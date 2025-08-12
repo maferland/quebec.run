@@ -1,8 +1,10 @@
-import { getClubs } from '@/lib/clubs'
+'use client'
+
+import { trpc } from '@/lib/trpc/client'
 import { format } from 'date-fns'
 
-export default async function Home() {
-  const clubs = await getClubs()
+export default function Home() {
+  const { data: clubs, isLoading } = trpc.clubs.getAll.useQuery()
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -18,8 +20,13 @@ export default async function Home() {
 
       <div className="mb-8">
         <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Run Clubs</h2>
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {clubs.map((club) => (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading clubs...</p>
+          </div>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {clubs?.map((club) => (
             <div key={club.id} className="bg-white p-6 rounded-lg shadow-md">
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{club.name}</h3>
               <p className="text-gray-600 mb-3">{club.description}</p>
@@ -48,8 +55,9 @@ export default async function Home() {
                 </a>
               )}
             </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">

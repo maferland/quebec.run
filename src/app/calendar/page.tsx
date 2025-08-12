@@ -1,8 +1,10 @@
-import { getUpcomingRuns } from '@/lib/runs'
+'use client'
+
+import { trpc } from '@/lib/trpc/client'
 import { format } from 'date-fns'
 
-export default async function CalendarPage() {
-  const runs = await getUpcomingRuns()
+export default function CalendarPage() {
+  const { data: runs = [], isLoading } = trpc.runs.getUpcoming.useQuery()
 
   const groupedRuns = runs.reduce((groups, run) => {
     const date = format(new Date(run.date), 'yyyy-MM-dd')
@@ -25,7 +27,11 @@ export default async function CalendarPage() {
       </div>
 
       <div className="max-w-4xl mx-auto">
-        {Object.keys(groupedRuns).length === 0 ? (
+        {isLoading ? (
+          <div className="text-center py-12">
+            <p className="text-gray-500 text-lg">Loading runs...</p>
+          </div>
+        ) : Object.keys(groupedRuns).length === 0 ? (
           <div className="text-center py-12">
             <p className="text-gray-500 text-lg">No upcoming runs scheduled.</p>
           </div>
