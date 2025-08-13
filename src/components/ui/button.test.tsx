@@ -58,20 +58,24 @@ describe('Button', () => {
   it('calls onClick handler when clicked', () => {
     const handleClick = vi.fn()
     render(<Button onClick={handleClick}>Clickable Button</Button>)
-    
+
     const button = screen.getByRole('button')
     button.click()
-    
+
     expect(handleClick).toHaveBeenCalledTimes(1)
   })
 
   it('does not call onClick when disabled', () => {
     const handleClick = vi.fn()
-    render(<Button onClick={handleClick} disabled>Disabled Button</Button>)
-    
+    render(
+      <Button onClick={handleClick} disabled>
+        Disabled Button
+      </Button>
+    )
+
     const button = screen.getByRole('button')
     button.click()
-    
+
     expect(handleClick).not.toHaveBeenCalled()
   })
 })

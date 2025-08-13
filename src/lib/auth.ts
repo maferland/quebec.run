@@ -1,9 +1,9 @@
-import {env} from '@/lib/env'
-import {PrismaAdapter} from '@auth/prisma-adapter'
-import {PrismaClient} from '@prisma/client'
-import {NextAuthOptions} from 'next-auth'
+import { env } from '@/lib/env'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { PrismaClient } from '@prisma/client'
+import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
-import {Resend} from 'resend'
+import { Resend } from 'resend'
 
 const prisma = new PrismaClient()
 
@@ -20,7 +20,7 @@ const createEmailProvider = () => {
 
     return EmailProvider({
       from: env.EMAIL_FROM,
-      sendVerificationRequest: async ({identifier: email, url}) => {
+      sendVerificationRequest: async ({ identifier: email, url }) => {
         try {
           await resend.emails.send({
             from: env.EMAIL_FROM,
@@ -48,9 +48,11 @@ const createEmailProvider = () => {
   } else {
     // Use Mailhog for development ONLY
     if (env.NODE_ENV === 'production') {
-      throw new Error('Mailhog cannot be used in production. Set USE_RESEND=true or provide RESEND_API_KEY.')
+      throw new Error(
+        'Mailhog cannot be used in production. Set USE_RESEND=true or provide RESEND_API_KEY.'
+      )
     }
-    
+
     console.log('📧 Using Mailhog (development only):', {
       host: env.EMAIL_SERVER_HOST,
       port: env.EMAIL_SERVER_PORT,
@@ -75,13 +77,13 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [createEmailProvider()],
   callbacks: {
-    session: async ({session, user}) => {
+    session: async ({ session, user }) => {
       if (session?.user) {
         session.user.id = user.id
         // Check if user is admin
         const dbUser = await prisma.user.findUnique({
-          where: {id: user.id},
-          select: {isAdmin: true},
+          where: { id: user.id },
+          select: { isAdmin: true },
         })
         session.user.isAdmin = dbUser?.isAdmin ?? false
       }

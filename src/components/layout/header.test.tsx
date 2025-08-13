@@ -9,9 +9,15 @@ const mockUseSession = useSession as vi.MockedFunction<typeof useSession>
 // Mock Next.js Link
 vi.mock('next/link', () => {
   return {
-    default: function MockLink({ children, href }: { children: React.ReactNode; href: string }) {
+    default: function MockLink({
+      children,
+      href,
+    }: {
+      children: React.ReactNode
+      href: string
+    }) {
       return <a href={href}>{children}</a>
-    }
+    },
   }
 })
 
@@ -26,7 +32,7 @@ describe('Header', () => {
 
   it('renders the logo and navigation links', () => {
     render(<Header />)
-    
+
     expect(screen.getByText('Courses')).toBeInTheDocument()
     expect(screen.getByText('Map')).toBeInTheDocument()
     expect(screen.getByText('Calendar')).toBeInTheDocument()
@@ -34,9 +40,11 @@ describe('Header', () => {
 
   it('shows sign in button when not authenticated', () => {
     render(<Header />)
-    
+
     expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Sign Out' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Sign Out' })
+    ).not.toBeInTheDocument()
   })
 
   it('shows loading state', () => {
@@ -47,7 +55,7 @@ describe('Header', () => {
     })
 
     render(<Header />)
-    
+
     // Look for the loading div by its specific classes
     const loadingDiv = document.querySelector('.animate-pulse')
     expect(loadingDiv).toBeInTheDocument()
@@ -70,10 +78,12 @@ describe('Header', () => {
     })
 
     render(<Header />)
-    
+
     expect(screen.getByText('John Doe')).toBeInTheDocument()
     expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument()
-    expect(screen.queryByRole('button', { name: 'Sign In' })).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Sign In' })
+    ).not.toBeInTheDocument()
   })
 
   it('shows admin link for admin users', () => {
@@ -92,7 +102,7 @@ describe('Header', () => {
     })
 
     render(<Header />)
-    
+
     expect(screen.getByText('Admin')).toBeInTheDocument()
   })
 
@@ -112,7 +122,7 @@ describe('Header', () => {
     })
 
     render(<Header />)
-    
+
     expect(screen.queryByText('Admin')).not.toBeInTheDocument()
   })
 })

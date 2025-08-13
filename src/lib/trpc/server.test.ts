@@ -1,6 +1,11 @@
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 import { appRouter, createTRPCContext } from './server'
-import { testPrisma, setupTestDatabase, cleanDatabase, seedTestData } from '../test-seed'
+import {
+  testPrisma,
+  setupTestDatabase,
+  cleanDatabase,
+  seedTestData,
+} from '../test-seed'
 
 describe('tRPC routers', () => {
   beforeAll(async () => {
@@ -101,7 +106,7 @@ describe('tRPC routers', () => {
 
       // Should still only return the 2 future runs
       expect(runs).toHaveLength(2)
-      expect(runs.every(run => run.title !== 'Past Run')).toBe(true)
+      expect(runs.every((run) => run.title !== 'Past Run')).toBe(true)
     })
   })
 })

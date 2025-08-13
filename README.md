@@ -93,7 +93,6 @@ Built with Next.js 14, TypeScript, and Tailwind CSS.
    ```
 
    This runs both the Next.js app and Mailhog concurrently:
-
    - App: http://localhost:3000
    - Mailhog UI: http://localhost:8025
 
