@@ -3,6 +3,7 @@ import {z} from 'zod'
 const envSchema = z.object({
   // Database
   DATABASE_URL: z.string().url('Invalid database URL'),
+  TEST_DATABASE_URL: z.string().url('Invalid test database URL').optional(),
 
   // NextAuth
   NEXTAUTH_SECRET: z
