@@ -30,11 +30,11 @@ export async function setupTestDatabase() {
   // Run migrations
   try {
     execSync('npx prisma migrate deploy', {
-      env: { 
-        ...process.env, 
-        DATABASE_URL: env.TEST_DATABASE_URL
+      env: {
+        ...process.env,
+        DATABASE_URL: env.TEST_DATABASE_URL,
       },
-      stdio: 'inherit'
+      stdio: 'inherit',
     })
   } catch (error) {
     console.error('Failed to run migrations:', error)

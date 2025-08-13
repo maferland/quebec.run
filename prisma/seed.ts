@@ -18,31 +18,35 @@ async function main() {
   const clubs = [
     {
       name: 'Club de Course Vieux-Québec',
-      description: 'Découvrez les rues historiques de Québec en courant avec nous chaque semaine.',
+      description:
+        'Découvrez les rues historiques de Québec en courant avec nous chaque semaine.',
       address: '1 Place des Canotiers, Québec, QC G1K 4E4',
       website: 'https://example.com/vieux-quebec',
       createdBy: adminUser.id,
     },
     {
-      name: 'Runners des Plaines d\'Abraham',
-      description: 'Entraînements sur les magnifiques plaines d\'Abraham, adaptés à tous les niveaux.',
+      name: "Runners des Plaines d'Abraham",
+      description:
+        "Entraînements sur les magnifiques plaines d'Abraham, adaptés à tous les niveaux.",
       address: '835 Av. Wilfrid-Laurier, Québec, QC G1R 2L3',
       website: 'https://example.com/plaines',
       createdBy: adminUser.id,
     },
     {
       name: 'Course Limoilou',
-      description: 'Club communautaire du quartier Limoilou, ambiance décontractée et parcours variés.',
+      description:
+        'Club communautaire du quartier Limoilou, ambiance décontractée et parcours variés.',
       address: '250 3e Rue, Québec, QC G1L 2B3',
       createdBy: adminUser.id,
     },
     {
       name: 'Trail Runners Capitale-Nationale',
-      description: 'Pour les amateurs de course en sentier dans la région de Québec et ses environs.',
+      description:
+        'Pour les amateurs de course en sentier dans la région de Québec et ses environs.',
       address: '2300 Rue Sicotte, Québec, QC G1P 2K5',
       instagram: '@trailrunners_qc',
       createdBy: adminUser.id,
-    }
+    },
   ]
 
   const createdClubs = await prisma.club.createMany({
@@ -52,7 +56,7 @@ async function main() {
 
   // Get the created clubs to create runs
   const clubRecords = await prisma.club.findMany({
-    where: { name: { in: clubs.map(c => c.name) } }
+    where: { name: { in: clubs.map((c) => c.name) } },
   })
 
   // Create runs for each club
@@ -71,14 +75,14 @@ async function main() {
       },
       {
         title: 'Long run du samedi',
-        description: 'Course longue pour améliorer l\'endurance',
+        description: "Course longue pour améliorer l'endurance",
         date: new Date('2025-01-18T09:00:00'),
         time: '09:00',
         address: club.address,
         distance: '12-15 km',
         pace: 'Rythme facile',
         clubId: club.id,
-      }
+      },
     ]
     allRuns.push(...runs)
   }

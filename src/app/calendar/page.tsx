@@ -6,14 +6,17 @@ import { format } from 'date-fns'
 export default function CalendarPage() {
   const { data: runs = [], isLoading } = trpc.runs.getUpcoming.useQuery()
 
-  const groupedRuns = runs.reduce((groups, run) => {
-    const date = format(new Date(run.date), 'yyyy-MM-dd')
-    if (!groups[date]) {
-      groups[date] = []
-    }
-    groups[date].push(run)
-    return groups
-  }, {} as Record<string, typeof runs>)
+  const groupedRuns = runs.reduce(
+    (groups, run) => {
+      const date = format(new Date(run.date), 'yyyy-MM-dd')
+      if (!groups[date]) {
+        groups[date] = []
+      }
+      groups[date].push(run)
+      return groups
+    },
+    {} as Record<string, typeof runs>
+  )
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -43,26 +46,35 @@ export default function CalendarPage() {
               </h2>
               <div className="grid gap-4">
                 {dayRuns.map((run) => (
-                  <div key={run.id} className="bg-white p-6 rounded-lg shadow-md">
+                  <div
+                    key={run.id}
+                    className="bg-white p-6 rounded-lg shadow-md"
+                  >
                     <div className="flex justify-between items-start mb-3">
                       <div>
                         <h3 className="text-xl font-semibold text-gray-900 mb-1">
                           {run.title}
                         </h3>
-                        <p className="text-blue-600 font-medium">{run.club.name}</p>
+                        <p className="text-blue-600 font-medium">
+                          {run.club.name}
+                        </p>
                       </div>
                       <div className="text-right">
-                        <p className="text-lg font-semibold text-gray-900">{run.time}</p>
+                        <p className="text-lg font-semibold text-gray-900">
+                          {run.time}
+                        </p>
                         {run.distance && (
-                          <p className="text-sm text-gray-600">{run.distance}</p>
+                          <p className="text-sm text-gray-600">
+                            {run.distance}
+                          </p>
                         )}
                       </div>
                     </div>
-                    
+
                     {run.description && (
                       <p className="text-gray-600 mb-3">{run.description}</p>
                     )}
-                    
+
                     <div className="flex flex-wrap gap-4 text-sm text-gray-600">
                       <span>📍 {run.address}</span>
                       {run.pace && <span>⏱️ {run.pace}</span>}

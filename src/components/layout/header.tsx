@@ -17,30 +17,30 @@ export function Header() {
               Courses
             </Link>
           </div>
-          
+
           <nav className="flex items-center space-x-4">
-            <Link 
-              href="/" 
+            <Link
+              href="/"
               className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"
             >
               <MapPin size={20} />
               <span>Map</span>
             </Link>
-            <Link 
-              href="/calendar" 
+            <Link
+              href="/calendar"
               className="flex items-center space-x-1 text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"
             >
               <Calendar size={20} />
               <span>Calendar</span>
             </Link>
-            
+
             {status === 'loading' ? (
               <div className="w-8 h-8 bg-gray-200 rounded animate-pulse" />
             ) : session ? (
               <div className="flex items-center space-x-4">
                 {session.user?.isAdmin && (
-                  <Link 
-                    href="/admin" 
+                  <Link
+                    href="/admin"
                     className="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md"
                   >
                     Admin
@@ -48,21 +48,16 @@ export function Header() {
                 )}
                 <div className="flex items-center space-x-2">
                   <User size={20} className="text-gray-600" />
-                  <span className="text-sm text-gray-700">{session.user?.name || session.user?.email}</span>
+                  <span className="text-sm text-gray-700">
+                    {session.user?.name || session.user?.email}
+                  </span>
                 </div>
-                <Button 
-                  variant="outline" 
-                  size="sm"
-                  onClick={() => signOut()}
-                >
+                <Button variant="outline" size="sm" onClick={() => signOut()}>
                   Sign Out
                 </Button>
               </div>
             ) : (
-              <Button 
-                size="sm"
-                onClick={() => signIn()}
-              >
+              <Button size="sm" onClick={() => signIn()}>
                 Sign In
               </Button>
             )}

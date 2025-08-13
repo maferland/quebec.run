@@ -7,7 +7,7 @@ import { z } from 'zod'
 // Create context
 export async function createTRPCContext() {
   const session = await getServerSession(authOptions)
-  
+
   return {
     prisma,
     session,
@@ -44,33 +44,31 @@ const clubsRouter = router({
         runs: {
           where: {
             date: {
-              gte: new Date()
-            }
+              gte: new Date(),
+            },
           },
           orderBy: { date: 'asc' },
-          take: 2
-        }
-      }
+          take: 2,
+        },
+      },
     })
   }),
-  
-  getById: publicProcedure
-    .input(z.string())
-    .query(async ({ ctx, input }) => {
-      return await ctx.prisma.club.findUnique({
-        where: { id: input },
-        include: {
-          runs: {
-            where: {
-              date: {
-                gte: new Date()
-              }
+
+  getById: publicProcedure.input(z.string()).query(async ({ ctx, input }) => {
+    return await ctx.prisma.club.findUnique({
+      where: { id: input },
+      include: {
+        runs: {
+          where: {
+            date: {
+              gte: new Date(),
             },
-            orderBy: { date: 'asc' }
-          }
-        }
-      })
+          },
+          orderBy: { date: 'asc' },
+        },
+      },
     })
+  }),
 })
 
 // Runs router
@@ -79,15 +77,15 @@ const runsRouter = router({
     return await ctx.prisma.run.findMany({
       where: {
         date: {
-          gte: new Date()
-        }
+          gte: new Date(),
+        },
       },
       include: {
-        club: true
+        club: true,
       },
-      orderBy: { date: 'asc' }
+      orderBy: { date: 'asc' },
     })
-  })
+  }),
 })
 
 // Main app router
