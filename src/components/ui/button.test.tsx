@@ -1,4 +1,5 @@
 import { render, screen } from '@/lib/test-utils'
+import { vi } from 'vitest'
 import { Button } from './button'
 
 describe('Button', () => {

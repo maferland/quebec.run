@@ -1,10 +1,11 @@
 import { render, screen } from '@/lib/test-utils'
 import { useSession } from 'next-auth/react'
+import { vi, type MockedFunction } from 'vitest'
 import { Header } from './header'
 
 // Mock next-auth
 vi.mock('next-auth/react')
-const mockUseSession = useSession as vi.MockedFunction<typeof useSession>
+const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 // Mock Next.js Link
 vi.mock('next/link', () => {
