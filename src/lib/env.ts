@@ -16,8 +16,8 @@ const envSchema = z
     EMAIL_FROM: z.string().email('Invalid email address'),
     USE_RESEND: z
       .string()
-      .transform((val) => val === 'true')
-      .default('true'),
+      .default('true')
+      .transform((val) => val === 'true'),
 
     // Node environment
     NODE_ENV: z

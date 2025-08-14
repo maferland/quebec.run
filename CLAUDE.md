@@ -26,13 +26,14 @@
 - **Leverage route handlers** in `app/api/` for API endpoints
 - **Use `loading.tsx`, `error.tsx`, `not-found.tsx`** for special files
 
-### tRPC + React Query
+### REST API + React Query
 
-- **Type-safe API calls** - leverage full TypeScript inference
-- **Use proper error handling** with TRPCError and custom error codes
-- **Implement proper input validation** with Zod schemas
-- **Separate client/server** code: `trpc/client.ts` and `trpc/server.ts`
-- **Test both unit and integration** for tRPC procedures
+- **Use App Router route handlers** - leverage Next.js 15+ patterns in `app/api/`
+- **Type-safe API calls** - use Zod schemas with proper TypeScript inference
+- **Implement `withAuth` and `withPublic` middleware** for clean authentication
+- **Use proper error handling** with centralized error responses
+- **Separate service layer** - business logic in `src/lib/services/`
+- **Validate inputs at API boundaries** with Zod schemas
 
 ### Prisma + PostgreSQL
 
@@ -46,7 +47,7 @@
 
 - **Define schemas close to usage** or in dedicated schema files
 - **Use Zod inference** for TypeScript types: `type User = z.infer<typeof userSchema>`
-- **Validate at API boundaries** - tRPC inputs, form data, environment variables
+- **Validate at API boundaries** - API route inputs, form data, environment variables
 - **Create reusable schemas** for common patterns
 
 ### NextAuth.js
@@ -55,7 +56,7 @@
 - **Implement proper callback handling** for custom logic
 - **Use database adapter** for production (Prisma adapter configured)
 - **Handle authentication errors gracefully** in UI
-- **Protect tRPC procedures** with proper middleware
+- **Protect API routes** with authentication middleware (`withAuth`)
 
 ### TypeScript Best Practices
 

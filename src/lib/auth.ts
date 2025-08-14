@@ -61,7 +61,7 @@ const createEmailProvider = () => {
         host: env.EMAIL_SERVER_HOST,
         port: env.EMAIL_SERVER_PORT,
         secure: false,
-        auth: null,
+        auth: undefined,
         tls: {
           rejectUnauthorized: false,
         },

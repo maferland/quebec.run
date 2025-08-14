@@ -17,8 +17,5 @@ export default {
       },
     },
   },
-  corePlugins: {
-    preflight: true,
-  },
   plugins: [],
 } satisfies Config
