@@ -1,11 +1,9 @@
 import { env } from '@/lib/env'
-import { PrismaAdapter } from '@auth/prisma-adapter'
-import { PrismaClient } from '@prisma/client'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import { prisma } from '@/lib/prisma'
 import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
 import { Resend } from 'resend'
-
-const prisma = new PrismaClient()
 
 // Create email provider based on environment configuration
 const createEmailProvider = () => {
@@ -91,3 +89,4 @@ export const authOptions: NextAuthOptions = {
     },
   },
 }
+

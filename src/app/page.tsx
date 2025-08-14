@@ -1,10 +1,10 @@
 'use client'
 
-import { trpc } from '@/lib/trpc/client'
+import { useClubs } from '@/lib/hooks/use-clubs'
 import { format } from 'date-fns'
 
 export default function Home() {
-  const { data: clubs, isLoading } = trpc.clubs.getAll.useQuery()
+  const { data: clubs, isLoading } = useClubs()
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -36,12 +36,12 @@ export default function Home() {
                 <p className="text-gray-600 mb-3">{club.description}</p>
                 <p className="text-sm text-gray-500 mb-4">{club.address}</p>
 
-                {club.runs.length > 0 && (
+                {club.upcomingRuns && club.upcomingRuns.length > 0 && (
                   <div className="border-t pt-3">
                     <h4 className="font-medium text-gray-900 mb-2">
                       Upcoming runs:
                     </h4>
-                    {club.runs.map((run) => (
+                    {club.upcomingRuns.map((run) => (
                       <div key={run.id} className="text-sm text-gray-600 mb-1">
                         <strong>{run.title}</strong> -{' '}
                         {format(new Date(run.date), 'MMM dd, yyyy')} at{' '}
