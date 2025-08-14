@@ -23,7 +23,6 @@ export default defineConfig(({ mode }) => {
           '**/*.e2e.{ts,tsx}',
           'src/lib/storybook-utils.tsx',
           'src/lib/auth.ts',
-          'src/lib/trpc/client.ts',
           'prisma/**',
           '.next/',
           'coverage/',

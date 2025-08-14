@@ -1,10 +1,10 @@
 'use client'
 
-import { trpc } from '@/lib/trpc/client'
+import { useUpcomingRuns } from '@/lib/hooks/use-runs'
 import { format } from 'date-fns'
 
 export default function CalendarPage() {
-  const { data: runs = [], isLoading } = trpc.runs.getUpcoming.useQuery()
+  const { data: runs = [], isLoading } = useUpcomingRuns()
 
   const groupedRuns = runs.reduce(
     (groups, run) => {
