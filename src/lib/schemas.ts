@@ -1,13 +1,13 @@
 import { z } from 'zod'
 
 // Base schemas
-export const PaginationQuerySchema = z.object({
+export const paginationQuerySchema = z.object({
   limit: z.string().transform(Number).pipe(z.number().min(1).max(100)).optional(),
   offset: z.string().transform(Number).pipe(z.number().min(0)).optional(),
 })
 
 // Club schemas
-export const ClubSchema = z.object({
+export const clubSchema = z.object({
   id: z.string(),
   name: z.string(),
   description: z.string().nullable(),
@@ -20,7 +20,7 @@ export const ClubSchema = z.object({
   createdBy: z.string(),
 })
 
-export const ClubCreateSchema = z.object({
+export const clubCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
   address: z.string().min(1, 'Address is required'),
@@ -29,10 +29,12 @@ export const ClubCreateSchema = z.object({
   facebook: z.string().optional(),
 })
 
-export const ClubUpdateSchema = ClubCreateSchema.partial()
+export const clubUpdateSchema = clubCreateSchema.partial().extend({
+  id: z.string().min(1, 'ID is required'),
+})
 
 // Run schemas
-export const RunSchema = z.object({
+export const runSchema = z.object({
   id: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -46,7 +48,7 @@ export const RunSchema = z.object({
   clubId: z.string(),
 })
 
-export const RunCreateSchema = z.object({
+export const runCreateSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
   date: z.string().refine((val) => !isNaN(Date.parse(val)), 'Must be a valid date'),
@@ -57,36 +59,53 @@ export const RunCreateSchema = z.object({
   clubId: z.string().min(1, 'Club ID is required'),
 })
 
-export const RunUpdateSchema = RunCreateSchema.partial()
-
-// API response schemas
-export const ClubWithRunsSchema = ClubSchema.extend({
-  upcomingRuns: z.array(RunSchema).optional(),
-})
-
-export const RunWithClubSchema = RunSchema.extend({
-  club: ClubSchema,
-})
-
-// Query parameter schemas - extending base pagination
-export const ClubsQuerySchema = PaginationQuerySchema
-
-export const RunsQuerySchema = PaginationQuerySchema.extend({
+export const runsQuerySchema = paginationQuerySchema.extend({
   clubId: z.string().optional(),
 })
 
+export const runUpdateSchema = runCreateSchema.partial()
+
+// Additional schemas needed by services
+export const clubIdSchema = z.object({
+  id: z.string().min(1, 'ID is required'),
+})
+
+export const clubDeleteSchema = clubIdSchema
+
+// API response schemas
+export const clubWithRunsSchema = clubSchema.extend({
+  upcomingRuns: z.array(runSchema).optional(),
+})
+
+export const runWithClubSchema = runSchema.extend({
+  club: clubSchema,
+})
+
+// Query parameter schemas - extending base pagination
+export const clubsQuerySchema = paginationQuerySchema
+
+// Service function utility types
+export type ServiceUser = {
+  id: string
+  isAdmin: boolean
+}
+
+export type PublicPayload<TData> = { data: TData }
+export type AuthPayload<TData> = { user: ServiceUser; data: TData }
+
 // Type exports
-export type PaginationQuery = z.infer<typeof PaginationQuerySchema>
+export type PaginationQuery = z.infer<typeof paginationQuerySchema>
 
-export type Club = z.infer<typeof ClubSchema>
-export type ClubCreate = z.infer<typeof ClubCreateSchema>
-export type ClubUpdate = z.infer<typeof ClubUpdateSchema>
-export type ClubWithRuns = z.infer<typeof ClubWithRunsSchema>
+export type Club = z.infer<typeof clubSchema>
+export type ClubCreate = z.infer<typeof clubCreateSchema>
+export type ClubUpdate = z.infer<typeof clubUpdateSchema>
+export type ClubDelete = z.infer<typeof clubDeleteSchema>
+export type ClubWithRuns = z.infer<typeof clubWithRunsSchema>
 
-export type Run = z.infer<typeof RunSchema>
-export type RunCreate = z.infer<typeof RunCreateSchema>
-export type RunUpdate = z.infer<typeof RunUpdateSchema>
-export type RunWithClub = z.infer<typeof RunWithClubSchema>
+export type Run = z.infer<typeof runSchema>
+export type RunCreate = z.infer<typeof runCreateSchema>
+export type RunUpdate = z.infer<typeof runUpdateSchema>
+export type RunWithClub = z.infer<typeof runWithClubSchema>
 
-export type ClubsQuery = z.infer<typeof ClubsQuerySchema>
-export type RunsQuery = z.infer<typeof RunsQuerySchema>
+export type ClubsQuery = z.infer<typeof clubsQuerySchema>
+export type RunsQuery = z.infer<typeof runsQuerySchema>

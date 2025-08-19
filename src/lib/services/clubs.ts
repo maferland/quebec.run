@@ -1,21 +1,23 @@
-import { z } from 'zod'
 import { prisma } from '@/lib/prisma'
-import { withPublic, withAuth } from '@/lib/api-middleware'
-import {
-  ClubsQuerySchema,
-  ClubCreateSchema,
-  ClubUpdateSchema,
-  type ClubWithRuns,
+import type {
+  ClubWithRuns,
+  ClubsQuery,
+  ClubCreate,
+  ClubUpdate,
+  ClubDelete,
+  PublicPayload,
+  AuthPayload,
 } from '@/lib/schemas'
 
-// Schema for delete operation
-const ClubDeleteSchema = z.object({
-  id: z.string().min(1, 'Club ID is required'),
-})
+// We need the ClubId type for getClubById
+import type { z } from 'zod'
+import { clubIdSchema } from '@/lib/schemas'
+type ClubId = z.infer<typeof clubIdSchema>
 
-// Public routes
-export const getAllClubs = withPublic(ClubsQuerySchema)(async (query) => {
-  const { limit = 50, offset = 0 } = query
+// Pure business logic functions - let TypeScript infer return types
+
+export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
+  const { limit = 50, offset = 0 } = data
 
   const clubs = await prisma.club.findMany({
     skip: offset,
@@ -42,29 +44,54 @@ export const getAllClubs = withPublic(ClubsQuerySchema)(async (query) => {
   )
 
   return clubsWithRuns
-})
+}
 
-export const getClubById = withPublic()(async (): Promise<ClubWithRuns | null> => {
-  // This will need the ID from route params in the API handler
-  throw new Error('getClubById needs ID from route params')
-})
+export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
+  const { id } = data
+  const club = await prisma.club.findUnique({
+    where: { id },
+  })
 
-// Authenticated routes
-export const createClub = withAuth(ClubCreateSchema)(async ({ user, data }) => {
+  if (!club) {
+    throw new Error('Club not found')
+  }
+
+  const upcomingRuns = await prisma.run.findMany({
+    where: {
+      clubId: id,
+      date: { gte: new Date() },
+    },
+    orderBy: { date: 'asc' },
+    take: 5,
+  })
+
+  return {
+    ...club,
+    upcomingRuns,
+  }
+}
+
+export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
   return await prisma.club.create({
     data: {
       ...data,
       createdBy: user.id,
     },
   })
-})
+}
 
-export const updateClub = withAuth(ClubUpdateSchema)(async ({ user, data }) => {
-  // This will need the ID from route params in the API handler
-  throw new Error('updateClub needs ID from route params')
-})
+export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
+  const { id, ...updateData } = data
+  
+  const club = await prisma.club.update({
+    where: { id },
+    data: updateData,
+  })
+  
+  return club
+}
 
-export const deleteClub = withAuth(ClubDeleteSchema)(async ({ user, data }) => {
+export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   const { id } = data
   const club = await prisma.club.findUnique({
     where: { id },
@@ -80,7 +107,7 @@ export const deleteClub = withAuth(ClubDeleteSchema)(async ({ user, data }) => {
   return await prisma.club.delete({
     where: { id },
   })
-})
+}
 
 // Helper functions that take ID from route params
 export async function getClubByIdWithParams(id: string): Promise<ClubWithRuns | null> {
@@ -104,20 +131,24 @@ export async function getClubByIdWithParams(id: string): Promise<ClubWithRuns | 
   }
 }
 
-export const updateClubWithParams = (id: string) => withAuth(ClubUpdateSchema)(async ({ user, data }) => {
+export const updateClubById = async ({ user, data }: AuthPayload<ClubUpdate & { id: string }>) => {
   const club = await prisma.club.findUnique({
-    where: { id },
+    where: { id: data.id },
     select: { createdBy: true },
   })
 
-  if (!club) return null
+  if (!club) {
+    throw new Error('Club not found')
+  }
 
   if (club.createdBy !== user.id && !user.isAdmin) {
     throw new Error('Unauthorized to update this club')
   }
 
+  const { id, ...updateData } = data
+  
   return await prisma.club.update({
     where: { id },
-    data,
+    data: updateData,
   })
-})
+}

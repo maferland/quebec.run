@@ -23,7 +23,7 @@ export async function setupTestDatabase() {
   try {
     // Create test database if it doesn't exist
     execSync('createdb courses_test', { stdio: 'ignore' })
-  } catch (error) {
+  } catch {
     // Database might already exist, that's fine
   }
 
@@ -64,11 +64,10 @@ export async function seedTestData() {
   // Clean first
   await cleanDatabase()
 
-  // Create test user first
+  // Create test user - let Prisma generate the CUID
   const testUser = await testPrisma.user.create({
     data: {
-      id: 'test-user-id',
-      email: 'test@example.com',
+      email: `test-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@example.com`,
       name: 'Test User',
     },
   })
@@ -112,4 +111,9 @@ export async function seedTestData() {
   })
 
   return testClub
+}
+
+export async function teardownTestData() {
+  await cleanDatabase()
+  await testPrisma.$disconnect()
 }

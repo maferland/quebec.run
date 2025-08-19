@@ -1,14 +1,13 @@
-import { NextRequest } from 'next/server'
-import { getQueryParams, withErrorHandler } from '@/lib/route-helpers'
+import { withAuth, withPublic } from '@/lib/api-middleware'
+import { runCreateSchema, runsQuerySchema } from '@/lib/schemas'
+import { createRun, getAllRuns } from '@/lib/services/runs'
 
-// Temporary implementation until we create the runs service
-async function getUpcomingRuns() {
-  // For now, return empty array - we'll implement the full runs service later
-  return []
-}
-
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  const queryData = getQueryParams(request)
-  const runs = await getUpcomingRuns()
+export const GET = withPublic(runsQuerySchema)(async (data) => {
+  const runs = await getAllRuns({ data })
   return Response.json(runs)
+})
+
+export const POST = withAuth(runCreateSchema)(async ({ user, data }) => {
+  const run = await createRun({ user, data })
+  return Response.json(run, { status: 201 })
 })

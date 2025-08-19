@@ -1,41 +1,18 @@
-import { NextRequest } from 'next/server'
-import { getClubByIdWithParams, updateClubWithParams, deleteClub } from '@/lib/services/clubs'
-import { withErrorHandler } from '@/lib/route-helpers'
+import { withAuth, withPublic } from '@/lib/api-middleware'
+import { clubDeleteSchema, clubIdSchema, clubUpdateSchema } from '@/lib/schemas'
+import { deleteClub, getClubById, updateClubById } from '@/lib/services/clubs'
 
-export const GET = withErrorHandler(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const club = await getClubByIdWithParams(params.id)
-  if (!club) {
-    return Response.json({ error: 'Club not found' }, { status: 404 })
-  }
+export const GET = withPublic(clubIdSchema)(async (data) => {
+  const club = await getClubById({ data })
   return Response.json(club)
 })
 
-export const PUT = withErrorHandler(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const body = await request.json()
-  const updateFn = updateClubWithParams(params.id)
-  const club = await updateFn(body)
-  
-  if (!club) {
-    return Response.json({ error: 'Club not found' }, { status: 404 })
-  }
+export const PUT = withAuth(clubUpdateSchema)(async ({ user, data }) => {
+  const club = await updateClubById({ user, data })
   return Response.json(club)
 })
 
-export const DELETE = withErrorHandler(async (
-  request: NextRequest,
-  { params }: { params: { id: string } }
-) => {
-  const deleteData = { id: params.id }
-  const result = await deleteClub(deleteData)
-  
-  if (!result) {
-    return Response.json({ error: 'Club not found' }, { status: 404 })
-  }
+export const DELETE = withAuth(clubDeleteSchema)(async ({ user, data }) => {
+  await deleteClub({ user, data })
   return Response.json({ success: true })
 })
