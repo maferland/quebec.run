@@ -1,69 +1,92 @@
-import { z } from 'zod'
-import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
+import type { ServiceUser } from '@/lib/schemas'
+import { getServerSession } from 'next-auth'
+import { z } from 'zod'
 
-// Public routes (no auth required)
+// Internal error handler - DO NOT USE outside this file, use withPublic or withAuth instead
+function withErrorHandler<T extends unknown[]>(
+  handler: (...args: T) => Promise<Response>
+) {
+  return async (...args: T): Promise<Response> => {
+    try {
+      return await handler(...args)
+    } catch (error) {
+      console.error('API Error:', error)
 
-// Function overload: withPublic without schema
-export function withPublic(): <R>(fn: () => R | Promise<R>) => () => Promise<R>
-// Function overload: withPublic with schema  
-export function withPublic<T extends z.ZodType>(schema: T): <R>(fn: (data: z.infer<T>) => R | Promise<R>) => (input: unknown) => Promise<R>
-export function withPublic<T extends z.ZodType>(schema?: T) {
-  if (schema) {
-    return <R>(fn: (data: z.infer<T>) => R | Promise<R>) => {
-      return async (input: unknown): Promise<R> => {
-        const validatedData = schema.parse(input)
-        return await fn(validatedData)
+      if (
+        error instanceof Error &&
+        error.message === 'Authentication required'
+      ) {
+        return Response.json(
+          { error: 'Authentication required' },
+          { status: 401 }
+        )
       }
-    }
-  } else {
-    return <R>(fn: () => R | Promise<R>) => {
-      return async (): Promise<R> => {
-        return await fn()
-      }
-    }
-  }
-}
 
-// Function overload: withAuth without schema
-export function withAuth(): <R>(fn: (user: { id: string; isAdmin: boolean }) => R | Promise<R>) => () => Promise<R>
-// Function overload: withAuth with schema
-export function withAuth<T extends z.ZodType>(schema: T): <R>(fn: (args: { user: { id: string; isAdmin: boolean }; data: z.infer<T> }) => R | Promise<R>) => (input: unknown) => Promise<R>
-export function withAuth<T extends z.ZodType>(schema?: T) {
-  if (schema) {
-    return <R>(fn: (args: { user: { id: string; isAdmin: boolean }; data: z.infer<T> }) => R | Promise<R>) => {
-      return async (input: unknown): Promise<R> => {
-        const session = await getServerSession(authOptions)
-        
-        if (!session?.user?.id) {
-          throw new Error('Authentication required')
-        }
-
-        const user = {
-          id: session.user.id,
-          isAdmin: session.user.isAdmin || false,
-        }
-
-        const validatedData = schema.parse(input)
-        return await fn({ user, data: validatedData })
-      }
-    }
-  } else {
-    return <R>(fn: (user: { id: string; isAdmin: boolean }) => R | Promise<R>) => {
-      return async (): Promise<R> => {
-        const session = await getServerSession(authOptions)
-        
-        if (!session?.user?.id) {
-          throw new Error('Authentication required')
-        }
-
-        const user = {
-          id: session.user.id,
-          isAdmin: session.user.isAdmin || false,
-        }
-
-        return await fn(user)
-      }
+      return Response.json(
+        { error: error instanceof Error ? error.message : 'Unknown error' },
+        { status: 400 }
+      )
     }
   }
 }
+
+const methodsWithBody = ['POST', 'PUT', 'PATCH']
+
+// Extract all parameters and parse with schema
+async function getParams<T extends z.ZodType>(
+  request: Request,
+  context: { params?: Record<string, string> } | undefined,
+  schema: T
+): Promise<z.infer<T>> {
+  const url = new URL(request.url)
+
+  // Extract query parameters
+  const queryParams: Record<string, string> = {}
+  url.searchParams.forEach((value, key) => {
+    queryParams[key] = value
+  })
+
+  // Extract URL parameters from context (Next.js provides this)
+  const urlParams = context?.params || {}
+
+  const body = methodsWithBody.includes(request.method)
+    ? await request.json()
+    : {}
+
+  const params = { ...urlParams, ...queryParams }
+
+  return schema.parse({ ...params, ...body })
+}
+
+// Simplified public routes handler
+export function withPublic<T extends z.ZodType>(schema: T) {
+  return (fn: (data: z.infer<T>) => Response | Promise<Response>) => {
+    return withErrorHandler(async (request: Request, context?: { params?: Record<string, string> }): Promise<Response> => {
+      const data = await getParams(request, context, schema)
+      return await fn(data)
+    })
+  }
+}
+
+// Simplified auth routes handler
+export function withAuth<T extends z.ZodType>(schema: T) {
+  return (fn: (args: { user: ServiceUser; data: z.infer<T> }) => Response | Promise<Response>) => {
+    return withErrorHandler(async (request: Request, context?: { params?: Record<string, string> }): Promise<Response> => {
+      const session = await getServerSession(authOptions)
+      
+      if (!session?.user?.id) {
+        return Response.json({ error: 'Authentication required' }, { status: 401 })
+      }
+
+      const user: ServiceUser = {
+        id: session.user.id,
+        isAdmin: session.user.isAdmin || false,
+      }
+
+      const data = await getParams(request, context, schema)
+      return await fn({ user, data })
+    })
+  }
+}
+

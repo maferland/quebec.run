@@ -29,11 +29,49 @@
 ### REST API + React Query
 
 - **Use App Router route handlers** - leverage Next.js 15+ patterns in `app/api/`
+- **Clean route handlers** - import service functions, use `withErrorHandler`, keep routes simple
+- **Separate service layer** - all business logic in `src/lib/services/`, routes only handle HTTP
+- **Service layer pattern** EXAMPLE: `import { getAllClubs } from '@/lib/services/clubs'`
+- **Services are pure business logic** - no middleware, consistent payload signatures
+- **Use payload utility types** for consistent function signatures:
+
+  ```ts
+  // Public services (no auth required)
+  export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
+    // business logic here
+  }
+
+  // Authenticated services
+  export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
+    return await prisma.club.create({
+      data: {
+        ...data,
+        createdBy: user.id,
+      },
+    })
+  }
+  ```
+
+- **Use combined route handlers** - clean middleware composition in API routes:
+
+  ```ts
+  // app/api/clubs/route.ts
+  export const GET = withPublic(clubsQuerySchema)(async (data) => {
+    const clubs = await getAllClubs({ data })
+    return Response.json(clubs)
+  })
+
+  export const POST = withAuth(clubCreateSchema)(async ({ user, data }) => {
+    const club = await createClub({ user, data })
+    return Response.json(club, { status: 201 })
+  })
+  ```
+
+- **NEVER use withErrorHandler directly** - it's internal to the combined handlers
+- **Only use withPublic and withAuth** - they include error handling automatically
 - **Type-safe API calls** - use Zod schemas with proper TypeScript inference
-- **Implement `withAuth` and `withPublic` middleware** for clean authentication
-- **Use proper error handling** with centralized error responses
-- **Separate service layer** - business logic in `src/lib/services/`
-- **Validate inputs at API boundaries** with Zod schemas
+- **Use proper error handling** with `withErrorHandler` wrapper for consistent responses
+- **Let types flow** - avoid explicit return types, let TypeScript infer from implementation
 
 ### Prisma + PostgreSQL
 
@@ -42,6 +80,8 @@
 - **Use database constraints** and proper foreign keys
 - **Write migrations carefully** - test locally before deploying
 - **Seed data should be reproducible** and use proper factories
+- **Use CUID for all IDs** - `@default(cuid())` generates collision-resistant, sortable IDs
+- **Never manually set IDs in tests** - let Prisma generate CUIDs to avoid conflicts
 
 ### Zod Validation
 
@@ -128,6 +168,82 @@ await waitFor(() => {
 expect(await screen.findByText('Loading complete')).toBeInTheDocument()
 ```
 
+### E2E Testing with Playwright
+
+E2E tests validate complete user workflows using real browsers. Follow these guidelines for maintainable, reliable tests:
+
+#### Semantic Queries (Playwright + RTL Style)
+
+- **Use semantic queries like RTL** - `page.getByRole()`, `page.getByText()`, `page.getByLabel()`
+- **Avoid CSS selectors** - No `page.locator('.class')` or `page.locator('[data-testid]')`
+- **Use locator chaining for context** - `page.getByRole('article').first().getByRole('heading')`
+- **Validate actual content** - Check text content, not just element existence
+
+```typescript
+// ❌ Avoid - CSS selectors and testids
+await page.locator('[data-testid="club-card"]').click()
+await page.locator('.button').click()
+await expect(page.locator('h3')).toBeVisible()
+
+// ✅ Good - semantic queries
+const clubCard = page.getByRole('article').first()
+await expect(clubCard.getByRole('heading')).toContainText(/Quebec Running Club/)
+await clubCard.getByRole('button', { name: 'View Details' }).click()
+```
+
+#### Content Validation
+
+- **Check actual text content** - Don't just verify elements exist
+- **Use regex for flexible matching** - Handle dynamic content gracefully
+- **Validate user-facing content** - Test what users actually see
+
+```typescript
+// ❌ Avoid - only checking existence
+await expect(page.getByRole('heading')).toBeVisible()
+
+// ✅ Good - validating actual content
+await expect(page.getByRole('heading')).toContainText(/Featured Run Clubs/i)
+await expect(clubCard.getByText(/Quebec|Running|Club/)).toBeVisible()
+```
+
+#### Sequential Flow Testing
+
+- **Test realistic user workflows** - Not just isolated interactions
+- **Wait for content to load** - Let async operations complete
+- **Handle loading states gracefully** - Test both loading and loaded states
+
+```typescript
+// ✅ Good - realistic user flow
+test('user can browse and view club details', async ({ page }) => {
+  await page.goto('/')
+  
+  // Wait for clubs to load
+  await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({ timeout: 10000 })
+  
+  // Click on first club
+  const firstClub = page.getByRole('article').first()
+  await expect(firstClub.getByRole('heading')).toContainText(/\w+/)
+  await firstClub.getByRole('link', { name: /view|details/i }).click()
+  
+  // Verify navigation to club details
+  await expect(page).toHaveURL(/\/clubs\//)
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+})
+```
+
+#### Test Configuration
+
+- **Always run headless by default** - Use `npm run test:e2e:headed` only for debugging
+- **Use Chrome desktop + mobile** - Test responsive design
+- **Sequential execution in CI** - Prevent flaky parallel test issues
+- **Proper timeouts** - Allow for real network delays
+
+#### Scripts Available
+
+- `npm run test:e2e` - Headless tests (default)
+- `npm run test:e2e:headed` - Visual debugging mode
+- `npm run test:e2e:ui` - Playwright UI for test development
+
 ### Test Requirements
 
 - **95% code coverage threshold** enforced
@@ -137,14 +253,29 @@ expect(await screen.findByText('Loading complete')).toBeInTheDocument()
 ### Test Types
 
 - **Component tests**: Unit tests for React components using RTL + Vitest
-- **Integration tests**: tRPC procedures with test database
-- **E2E tests**: Happy path user flows with Playwright
+- **Service integration tests**: Business logic functions with test database
+- **API route tests**: Test actual HTTP endpoints to catch route handler bugs
+- **E2E tests**: Happy path user flows with Playwright using semantic queries
+
+### Critical Testing Layers
+
+**IMPORTANT**: Test all layers to prevent runtime errors:
+
+1. **Service layer**: Test business logic functions directly
+2. **API route layer**: Test actual HTTP endpoints (GET /api/clubs, POST /api/runs, etc.)
+3. **Frontend integration**: Test React Query hooks with MSW
+4. **E2E**: Test complete user flows
+
+Missing API route tests caused our recent runtime error - service layer worked but route handlers had bugs.
 
 ### Database Testing
 
 - **Use separate test database**: `courses_test`
 - **Never fall back to main database** - require explicit `TEST_DATABASE_URL`
 - **Clean and seed data** before each test
+- **Clean up after each test** - use `afterEach` to prevent data leaks between tests
+- **Let Prisma generate IDs** - never manually set IDs in test data to avoid conflicts
+- **Avoid parallel test execution issues** - use unique data for each test
 
 ### Storybook
 
@@ -158,10 +289,21 @@ expect(await screen.findByText('Loading complete')).toBeInTheDocument()
 
 ### Before Completing Tasks
 
-1. **Run tests**: `npm run test -- --coverage`
-2. **Verify 95% coverage threshold**
-3. **Run linting**: `npm run lint`
-4. **Format code**: `npx prettier --write .`
+**MANDATORY: After completing any major body of work, ALWAYS run this checklist:**
+
+1. **Run linter**: `npm run lint` - Fix all ESLint errors before proceeding
+2. **Run TypeScript check**: `npx tsc --noEmit` - Ensure no TypeScript errors
+3. **Run tests**: `npm run test -- --coverage` - Verify all tests pass
+4. **Verify 95% coverage threshold** - Ensure coverage meets requirements
+5. **Format code**: `npx prettier --write .` - Apply consistent formatting
+
+**Major body of work includes:**
+
+- Adding new features or components
+- Refactoring existing code
+- Changing API patterns or service layer
+- Adding new dependencies or configuration changes
+- Any work spanning multiple files or significant code changes
 
 ### Component Development Checklist
 

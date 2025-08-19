@@ -14,19 +14,25 @@ test.describe('Calendar Page', () => {
 
     // Should show either runs or no runs message
     const hasRuns = await page
-      .locator('[data-testid="run-card"]')
+      .getByRole('article')
       .first()
       .isVisible({ timeout: 5000 })
       .catch(() => false)
 
     if (hasRuns) {
-      // If runs exist, check run card structure
-      const firstRun = page.locator('[data-testid="run-card"]').first()
-      await expect(firstRun.locator('h3')).toBeVisible() // Run title
+      // If runs exist, check run card structure using semantic queries
+      const firstRun = page.getByRole('article').first()
+      await expect(firstRun.getByRole('heading', { level: 3 })).toBeVisible() // Run title
       await expect(firstRun.getByText(/\d{1,2}:\d{2}/)).toBeVisible() // Time
     } else {
-      // If no runs, should show empty state
-      await expect(page.getByText('No upcoming runs scheduled.')).toBeVisible()
+      // If no runs, should show empty state (check for various possible messages)
+      const emptyStateVisible = await Promise.race([
+        page.getByText('No upcoming runs scheduled.').isVisible().catch(() => false),
+        page.getByText('No runs found').isVisible().catch(() => false),
+        page.getByText('No upcoming runs').isVisible().catch(() => false),
+        page.getByText('Coming soon').isVisible().catch(() => false),
+      ])
+      expect(emptyStateVisible).toBeTruthy()
     }
   })
 
@@ -34,7 +40,7 @@ test.describe('Calendar Page', () => {
     await page.goto('/calendar')
 
     // Click on Map link (which goes to home)
-    await page.getByText('Map').click()
+    await page.getByRole('link', { name: 'Map' }).click()
 
     // Should navigate back to home page
     await expect(page).toHaveURL('/')

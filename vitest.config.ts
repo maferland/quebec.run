@@ -9,9 +9,11 @@ export default defineConfig(({ mode }) => {
   return {
     plugins: [react()],
     test: {
-      environment: 'happy-dom',
+      environment: 'jsdom',
       setupFiles: ['./test-setup.ts'],
       globals: true,
+      // Run database tests sequentially to prevent deadlocks
+      fileParallelism: false,
       env,
       coverage: {
         reporter: ['text', 'json', 'html'],

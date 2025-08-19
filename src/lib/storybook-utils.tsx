@@ -25,11 +25,15 @@ export const mockSessions = {
 }
 
 // Reusable session decorators
-export const withSession = (session: Session | null | undefined) => (Story: any) => (
-  <SessionProvider session={session}>
-    <Story />
-  </SessionProvider>
-)
+export const withSession = (session: Session | null | undefined) => {
+  const SessionDecorator = (Story: React.ComponentType) => (
+    <SessionProvider session={session}>
+      <Story />
+    </SessionProvider>
+  )
+  SessionDecorator.displayName = 'SessionDecorator'
+  return SessionDecorator
+}
 
 export const withLoggedOutSession = withSession(null)
 export const withLoadingSession = withSession(undefined)

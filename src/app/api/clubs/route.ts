@@ -1,15 +1,13 @@
-import { NextRequest } from 'next/server'
-import { getAllClubs, createClub } from '@/lib/services/clubs'
-import { getQueryParams, withErrorHandler } from '@/lib/route-helpers'
+import { withAuth, withPublic } from '@/lib/api-middleware'
+import { clubCreateSchema, clubsQuerySchema } from '@/lib/schemas'
+import { createClub, getAllClubs } from '@/lib/services/clubs'
 
-export const GET = withErrorHandler(async (request: NextRequest) => {
-  const queryData = getQueryParams(request)
-  const clubs = await getAllClubs(queryData)
+export const GET = withPublic(clubsQuerySchema)(async (data) => {
+  const clubs = await getAllClubs({ data })
   return Response.json(clubs)
 })
 
-export const POST = withErrorHandler(async (request: NextRequest) => {
-  const body = await request.json()
-  const club = await createClub(body)
+export const POST = withAuth(clubCreateSchema)(async ({ user, data }) => {
+  const club = await createClub({ user, data })
   return Response.json(club, { status: 201 })
 })
