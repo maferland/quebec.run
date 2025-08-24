@@ -9,14 +9,14 @@ export const mockSessions = {
     email: 'john@example.com',
     isAdmin: false,
   } as Session['user'],
-  
+
   admin: {
     id: 'admin-123',
     name: 'Admin User',
     email: 'admin@example.com',
     isAdmin: true,
   } as Session['user'],
-  
+
   userWithoutName: {
     id: 'user-456',
     email: 'jane@example.com',

@@ -1,7 +1,7 @@
 'use client'
 
 import { useClubs } from '@/lib/hooks/use-clubs'
-import { format } from 'date-fns'
+import { ClubCard } from '@/components/clubs/club-card'
 
 export default function Home() {
   const { data: clubs, isLoading } = useClubs()
@@ -27,41 +27,9 @@ export default function Home() {
             <p className="text-gray-500 text-lg">Loading clubs...</p>
           </div>
         ) : (
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid md:grid-cols-2 gap-6">
             {clubs?.map((club) => (
-              <div key={club.id} className="bg-white p-6 rounded-lg shadow-md">
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                  {club.name}
-                </h3>
-                <p className="text-gray-600 mb-3">{club.description}</p>
-                <p className="text-sm text-gray-500 mb-4">{club.address}</p>
-
-                {club.upcomingRuns && club.upcomingRuns.length > 0 && (
-                  <div className="border-t pt-3">
-                    <h4 className="font-medium text-gray-900 mb-2">
-                      Upcoming runs:
-                    </h4>
-                    {club.upcomingRuns.map((run) => (
-                      <div key={run.id} className="text-sm text-gray-600 mb-1">
-                        <strong>{run.title}</strong> -{' '}
-                        {format(new Date(run.date), 'MMM dd, yyyy')} at{' '}
-                        {run.time}
-                      </div>
-                    ))}
-                  </div>
-                )}
-
-                {club.website && (
-                  <a
-                    href={club.website}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-block mt-3 text-blue-600 hover:text-blue-800 text-sm"
-                  >
-                    Visit website →
-                  </a>
-                )}
-              </div>
+              <ClubCard key={club.id} club={club} />
             ))}
           </div>
         )}

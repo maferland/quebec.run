@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { env } from './env'
 import { execSync } from 'child_process'
+import { createSlug } from './utils/slug'
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -76,19 +77,25 @@ export async function seedTestData() {
   const testClub = await testPrisma.club.create({
     data: {
       name: 'Test Running Club',
+      slug: createSlug('Test Running Club'),
       description: 'A club for testing purposes',
-      address: '123 Test Street, Quebec City',
       website: 'https://test-club.com',
-      createdBy: testUser.id,
+      ownerId: testUser.id,
     },
   })
 
-  // Seed test runs
-  await testPrisma.run.create({
+  // Seed test events with upcoming dates
+  const tomorrow = new Date()
+  tomorrow.setDate(tomorrow.getDate() + 1)
+
+  const dayAfterTomorrow = new Date()
+  dayAfterTomorrow.setDate(dayAfterTomorrow.getDate() + 2)
+
+  await testPrisma.event.create({
     data: {
       title: 'Morning Test Run',
       description: 'A test run for the morning',
-      date: new Date('2025-12-25'),
+      date: tomorrow,
       time: '07:00',
       address: '456 Run Street, Quebec City',
       distance: '5km',
@@ -97,11 +104,11 @@ export async function seedTestData() {
     },
   })
 
-  await testPrisma.run.create({
+  await testPrisma.event.create({
     data: {
       title: 'Evening Test Run',
       description: 'A test run for the evening',
-      date: new Date('2025-12-26'),
+      date: dayAfterTomorrow,
       time: '18:00',
       address: '789 Jog Avenue, Quebec City',
       distance: '10km',

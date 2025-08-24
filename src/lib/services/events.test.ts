@@ -1,25 +1,25 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
-import { getAllRuns, createRun } from './runs'
+import { getAllEvents, createEvent } from './events'
 
-describe('Runs Service Integration Tests', () => {
+describe('Events Service Integration Tests', () => {
   let testUserId: string
-  
+
   beforeEach(async () => {
     await seedTestData()
     // Get the user ID from the created test data
     const testUser = await testPrisma.user.findFirst()
     testUserId = testUser!.id
   })
-  
+
   afterEach(async () => {
     await teardownTestData()
   })
 
-  describe('getAllRuns', () => {
+  describe('getAllEvents', () => {
     it('returns all runs with pagination', async () => {
-      const result = await getAllRuns({ data: { limit: 10, offset: 0 } })
-      
+      const result = await getAllEvents({ data: { limit: 10, offset: 0 } })
+
       expect(result).toBeDefined()
       expect(Array.isArray(result)).toBe(true)
       expect(result.length).toBeGreaterThan(0)
@@ -33,23 +33,23 @@ describe('Runs Service Integration Tests', () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
-      const result = await getAllRuns({ data: { clubId: testClub.id } })
-      
+      const result = await getAllEvents({ data: { clubId: testClub.id } })
+
       expect(result).toBeDefined()
       expect(Array.isArray(result)).toBe(true)
-      result.forEach(run => {
+      result.forEach((run) => {
         expect(run.clubId).toBe(testClub.id)
       })
     })
 
     it('respects limit parameter', async () => {
-      const result = await getAllRuns({ data: { limit: 1, offset: 0 } })
+      const result = await getAllEvents({ data: { limit: 1, offset: 0 } })
       expect(result.length).toBe(1)
     })
 
     it('orders runs by date ascending', async () => {
-      const result = await getAllRuns({ data: { limit: 10, offset: 0 } })
-      
+      const result = await getAllEvents({ data: { limit: 10, offset: 0 } })
+
       if (result.length > 1) {
         for (let i = 1; i < result.length; i++) {
           const prevDate = new Date(result[i - 1].date)
@@ -60,11 +60,11 @@ describe('Runs Service Integration Tests', () => {
     })
   })
 
-  describe('createRun', () => {
+  describe('createEvent', () => {
     it('creates a new run', async () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
-      
+
       if (!testClub) {
         throw new Error('No test club found - seeding may have failed')
       }
@@ -80,8 +80,11 @@ describe('Runs Service Integration Tests', () => {
         clubId: testClub.id,
       }
 
-      const result = await createRun({ user: { id: testUserId, isAdmin: false }, data: runData })
-      
+      const result = await createEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: runData,
+      })
+
       expect(result).toBeDefined()
       expect(result.title).toBe(runData.title)
       expect(result.description).toBe(runData.description)
@@ -95,13 +98,13 @@ describe('Runs Service Integration Tests', () => {
       expect(result.club.name).toBe(testClub.name)
 
       // Verify it was actually created in database
-      const dbRun = await testPrisma.run.findUnique({
+      const dbEvent = await testPrisma.event.findUnique({
         where: { id: result.id },
         include: { club: true },
       })
-      expect(dbRun).toBeDefined()
-      expect(dbRun?.title).toBe(runData.title)
-      expect(dbRun?.club.id).toBe(testClub.id)
+      assert(dbEvent)
+      expect(dbEvent.title).toBe(runData.title)
+      expect(dbEvent.club.id).toBe(testClub.id)
     })
 
     it('includes club information in response', async () => {
@@ -116,8 +119,11 @@ describe('Runs Service Integration Tests', () => {
         clubId: testClub.id,
       }
 
-      const result = await createRun({ user: { id: testUserId, isAdmin: false }, data: runData })
-      
+      const result = await createEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: runData,
+      })
+
       expect(result.club).toBeDefined()
       expect(result.club.id).toBe(testClub.id)
       expect(result.club.name).toBe(testClub.name)

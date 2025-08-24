@@ -29,6 +29,8 @@ export default defineConfig(({ mode }) => {
           '.next/',
           'coverage/',
           '**/*.config.{js,ts,mjs}',
+          // Exclude only API route files - these are integration tested
+          'src/app/api/**/route.ts',
         ],
         thresholds: {
           global: {

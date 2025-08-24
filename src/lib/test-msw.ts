@@ -1,10 +1,14 @@
 import { http, HttpResponse } from 'msw'
 
 // Helper to safely parse request body
-async function parseRequestBody(request: Request): Promise<Record<string, unknown>> {
+async function parseRequestBody(
+  request: Request
+): Promise<Record<string, unknown>> {
   try {
     const body = await request.json()
-    return typeof body === 'object' && body !== null ? body as Record<string, unknown> : {}
+    return typeof body === 'object' && body !== null
+      ? (body as Record<string, unknown>)
+      : {}
   } catch {
     return {}
   }
@@ -12,7 +16,7 @@ async function parseRequestBody(request: Request): Promise<Record<string, unknow
 
 // Helper to create mock responses with consistent structure
 function createMockResponse<T extends Record<string, unknown>>(
-  baseData: T, 
+  baseData: T,
   overrides: Record<string, unknown> = {}
 ) {
   return {
@@ -29,34 +33,44 @@ export const mockClubs = [
   {
     id: 'club-1',
     name: 'Morning Runners',
+    slug: 'morning-runners',
     description: 'Early morning running group',
-    address: '123 Main St, Quebec City',
     website: 'https://morningrunners.com',
     instagram: null,
     facebook: null,
+    language: null,
+    stravaClubId: null,
+    stravaSlug: null,
+    isManual: true,
+    lastSynced: null,
     createdAt: new Date('2024-01-01'),
     updatedAt: new Date('2024-01-01'),
-    createdBy: 'user-1',
-    upcomingRuns: [],
+    ownerId: 'user-1',
+    events: [],
   },
   {
     id: 'club-2',
     name: 'Evening Runners',
+    slug: 'evening-runners',
     description: 'Evening running group',
-    address: '456 Oak St, Quebec City',
     website: null,
     instagram: '@eveningrunners',
     facebook: null,
+    language: null,
+    stravaClubId: null,
+    stravaSlug: null,
+    isManual: true,
+    lastSynced: null,
     createdAt: new Date('2024-01-02'),
     updatedAt: new Date('2024-01-02'),
-    createdBy: 'user-2',
-    upcomingRuns: [],
+    ownerId: 'user-2',
+    events: [],
   },
 ]
 
-export const mockRuns = [
+export const mockEvents = [
   {
-    id: 'run-1',
+    id: 'event-1',
     title: 'Morning 5K',
     description: 'Easy 5K run',
     date: new Date('2025-01-01'),
@@ -73,7 +87,7 @@ export const mockRuns = [
     },
   },
   {
-    id: 'run-2',
+    id: 'event-2',
     title: 'Evening 10K',
     description: 'Tempo 10K run',
     date: new Date('2025-01-02'),
@@ -100,7 +114,10 @@ export const handlers = [
 
   http.post('/api/clubs', async ({ request }) => {
     const newClub = await parseRequestBody(request)
-    const club = createMockResponse({ id: 'club-new', createdBy: 'user-1' }, newClub)
+    const club = createMockResponse(
+      { id: 'club-new', ownerId: 'user-1', slug: 'test-club' },
+      newClub
+    )
     return HttpResponse.json(club, { status: 201 })
   }),
 
@@ -130,24 +147,24 @@ export const handlers = [
     return HttpResponse.json({ success: true })
   }),
 
-  // Runs API
-  http.get('/api/runs', () => {
-    return HttpResponse.json(mockRuns)
+  // Events API
+  http.get('/api/events', () => {
+    return HttpResponse.json(mockEvents)
   }),
 
-  http.post('/api/runs', async ({ request }) => {
-    const newRun = await parseRequestBody(request)
-    const run = createMockResponse(
-      { 
-        id: 'run-new',
+  http.post('/api/events', async ({ request }) => {
+    const newEvent = await parseRequestBody(request)
+    const event = createMockResponse(
+      {
+        id: 'event-new',
         club: {
-          id: newRun.clubId as string || 'default-club',
+          id: (newEvent.clubId as string) || 'default-club',
           name: 'Test Club',
         },
-      }, 
-      newRun
+      },
+      newEvent
     )
-    return HttpResponse.json(run, { status: 201 })
+    return HttpResponse.json(event, { status: 201 })
   }),
 ]
 

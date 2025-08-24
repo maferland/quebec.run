@@ -1,9 +1,16 @@
 import { withAuth, withPublic } from '@/lib/api-middleware'
-import { clubDeleteSchema, clubIdSchema, clubUpdateSchema } from '@/lib/schemas'
-import { deleteClub, getClubById, updateClubById } from '@/lib/services/clubs'
+import {
+  clubDeleteSchema,
+  clubSlugSchema,
+  clubUpdateSchema,
+} from '@/lib/schemas'
+import { deleteClub, getClubBySlug, updateClubById } from '@/lib/services/clubs'
 
-export const GET = withPublic(clubIdSchema)(async (data) => {
-  const club = await getClubById({ data })
+export const GET = withPublic(clubSlugSchema)(async (data) => {
+  const club = await getClubBySlug(data)
+  if (!club) {
+    return Response.json({ error: 'Club not found' }, { status: 404 })
+  }
   return Response.json(club)
 })
 

@@ -1,10 +1,10 @@
 import React from 'react'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
-import { 
-  render as originalRender, 
+import {
+  render as originalRender,
   renderHook as originalRenderHook,
   RenderOptions,
-  RenderHookOptions
+  RenderHookOptions,
 } from '@testing-library/react'
 import type { ReactElement } from 'react'
 
@@ -26,11 +26,9 @@ function createTestQueryClient() {
 // Test wrapper component
 function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient()
-  
+
   return (
-    <QueryClientProvider client={queryClient}>
-      {children}
-    </QueryClientProvider>
+    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
   )
 }
 TestWrapper.displayName = 'TestWrapper'

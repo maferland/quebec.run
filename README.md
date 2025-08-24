@@ -1,7 +1,45 @@
+<div align="center">
+<h1>🏃‍♂️ quebec.run</h1>
+
+<p>Quebec city running hub</p>
+</div>
+
+---
+
 # Courses - Quebec Run Clubs
 
 A modern web application for discovering and managing run clubs in Quebec City.
 Built with Next.js 14, TypeScript, and Tailwind CSS.
+
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+**Table of Contents** _generated with [DocToc](https://github.com/thlorenz/doctoc)_
+
+- [Courses - Quebec Run Clubs](#courses---quebec-run-clubs)
+  - [🏃‍♂️ Features](#%E2%80%8D-features)
+  - [🚀 Tech Stack](#-tech-stack)
+  - [📋 Prerequisites](#-prerequisites)
+  - [🛠️ Installation](#-installation)
+  - [🗂️ Project Structure](#-project-structure)
+  - [🔧 Development](#-development)
+    - [Available Scripts](#available-scripts)
+    - [Database Management](#database-management)
+    - [Email Testing](#email-testing)
+  - [🚀 Deployment](#-deployment)
+    - [Environment Setup](#environment-setup)
+    - [Deployment Platforms](#deployment-platforms)
+  - [🤝 Contributing](#-contributing)
+  - [📝 API Reference](#-api-reference)
+    - [Club Endpoints](#club-endpoints)
+    - [Run Endpoints](#run-endpoints)
+  - [🔒 Security](#-security)
+  - [🗺️ Roadmap](#-roadmap)
+  - [📄 License](#-license)
+  - [🙏 Acknowledgments](#-acknowledgments)
+  - [📞 Support](#-support)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## 🏃‍♂️ Features
 

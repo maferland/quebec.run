@@ -8,4 +8,3 @@ export function getQueryParams(request: NextRequest) {
   })
   return params
 }
-

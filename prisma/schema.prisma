@@ -72,35 +72,95 @@ model VerificationToken {
 model Club {
   id           String   @id @default(cuid())
   name         String
+  slug         String   @unique
   description  String?
-  address      String
   website      String?
   instagram    String?
   facebook     String?
+  language     String?  // 'fr', 'en', or 'both'
+  
+  // Strava integration
+  stravaClubId String?  @unique
+  stravaSlug   String?
+  isManual     Boolean  @default(true)
+  lastSynced   DateTime?
+  
+  // Metadata
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
+  ownerId      String
   
-  createdBy    String
-  user         User   @relation(fields: [createdBy], references: [id])
-  runs         Run[]
+  // Relations
+  owner           User             @relation(fields: [ownerId], references: [id])
+  events          Event[]
+  recurringEvents RecurringEvent[]
   
   @@map("clubs")
 }
 
-model Run {
+model RecurringEvent {
   id          String   @id @default(cuid())
   title       String
   description String?
-  date        DateTime
-  time        String
-  address     String
+  
+  // Location
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  
+  // Event details
   distance    String?
   pace        String?
+  
+  // Schedule
+  schedulePattern String
+  timezone        String  @default("America/Toronto")
+  
+  // Generation control
+  isActive        Boolean   @default(true)
+  generateUntil   DateTime?
+  
+  // Metadata
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
-  
   clubId      String
-  club        Club   @relation(fields: [clubId], references: [id], onDelete: Cascade)
   
-  @@map("runs")
+  // Relations
+  club            Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  generatedEvents Event[]
+  
+  @@map("recurring_events")
+}
+
+model Event {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  
+  // Location
+  address     String?
+  latitude    Float?
+  longitude   Float?
+  
+  // Event timing
+  date        DateTime
+  time        String
+  
+  // Event details
+  distance    String?
+  pace        String?
+  
+  // Metadata
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  clubId      String
+  
+  // Recurring event link
+  recurringEventId String?
+  
+  // Relations
+  club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
+  
+  @@map("events")
 }
