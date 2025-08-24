@@ -27,10 +27,22 @@ test.describe('Calendar Page', () => {
     } else {
       // If no runs, should show empty state (check for various possible messages)
       const emptyStateVisible = await Promise.race([
-        page.getByText('No upcoming runs scheduled.').isVisible().catch(() => false),
-        page.getByText('No runs found').isVisible().catch(() => false),
-        page.getByText('No upcoming runs').isVisible().catch(() => false),
-        page.getByText('Coming soon').isVisible().catch(() => false),
+        page
+          .getByText('No upcoming runs scheduled.')
+          .isVisible()
+          .catch(() => false),
+        page
+          .getByText('No runs found')
+          .isVisible()
+          .catch(() => false),
+        page
+          .getByText('No upcoming runs')
+          .isVisible()
+          .catch(() => false),
+        page
+          .getByText('Coming soon')
+          .isVisible()
+          .catch(() => false),
       ])
       expect(emptyStateVisible).toBeTruthy()
     }

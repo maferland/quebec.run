@@ -21,12 +21,18 @@ test.describe('Home Page', () => {
     await expect(page.getByText('Featured Run Clubs')).toBeVisible()
 
     // Wait for clubs content to load using semantic queries
-    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({ timeout: 10000 })
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({
+      timeout: 10000,
+    })
 
     // Find the first club article and validate its content
     const firstClubCard = page.getByRole('article').first()
-    await expect(firstClubCard.getByRole('heading', { level: 3 })).toContainText(/\w+/) // Has club name
-    await expect(firstClubCard.getByText(/Quebec|Running|Club|Run/)).toBeVisible() // Has relevant content
+    await expect(
+      firstClubCard.getByRole('heading', { level: 3 })
+    ).toContainText(/\w+/) // Has club name
+    await expect(
+      firstClubCard.getByText(/Quebec|Running|Club|Run/)
+    ).toBeVisible() // Has relevant content
   })
 
   test('navigates to calendar page', async ({ page }) => {

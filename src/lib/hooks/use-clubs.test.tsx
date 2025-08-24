@@ -1,18 +1,21 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@/lib/test-utils'
 import { setupMSW } from '@/lib/test-msw-setup'
-import { useClubs, useClub, useCreateClub, useUpdateClub, useDeleteClub } from './use-clubs'
+import {
+  useClubs,
+  useClub,
+  useCreateClub,
+  useUpdateClub,
+  useDeleteClub,
+} from './use-clubs'
 
 // Setup MSW
 setupMSW()
 
-
 describe('useClubs hook', () => {
-
   describe('useClubs', () => {
     it('fetches clubs successfully', async () => {
-      const { result } = renderHook(() => useClubs(), {
-        })
+      const { result } = renderHook(() => useClubs(), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -23,12 +26,11 @@ describe('useClubs hook', () => {
       expect(result.current.data!.length).toBeGreaterThan(0)
       expect(result.current.data![0]).toHaveProperty('id')
       expect(result.current.data![0]).toHaveProperty('name')
-      expect(result.current.data![0]).toHaveProperty('upcomingRuns')
+      expect(result.current.data![0]).toHaveProperty('events')
     })
 
     it('handles query parameters', async () => {
-      const { result } = renderHook(() => useClubs({ limit: 5, offset: 0 }), {
-        })
+      const { result } = renderHook(() => useClubs({ limit: 5, offset: 0 }), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -49,8 +51,7 @@ describe('useClubs hook', () => {
         })
       )
 
-      const { result } = renderHook(() => useClubs(), {
-        })
+      const { result } = renderHook(() => useClubs(), {})
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
@@ -62,8 +63,7 @@ describe('useClubs hook', () => {
 
   describe('useClub', () => {
     it('fetches a specific club successfully', async () => {
-      const { result } = renderHook(() => useClub('club-1'), {
-        })
+      const { result } = renderHook(() => useClub('club-1'), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -72,20 +72,18 @@ describe('useClubs hook', () => {
       expect(result.current.data).toBeDefined()
       expect(result.current.data!.id).toBe('club-1')
       expect(result.current.data!.name).toBe('Morning Runners')
-      expect(result.current.data!).toHaveProperty('upcomingRuns')
+      expect(result.current.data!).toHaveProperty('events')
     })
 
     it('does not fetch when id is empty', () => {
-      const { result } = renderHook(() => useClub(''), {
-        })
+      const { result } = renderHook(() => useClub(''), {})
 
       expect(result.current.status).toBe('pending')
       expect(result.current.fetchStatus).toBe('idle')
     })
 
     it('handles 404 errors', async () => {
-      const { result } = renderHook(() => useClub('non-existent'), {
-        })
+      const { result } = renderHook(() => useClub('non-existent'), {})
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
@@ -97,8 +95,7 @@ describe('useClubs hook', () => {
 
   describe('useCreateClub', () => {
     it('creates a club successfully', async () => {
-      const { result } = renderHook(() => useCreateClub(), {
-        })
+      const { result } = renderHook(() => useCreateClub(), {})
 
       const clubData = {
         name: 'Test Club',
@@ -123,12 +120,14 @@ describe('useClubs hook', () => {
 
       server.use(
         http.post('/api/clubs', () => {
-          return HttpResponse.json({ error: 'Validation error' }, { status: 400 })
+          return HttpResponse.json(
+            { error: 'Validation error' },
+            { status: 400 }
+          )
         })
       )
 
-      const { result } = renderHook(() => useCreateClub(), {
-        })
+      const { result } = renderHook(() => useCreateClub(), {})
 
       const clubData = {
         name: 'Test Club',
@@ -147,8 +146,7 @@ describe('useClubs hook', () => {
 
   describe('useUpdateClub', () => {
     it('updates a club successfully', async () => {
-      const { result } = renderHook(() => useUpdateClub(), {
-        })
+      const { result } = renderHook(() => useUpdateClub(), {})
 
       const updateData = {
         id: 'club-1',
@@ -172,8 +170,7 @@ describe('useClubs hook', () => {
 
   describe('useDeleteClub', () => {
     it('deletes a club successfully', async () => {
-      const { result } = renderHook(() => useDeleteClub(), {
-        })
+      const { result } = renderHook(() => useDeleteClub(), {})
 
       result.current.mutate('club-1')
 

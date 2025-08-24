@@ -1,17 +1,65 @@
-import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest'
-import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
-import { getAllClubs, createClub, updateClub, deleteClub, getClubById } from './clubs'
+import { seedTestData, teardownTestData, testPrisma } from '@/lib/test-seed'
+import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest'
+import {
+  createClub,
+  deleteClub,
+  getAllClubs,
+  getClubById,
+  updateClub,
+} from './clubs'
+
+// Test helpers
+const expectValidClub = (overrides = {}) =>
+  expect.objectContaining({
+    id: expect.stringMatching(/^c[a-z0-9]+$/), // CUID pattern
+    name: expect.any(String),
+    slug: expect.any(String),
+    description: expect.any(String),
+    ...overrides,
+  })
+
+const expectValidEvent = (overrides = {}) =>
+  expect.objectContaining({
+    id: expect.stringMatching(/^c[a-z0-9]+$/), // CUID pattern
+    title: expect.any(String),
+    date: expect.any(Date),
+    time: expect.any(String),
+    distance: expect.any(String),
+    pace: expect.any(String),
+    ...overrides,
+  })
+
+const expectValidClubWithEvents = (expectedEventCount = 0, overrides = {}) =>
+  expectValidClub({
+    events:
+      expectedEventCount > 0
+        ? expect.arrayContaining([expectValidEvent()])
+        : expect.arrayContaining([]),
+    ...overrides,
+  })
+
+const expectValidClubWithUpcomingEvents = (
+  expectedEventCount = 0,
+  overrides = {}
+) =>
+  expectValidClub({
+    upcomingEvents:
+      expectedEventCount > 0
+        ? expect.arrayContaining([expectValidEvent()])
+        : expect.arrayContaining([]),
+    ...overrides,
+  })
 
 describe('Clubs Service Integration Tests', () => {
   let testUserId: string
-  
+
   beforeEach(async () => {
     await seedTestData()
     // Get the user ID from the created test data
     const testUser = await testPrisma.user.findFirst()
     testUserId = testUser!.id
   })
-  
+
   afterEach(async () => {
     await teardownTestData()
   })
@@ -19,13 +67,15 @@ describe('Clubs Service Integration Tests', () => {
   describe('getAllClubs', () => {
     it('returns all clubs with pagination', async () => {
       const result = await getAllClubs({ data: { limit: 10, offset: 0 } })
-      
-      expect(result).toBeDefined()
-      expect(Array.isArray(result)).toBe(true)
-      expect(result.length).toBeGreaterThan(0)
-      expect(result[0]).toHaveProperty('id')
-      expect(result[0]).toHaveProperty('name')
-      expect(result[0]).toHaveProperty('upcomingRuns')
+
+      expect(result).toHaveLength(1)
+      expect(result[0]).toEqual(
+        expectValidClubWithEvents(2, {
+          name: 'Test Running Club',
+          slug: 'test-running-club',
+          description: 'A club for testing purposes',
+        })
+      )
     })
 
     it('respects limit parameter', async () => {
@@ -33,20 +83,20 @@ describe('Clubs Service Integration Tests', () => {
       await testPrisma.club.create({
         data: {
           name: 'Extra Club 1',
-          address: '111 Extra St',
-          createdBy: testUserId,
+          slug: 'extra-club-1',
+          ownerId: testUserId,
         },
       })
       await testPrisma.club.create({
         data: {
-          name: 'Extra Club 2', 
-          address: '222 Extra St',
-          createdBy: testUserId,
+          name: 'Extra Club 2',
+          slug: 'extra-club-2',
+          ownerId: testUserId,
         },
       })
 
       const result = await getAllClubs({ data: { limit: 1, offset: 0 } })
-      expect(result.length).toBe(1)
+      expect(result).toHaveLength(1)
     })
   })
 
@@ -56,16 +106,20 @@ describe('Clubs Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const result = await getClubById({ data: { id: testClub.id } })
-      
-      assert(result)
-      expect(result.id).toBe(testClub.id)
-      expect(result.name).toBe(testClub.name)
-      expect(result).toHaveProperty('upcomingRuns')
-      expect(Array.isArray(result.upcomingRuns)).toBe(true)
+
+      expect(result).toEqual(
+        expectValidClubWithUpcomingEvents(2, {
+          id: testClub.id,
+          name: testClub.name,
+          slug: testClub.slug,
+        })
+      )
     })
 
     it('throws error for non-existent club', async () => {
-      await expect(getClubById({ data: { id: 'non-existent' } })).rejects.toThrow('Club not found')
+      await expect(
+        getClubById({ data: { id: 'non-existent' } })
+      ).rejects.toThrow('Club not found')
     })
   })
 
@@ -74,19 +128,17 @@ describe('Clubs Service Integration Tests', () => {
       const clubData = {
         name: 'Integration Test Club',
         description: 'A club created in integration test',
-        address: '123 Integration St, Quebec City',
         website: 'https://integration-test.com',
       }
 
       const mockUser = { id: testUserId, isAdmin: false }
       const result = await createClub({ user: mockUser, data: clubData })
-      
+
       expect(result).toBeDefined()
       expect(result.name).toBe(clubData.name)
       expect(result.description).toBe(clubData.description)
-      expect(result.address).toBe(clubData.address)
       expect(result.website).toBe(clubData.website)
-      expect(result.createdBy).toBe(mockUser.id)
+      expect(result.ownerId).toBe(mockUser.id)
       expect(result.id).toBeDefined()
 
       // Verify it was actually created in database
@@ -110,7 +162,7 @@ describe('Clubs Service Integration Tests', () => {
       }
 
       const result = await updateClub({ data: updateData })
-      
+
       assert(result)
       expect(result.id).toBe(testClub.id)
       expect(result.name).toBe(updateData.name)
@@ -130,9 +182,12 @@ describe('Clubs Service Integration Tests', () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
-      const mockUser = { id: testClub.createdBy, isAdmin: false }
-      const result = await deleteClub({ user: mockUser, data: { id: testClub.id } })
-      
+      const mockUser = { id: testClub.ownerId, isAdmin: false }
+      const result = await deleteClub({
+        user: mockUser,
+        data: { id: testClub.id },
+      })
+
       assert(result)
       expect(result.id).toBe(testClub.id)
 
@@ -148,7 +203,7 @@ describe('Clubs Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const mockUser = { id: 'different-user', isAdmin: false }
-      
+
       await expect(
         deleteClub({ user: mockUser, data: { id: testClub.id } })
       ).rejects.toThrow('Unauthorized to delete this club')
@@ -159,8 +214,11 @@ describe('Clubs Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const mockAdmin = { id: 'admin-user', isAdmin: true }
-      const result = await deleteClub({ user: mockAdmin, data: { id: testClub.id } })
-      
+      const result = await deleteClub({
+        user: mockAdmin,
+        data: { id: testClub.id },
+      })
+
       assert(result)
       expect(result.id).toBe(testClub.id)
 

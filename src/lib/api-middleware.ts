@@ -13,9 +13,11 @@ function withErrorHandler<T extends unknown[]>(
     } catch (error) {
       console.error('API Error:', error)
 
+      // Handle authentication errors
       if (
         error instanceof Error &&
-        error.message === 'Authentication required'
+        (error.message === 'Authentication required' ||
+          error.message.includes('headers` was called outside a request scope'))
       ) {
         return Response.json(
           { error: 'Authentication required' },
@@ -23,9 +25,18 @@ function withErrorHandler<T extends unknown[]>(
         )
       }
 
+      // Handle Zod validation errors
+      if (error instanceof z.ZodError) {
+        return Response.json(
+          { error: 'Validation failed: ' + error.message },
+          { status: 400 }
+        )
+      }
+
+      // Handle other errors
       return Response.json(
         { error: error instanceof Error ? error.message : 'Unknown error' },
-        { status: 400 }
+        { status: 500 }
       )
     }
   }
@@ -62,31 +73,48 @@ async function getParams<T extends z.ZodType>(
 // Simplified public routes handler
 export function withPublic<T extends z.ZodType>(schema: T) {
   return (fn: (data: z.infer<T>) => Response | Promise<Response>) => {
-    return withErrorHandler(async (request: Request, context?: { params?: Record<string, string> }): Promise<Response> => {
-      const data = await getParams(request, context, schema)
-      return await fn(data)
-    })
+    return withErrorHandler(
+      async (
+        request: Request,
+        context?: { params?: Record<string, string> }
+      ): Promise<Response> => {
+        const data = await getParams(request, context, schema)
+        return await fn(data)
+      }
+    )
   }
 }
 
 // Simplified auth routes handler
 export function withAuth<T extends z.ZodType>(schema: T) {
-  return (fn: (args: { user: ServiceUser; data: z.infer<T> }) => Response | Promise<Response>) => {
-    return withErrorHandler(async (request: Request, context?: { params?: Record<string, string> }): Promise<Response> => {
-      const session = await getServerSession(authOptions)
-      
-      if (!session?.user?.id) {
-        return Response.json({ error: 'Authentication required' }, { status: 401 })
-      }
+  return (
+    fn: (args: {
+      user: ServiceUser
+      data: z.infer<T>
+    }) => Response | Promise<Response>
+  ) => {
+    return withErrorHandler(
+      async (
+        request: Request,
+        context?: { params?: Record<string, string> }
+      ): Promise<Response> => {
+        const session = await getServerSession(authOptions)
 
-      const user: ServiceUser = {
-        id: session.user.id,
-        isAdmin: session.user.isAdmin || false,
-      }
+        if (!session?.user?.id) {
+          return Response.json(
+            { error: 'Authentication required' },
+            { status: 401 }
+          )
+        }
 
-      const data = await getParams(request, context, schema)
-      return await fn({ user, data })
-    })
+        const user: ServiceUser = {
+          id: session.user.id,
+          isAdmin: session.user.isAdmin || false,
+        }
+
+        const data = await getParams(request, context, schema)
+        return await fn({ user, data })
+      }
+    )
   }
 }
-

@@ -1,3 +1,47 @@
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+
+**Table of Contents** _generated with [DocToc](https://github.com/thlorenz/doctoc)_
+
+- [Claude Development Guidelines](#claude-development-guidelines)
+  - [General Principles](#general-principles)
+    - [Code Changes Must Be Tested](#code-changes-must-be-tested)
+    - [Renaming and Refactoring](#renaming-and-refactoring)
+    - [File Organization](#file-organization)
+  - [Tech Stack Guidelines](#tech-stack-guidelines)
+    - [Next.js 13+ App Router](#nextjs-13-app-router)
+    - [REST API + React Query](#rest-api--react-query)
+    - [Prisma + PostgreSQL](#prisma--postgresql)
+      - [⚠️ CRITICAL: Prevent N+1 Query Problems](#-critical-prevent-n1-query-problems)
+    - [Zod Validation](#zod-validation)
+    - [NextAuth.js](#nextauthjs)
+    - [TypeScript Best Practices](#typescript-best-practices)
+    - [Tailwind CSS](#tailwind-css)
+  - [Code Style & Formatting](#code-style--formatting)
+    - [Component Patterns](#component-patterns)
+    - [Component Design Principles](#component-design-principles)
+    - [Hook Patterns](#hook-patterns)
+    - [Prettier Configuration](#prettier-configuration)
+  - [Testing Guidelines](#testing-guidelines)
+    - [Testing Best Practices](#testing-best-practices)
+    - [E2E Testing with Playwright](#e2e-testing-with-playwright)
+      - [Semantic Queries (Playwright + RTL Style)](#semantic-queries-playwright--rtl-style)
+      - [Content Validation](#content-validation)
+      - [Sequential Flow Testing](#sequential-flow-testing)
+      - [Test Configuration](#test-configuration)
+      - [Scripts Available](#scripts-available)
+    - [Test Requirements](#test-requirements)
+    - [Test Types](#test-types)
+    - [Critical Testing Layers](#critical-testing-layers)
+    - [Database Testing](#database-testing)
+    - [Storybook](#storybook)
+  - [Development Workflow](#development-workflow)
+    - [Before Completing Tasks](#before-completing-tasks)
+    - [Component Development Checklist](#component-development-checklist)
+    - [File Naming Conventions](#file-naming-conventions)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
 # Claude Development Guidelines
 
 ## General Principles
@@ -8,6 +52,13 @@
 - **Tests must be green before completing any task**
 - Run `npm run test -- --coverage` to verify coverage meets 95% threshold
 - Current coverage: **37.83%** - needs significant improvement
+
+### Renaming and Refactoring
+
+- **Be thorough when renaming** - update all references across the entire codebase
+- **Search and replace systematically** - files, imports, variable names, types, schemas, tests, documentation
+- **Update related file names** - services, hooks, API routes, test files
+- **Check for broken imports** after renaming files
 
 ### File Organization
 
@@ -82,13 +133,56 @@
 - **Seed data should be reproducible** and use proper factories
 - **Use CUID for all IDs** - `@default(cuid())` generates collision-resistant, sortable IDs
 - **Never manually set IDs in tests** - let Prisma generate CUIDs to avoid conflicts
+- **NEVER use `prisma db push`** - always create proper migrations with `prisma migrate dev` for schema changes
+- **Ask user to run migrations** - if migration commands fail in non-interactive mode, ask user to run them manually
+- **Use minimal field selection** - Always use `select` with only required fields instead of `include` to minimize data transfer and improve performance
+
+#### ⚠️ CRITICAL: Prevent N+1 Query Problems
+
+**ALWAYS use `include` or `select` to fetch related data in single queries. NEVER loop over results to make additional queries.**
+
+```typescript
+// ❌ NEVER DO THIS - N+1 Query Problem
+const clubs = await prisma.club.findMany()
+const clubsWithEvents = await Promise.all(
+  clubs.map(async (club) => {
+    const events = await prisma.event.findMany({ where: { clubId: club.id } })
+    return { ...club, events }
+  })
+)
+
+// ✅ ALWAYS DO THIS - Single Query with Include
+const clubsWithEvents = await prisma.club.findMany({
+  include: {
+    events: {
+      where: { date: { gte: new Date() } },
+      orderBy: { date: 'asc' },
+    },
+  },
+})
+```
+
+**Review every Prisma query for N+1 patterns before merging.**
 
 ### Zod Validation
 
 - **Define schemas close to usage** or in dedicated schema files
 - **Use Zod inference** for TypeScript types: `type User = z.infer<typeof userSchema>`
+- **Colocate schemas and types** - Export both together to avoid duplication
 - **Validate at API boundaries** - API route inputs, form data, environment variables
 - **Create reusable schemas** for common patterns
+
+```typescript
+// ✅ Good - colocated schema and type
+export const eventIdSchema = z.object({
+  id: z.string().min(1, 'Event ID is required'),
+})
+export type EventId = z.infer<typeof eventIdSchema>
+
+// ❌ Avoid - separated schema and type definitions
+// In one file: export const eventIdSchema = z.object({...})
+// In another file: type EventId = z.infer<typeof eventIdSchema>
+```
 
 ### NextAuth.js
 
@@ -103,7 +197,8 @@
 - **Use strict mode** - `"strict": true` in tsconfig
 - **Prefer type over interface** for simple object types
 - **Use `export type`** for type-only exports
-- **Avoid `any`** - use `unknown` or proper typing
+- **NEVER use `any`** - use `unknown`, proper typing, or specific types
+- **Use `as const` for literal types** - creates readonly literal types instead of widened types
 
 ### Tailwind CSS
 
@@ -129,6 +224,13 @@ export type ButtonProps = {
   children: React.ReactNode
 } & React.ButtonHTMLAttributes<HTMLButtonElement>
 ```
+
+### Component Design Principles
+
+- **UI components should be opinionated** - Provide sensible defaults that work well in most cases
+- **Avoid requiring constant overrides** - If users always override defaults, change the defaults
+- **Design for the 80% use case** - Make common patterns easy, complex patterns possible
+- **Consistent API design** - Use similar prop patterns across components (e.g., `variant`, `as`, `className`)
 
 ### Hook Patterns
 
@@ -216,15 +318,17 @@ await expect(clubCard.getByText(/Quebec|Running|Club/)).toBeVisible()
 // ✅ Good - realistic user flow
 test('user can browse and view club details', async ({ page }) => {
   await page.goto('/')
-  
+
   // Wait for clubs to load
-  await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({ timeout: 10000 })
-  
+  await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({
+    timeout: 10000,
+  })
+
   // Click on first club
   const firstClub = page.getByRole('article').first()
   await expect(firstClub.getByRole('heading')).toContainText(/\w+/)
   await firstClub.getByRole('link', { name: /view|details/i }).click()
-  
+
   // Verify navigation to club details
   await expect(page).toHaveURL(/\/clubs\//)
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
@@ -281,15 +385,25 @@ Missing API route tests caused our recent runtime error - service layer worked b
 
 - **Every component needs a story** unless explicitly discussed
 - **Stories should be colocated** with components
+- **Create one story per variant** - each component variant/state gets its own individual story
 - **Create separate stories for each component state/variant** for better testing and documentation
 - **Use descriptive story names** like `Primary`, `Secondary`, `Disabled`, etc.
 - **Include interactive controls** with argTypes for props exploration
+- **Use correct Storybook imports** - Always import from framework package, never renderer package:
+
+```typescript
+// ✅ Good - use framework package
+import type { Meta, StoryObj } from '@storybook/nextjs'
+
+// ❌ Bad - never use renderer package directly
+import type { Meta, StoryObj } from '@storybook/react'
+```
 
 ## Development Workflow
 
 ### Before Completing Tasks
 
-**MANDATORY: After completing any major body of work, ALWAYS run this checklist:**
+**MANDATORY: After completing ANY of the following, ALWAYS run this checklist:**
 
 1. **Run linter**: `npm run lint` - Fix all ESLint errors before proceeding
 2. **Run TypeScript check**: `npx tsc --noEmit` - Ensure no TypeScript errors
@@ -297,13 +411,17 @@ Missing API route tests caused our recent runtime error - service layer worked b
 4. **Verify 95% coverage threshold** - Ensure coverage meets requirements
 5. **Format code**: `npx prettier --write .` - Apply consistent formatting
 
-**Major body of work includes:**
+**Quality gates are required for:**
 
-- Adding new features or components
-- Refactoring existing code
-- Changing API patterns or service layer
-- Adding new dependencies or configuration changes
-- Any work spanning multiple files or significant code changes
+- **ANY component creation** - new .tsx files with tests and stories
+- **ANY schema changes** - Prisma models, Zod schemas, API types
+- **ANY service layer changes** - business logic, API routes, database queries
+- **ANY hook or utility creation** - reusable logic with tests
+- **Refactoring existing code** - changes to multiple existing files
+- **Bug fixes** - ensure fix works and doesn't break other functionality
+- **Feature completion** - when user says "moving on" or task is done
+
+**NEVER skip quality gates for "small" changes. Component creation, new utilities, and schema changes always require full validation.**
 
 ### Component Development Checklist
 

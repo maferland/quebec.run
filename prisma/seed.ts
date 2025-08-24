@@ -1,94 +1,143 @@
 import { PrismaClient } from '@prisma/client'
+import { createSlug } from '../src/lib/utils/slug'
 
 const prisma = new PrismaClient()
 
 async function main() {
   // Create admin user
   const adminUser = await prisma.user.upsert({
-    where: { email: 'admin@courses.local' },
-    update: {},
+    where: { email: 'me@maferland.com' },
+    update: {
+      isAdmin: true,
+    },
     create: {
-      email: 'admin@courses.local',
+      email: 'me@maferland.com',
       name: 'Admin User',
       isAdmin: true,
     },
   })
 
-  // Create some run clubs in Quebec City
-  const clubs = [
-    {
-      name: 'Club de Course Vieux-Québec',
+  // Create the 6AM Club
+  const sixAmClub = await prisma.club.create({
+    data: {
+      name: '6AM Club',
+      slug: createSlug('6AM Club'),
       description:
-        'Découvrez les rues historiques de Québec en courant avec nous chaque semaine.',
-      address: '1 Place des Canotiers, Québec, QC G1K 4E4',
-      website: 'https://example.com/vieux-quebec',
-      createdBy: adminUser.id,
+        'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
+      language: 'fr',
+      ownerId: adminUser.id,
+    },
+  })
+
+  // Create recurring events for each neighborhood with correct schedule
+  const recurringEvents = [
+    {
+      title: '6AM Club Saint-Sauveur',
+      description: 'Course matinale dans le quartier Saint-Sauveur',
+      address: '980 Rue Saint-Vallier O, Québec, QC G1N 1R7',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
     },
     {
-      name: "Runners des Plaines d'Abraham",
-      description:
-        "Entraînements sur les magnifiques plaines d'Abraham, adaptés à tous les niveaux.",
+      title: '6AM Club Sillery',
+      description: 'Course matinale dans le quartier Sillery',
+      address: '1200 Av. du Bois-de-Coulonge, Québec, QC G1S 2L2',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
+    },
+    {
+      title: '6AM Club Maizerets',
+      description: 'Course matinale au parc Maizerets',
+      address: '2000 Bd de Montmorency, Québec, QC G1J 5E7',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
+    },
+    {
+      title: '6AM Club Montcalm',
+      description: 'Course matinale dans le quartier Montcalm',
       address: '835 Av. Wilfrid-Laurier, Québec, QC G1R 2L3',
-      website: 'https://example.com/plaines',
-      createdBy: adminUser.id,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
     },
     {
-      name: 'Course Limoilou',
-      description:
-        'Club communautaire du quartier Limoilou, ambiance décontractée et parcours variés.',
+      title: '6AM Club Saint-Jean-Baptiste',
+      description: 'Course matinale dans le quartier Saint-Jean-Baptiste',
+      address: '560 Rue Saint-Jean, Québec, QC G1R 1P8',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
+    },
+    {
+      title: '6AM Club Charlesbourg',
+      description: 'Course matinale à Charlesbourg',
+      address: '4500 1re Avenue, Québec, QC G1H 2S6',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
+    },
+    {
+      title: '6AM Club Limoilou',
+      description: 'Course matinale dans le quartier Limoilou',
       address: '250 3e Rue, Québec, QC G1L 2B3',
-      createdBy: adminUser.id,
-    },
-    {
-      name: 'Trail Runners Capitale-Nationale',
-      description:
-        'Pour les amateurs de course en sentier dans la région de Québec et ses environs.',
-      address: '2300 Rue Sicotte, Québec, QC G1P 2K5',
-      instagram: '@trailrunners_qc',
-      createdBy: adminUser.id,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR',
+      timezone: 'America/Toronto',
+      clubId: sixAmClub.id,
     },
   ]
 
-  const createdClubs = await prisma.club.createMany({
-    data: clubs,
+  await prisma.recurringEvent.createMany({
+    data: recurringEvents,
     skipDuplicates: true,
   })
 
-  // Get the created clubs to create runs
-  const clubRecords = await prisma.club.findMany({
-    where: { name: { in: clubs.map((c) => c.name) } },
+  // Create instantiated events from recurring events for the next few weeks
+  const recurringEventRecords = await prisma.recurringEvent.findMany({
+    where: { clubId: sixAmClub.id },
   })
 
-  // Create runs for each club
-  const allRuns = []
-  for (const club of clubRecords) {
-    const runs = [
-      {
-        title: 'Course du mercredi soir',
-        description: 'Notre entraînement hebdomadaire régulier',
-        date: new Date('2025-01-15T18:30:00'),
-        time: '18:30',
-        address: club.address,
+  const instantiatedEvents = []
+  for (const recurringEvent of recurringEventRecords) {
+    // Parse BYDAY from schedule pattern (e.g., "FREQ=WEEKLY;BYDAY=MO")
+    const dayMap = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 } as const
+    const byDayMatch = recurringEvent.schedulePattern.match(/BYDAY=([A-Z]{2})/)
+
+    if (!byDayMatch) {
+      throw new Error(
+        `Invalid schedule pattern: ${recurringEvent.schedulePattern}`
+      )
+    }
+
+    const dayCode = dayMap[byDayMatch[1] as keyof typeof dayMap]
+
+    // Create events for next 3 weeks
+    for (let week = 0; week < 3; week++) {
+      const baseDate = new Date()
+      const daysUntilTarget = (dayCode - baseDate.getDay() + 7) % 7
+      const eventDate = new Date(
+        baseDate.getTime() + (daysUntilTarget + week * 7) * 24 * 60 * 60 * 1000
+      )
+      eventDate.setHours(6, 0, 0, 0)
+
+      instantiatedEvents.push({
+        title: recurringEvent.title,
+        description: recurringEvent.description,
+        date: eventDate,
+        time: '06:00',
+        address: recurringEvent.address,
         distance: '5-8 km',
         pace: 'Rythme modéré',
-        clubId: club.id,
-      },
-      {
-        title: 'Long run du samedi',
-        description: "Course longue pour améliorer l'endurance",
-        date: new Date('2025-01-18T09:00:00'),
-        time: '09:00',
-        address: club.address,
-        distance: '12-15 km',
-        pace: 'Rythme facile',
-        clubId: club.id,
-      },
-    ]
-    allRuns.push(...runs)
+        clubId: sixAmClub.id,
+        recurringEventId: recurringEvent.id,
+      })
+    }
   }
 
-  await prisma.run.createMany({
-    data: allRuns,
+  await prisma.event.createMany({
+    data: instantiatedEvents,
     skipDuplicates: true,
   })
 

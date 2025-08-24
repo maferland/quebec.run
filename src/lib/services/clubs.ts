@@ -1,50 +1,60 @@
 import { prisma } from '@/lib/prisma'
 import type {
-  ClubWithRuns,
-  ClubsQuery,
-  ClubCreate,
-  ClubUpdate,
-  ClubDelete,
-  PublicPayload,
   AuthPayload,
+  ClubCreate,
+  ClubDelete,
+  ClubsQuery,
+  ClubUpdate,
+  PublicPayload,
 } from '@/lib/schemas'
+import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
 
 // We need the ClubId type for getClubById
+import { clubIdSchema, clubSlugSchema } from '@/lib/schemas'
 import type { z } from 'zod'
-import { clubIdSchema } from '@/lib/schemas'
 type ClubId = z.infer<typeof clubIdSchema>
+type ClubSlug = z.infer<typeof clubSlugSchema>
 
 // Pure business logic functions - let TypeScript infer return types
 
 export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
   const { limit = 50, offset = 0 } = data
 
-  const clubs = await prisma.club.findMany({
+  const nextWeek = new Date()
+  nextWeek.setDate(nextWeek.getDate() + 7)
+
+  return await prisma.club.findMany({
     skip: offset,
     take: limit,
     orderBy: { createdAt: 'desc' },
-  })
-
-  const clubsWithRuns: ClubWithRuns[] = await Promise.all(
-    clubs.map(async (club) => {
-      const upcomingRuns = await prisma.run.findMany({
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      events: {
         where: {
-          clubId: club.id,
-          date: { gte: new Date() },
+          date: {
+            gte: new Date(),
+            lte: nextWeek,
+          },
         },
         orderBy: { date: 'asc' },
         take: 5,
-      })
-
-      return {
-        ...club,
-        upcomingRuns,
-      }
-    })
-  )
-
-  return clubsWithRuns
+        select: {
+          id: true,
+          title: true,
+          date: true,
+          time: true,
+          distance: true,
+          pace: true,
+        },
+      },
+    },
+  })
 }
+
+export type GetAllClubsReturn = Awaited<ReturnType<typeof getAllClubs>>[0]
 
 export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
   const { id } = data
@@ -56,7 +66,7 @@ export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
     throw new Error('Club not found')
   }
 
-  const upcomingRuns = await prisma.run.findMany({
+  const upcomingEvents = await prisma.event.findMany({
     where: {
       clubId: id,
       date: { gte: new Date() },
@@ -67,27 +77,49 @@ export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
 
   return {
     ...club,
-    upcomingRuns,
+    upcomingEvents,
   }
 }
 
 export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
+  // Generate unique slug from club name
+  const baseSlug = createSlug(data.name)
+
+  // Get all existing slugs to ensure uniqueness
+  const existingSlugs = await prisma.club
+    .findMany({
+      select: { slug: true },
+    })
+    .then((clubs) => clubs.map((c) => c.slug))
+
+  const uniqueSlug = createUniqueSlug(baseSlug, existingSlugs)
+
   return await prisma.club.create({
     data: {
       ...data,
-      createdBy: user.id,
+      slug: uniqueSlug,
+      ownerId: user.id,
+    },
+    include: {
+      events: {
+        where: {
+          date: { gte: new Date() },
+        },
+        orderBy: { date: 'asc' },
+        take: 5,
+      },
     },
   })
 }
 
 export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
   const { id, ...updateData } = data
-  
+
   const club = await prisma.club.update({
     where: { id },
     data: updateData,
   })
-  
+
   return club
 }
 
@@ -95,12 +127,12 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   const { id } = data
   const club = await prisma.club.findUnique({
     where: { id },
-    select: { createdBy: true },
+    select: { ownerId: true },
   })
 
   if (!club) return null
 
-  if (club.createdBy !== user.id && !user.isAdmin) {
+  if (club.ownerId !== user.id && !user.isAdmin) {
     throw new Error('Unauthorized to delete this club')
   }
 
@@ -109,44 +141,66 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   })
 }
 
-// Helper functions that take ID from route params
-export async function getClubByIdWithParams(id: string): Promise<ClubWithRuns | null> {
-  const club = await prisma.club.findUnique({
+// Helper functions that take ID/slug from route params
+export async function getClubByIdWithParams(id: string) {
+  const nextWeek = new Date()
+  nextWeek.setDate(nextWeek.getDate() + 7)
+
+  return await prisma.club.findUnique({
     where: { id },
-  })
-
-  if (!club) return null
-
-  const upcomingRuns = await prisma.run.findMany({
-    where: {
-      clubId: id,
-      date: { gte: new Date() },
+    include: {
+      events: {
+        where: {
+          date: {
+            gte: new Date(),
+            lte: nextWeek,
+          },
+        },
+        orderBy: { date: 'asc' },
+      },
     },
-    orderBy: { date: 'asc' },
   })
-
-  return {
-    ...club,
-    upcomingRuns,
-  }
 }
 
-export const updateClubById = async ({ user, data }: AuthPayload<ClubUpdate & { id: string }>) => {
+export async function getClubBySlug({ slug }: ClubSlug) {
+  const nextWeek = new Date()
+  nextWeek.setDate(nextWeek.getDate() + 7)
+
+  return await prisma.club.findUnique({
+    where: { slug },
+    include: {
+      events: {
+        where: {
+          date: {
+            gte: new Date(),
+            lte: nextWeek,
+          },
+        },
+        orderBy: { date: 'asc' },
+      },
+    },
+  })
+}
+
+export const updateClubById = async ({
+  user,
+  data,
+}: AuthPayload<ClubUpdate & { id: string }>) => {
   const club = await prisma.club.findUnique({
     where: { id: data.id },
-    select: { createdBy: true },
+    select: { ownerId: true },
   })
 
   if (!club) {
     throw new Error('Club not found')
   }
 
-  if (club.createdBy !== user.id && !user.isAdmin) {
+  if (club.ownerId !== user.id && !user.isAdmin) {
     throw new Error('Unauthorized to update this club')
   }
 
   const { id, ...updateData } = data
-  
+
   return await prisma.club.update({
     where: { id },
     data: updateData,

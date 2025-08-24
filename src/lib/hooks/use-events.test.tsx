@@ -1,18 +1,15 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@/lib/test-utils'
 import { setupMSW } from '@/lib/test-msw-setup'
-import { useUpcomingRuns } from './use-runs'
+import { useUpcomingEvents } from './use-events'
 
 // Setup MSW
 setupMSW()
 
-
-describe('useRuns hooks', () => {
-
-  describe('useUpcomingRuns', () => {
-    it('fetches upcoming runs successfully', async () => {
-      const { result } = renderHook(() => useUpcomingRuns(), {
-        })
+describe('useEvents hooks', () => {
+  describe('useUpcomingEvents', () => {
+    it('fetches upcoming events successfully', async () => {
+      const { result } = renderHook(() => useUpcomingEvents(), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -28,8 +25,10 @@ describe('useRuns hooks', () => {
     })
 
     it('handles query parameters', async () => {
-      const { result } = renderHook(() => useUpcomingRuns({ limit: 5, offset: 0 }), {
-        })
+      const { result } = renderHook(
+        () => useUpcomingEvents({ limit: 5, offset: 0 }),
+        {}
+      )
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -40,8 +39,10 @@ describe('useRuns hooks', () => {
     })
 
     it('filters by clubId', async () => {
-      const { result } = renderHook(() => useUpcomingRuns({ clubId: 'club-1' }), {
-        })
+      const { result } = renderHook(
+        () => useUpcomingEvents({ clubId: 'club-1' }),
+        {}
+      )
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -57,13 +58,12 @@ describe('useRuns hooks', () => {
       const { http, HttpResponse } = await import('msw')
 
       server.use(
-        http.get('/api/runs', () => {
+        http.get('/api/events', () => {
           return HttpResponse.json({ error: 'Server error' }, { status: 500 })
         })
       )
 
-      const { result } = renderHook(() => useUpcomingRuns(), {
-        })
+      const { result } = renderHook(() => useUpcomingEvents(), {})
 
       await waitFor(() => {
         expect(result.current.isError).toBe(true)
