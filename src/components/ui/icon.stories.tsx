@@ -1,15 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import {
-  MapPin,
   Calendar,
-  Users,
   Clock,
-  Search,
   Filter,
-  Star,
   Heart,
-  Settings,
   Home,
+  MapPin,
+  Search,
+  Settings,
+  Star,
+  Users,
 } from 'lucide-react'
 import { Icon } from './icon'
 
@@ -88,6 +88,7 @@ export const Decorative: Story = {
 
 // Size Variants
 export const Sizes: Story = {
+  args: { icon: Users },
   render: () => (
     <div className="flex items-end gap-4">
       <div className="text-center">
@@ -124,6 +125,7 @@ export const Sizes: Story = {
 
 // Color Variants
 export const QuebecRunBrandColors: Story = {
+  args: { icon: Users },
   render: () => (
     <div className="flex gap-6">
       <div className="text-center">
@@ -146,6 +148,7 @@ export const QuebecRunBrandColors: Story = {
 }
 
 export const TextColors: Story = {
+  args: { icon: Users },
   render: () => (
     <div className="flex gap-6">
       <div className="text-center">
@@ -169,6 +172,7 @@ export const TextColors: Story = {
 }
 
 export const StatusColors: Story = {
+  args: { icon: Star },
   render: () => (
     <div className="flex gap-6">
       <div className="text-center">
@@ -197,6 +201,7 @@ export const StatusColors: Story = {
 
 // Usage Examples
 export const NavigationIcons: Story = {
+  args: { icon: Home },
   render: () => (
     <div className="flex items-center gap-4 p-4 bg-surface rounded-lg border border-border">
       <Icon icon={Home} size="md" color="text-secondary" aria-label="Home" />
@@ -218,6 +223,7 @@ export const NavigationIcons: Story = {
 }
 
 export const ButtonWithIcon: Story = {
+  args: { icon: Calendar },
   render: () => (
     <button className="flex items-center gap-2 px-4 py-2 bg-primary text-text-inverse rounded-lg hover:bg-primary/90 transition-colors">
       <Icon icon={Calendar} size="sm" color="text-inverse" decorative />
@@ -227,6 +233,7 @@ export const ButtonWithIcon: Story = {
 }
 
 export const HeroIcon: Story = {
+  args: { icon: MapPin },
   render: () => (
     <div className="text-center p-12 bg-surface-variant rounded-xl">
       <Icon
@@ -247,6 +254,7 @@ export const HeroIcon: Story = {
 }
 
 export const FlexLayoutBehavior: Story = {
+  args: { icon: Users },
   render: () => (
     <div className="space-y-4 max-w-md">
       <p className="text-sm text-text-secondary mb-4">

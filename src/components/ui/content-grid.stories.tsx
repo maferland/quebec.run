@@ -128,6 +128,7 @@ export const LargeGap: Story = {
 
 // Real-world Examples
 export const EventCards: Story = {
+  args: {},
   render: () => (
     <ContentGrid>
       {Array.from({ length: 6 }, (_, i) => (
@@ -161,6 +162,7 @@ export const EventCards: Story = {
 }
 
 export const ClubCards: Story = {
+  args: {},
   render: () => (
     <ContentGrid>
       {Array.from({ length: 4 }, (_, i) => (
@@ -197,6 +199,7 @@ export const ClubCards: Story = {
 
 // Responsive Demonstration
 export const ResponsiveDemo: Story = {
+  args: {},
   render: () => (
     <div className="space-y-8">
       <div>

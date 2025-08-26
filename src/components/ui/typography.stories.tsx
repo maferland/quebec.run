@@ -54,6 +54,7 @@ export const Default: Story = {
 }
 
 export const AllHeadings: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-4">
       <Typography variant="heading1" color="primary">
@@ -79,6 +80,7 @@ export const AllHeadings: Story = {
 }
 
 export const BodyText: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-4 max-w-2xl">
       <Typography variant="bodyLarge" color="accent">
@@ -100,6 +102,7 @@ export const BodyText: Story = {
 }
 
 export const Colors: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-2">
       <Typography variant="body" color="primary">
@@ -124,6 +127,7 @@ export const Colors: Story = {
 }
 
 export const Weights: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-2">
       <Typography variant="body" weight="light">
@@ -146,6 +150,7 @@ export const Weights: Story = {
 }
 
 export const Alignment: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-4 max-w-md">
       <Typography variant="body" align="left">
@@ -168,6 +173,7 @@ export const Alignment: Story = {
 }
 
 export const ConvenienceComponents: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-4">
       <Heading level={1} color="primary">
@@ -186,6 +192,7 @@ export const ConvenienceComponents: Story = {
 }
 
 export const RealWorldExample: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="max-w-2xl space-y-6">
       <div>
@@ -223,6 +230,7 @@ export const CustomElement: Story = {
 }
 
 export const ResponsiveHeadings: Story = {
+  args: { children: 'Typography' },
   render: () => (
     <div className="space-y-4">
       <Typography variant="heading1" color="primary">

@@ -9,6 +9,8 @@ export type TagVariant =
   | 'datetime'
   | 'training'
   | 'social'
+  | 'outline'
+  | 'primary'
 
 export type TagColorScheme =
   | 'primary'
@@ -49,6 +51,8 @@ const tagVariants: Record<TagVariant, TagColorScheme> = {
   datetime: 'secondary',
   training: 'primary',
   social: 'secondary',
+  outline: 'gray',
+  primary: 'primary',
 }
 
 const sizeVariants: Record<
