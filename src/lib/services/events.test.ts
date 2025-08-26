@@ -38,7 +38,7 @@ describe('Events Service Integration Tests', () => {
       expect(result).toBeDefined()
       expect(Array.isArray(result)).toBe(true)
       result.forEach((run) => {
-        expect(run.clubId).toBe(testClub.id)
+        expect(run.club.name).toBe(testClub.name)
       })
     })
 

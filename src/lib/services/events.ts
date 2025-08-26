@@ -28,12 +28,17 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
     orderBy: { date: 'asc' },
     take: limit,
     skip: offset,
-    include: {
+    select: {
+      id: true,
+      title: true,
+      date: true,
+      time: true,
+      distance: true,
+      pace: true,
+      address: true,
       club: {
         select: {
-          id: true,
           name: true,
-          slug: true,
         },
       },
     },
@@ -41,6 +46,8 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 
   return events
 }
+
+export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data

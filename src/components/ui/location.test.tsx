@@ -68,6 +68,22 @@ describe('Location Component', () => {
       expect(containerDiv).not.toHaveClass('bg-gray-50') // Inline doesn't have background
       expect(screen.queryByText('Location')).not.toBeInTheDocument() // Inline variant has no label
     })
+
+    it('renders compact variant correctly', () => {
+      const { container } = render(
+        <Location address={sampleAddress} variant="compact" />
+      )
+
+      const containerDiv = container.firstChild as HTMLElement
+      expect(containerDiv).toHaveClass(
+        'flex',
+        'items-center',
+        'gap-3',
+        'p-3',
+        'bg-gray-50'
+      )
+      expect(screen.queryByText('Location')).not.toBeInTheDocument() // Compact variant has no label
+    })
   })
 
   describe('Icon visibility', () => {
@@ -121,21 +137,19 @@ describe('Location Component', () => {
     })
   })
 
-  describe('Compact mode', () => {
-    it('hides label when compact is true', () => {
-      render(<Location address={sampleAddress} compact={true} />)
+  describe('Compact variant', () => {
+    it('hides label when using compact variant', () => {
+      render(<Location address={sampleAddress} variant="compact" />)
       expect(screen.queryByText('Location')).not.toBeInTheDocument()
     })
 
-    it('shows label when compact is false', () => {
-      render(<Location address={sampleAddress} compact={false} />)
+    it('shows label when using default variant', () => {
+      render(<Location address={sampleAddress} variant="default" />)
       expect(screen.getByText('Location')).toBeInTheDocument()
     })
 
-    it('inline variant never shows label regardless of compact setting', () => {
-      render(
-        <Location address={sampleAddress} variant="inline" compact={false} />
-      )
+    it('inline variant never shows label', () => {
+      render(<Location address={sampleAddress} variant="inline" />)
       expect(screen.queryByText('Location')).not.toBeInTheDocument()
     })
   })

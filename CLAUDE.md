@@ -136,7 +136,7 @@ export const POST = withAuth(clubCreateSchema)(async ({ user, data }) => {
 - **Use CUID for all IDs** — `@default(cuid())`
 - **Never manually set IDs in tests** — let Prisma generate CUIDs
 - **Never use `prisma db push`** — use `prisma migrate dev`
-- **Use minimal field selection** — prefer `select` of required fields
+- **ALWAYS use minimal field selection** — Always use `select` with only required fields instead of `include` to minimize data transfer, improve performance, and **prevent information leakage**. Never select all fields with `include: true` unless absolutely necessary for the specific use case
 
 #### ⚠️ CRITICAL: Prevent N+1 Query Problems
 

@@ -16,15 +16,12 @@ const meta = {
   argTypes: {
     variant: {
       control: 'select',
-      options: ['default', 'card', 'inline'],
+      options: ['default', 'card', 'inline', 'compact'],
     },
     showIcon: {
       control: 'boolean',
     },
     truncate: {
-      control: 'boolean',
-    },
-    compact: {
       control: 'boolean',
     },
   },
@@ -59,6 +56,11 @@ export const AllVariants: Story = {
       <div>
         <h3 className="text-lg font-semibold mb-3">Inline Variant</h3>
         <Location address={sampleAddress} variant="inline" />
+      </div>
+
+      <div>
+        <h3 className="text-lg font-semibold mb-3">Compact Variant</h3>
+        <Location address={sampleAddress} variant="compact" />
       </div>
     </div>
   ),
@@ -97,13 +99,13 @@ export const Compact: Story = {
   render: () => (
     <div className="space-y-4 max-w-sm">
       <div>
-        <h4 className="font-semibold mb-2">Regular</h4>
+        <h4 className="font-semibold mb-2">Regular Card</h4>
         <Location address={sampleAddress} variant="card" />
       </div>
 
       <div>
-        <h4 className="font-semibold mb-2">Compact (no label)</h4>
-        <Location address={sampleAddress} variant="card" compact={true} />
+        <h4 className="font-semibold mb-2">Compact Variant (no label)</h4>
+        <Location address={sampleAddress} variant="compact" />
       </div>
     </div>
   ),

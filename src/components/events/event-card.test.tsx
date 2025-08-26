@@ -1,44 +1,20 @@
 import { describe, it, expect } from 'vitest'
 import { render, screen } from '@/lib/test-utils'
 import { EventCard } from './event-card'
-import type { EventWithClub } from '@/lib/schemas'
+import type { GetAllEventsReturn } from '@/lib/services/events'
 
-// Mock complete event data structure
-const baseEvent = {
+// Mock event data structure matching service return type
+const mockEventWithClub: GetAllEventsReturn = {
   id: 'event-1',
   title: 'Morning 5K Run',
-  description: 'Early morning run through Old Quebec',
   address: '250 3e Rue, Québec, QC G1L 2B3',
-  latitude: 46.8139,
-  longitude: -71.208,
   date: new Date('2025-09-04T06:00:00-04:00'),
   time: '06:00',
   distance: '5K',
   pace: '5:30 /km',
-  createdAt: new Date('2025-08-01T10:00:00'),
-  updatedAt: new Date('2025-08-01T10:00:00'),
-  clubId: 'club-1',
-  recurringEventId: null,
-} as const
-
-const mockClub = {
-  id: 'club-1',
-  name: 'Quebec Running Club',
-  slug: 'quebec-running-club',
-  description: 'Premier running club in Quebec City',
-  website: 'https://quebecrunning.com',
-  instagram: '@quebecrunning',
-  facebook: 'QuebecRunningClub',
-  language: 'en' as const,
-  stravaClubId: '12345',
-  createdAt: new Date('2025-01-01T00:00:00'),
-  updatedAt: new Date('2025-08-01T00:00:00'),
-  ownerId: 'owner-1',
-}
-
-const mockEventWithClub: EventWithClub = {
-  ...baseEvent,
-  club: mockClub,
+  club: {
+    name: 'Quebec Running Club',
+  },
 }
 
 describe('EventCard Component', () => {
@@ -275,15 +251,10 @@ describe('EventCard Component', () => {
       expect(screen.queryByText('Quebec Running Club')).not.toBeInTheDocument()
     })
 
-    it('handles missing club gracefully when showClubName is true', () => {
-      const eventWithoutClub = {
-        ...mockEventWithClub,
-        club: null, // Simulate missing club
-      }
+    it('handles club name display correctly when showClubName is false', () => {
+      render(<EventCard event={mockEventWithClub} showClubName={false} />)
 
-      render(<EventCard event={eventWithoutClub} showClubName={true} />)
-
-      // Should not crash and not display any club name
+      // Should not display club name when showClubName is false
       expect(screen.queryByText('Quebec Running Club')).not.toBeInTheDocument()
     })
 
@@ -405,22 +376,17 @@ describe('EventCard Component', () => {
 
   describe('Edge Cases and Error Handling', () => {
     it('handles minimal event data gracefully', () => {
-      const minimalEvent: EventWithClub = {
+      const minimalEvent: GetAllEventsReturn = {
         id: 'minimal-event',
         title: 'Minimal Event',
-        description: null,
         address: null,
-        latitude: null,
-        longitude: null,
         date: new Date('2025-09-04T06:00:00'),
         time: '06:00',
         distance: null,
         pace: null,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        clubId: 'club-1',
-        recurringEventId: null,
-        club: mockClub,
+        club: {
+          name: 'Test Club',
+        },
       }
 
       render(<EventCard event={minimalEvent} />)

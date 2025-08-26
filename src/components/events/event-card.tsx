@@ -1,4 +1,4 @@
-import type { EventWithClub } from '@/lib/schemas'
+import type { GetAllEventsReturn } from '@/lib/services/events'
 import { Tag } from '@/components/ui/tag'
 import { Card } from '@/components/ui/card'
 import { LocationCard } from '@/components/ui/location'
@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { Clock } from 'lucide-react'
 
 export type EventCardProps = {
-  event: EventWithClub
+  event: GetAllEventsReturn
   showClubName?: boolean
 }
 

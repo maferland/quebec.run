@@ -134,7 +134,7 @@ export const ResponsiveColumns: Story = {
 }
 
 export const DifferentGaps: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <div className="space-y-8">
       <div>
@@ -179,7 +179,7 @@ export const DifferentGaps: Story = {
 }
 
 export const WithGridItems: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <ResponsiveGrid cols={{ default: 12 }} gap="md">
       <GridItem span={{ default: 12, md: 8 }}>
@@ -219,7 +219,7 @@ export const WithGridItems: Story = {
 }
 
 export const TwoColumn: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <TwoColumnGrid gap="lg">
       <SampleCard
@@ -251,7 +251,7 @@ export const TwoColumn: Story = {
 }
 
 export const ThreeColumn: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <ThreeColumnGrid gap="md">
       <SampleCard title="Feature 1" content="Mobile: 1 column" />
@@ -279,7 +279,7 @@ export const ThreeColumn: Story = {
 }
 
 export const EventGridExample: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <EventGrid gap="lg">
       <SampleEvent title="Morning 5K Run" date="Thu, Sep 4 • 06:00" />
@@ -301,7 +301,7 @@ export const EventGridExample: Story = {
 }
 
 export const ClubGridExample: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <ClubGrid gap="lg">
       <SampleClub
@@ -333,7 +333,7 @@ export const ClubGridExample: Story = {
 }
 
 export const DashboardLayout: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <DashboardGrid gap="lg">
       <DashboardMain className="space-y-6">
@@ -442,7 +442,7 @@ export const DashboardLayout: Story = {
 }
 
 export const ComplexResponsive: Story = {
-  args: {},
+  args: { children: null },
   render: () => (
     <div className="space-y-8">
       <ResponsiveGrid

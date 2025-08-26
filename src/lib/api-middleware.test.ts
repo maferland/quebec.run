@@ -20,7 +20,7 @@ describe('api-middleware', () => {
         body: JSON.stringify({ name: 'Test', age: 25 }),
       })
 
-      const response = await handler(request)
+      const response = await handler(request, { params: Promise.resolve({}) })
       const result = await response.json()
 
       expect(response.status).toBe(200)
@@ -39,7 +39,7 @@ describe('api-middleware', () => {
 
       const request = new Request('http://localhost/test?search=test&limit=5')
 
-      const response = await handler(request)
+      const response = await handler(request, { params: Promise.resolve({}) })
       const result = await response.json()
 
       expect(response.status).toBe(200)
@@ -57,7 +57,7 @@ describe('api-middleware', () => {
         body: JSON.stringify({ age: 25 }), // missing required 'name'
       })
 
-      const response = await handler(request)
+      const response = await handler(request, { params: Promise.resolve({}) })
       const result = await response.json()
 
       expect(response.status).toBe(400)
@@ -75,7 +75,7 @@ describe('api-middleware', () => {
         body: JSON.stringify({ name: 'Test' }),
       })
 
-      const response = await handler(request)
+      const response = await handler(request, { params: Promise.resolve({}) })
       const result = await response.json()
 
       expect(response.status).toBe(500)
@@ -95,7 +95,7 @@ describe('api-middleware', () => {
         body: JSON.stringify({ name: 'Test' }),
       })
 
-      const response = await handler(request)
+      const response = await handler(request, { params: Promise.resolve({}) })
       const result = await response.json()
 
       expect(response.status).toBe(401)
