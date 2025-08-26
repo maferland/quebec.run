@@ -3,6 +3,11 @@ import type { ServiceUser } from '@/lib/schemas'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
 
+// Shared type for Next.js route handler context
+export type RouteHandlerContext = {
+  params: Promise<Record<string, string>>
+}
+
 // Internal error handler - DO NOT USE outside this file, use withPublic or withAuth instead
 function withErrorHandler<T extends unknown[]>(
   handler: (...args: T) => Promise<Response>
@@ -47,7 +52,7 @@ const methodsWithBody = ['POST', 'PUT', 'PATCH']
 // Extract all parameters and parse with schema
 async function getParams<T extends z.ZodType>(
   request: Request,
-  context: { params?: Record<string, string> } | undefined,
+  context: RouteHandlerContext,
   schema: T
 ): Promise<z.infer<T>> {
   const url = new URL(request.url)
@@ -58,8 +63,8 @@ async function getParams<T extends z.ZodType>(
     queryParams[key] = value
   })
 
-  // Extract URL parameters from context (Next.js provides this)
-  const urlParams = context?.params || {}
+  // Extract URL parameters from context
+  const urlParams = await context.params
 
   const body = methodsWithBody.includes(request.method)
     ? await request.json()
@@ -76,7 +81,7 @@ export function withPublic<T extends z.ZodType>(schema: T) {
     return withErrorHandler(
       async (
         request: Request,
-        context?: { params?: Record<string, string> }
+        context: RouteHandlerContext
       ): Promise<Response> => {
         const data = await getParams(request, context, schema)
         return await fn(data)
@@ -96,7 +101,7 @@ export function withAuth<T extends z.ZodType>(schema: T) {
     return withErrorHandler(
       async (
         request: Request,
-        context?: { params?: Record<string, string> }
+        context: RouteHandlerContext
       ): Promise<Response> => {
         const session = await getServerSession(authOptions)
 

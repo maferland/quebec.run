@@ -43,6 +43,7 @@ export const Default: Story = {
 }
 
 export const AllVariants: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-6 max-w-md">
       <div>
@@ -64,6 +65,7 @@ export const AllVariants: Story = {
 }
 
 export const WithTruncation: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-4 max-w-sm">
       <div>
@@ -80,6 +82,7 @@ export const WithTruncation: Story = {
 }
 
 export const WithoutIcon: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-4 max-w-md">
       <Location address={sampleAddress} variant="default" showIcon={false} />
@@ -90,6 +93,7 @@ export const WithoutIcon: Story = {
 }
 
 export const Compact: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-4 max-w-sm">
       <div>
@@ -106,6 +110,7 @@ export const Compact: Story = {
 }
 
 export const ConvenienceComponents: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-6 max-w-md">
       <div>
@@ -127,6 +132,7 @@ export const ConvenienceComponents: Story = {
 }
 
 export const EventCardExample: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="max-w-sm bg-white p-4 rounded-lg border shadow-sm">
       <div className="mb-4">
@@ -155,6 +161,7 @@ export const EventCardExample: Story = {
 }
 
 export const ClubCardExample: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="max-w-md bg-white p-6 rounded-lg border shadow-sm">
       <div className="flex items-center gap-3 mb-4">
@@ -179,6 +186,7 @@ export const ClubCardExample: Story = {
 }
 
 export const ResponsiveExample: Story = {
+  args: { address: '250 3e Rue, Québec, QC G1L 2B3' },
   render: () => (
     <div className="space-y-4">
       <p className="text-sm text-gray-600 mb-4">

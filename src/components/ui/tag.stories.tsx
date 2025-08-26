@@ -52,6 +52,7 @@ export const WithIcon: Story = {
 }
 
 export const AllSizes: Story = {
+  args: { children: 'Tag' },
   render: () => (
     <div className="flex items-center gap-4">
       <Tag size="xs" icon={MapPin}>
@@ -71,6 +72,7 @@ export const AllSizes: Story = {
 }
 
 export const AllColorSchemes: Story = {
+  args: { children: 'Tag' },
   render: () => (
     <div className="flex flex-wrap gap-2">
       <Tag colorScheme="primary" icon={Users}>
@@ -94,6 +96,7 @@ export const AllColorSchemes: Story = {
 }
 
 export const LegacyVariants: Story = {
+  args: { children: 'Tag' },
   render: () => (
     <div className="flex flex-wrap gap-2">
       <Tag variant="date">Sep 4</Tag>
@@ -110,6 +113,7 @@ export const LegacyVariants: Story = {
 }
 
 export const EventCardExample: Story = {
+  args: { children: 'Tag' },
   render: () => (
     <div className="flex flex-wrap gap-2 p-4 bg-gray-50 rounded-lg max-w-sm">
       <Tag variant="datetime" icon={Clock} size="xs">
