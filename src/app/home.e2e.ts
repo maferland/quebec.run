@@ -52,4 +52,29 @@ test.describe('Home Page', () => {
     // Should show loading text briefly
     await expect(page.getByText('Loading clubs...')).toBeVisible()
   })
+
+  test('navigates to club details from featured clubs', async ({ page }) => {
+    await page.goto('/')
+
+    // Wait for clubs to load
+    await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({
+      timeout: 10000,
+    })
+
+    // Click on first club card
+    const firstClubCard = page.getByRole('article').first()
+    await expect(
+      firstClubCard.getByRole('heading', { level: 3 })
+    ).toContainText(/\w+/)
+
+    // Find and click the view details link
+    const detailsLink = firstClubCard.getByText('View details →')
+    await expect(detailsLink).toBeVisible()
+    await detailsLink.click()
+
+    // Should navigate to club page with slug routing
+    await expect(page).toHaveURL(/\/clubs\/[a-z0-9-]+$/)
+    await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    await expect(page.getByText('Back to All Clubs')).toBeVisible()
+  })
 })

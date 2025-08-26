@@ -16,13 +16,14 @@ export function Card({
   as = 'section',
   ...props
 }: CardProps) {
-  const baseStyles = 'rounded-xl border hover:shadow-md transition-all'
+  const baseStyles = 'rounded-xl border transition-all duration-200'
 
   const variantStyles = {
-    default: 'p-4 bg-white',
-    accent: 'p-6 bg-gray-50 border-l-4 border-l-blue-500',
+    default: 'p-4 bg-surface border-border hover:shadow-md',
+    accent:
+      'p-6 bg-surface-variant border-l-4 border-l-primary hover:shadow-md hover:border-l-primary/80',
     interactive:
-      'group p-4 bg-white hover:bg-gray-50 hover:shadow-lg cursor-pointer',
+      'group p-4 bg-surface border-border hover:bg-surface/90 hover:shadow-lg hover:shadow-primary/5 hover:-translate-y-1 hover:border-primary/20 cursor-pointer',
   }
 
   const Component = as

@@ -12,7 +12,16 @@ import type {
 export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   const { limit = 50, offset = 0, clubId } = data
 
-  const where = clubId ? { clubId } : {}
+  // Get today's date at midnight to include today's events but exclude past days
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+
+  const where = {
+    date: {
+      gte: today, // Include events from today (00:00) forward, excluding yesterday and earlier
+    },
+    ...(clubId && { clubId }),
+  }
 
   const events = await prisma.event.findMany({
     where,
@@ -24,6 +33,7 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
         select: {
           id: true,
           name: true,
+          slug: true,
         },
       },
     },

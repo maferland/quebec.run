@@ -1,21 +1,4 @@
-import type { Config } from 'tailwindcss'
-
-export default {
-  content: [
-    './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/components/**/*.{js,ts,jsx,tsx,mdx}',
-    './src/app/**/*.{js,ts,jsx,tsx,mdx}',
-  ],
-  theme: {
-    extend: {
-      colors: {
-        background: 'var(--background)',
-        foreground: 'var(--foreground)',
-      },
-      backgroundColor: {
-        default: '#f9fafb', // gray-50
-      },
-    },
-  },
-  plugins: [],
-} satisfies Config
+// Tailwind CSS v4 uses CSS-based configuration in globals.css
+// This file is kept for compatibility but configuration is now in src/app/globals.css
+const config = {}
+export default config

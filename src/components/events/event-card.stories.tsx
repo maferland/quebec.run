@@ -18,6 +18,8 @@ const mockEvent = {
   title: '6AM Club Limoilou',
   description: 'Course matinale dans le quartier Limoilou',
   address: '250 3e Rue, Québec, QC G1L 2B3',
+  latitude: 46.8139,
+  longitude: -71.208,
   date: new Date('2025-01-24T06:00:00'),
   time: '06:00',
   distance: '5-8 km',
@@ -25,6 +27,11 @@ const mockEvent = {
   createdAt: new Date('2025-01-01'),
   updatedAt: new Date('2025-01-01'),
   clubId: 'club-1',
+  recurringEventId: null,
+  club: {
+    id: 'club-1',
+    name: '6AM Club Quebec',
+  },
 }
 
 export const Default: Story = {
@@ -35,13 +42,7 @@ export const Default: Story = {
 
 export const WithClubName: Story = {
   args: {
-    event: {
-      ...mockEvent,
-      club: {
-        id: 'club-1',
-        name: '6AM Club',
-      },
-    },
+    event: mockEvent,
     showClubName: true,
   },
 }
