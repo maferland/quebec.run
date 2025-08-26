@@ -118,7 +118,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             {club.events && club.events.length > 0 ? (
               <ContentGrid columns="2" gap="lg">
                 {club.events.map((event) => (
-                  <EventCard key={event.id} event={event} />
+                  <EventCard key={event.id} event={{ ...event, club }} />
                 ))}
               </ContentGrid>
             ) : (

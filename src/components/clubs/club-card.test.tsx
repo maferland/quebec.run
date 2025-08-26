@@ -363,10 +363,10 @@ describe('ClubCard Component', () => {
       expect(container.firstChild).toBeNull()
     })
 
-    it('renders nothing when events is null', () => {
+    it('renders nothing when events is empty array', () => {
       const clubWithNullEvents = {
         ...mockClubWithEvents,
-        events: null,
+        events: [],
       }
 
       const { container } = render(<ClubCard club={clubWithNullEvents} />)

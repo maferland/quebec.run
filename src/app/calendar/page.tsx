@@ -15,7 +15,7 @@ export default function CalendarPage() {
 
   const groupedEvents = events.reduce(
     (groups, event) => {
-      const date = dateUtils.formatEventDate(event.date, 'yyyy-MM-dd')
+      const date = dateUtils.formatHumanFriendlyDate(event.date)
       if (!groups[date]) {
         groups[date] = []
       }

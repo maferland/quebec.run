@@ -135,7 +135,7 @@ describe('Card Component', () => {
     })
 
     it('handles empty content gracefully', () => {
-      render(<Card data-testid="empty-card"></Card>)
+      render(<Card data-testid="empty-card">{null}</Card>)
 
       const card = screen.getByTestId('empty-card')
       expect(card).toBeInTheDocument()

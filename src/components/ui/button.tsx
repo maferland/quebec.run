@@ -17,9 +17,6 @@ export function Button({
   size = 'md',
   ...props
 }: ButtonProps) {
-  // Remove className from props if it somehow gets passed
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { className: _, ...buttonProps } = props
   const baseStyles =
     'inline-flex items-center justify-center rounded-md font-medium focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 cursor-pointer disabled:cursor-not-allowed shadow-sm hover:shadow-md hover:scale-105 transition-all duration-200 disabled:bg-disabled disabled:text-disabled-text'
 
@@ -45,7 +42,7 @@ export function Button({
   return (
     <button
       className={cn(baseStyles, variants[variant], sizes[size])}
-      {...buttonProps}
+      {...props}
     >
       {children}
     </button>
