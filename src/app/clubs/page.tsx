@@ -1,18 +1,31 @@
 import { getAllClubs } from '@/lib/services/clubs'
 import { ClubCard } from '@/components/clubs/club-card'
+import { ContentGrid } from '@/components/ui/content-grid'
+import { PageContainer } from '@/components/ui/page-container'
+import { PageTitle } from '@/components/ui/page-title'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Users } from 'lucide-react'
 
 export default async function ClubsPage() {
   const clubs = await getAllClubs({ data: {} })
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">Running Clubs</h1>
+    <PageContainer>
+      <PageTitle>Running Clubs</PageTitle>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-        {clubs.map((club) => (
-          <ClubCard key={club.id} club={club} />
-        ))}
-      </div>
-    </div>
+      {clubs.length === 0 ? (
+        <EmptyState
+          icon={Users}
+          title="No running clubs found"
+          description="Be the first to create a running club in Quebec City"
+        />
+      ) : (
+        <ContentGrid>
+          {clubs.map((club) => (
+            <ClubCard key={club.id} club={club} />
+          ))}
+        </ContentGrid>
+      )}
+    </PageContainer>
   )
 }

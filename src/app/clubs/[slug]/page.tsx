@@ -1,8 +1,22 @@
 import { EventCard } from '@/components/events/event-card'
 import { Link } from '@/components/ui/link'
+import { Card } from '@/components/ui/card'
+import { ContentGrid } from '@/components/ui/content-grid'
+import { PageContainer } from '@/components/ui/page-container'
+import { EmptyState } from '@/components/ui/empty-state'
+import { Icon } from '@/components/ui/icon'
+import { Tag } from '@/components/ui/tag'
 import { getClubBySlug } from '@/lib/services/clubs'
 import type { PageProps } from '@/lib/types/next'
-import { Calendar } from 'lucide-react'
+import {
+  Calendar,
+  ArrowLeft,
+  Globe,
+  Instagram,
+  Facebook,
+  Users,
+  MapPin,
+} from 'lucide-react'
 import { notFound } from 'next/navigation'
 
 export type ClubPageProps = PageProps<{ slug: string }>
@@ -15,80 +29,108 @@ export default async function ClubPage({ params }: ClubPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-surface-variant">
+      <PageContainer>
+        {/* Back Navigation */}
         <div className="mb-8">
           <Link
             href="/clubs"
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
+            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
           >
-            ← Back to All Clubs
+            <Icon icon={ArrowLeft} size="sm" decorative />
+            Back to All Clubs
           </Link>
         </div>
 
         {/* Club Header */}
-        <div className="bg-white rounded-xl shadow-sm border mb-8 overflow-hidden">
-          <div className="bg-gradient-to-r from-blue-50 to-indigo-50 px-8 py-12">
-            <div className="max-w-3xl">
-              <h1 className="text-5xl font-bold text-gray-900 mb-6">
-                {club.name}
-              </h1>
+        <Card className="mb-8 overflow-hidden">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-8">
+            <div className="max-w-4xl">
+              {/* Club Name & Location */}
+              <div className="flex items-start gap-4 mb-6">
+                <div className="p-3 bg-primary/10 rounded-lg">
+                  <Icon icon={Users} size="xl" color="primary" decorative />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-4xl font-heading font-bold text-primary mb-2">
+                    {club.name}
+                  </h1>
+                  <div className="flex items-center gap-2">
+                    <Icon
+                      icon={MapPin}
+                      size="sm"
+                      color="text-secondary"
+                      decorative
+                    />
+                    <span className="text-text-secondary font-body">
+                      Quebec City
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Description */}
               {club.description && (
-                <p className="text-xl text-gray-700 leading-relaxed mb-6">
+                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
                   {club.description}
                 </p>
               )}
 
-              {/* Social Links */}
+              {/* Social Links & Stats */}
               <div className="flex items-center gap-3 flex-wrap">
                 {club.website && (
-                  <Link
-                    href={club.website}
-                    className="text-blue-600 hover:text-blue-800 font-medium"
-                  >
-                    🌐 Website
+                  <Link href={club.website}>
+                    <Tag variant="outline" icon={Globe}>
+                      Website
+                    </Tag>
                   </Link>
                 )}
                 {club.instagram && (
-                  <span className="text-gray-700">📸 {club.instagram}</span>
+                  <Tag variant="outline" icon={Instagram}>
+                    @{club.instagram}
+                  </Tag>
                 )}
                 {club.facebook && (
-                  <span className="text-gray-700">👥 Facebook</span>
+                  <Tag variant="outline" icon={Facebook}>
+                    Facebook
+                  </Tag>
+                )}
+                {club.events && club.events.length > 0 && (
+                  <Tag variant="primary" icon={Calendar}>
+                    {club.events.length} upcoming events
+                  </Tag>
                 )}
               </div>
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Events Section */}
-        <div className="bg-white rounded-xl shadow-sm border p-8">
-          <div className="flex items-center gap-3 mb-8">
-            <Calendar className="h-8 w-8 text-blue-600" />
-            <h2 className="text-3xl font-bold text-gray-900">
-              Upcoming Events (Next 7 Days)
-            </h2>
-          </div>
+        <Card>
+          <div className="p-8">
+            <div className="flex items-center gap-3 mb-8">
+              <Icon icon={Calendar} size="lg" color="primary" decorative />
+              <h2 className="text-2xl font-heading font-bold text-primary">
+                Upcoming Events
+              </h2>
+            </div>
 
-          {club.events && club.events.length > 0 ? (
-            <div className="grid gap-6">
-              {club.events.map((event) => (
-                <EventCard key={event.id} event={event} />
-              ))}
-            </div>
-          ) : (
-            <div className="text-center py-16">
-              <Calendar className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-xl font-medium text-gray-900 mb-2">
-                No Upcoming Events
-              </h3>
-              <p className="text-gray-500">
-                This club doesn&apos;t have any events scheduled for the next 7
-                days.
-              </p>
-            </div>
-          )}
-        </div>
-      </div>
+            {club.events && club.events.length > 0 ? (
+              <ContentGrid columns="2" gap="lg">
+                {club.events.map((event) => (
+                  <EventCard key={event.id} event={event} />
+                ))}
+              </ContentGrid>
+            ) : (
+              <EmptyState
+                icon={Calendar}
+                title="No upcoming events"
+                description="This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+              />
+            )}
+          </div>
+        </Card>
+      </PageContainer>
     </div>
   )
 }

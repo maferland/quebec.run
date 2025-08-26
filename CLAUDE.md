@@ -1,44 +1,16 @@
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-**Table of Contents** _generated with [DocToc](https://github.com/thlorenz/doctoc)_
-
 - [Claude Development Guidelines](#claude-development-guidelines)
   - [General Principles](#general-principles)
+    - [UI/UX Quality Standards](#uiux-quality-standards)
     - [Code Changes Must Be Tested](#code-changes-must-be-tested)
+    - [YAGNI: Don’t Build for Unused Use Cases](#yagni-dont-build-for-unused-use-cases)
     - [Renaming and Refactoring](#renaming-and-refactoring)
     - [File Organization](#file-organization)
   - [Tech Stack Guidelines](#tech-stack-guidelines)
     - [Next.js 13+ App Router](#nextjs-13-app-router)
     - [REST API + React Query](#rest-api--react-query)
-    - [Prisma + PostgreSQL](#prisma--postgresql)
-      - [⚠️ CRITICAL: Prevent N+1 Query Problems](#-critical-prevent-n1-query-problems)
-    - [Zod Validation](#zod-validation)
-    - [NextAuth.js](#nextauthjs)
-    - [TypeScript Best Practices](#typescript-best-practices)
-    - [Tailwind CSS](#tailwind-css)
-  - [Code Style & Formatting](#code-style--formatting)
-    - [Component Patterns](#component-patterns)
-    - [Component Design Principles](#component-design-principles)
-    - [Hook Patterns](#hook-patterns)
-    - [Prettier Configuration](#prettier-configuration)
-  - [Testing Guidelines](#testing-guidelines)
-    - [Testing Best Practices](#testing-best-practices)
-    - [E2E Testing with Playwright](#e2e-testing-with-playwright)
-      - [Semantic Queries (Playwright + RTL Style)](#semantic-queries-playwright--rtl-style)
-      - [Content Validation](#content-validation)
-      - [Sequential Flow Testing](#sequential-flow-testing)
-      - [Test Configuration](#test-configuration)
-      - [Scripts Available](#scripts-available)
-    - [Test Requirements](#test-requirements)
-    - [Test Types](#test-types)
-    - [Critical Testing Layers](#critical-testing-layers)
-    - [Database Testing](#database-testing)
-    - [Storybook](#storybook)
-  - [Development Workflow](#development-workflow)
-    - [Before Completing Tasks](#before-completing-tasks)
-    - [Component Development Checklist](#component-development-checklist)
-    - [File Naming Conventions](#file-naming-conventions)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -46,103 +18,132 @@
 
 ## General Principles
 
+### UI/UX Quality Standards
+
+**Minimum WCAG AA compliance; aim for AAA where practical.**
+
+- **Visual Design**: Professional, polished, and cohesive branding throughout
+- **User Experience**: Intuitive navigation, clear information hierarchy, and responsive design
+- **Accessibility**: Semantic HTML, proper contrast ratios, and full keyboard navigation
+- **Performance**: Fast loading times, optimized images, and smooth animations
+- **Code Quality**: Clean, maintainable, well-tested code with consistent patterns
+
+**Button and Interactive Element Guidelines:**
+
+- **Never sacrifice usability for aesthetics** — interactive elements must be clearly visible across all states
+- **Maintain consistent hover/focus states** — visible feedback without reducing contrast
+- **Ensure proper contrast ratios** — AA minimum (AAA when feasible)
+- **Test all interactive states** — default, hover, focus, active, disabled
+
 ### Code Changes Must Be Tested
 
-- **All code changes require tests** - components, functions, tRPC procedures, etc.
+- **All code changes require tests** — components, functions, APIs, etc.
 - **Tests must be green before completing any task**
-- Run `npm run test -- --coverage` to verify coverage meets 95% threshold
-- Current coverage: **37.83%** - needs significant improvement
+- Run `npm run test -- --coverage` to verify coverage meets **95% threshold**
+
+### Security Gates Must Never Be Bypassed
+
+- **NEVER use `--no-verify` or similar flags** to skip pre-commit hooks, linting, or quality checks
+- **All quality gates must pass** — ESLint, TypeScript, tests, formatting, security checks
+- **Fix issues at the source** — resolve linting errors, type errors, and test failures properly
+- **Quality gates exist for security and code quality** — bypassing them introduces technical debt and potential vulnerabilities
+
+### YAGNI: Don’t Build for Unused Use Cases
+
+- **Avoid being too eager.** Don’t implement features, props, hooks, or abstractions that have no current use case.
+- **Focus on what is needed now.** Code should solve today’s problems and be exercised by the product immediately.
+- **Be thoughtful about tomorrow.** When writing code, stay aware of future directions — especially changes that would be expensive to retrofit (e.g., database schema, API design, or core component patterns).
+- **Balance pragmatism with foresight.** Prefer minimal solutions that can evolve naturally rather than speculative architectures.
 
 ### Renaming and Refactoring
 
-- **Be thorough when renaming** - update all references across the entire codebase
-- **Search and replace systematically** - files, imports, variable names, types, schemas, tests, documentation
-- **Update related file names** - services, hooks, API routes, test files
+- **Be thorough when renaming** — update all references across the entire codebase
+- **Search and replace systematically** — files, imports, variable names, types, schemas, tests, documentation
+- **Update related file names** — services, hooks, API routes, test files
 - **Check for broken imports** after renaming files
 
 ### File Organization
 
 - **Colocate tests with code**: `button.test.tsx` next to `button.tsx`
 - **Colocate stories with components**: `button.stories.tsx` next to `button.tsx`
-- **No default exports** - use named exports: `export { Button }`
+- **Prefer named exports**: `export { Button }`
 - **Use `export type`** for TypeScript types: `export type ButtonProps = {...}`
+- **Exceptions for default exports** where the framework **requires** them (e.g., Next.js page files, Storybook story default export)
 
 ## Tech Stack Guidelines
 
 ### Next.js 13+ App Router
 
 - **Use file-based routing** in `app/` directory
-- **Prefer server components** when possible, use `'use client'` only when needed
-- **Use proper metadata API** for SEO: `export const metadata = {...}`
+- **Prefer server components**; add `'use client'` only when needed
+- **Use metadata API** for SEO: `export const metadata = {...}`
 - **Leverage route handlers** in `app/api/` for API endpoints
-- **Use `loading.tsx`, `error.tsx`, `not-found.tsx`** for special files
+- **Use `loading.tsx`, `error.tsx`, `not-found.tsx`** for special states
 
 ### REST API + React Query
 
-- **Use App Router route handlers** - leverage Next.js 15+ patterns in `app/api/`
-- **Clean route handlers** - import service functions, use `withErrorHandler`, keep routes simple
-- **Separate service layer** - all business logic in `src/lib/services/`, routes only handle HTTP
-- **Service layer pattern** EXAMPLE: `import { getAllClubs } from '@/lib/services/clubs'`
-- **Services are pure business logic** - no middleware, consistent payload signatures
-- **Use payload utility types** for consistent function signatures:
+- **Use App Router route handlers** — `app/api/` patterns
+- **Clean route handlers** — import service functions, use `withPublic/withAuth`, keep routes thin
+- **Separate service layer** — business logic in `src/lib/services/`
+- **Service layer pattern** example: `import { getAllClubs } from '@/lib/services/clubs'`
+- **Services are pure business logic** — consistent payload signatures
 
-  ```ts
-  // Public services (no auth required)
-  export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
-    // business logic here
-  }
+```ts
+// Public services (no auth)
+export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
+  // business logic here
+}
 
-  // Authenticated services
-  export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
-    return await prisma.club.create({
-      data: {
-        ...data,
-        createdBy: user.id,
-      },
-    })
-  }
-  ```
-
-- **Use combined route handlers** - clean middleware composition in API routes:
-
-  ```ts
-  // app/api/clubs/route.ts
-  export const GET = withPublic(clubsQuerySchema)(async (data) => {
-    const clubs = await getAllClubs({ data })
-    return Response.json(clubs)
+// Authenticated services
+export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
+  return await prisma.club.create({
+    data: {
+      ...data,
+      createdBy: user.id,
+    },
   })
+}
+```
 
-  export const POST = withAuth(clubCreateSchema)(async ({ user, data }) => {
-    const club = await createClub({ user, data })
-    return Response.json(club, { status: 201 })
-  })
-  ```
+````
 
-- **NEVER use withErrorHandler directly** - it's internal to the combined handlers
-- **Only use withPublic and withAuth** - they include error handling automatically
-- **Type-safe API calls** - use Zod schemas with proper TypeScript inference
-- **Use proper error handling** with `withErrorHandler` wrapper for consistent responses
-- **Let types flow** - avoid explicit return types, let TypeScript infer from implementation
+**Combined route handlers:**
+
+```ts
+// app/api/clubs/route.ts
+export const GET = withPublic(clubsQuerySchema)(async (data) => {
+  const clubs = await getAllClubs({ data })
+  return Response.json(clubs)
+})
+
+export const POST = withAuth(clubCreateSchema)(async ({ user, data }) => {
+  const club = await createClub({ user, data })
+  return Response.json(club, { status: 201 })
+})
+```
+
+- **Never use `withErrorHandler` directly** — it’s wrapped by `withPublic/withAuth`
+- **Type-safe API calls** — Zod schemas + TS inference
+- **Let types flow** — avoid redundant explicit return types
 
 ### Prisma + PostgreSQL
 
-- **Use descriptive model names** and follow naming conventions
-- **Leverage Prisma relations** properly with `include` and `select`
-- **Use database constraints** and proper foreign keys
-- **Write migrations carefully** - test locally before deploying
-- **Seed data should be reproducible** and use proper factories
-- **Use CUID for all IDs** - `@default(cuid())` generates collision-resistant, sortable IDs
-- **Never manually set IDs in tests** - let Prisma generate CUIDs to avoid conflicts
-- **NEVER use `prisma db push`** - always create proper migrations with `prisma migrate dev` for schema changes
-- **Ask user to run migrations** - if migration commands fail in non-interactive mode, ask user to run them manually
-- **Use minimal field selection** - Always use `select` with only required fields instead of `include` to minimize data transfer and improve performance
+- **Descriptive model names**; follow naming conventions
+- **Leverage relations** with `include`/`select`
+- **Use DB constraints** and proper FKs
+- **Write migrations carefully** — test locally before deploying
+- **Seed data** should be reproducible and use factories
+- **Use CUID for all IDs** — `@default(cuid())`
+- **Never manually set IDs in tests** — let Prisma generate CUIDs
+- **Never use `prisma db push`** — use `prisma migrate dev`
+- **Use minimal field selection** — prefer `select` of required fields
 
 #### ⚠️ CRITICAL: Prevent N+1 Query Problems
 
 **ALWAYS use `include` or `select` to fetch related data in single queries. NEVER loop over results to make additional queries.**
 
-```typescript
-// ❌ NEVER DO THIS - N+1 Query Problem
+```ts
+// ❌ NEVER - N+1
 const clubs = await prisma.club.findMany()
 const clubsWithEvents = await Promise.all(
   clubs.map(async (club) => {
@@ -151,7 +152,7 @@ const clubsWithEvents = await Promise.all(
   })
 )
 
-// ✅ ALWAYS DO THIS - Single Query with Include
+// ✅ DO - Single query with include
 const clubsWithEvents = await prisma.club.findMany({
   include: {
     events: {
@@ -167,56 +168,58 @@ const clubsWithEvents = await prisma.club.findMany({
 ### Zod Validation
 
 - **Define schemas close to usage** or in dedicated schema files
-- **Use Zod inference** for TypeScript types: `type User = z.infer<typeof userSchema>`
-- **Colocate schemas and types** - Export both together to avoid duplication
-- **Validate at API boundaries** - API route inputs, form data, environment variables
+- **Use Zod inference** for TS types: `type User = z.infer<typeof userSchema>`
+- **Colocate schemas and types** — export both
+- **Validate at boundaries** — API inputs, forms, env vars
 - **Create reusable schemas** for common patterns
 
-```typescript
-// ✅ Good - colocated schema and type
+```ts
+// ✅ Colocated schema + type
 export const eventIdSchema = z.object({
   id: z.string().min(1, 'Event ID is required'),
 })
 export type EventId = z.infer<typeof eventIdSchema>
-
-// ❌ Avoid - separated schema and type definitions
-// In one file: export const eventIdSchema = z.object({...})
-// In another file: type EventId = z.infer<typeof eventIdSchema>
 ```
 
 ### NextAuth.js
 
-- **Use proper session typing** with module augmentation
-- **Implement proper callback handling** for custom logic
-- **Use database adapter** for production (Prisma adapter configured)
-- **Handle authentication errors gracefully** in UI
-- **Protect API routes** with authentication middleware (`withAuth`)
+- **Proper session typing** with module augmentation
+- **Callbacks** for custom logic
+- **Prisma adapter** in production
+- **Graceful UI errors**
+- **Protect APIs** with `withAuth`
 
 ### TypeScript Best Practices
 
-- **Use strict mode** - `"strict": true` in tsconfig
-- **Prefer type over interface** for simple object types
-- **Use `export type`** for type-only exports
-- **NEVER use `any`** - use `unknown`, proper typing, or specific types
-- **Use `as const` for literal types** - creates readonly literal types instead of widened types
+- `"strict": true` in `tsconfig`
+- Prefer `type` over `interface` for simple objects
+- Use `export type` for type-only exports
+- **Avoid `any`** — use `unknown` or specific types
+- Use `as const` for literal types
 
 ### Tailwind CSS
 
-- **Use semantic class groupings** and organize by layout → styling → behavior
-- **Use `clsx` or `cn` utility** for conditional classes
-- **Create component variants** with class-variance-authority
-- **Use responsive design** with mobile-first approach
+- **Semantic class groupings**; order by layout → styling → behavior
+- Use `clsx`/`cn` for conditional classes
+- Component variants with `class-variance-authority`
+- **Mobile-first** responsive design
 
 ## Code Style & Formatting
 
 ### Component Patterns
 
-```typescript
+```tsx
 // ✅ Good
-export const Button = ({ variant = 'primary', children, ...props }: ButtonProps) => {
-  return <button className={cn(baseStyles, variants[variant])} {...props}>
-    {children}
-  </button>
+export const Button = ({
+  variant = 'primary',
+  children,
+  ...props
+}: ButtonProps) => {
+  return (
+    <button className={cn(baseStyles, variants[variant])} {...props}>
+      {children}
+    </button>
+  )
 }
 
 export type ButtonProps = {
@@ -227,18 +230,21 @@ export type ButtonProps = {
 
 ### Component Design Principles
 
-- **UI components should be opinionated** - Provide sensible defaults that work well in most cases
-- **Avoid requiring constant overrides** - If users always override defaults, change the defaults
-- **Design for the 80% use case** - Make common patterns easy, complex patterns possible
-- **Consistent API design** - Use similar prop patterns across components (e.g., `variant`, `as`, `className`)
+- **Opinionated components** — sensible defaults
+- **Avoid constant overrides** — change defaults if they’re always overridden
+- **Design for the 80%** — common easy, complex possible
+- **Consistent APIs** — shared prop patterns: `variant`, `as`, `className`
 
 ### Hook Patterns
 
-```typescript
-// ✅ Good - use 'opts' for hook parameters
+```ts
+// ✅ Use 'opts' for hook parameters
 export const useCounter = (opts: CounterOpts = {}) => {
   const { initialValue = 0 } = opts
-  return { count, increment: () => setCount((c) => c + 1) }
+  // ...
+  return {
+    /* count, increment */
+  }
 }
 
 export type CounterOpts = {
@@ -248,180 +254,265 @@ export type CounterOpts = {
 
 ### Prettier Configuration
 
-- **Automatically format code** with `npx prettier --write .`
+- **Format automatically**: `npx prettier --write .`
 - Configuration in `.prettierrc`
 
 ## Testing Guidelines
 
-### Testing Best Practices
+We follow a comprehensive 4-layer testing strategy to ensure quality, maintainability, and user-centric validation.
 
-- **Avoid using `.getByTestId()`** - Use semantic queries instead: `getByRole()`, `getByText()`, `getByLabelText()`
-- **Use `findBy` queries for async content** - Instead of `waitFor(() => getBy...)`, use `findBy` which includes built-in waiting
-- **Prefer semantic queries** - These queries reflect how users interact with the UI
-- **TestIds should only be used as a last resort** when no semantic query works
+### Unit Testing (React Components)
 
-```typescript
+> Purpose: keep tests fast, meaningful, and user-centric. We test behavior, not implementation.
+
+#### Core Principles
+
+- **Test like a user.** Query by role/name/label text; avoid implementation details and CSS selectors.
+- **Prefer public APIs.** Interact via the DOM and events, not component internals or hooks.
+- **Small & focused.** One behavior per test; clear Arrange–Act–Assert structure.
+- **Deterministic & fast.** No network, no timers leaking, no flakiness.
+- **Within TS boundaries.** No `null as any` just to force invalid inputs.
+- **Behavior over attributes.** Don’t assert `tabIndex`/`aria-hidden`—assert focusability, labels, and outcomes instead.
+- **Component scope.** Test the component’s responsibility, not unrelated containers.
+
+#### What to Test
+
+- User-visible states (loading, success, empty, error)
+- Interactions and side effects (clicks, typing, keyboard navigation)
+- Accessibility contracts (roles, names, labels, focus)
+- Branching logic important to users (feature flags, permissions)
+
+#### What Not to Test
+
+- Library internals (React, RTK, React Query, etc.)
+- Styling/layout pixel-perfection (covered by visual regression)
+- Private functions if covered via component behavior
+- CSS classes (avoid `toHaveClass('bg-red-500')`)
+
+#### Queries (use this order)
+
+1. `getByRole` (with `name`)
+2. `getByLabelText` / `getByPlaceholderText`
+3. `getByText` (sparingly)
+4. `getByTestId` **only** when no a11y handle exists
+
+Use `findBy*` for async; `queryBy*` to assert absence.
+
+#### Events
+
+- Use `@testing-library/user-event` (not `fireEvent`) for realistic typing, tabbing, clicks.
+
+#### Async
+
+- Prefer `findBy*` for elements that appear later.
+- Use `await waitFor(...)` for side-effect assertions.
+- Avoid arbitrary sleeps; wait on conditions.
+
+```ts
 // ❌ Avoid - using waitFor with getBy
 await waitFor(() => {
   expect(screen.getByText('Loading complete')).toBeInTheDocument()
 })
 
-// ✅ Good - using findBy for async content
+// ✅ Use findBy for async content
 expect(await screen.findByText('Loading complete')).toBeInTheDocument()
 ```
 
-### E2E Testing with Playwright
+#### Mocking & Data
 
-E2E tests validate complete user workflows using real browsers. Follow these guidelines for maintainable, reliable tests:
+- Mock network with **MSW** at the boundary.
+- Keep fixtures small and realistic; prefer factories.
+- Stub Date/Timers with Vitest fake timers when time matters.
 
-#### Semantic Queries (Playwright + RTL Style)
+#### Matchers
 
-- **Use semantic queries like RTL** - `page.getByRole()`, `page.getByText()`, `page.getByLabel()`
-- **Avoid CSS selectors** - No `page.locator('.class')` or `page.locator('[data-testid]')`
-- **Use locator chaining for context** - `page.getByRole('article').first().getByRole('heading')`
-- **Validate actual content** - Check text content, not just element existence
+- Use **`@testing-library/jest-dom`**: `toBeInTheDocument`, `toBeDisabled`, `toHaveTextContent`, `toHaveAccessibleName`, etc.
 
-```typescript
-// ❌ Avoid - CSS selectors and testids
-await page.locator('[data-testid="club-card"]').click()
-await page.locator('.button').click()
-await expect(page.locator('h3')).toBeVisible()
+#### Example
 
-// ✅ Good - semantic queries
-const clubCard = page.getByRole('article').first()
-await expect(clubCard.getByRole('heading')).toContainText(/Quebec Running Club/)
-await clubCard.getByRole('button', { name: 'View Details' }).click()
-```
+```tsx
+import { describe, it, expect } from 'vitest'
+import { render, screen } from '@/lib/test-utils'
+import userEvent from '@testing-library/user-event'
+import LoginForm from './LoginForm'
 
-#### Content Validation
+describe('LoginForm', () => {
+  it('submits credentials and shows greeting', async () => {
+    render(<LoginForm />)
+    const user = userEvent.setup()
 
-- **Check actual text content** - Don't just verify elements exist
-- **Use regex for flexible matching** - Handle dynamic content gracefully
-- **Validate user-facing content** - Test what users actually see
+    await user.type(screen.getByLabelText(/email/i), 'a@b.com')
+    await user.type(screen.getByLabelText(/password/i), 'secret')
+    await user.click(screen.getByRole('button', { name: /sign in/i }))
 
-```typescript
-// ❌ Avoid - only checking existence
-await expect(page.getByRole('heading')).toBeVisible()
-
-// ✅ Good - validating actual content
-await expect(page.getByRole('heading')).toContainText(/Featured Run Clubs/i)
-await expect(clubCard.getByText(/Quebec|Running|Club/)).toBeVisible()
-```
-
-#### Sequential Flow Testing
-
-- **Test realistic user workflows** - Not just isolated interactions
-- **Wait for content to load** - Let async operations complete
-- **Handle loading states gracefully** - Test both loading and loaded states
-
-```typescript
-// ✅ Good - realistic user flow
-test('user can browse and view club details', async ({ page }) => {
-  await page.goto('/')
-
-  // Wait for clubs to load
-  await expect(page.getByRole('heading', { level: 3 }).first()).toBeVisible({
-    timeout: 10000,
+    expect(await screen.findByText(/welcome, marc/i)).toBeVisible()
   })
 
-  // Click on first club
-  const firstClub = page.getByRole('article').first()
-  await expect(firstClub.getByRole('heading')).toContainText(/\w+/)
-  await firstClub.getByRole('link', { name: /view|details/i }).click()
+  it('supports keyboard navigation', async () => {
+    render(<LoginForm />)
+    const user = userEvent.setup()
 
-  // Verify navigation to club details
-  await expect(page).toHaveURL(/\/clubs\//)
-  await expect(page.getByRole('heading', { level: 1 })).toBeVisible()
+    const emailInput = screen.getByLabelText(/email/i)
+    emailInput.focus()
+    expect(emailInput).toHaveFocus()
+
+    await user.tab()
+    expect(screen.getByLabelText(/password/i)).toHaveFocus()
+  })
 })
 ```
 
+#### Coverage & Requirements
+
+- **95% code coverage threshold** enforced with `npm run test -- --coverage`
+- Keep tests parallelizable and hermetic; no shared mutable state.
+- Aim for **meaningful coverage** (critical paths). Coverage % is a guide, not a goal.
+
+### Integration Testing (Services & Database)
+
+Integration tests validate business logic functions and database interactions using a real test database.
+
+#### Database Testing
+
+- **Use separate test database** (e.g., `courses_test`)
+- **Require explicit `TEST_DATABASE_URL`**; never fall back to main DB
+- **Clean and seed** before each test
+- **Clean up after** each test (`afterEach`)
+- **Let Prisma generate IDs** (no manual ID setting)
+- **Avoid parallel collisions** — unique data per test
+
+#### Parallelization with Vitest
+
+- Vitest runs tests in **parallel** by default, which can conflict with a shared test DB.
+- For DB-related suites, run sequentially:
+
+  ```bash
+  vitest run --runInBand
+  ```
+
+- Or provision **per-suite databases** (dynamic schema names) / **test containers** for true parallel runs.
+
+#### Service Layer Testing
+
+- Test business logic functions directly
+- Use realistic data (factories/fixtures)
+- Test error conditions (validation, constraints)
+- Mock external APIs (MSW for HTTP, mock third-party SDKs)
+
+#### API Route Testing
+
+- Test actual HTTP endpoints (e.g., GET `/api/clubs`, POST `/api/runs`)
+- Use supertest-style requests to route handlers
+- Test auth/permissions
+- Test error responses (400/401/404/500) and error shapes
+
+### End-to-End Testing (Playwright)
+
+Validate complete user workflows using real browsers. Focus on happy paths and critical journeys.
+
+#### Semantic Queries (Playwright + RTL Style)
+
+- Use semantic queries: `page.getByRole()`, `page.getByText()`, `page.getByLabel()`
+- Avoid CSS selectors / test IDs when possible
+- Use locator chaining for context
+- Validate **content**, not just existence
+
 #### Test Configuration
 
-- **Always run headless by default** - Use `npm run test:e2e:headed` only for debugging
-- **Use Chrome desktop + mobile** - Test responsive design
-- **Sequential execution in CI** - Prevent flaky parallel test issues
-- **Proper timeouts** - Allow for real network delays
+- Headless by default; use headed/UI modes only for debugging
+- Test desktop + mobile viewports
+- Sequential in CI for stability; tune timeouts realistically
 
 #### Scripts Available
 
-- `npm run test:e2e` - Headless tests (default)
-- `npm run test:e2e:headed` - Visual debugging mode
-- `npm run test:e2e:ui` - Playwright UI for test development
+- `npm run test:e2e` — headless
+- `npm run test:e2e:headed` — visual debugging
+- `npm run test:e2e:ui` — Playwright UI
 
-### Test Requirements
+### UI Documentation & Visual Regression (Storybook)
 
-- **95% code coverage threshold** enforced
-- **All components must have both tests AND Storybook stories**
-- **Exception**: Ask before skipping tests/stories for simple wrapper components
+Storybook provides visual docs and visual regression via **Chromatic** in CI.
 
-### Test Types
+#### Story Requirements
 
-- **Component tests**: Unit tests for React components using RTL + Vitest
-- **Service integration tests**: Business logic functions with test database
-- **API route tests**: Test actual HTTP endpoints to catch route handler bugs
-- **E2E tests**: Happy path user flows with Playwright using semantic queries
+- Every component needs a story (unless explicitly exempted)
+- Stories colocated with components
+- Separate stories per variant/state
+- Descriptive names: `Primary`, `Secondary`, `Disabled`, `Loading`
+- Controls via `argTypes` for props exploration
+
+#### Visual Testing
+
+- **Chromatic** runs visual regression on PRs; treat diffs as code reviews
+- Document component states visually (loading/error/empty)
+- Test responsive behavior with Storybook viewports
+- Validate accessibility with Storybook a11y addon
+
+#### Import Guidelines
+
+```ts
+// ✅ Use framework package
+import type { Meta, StoryObj } from '@storybook/nextjs'
+
+// ❌ Don’t import the generic React renderer directly in this project
+// import type { Meta, StoryObj } from '@storybook/react'
+```
 
 ### Critical Testing Layers
 
-**IMPORTANT**: Test all layers to prevent runtime errors:
+**IMPORTANT**: Cover the appropriate layer(s) to prevent runtime errors:
 
-1. **Service layer**: Test business logic functions directly
-2. **API route layer**: Test actual HTTP endpoints (GET /api/clubs, POST /api/runs, etc.)
-3. **Frontend integration**: Test React Query hooks with MSW
-4. **E2E**: Test complete user flows
+1. **Unit** — component behavior and user interactions
+2. **Integration** — service/business logic with DB
+3. **API** — HTTP endpoints and handler behavior
+4. **E2E** — full user workflows and happy paths
 
-Missing API route tests caused our recent runtime error - service layer worked but route handlers had bugs.
+Missing the right layer can cause production bugs (e.g., API route not covered while service tests pass).
 
-### Database Testing
+#### Testing Scope Responsibility
 
-- **Use separate test database**: `courses_test`
-- **Never fall back to main database** - require explicit `TEST_DATABASE_URL`
-- **Clean and seed data** before each test
-- **Clean up after each test** - use `afterEach` to prevent data leaks between tests
-- **Let Prisma generate IDs** - never manually set IDs in test data to avoid conflicts
-- **Avoid parallel test execution issues** - use unique data for each test
+Avoid duplicating the same assertions at multiple layers:
 
-### Storybook
-
-- **Every component needs a story** unless explicitly discussed
-- **Stories should be colocated** with components
-- **Create one story per variant** - each component variant/state gets its own individual story
-- **Create separate stories for each component state/variant** for better testing and documentation
-- **Use descriptive story names** like `Primary`, `Secondary`, `Disabled`, etc.
-- **Include interactive controls** with argTypes for props exploration
-- **Use correct Storybook imports** - Always import from framework package, never renderer package:
-
-```typescript
-// ✅ Good - use framework package
-import type { Meta, StoryObj } from '@storybook/nextjs'
-
-// ❌ Bad - never use renderer package directly
-import type { Meta, StoryObj } from '@storybook/react'
-```
+| Layer           | Responsibility                                                   | Example                                                        |
+| --------------- | ---------------------------------------------------------------- | -------------------------------------------------------------- |
+| **Unit**        | Component logic and UI states; service functions in isolation    | Button disables on invalid form; `sum()` returns correct value |
+| **Integration** | Interaction between service + database; multiple modules working | `createClub` service saves to DB with relations                |
+| **API**         | Request/response formatting, auth, validation, error handling    | POST `/api/clubs` returns 401 if unauthenticated               |
+| **E2E**         | Full user flows, critical happy paths                            | User signs in → creates a club → sees it listed                |
 
 ## Development Workflow
 
 ### Before Completing Tasks
 
-**MANDATORY: After completing ANY of the following, ALWAYS run this checklist:**
+**MANDATORY checklist for code-impacting changes:**
 
-1. **Run linter**: `npm run lint` - Fix all ESLint errors before proceeding
-2. **Run TypeScript check**: `npx tsc --noEmit` - Ensure no TypeScript errors
-3. **Run tests**: `npm run test -- --coverage` - Verify all tests pass
-4. **Verify 95% coverage threshold** - Ensure coverage meets requirements
-5. **Format code**: `npx prettier --write .` - Apply consistent formatting
+1. **Run linter**: `npm run lint`
+2. **Run TypeScript check**: `npx tsc --noEmit`
+3. **Run tests**: `npm run test -- --coverage`
+4. **Verify 95% coverage threshold**
+5. **Format code**: `npx prettier --write .`
 
 **Quality gates are required for:**
 
-- **ANY component creation** - new .tsx files with tests and stories
-- **ANY schema changes** - Prisma models, Zod schemas, API types
-- **ANY service layer changes** - business logic, API routes, database queries
-- **ANY hook or utility creation** - reusable logic with tests
-- **Refactoring existing code** - changes to multiple existing files
-- **Bug fixes** - ensure fix works and doesn't break other functionality
-- **Feature completion** - when user says "moving on" or task is done
+- Component creation (.tsx) — with tests and stories
+- Schema changes — Prisma models, Zod schemas, API types
+- Service layer changes — business logic, API routes, DB queries
+- Hook/utility creation — with tests
+- Refactors across multiple files
+- Bug fixes — ensure fix + no regressions
+- Feature completion — when moving on / done
 
-**NEVER skip quality gates for "small" changes. Component creation, new utilities, and schema changes always require full validation.**
+**NEVER skip quality gates** for component creation, new utilities, or schema changes.
+
+#### Lightweight Lane (Non-Functional Changes)
+
+For changes that **do not affect runtime behavior** (docs, comments, config, text copy, styling-only refactors), a reduced workflow is acceptable:
+
+1. `npm run lint`
+2. `npx tsc --noEmit`
+3. `npx prettier --write .`
+
+Full test suite + coverage gates are **not required** for these cases.
 
 ### Component Development Checklist
 
@@ -438,4 +529,5 @@ import type { Meta, StoryObj } from '@storybook/react'
 - Stories: `button.stories.tsx`, `header.stories.tsx`
 - E2E tests: `home.e2e.ts`, `calendar.e2e.ts`
 
-Remember: Quality over speed. Comprehensive tests and documentation make the codebase maintainable and reliable.
+**Remember:** Quality over speed. Comprehensive tests and documentation make the codebase maintainable and reliable.
+````

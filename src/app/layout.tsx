@@ -1,22 +1,25 @@
 import type { Metadata } from 'next'
-import { Geist, Geist_Mono } from 'next/font/google'
+import { Montserrat, Inter } from 'next/font/google'
 import './globals.css'
 import { Providers } from './providers'
 import { Header } from '@/components/layout/header'
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const montserrat = Montserrat({
+  variable: '--font-heading',
   subsets: ['latin'],
+  display: 'swap',
 })
 
-const geistMono = Geist_Mono({
-  variable: '--font-geist-mono',
+const inter = Inter({
+  variable: '--font-body',
   subsets: ['latin'],
+  display: 'swap',
 })
 
 export const metadata: Metadata = {
-  title: 'Courses - Quebec Run Clubs',
-  description: 'Discover and join run clubs in Quebec City',
+  title: 'quebec.run - Find Your Next Run in Quebec City',
+  description:
+    'Discover running clubs and events in Quebec City. Connect with fellow runners and explore new routes together.',
 }
 
 export default function RootLayout({
@@ -27,7 +30,7 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased bg-gray-50`}
+        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant`}
       >
         <Providers>
           <Header />

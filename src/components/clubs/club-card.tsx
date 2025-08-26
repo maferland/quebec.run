@@ -2,7 +2,9 @@ import type { GetAllClubsReturn } from '@/lib/services/clubs'
 import { Link } from '@/components/ui/link'
 import { Tag } from '@/components/ui/tag'
 import { Card } from '@/components/ui/card'
-import { Calendar } from 'lucide-react'
+import { LocationInline } from '@/components/ui/location'
+import { formatEventDateFr } from '@/lib/utils/date-formatting'
+import { Calendar, Users, Clock, MapPin } from 'lucide-react'
 
 const MAX_EVENTS_TO_DISPLAY = 3
 
@@ -24,15 +26,29 @@ export function ClubCard({ club }: ClubCardProps) {
       href={`/clubs/${club.slug}`}
       className="block no-underline hover:no-underline"
     >
-      <Card variant="interactive" data-testid="club-card">
+      <Card
+        variant="interactive"
+        data-testid="club-card"
+        className="border-l-4 border-primary hover:shadow-lg transition-all duration-200"
+      >
         {/* Header */}
-        <div className="flex items-start justify-between mb-3">
-          <h2 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
-            {club.name}
-          </h2>
+        <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start gap-3">
+            <div className="p-2 bg-primary/10 rounded-lg">
+              <Users className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <h2 className="text-xl font-heading font-bold text-primary group-hover:text-primary/80 transition-colors">
+                {club.name}
+              </h2>
+              <div className="mt-1">
+                <LocationInline address="Quebec City" className="text-sm" />
+              </div>
+            </div>
+          </div>
 
           {/* Event count badge */}
-          <div className="flex items-center gap-1 px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+          <div className="flex items-center gap-1 px-3 py-1 bg-secondary/10 text-secondary rounded-full text-sm font-medium">
             <Calendar className="h-3 w-3" />
             {eventCount}
           </div>
@@ -40,53 +56,66 @@ export function ClubCard({ club }: ClubCardProps) {
 
         {/* Description - truncated */}
         {club.description && (
-          <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+          <p className="text-text-secondary font-body text-sm mb-4 line-clamp-2 leading-relaxed">
             {club.description}
           </p>
         )}
 
-        {/* Upcoming Events - Horizontal Layout with Wrapping */}
-        <div className="flex flex-wrap gap-3 mb-3">
+        {/* Upcoming Events - Clean layout */}
+        <div className="space-y-3 mb-4">
           {upcomingEvents.slice(0, MAX_EVENTS_TO_DISPLAY).map((event) => (
             <div
               key={event.id}
-              className="flex-1 min-w-[200px] p-3 bg-gray-100 rounded-lg border-l-4 border-blue-500"
+              className="p-3 bg-surface-variant rounded-xl border border-border hover:border-primary/20 transition-colors"
             >
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-sm font-medium text-gray-900 truncate">
-                  {event.title}
-                </p>
-                <Tag variant="time">{event.time}</Tag>
+              <div className="flex items-start gap-2 mb-2">
+                <div className="flex gap-2 flex-1 min-w-0">
+                  <MapPin className="h-4 w-4 text-primary flex-shrink-0 mt-0.5" />
+                  <p className="font-body font-medium text-text-primary line-clamp-2 leading-tight">
+                    {event.title}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 self-start">
+                  <Tag variant="time" icon={Clock} size="xs">
+                    {event.time}
+                  </Tag>
+                </div>
               </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <Tag variant="date">
-                  {new Date(event.date).toLocaleDateString('fr-CA', {
-                    weekday: 'short',
-                    month: 'short',
-                    day: 'numeric',
-                  })}
+              <div className="flex items-center gap-2 flex-wrap ml-6">
+                <Tag variant="date" size="xs">
+                  {formatEventDateFr(event.date, 'abbreviated')}
                 </Tag>
                 {event.distance && (
-                  <Tag variant="distance">{event.distance}</Tag>
+                  <Tag variant="distance" size="xs">
+                    {event.distance}
+                  </Tag>
                 )}
-                {event.pace && <Tag variant="pace">{event.pace}</Tag>}
+                {event.pace && (
+                  <Tag variant="pace" size="xs">
+                    {event.pace}
+                  </Tag>
+                )}
               </div>
             </div>
           ))}
 
           {eventCount > MAX_EVENTS_TO_DISPLAY && (
-            <div className="flex-1 min-w-[120px] flex items-center justify-center p-3 bg-gray-100 rounded-lg">
-              <p className="text-xs text-gray-500 text-center">
-                +{eventCount - MAX_EVENTS_TO_DISPLAY} more this week
+            <div className="flex items-center justify-center p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-dashed border-primary/20">
+              <p className="text-sm text-text-secondary font-body text-center">
+                +{eventCount - MAX_EVENTS_TO_DISPLAY} more events this week
               </p>
             </div>
           )}
         </div>
 
-        {/* Footer with vertically centered link */}
-        <div className="flex items-center justify-center pt-3 border-t border-gray-200">
-          <div className="text-xs text-blue-600 group-hover:text-blue-700 font-medium">
-            View details →
+        {/* Footer with action button */}
+        <div className="flex items-center justify-between pt-4 border-t border-border">
+          <div className="flex items-center gap-1 text-xs text-text-secondary font-body">
+            <Calendar className="h-3 w-3" />
+            <span>{eventCount} upcoming events</span>
+          </div>
+          <div className="text-sm text-primary group-hover:text-primary/80 font-medium font-body">
+            View Club →
           </div>
         </div>
       </Card>

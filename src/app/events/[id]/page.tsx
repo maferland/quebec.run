@@ -3,8 +3,19 @@ import { getEventById } from '@/lib/services/events'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { Tag } from '@/components/ui/tag'
+import { PageContainer } from '@/components/ui/page-container'
+import { Icon } from '@/components/ui/icon'
+import { formatEventDateFr } from '@/lib/utils/date-formatting'
 import type { PageProps } from '@/lib/types/next'
-import { Calendar, MapPin, Clock, Users, ArrowLeft } from 'lucide-react'
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  ArrowLeft,
+  Route,
+  Gauge,
+} from 'lucide-react'
 
 export type EventPageProps = PageProps<{ id: string }>
 
@@ -17,139 +28,197 @@ export default async function EventPage({ params }: EventPageProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8">
+    <div className="min-h-screen bg-surface-variant">
+      <PageContainer>
         {/* Back Navigation */}
         <div className="mb-8">
           <Link
             href="/events"
-            className="text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2"
+            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
           >
-            <ArrowLeft className="h-4 w-4" />
+            <Icon icon={ArrowLeft} size="sm" decorative />
             Back to All Events
           </Link>
         </div>
 
         {/* Event Header */}
-        <Card className="mb-8">
-          <div className="flex items-start justify-between mb-6">
-            <div className="flex-1 min-w-0">
-              <h1 className="text-4xl font-bold text-gray-900 mb-4">
-                {event.title}
-              </h1>
-              {event.club && (
-                <Link
-                  href={`/clubs/${event.club.slug}`}
-                  className="text-lg text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  {event.club.name}
-                </Link>
-              )}
-            </div>
-            <div className="flex items-center gap-2 ml-4">
-              <Calendar className="h-5 w-5 text-blue-600" />
-              <Tag variant="date">
-                {new Date(event.date).toLocaleDateString('fr-CA', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}
-              </Tag>
-              <Tag variant="time">{event.time}</Tag>
-            </div>
-          </div>
-
-          {event.description && (
-            <div className="mb-6">
-              <p className="text-lg text-gray-700 leading-relaxed">
-                {event.description}
-              </p>
-            </div>
-          )}
-
-          {/* Event Details */}
-          <div className="flex items-center gap-4 flex-wrap mb-6">
-            {event.distance && (
-              <div className="flex items-center gap-2">
-                <Users className="h-4 w-4 text-gray-500" />
-                <Tag variant="distance">{event.distance}</Tag>
-              </div>
-            )}
-            {event.pace && (
-              <div className="flex items-center gap-2">
-                <Clock className="h-4 w-4 text-gray-500" />
-                <Tag variant="pace">{event.pace}</Tag>
-              </div>
-            )}
-          </div>
-
-          {/* Location */}
-          {event.address && (
-            <Card variant="accent" className="bg-blue-50">
-              <div className="flex items-start gap-3">
-                <MapPin className="h-5 w-5 text-red-500 mt-1 flex-shrink-0" />
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">
-                    Meeting Location
-                  </h3>
-                  <p className="text-gray-700">{event.address}</p>
-                  {/* TODO: Add map integration here */}
+        <Card className="mb-8 overflow-hidden">
+          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-8">
+            <div className="max-w-4xl">
+              {/* Event Title & Club */}
+              <div className="flex items-start gap-4 mb-6">
+                <div className="p-3 bg-secondary/10 rounded-lg">
+                  <Icon
+                    icon={Calendar}
+                    size="xl"
+                    color="secondary"
+                    decorative
+                  />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-4xl font-heading font-bold text-secondary mb-3">
+                    {event.title}
+                  </h1>
+                  {event.club && (
+                    <Link href={`/clubs/${event.club.slug}`}>
+                      <Tag variant="outline" icon={Users}>
+                        {event.club.name}
+                      </Tag>
+                    </Link>
+                  )}
                 </div>
               </div>
-            </Card>
-          )}
+
+              {/* Description */}
+              {event.description && (
+                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
+                  {event.description}
+                </p>
+              )}
+
+              {/* Event Details */}
+              <div className="flex items-center gap-3 flex-wrap mb-6">
+                <Tag variant="datetime" icon={Calendar}>
+                  {formatEventDateFr(event.date, 'full')}
+                </Tag>
+                <Tag variant="time" icon={Clock}>
+                  {event.time}
+                </Tag>
+                {event.distance && (
+                  <Tag variant="distance" icon={Route}>
+                    {event.distance}
+                  </Tag>
+                )}
+                {event.pace && (
+                  <Tag variant="pace" icon={Gauge}>
+                    {event.pace}
+                  </Tag>
+                )}
+              </div>
+
+              {/* Location */}
+              {event.address && (
+                <div className="bg-surface border border-border rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Icon icon={MapPin} size="md" color="primary" decorative />
+                    <div>
+                      <h3 className="font-heading font-semibold text-text-primary mb-1">
+                        Meeting Location
+                      </h3>
+                      <p className="text-text-secondary font-body">
+                        {event.address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
         </Card>
 
         {/* Additional Information */}
         <Card>
-          <h2 className="text-2xl font-bold text-gray-900 mb-4">
-            Event Information
-          </h2>
-          <div className="space-y-4">
-            <div>
-              <h3 className="font-semibold text-gray-900 mb-2">When</h3>
-              <p className="text-gray-700">
-                {new Date(event.date).toLocaleDateString('fr-CA', {
-                  weekday: 'long',
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                })}{' '}
-                at {event.time}
-              </p>
+          <div className="p-8">
+            <div className="flex items-center gap-3 mb-8">
+              <Icon icon={Clock} size="lg" color="primary" decorative />
+              <h2 className="text-2xl font-heading font-bold text-primary">
+                Event Details
+              </h2>
             </div>
 
-            {event.distance && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Distance</h3>
-                <p className="text-gray-700">{event.distance}</p>
-              </div>
-            )}
+            <div className="grid md:grid-cols-2 gap-8">
+              {/* Event Info */}
+              <div className="space-y-6">
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <Icon
+                      icon={Calendar}
+                      size="sm"
+                      color="text-secondary"
+                      decorative
+                    />
+                    <h3 className="font-heading font-semibold text-text-primary">
+                      When
+                    </h3>
+                  </div>
+                  <p className="text-text-secondary font-body">
+                    {formatEventDateFr(event.date, 'full')} at {event.time}
+                  </p>
+                </div>
 
-            {event.pace && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Pace</h3>
-                <p className="text-gray-700">{event.pace}</p>
-              </div>
-            )}
+                {event.distance && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon
+                        icon={Route}
+                        size="sm"
+                        color="text-secondary"
+                        decorative
+                      />
+                      <h3 className="font-heading font-semibold text-text-primary">
+                        Distance
+                      </h3>
+                    </div>
+                    <p className="text-text-secondary font-body">
+                      {event.distance}
+                    </p>
+                  </div>
+                )}
 
-            {event.club && (
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">
-                  Organized by
-                </h3>
-                <Link
-                  href={`/clubs/${event.club.slug}`}
-                  className="text-blue-600 hover:text-blue-800 font-medium"
-                >
-                  {event.club.name} →
-                </Link>
+                {event.pace && (
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon
+                        icon={Gauge}
+                        size="sm"
+                        color="text-secondary"
+                        decorative
+                      />
+                      <h3 className="font-heading font-semibold text-text-primary">
+                        Pace
+                      </h3>
+                    </div>
+                    <p className="text-text-secondary font-body">
+                      {event.pace}
+                    </p>
+                  </div>
+                )}
               </div>
-            )}
+
+              {/* Club Info */}
+              {event.club && (
+                <div className="space-y-6">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <Icon
+                        icon={Users}
+                        size="sm"
+                        color="text-secondary"
+                        decorative
+                      />
+                      <h3 className="font-heading font-semibold text-text-primary">
+                        Organized by
+                      </h3>
+                    </div>
+                    <Link
+                      href={`/clubs/${event.club.slug}`}
+                      className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body font-medium transition-colors"
+                    >
+                      {event.club.name}
+                      <Icon
+                        icon={ArrowLeft}
+                        size="sm"
+                        className="rotate-180"
+                        decorative
+                      />
+                    </Link>
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
         </Card>
-      </div>
+      </PageContainer>
     </div>
   )
 }
