@@ -1,5 +1,5 @@
-import { expect, type Page, type Locator } from '@playwright/test'
-import { getTranslation, getBilingualTranslations } from './test-i18n'
+import { expect, type Locator, type Page } from '@playwright/test'
+import { getBilingualTranslations, getTranslation } from './test-i18n'
 
 type Locale = 'en' | 'fr'
 
@@ -191,10 +191,10 @@ export async function navigateAndVerifyLocalizedPage(
   headingKey: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  await navigateToLocalizedPage(page, path, locale)
-  await expectLocalizedURL(page, path, locale)
+  await navigateToLocalizedPage({ page, path, locale })
+  await expectLocalizedURL({ page, path, locale })
   await expectLocalizedTitle(page, titleKey, locale)
-  await expectLocalizedHeading(page, headingKey, undefined, locale)
+  await expectLocalizedHeading({ page, translationKey: headingKey, locale })
 }
 
 /**
@@ -206,7 +206,7 @@ export async function testLocalizedLoadingState(
   loadingKey: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  await navigateToLocalizedPage(page, path, locale)
+  await navigateToLocalizedPage({ page, path, locale })
 
   // Should show loading state briefly
   const loadingText = getTranslation(loadingKey, locale)
