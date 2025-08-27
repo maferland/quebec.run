@@ -7,7 +7,7 @@
     "dev:app": "next dev --turbopack",
     "dev:mail": "mailhog",
     "build": "next build",
-    "build:ci": "next build",
+    "build:ci": "next build && prisma migrate deploy",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",

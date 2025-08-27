@@ -1,18 +1,12 @@
 import { env } from '@/lib/env'
-import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { prisma } from '@/lib/prisma'
+import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
 import EmailProvider from 'next-auth/providers/email'
 import { Resend } from 'resend'
 
 // Create email provider based on environment configuration
 const createEmailProvider = () => {
-  console.log('🔧 Email config:', {
-    NODE_ENV: env.NODE_ENV,
-    USE_RESEND: env.USE_RESEND,
-    useResend: env.USE_RESEND,
-  })
-
   if (env.USE_RESEND) {
     const resend = new Resend(env.RESEND_API_KEY)
 
