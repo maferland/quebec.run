@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { EventCard } from '@/components/events/event-card'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
@@ -22,6 +23,7 @@ import { notFound } from 'next/navigation'
 export type ClubPageProps = PageProps<{ slug: string }>
 
 export default async function ClubPage({ params }: ClubPageProps) {
+  const t = await getTranslations('clubs')
   const club = await getClubBySlug(await params)
 
   if (!club) {
@@ -38,7 +40,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
           >
             <Icon icon={ArrowLeft} size="sm" decorative />
-            Back to All Clubs
+            {t('backToClubs')}
           </Link>
         </div>
 
@@ -124,8 +126,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
             ) : (
               <EmptyState
                 icon={Calendar}
-                title="No upcoming events"
-                description="This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+                title={t('noEvents.title')}
+                description={t('noEvents.description')}
               />
             )}
           </div>

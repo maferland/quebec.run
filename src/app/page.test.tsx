@@ -5,7 +5,7 @@ import { server } from '@/lib/test-msw'
 import { setupMSW } from '@/lib/test-msw-setup'
 import { mockClubsData, mockEmptyClubsData } from '@/lib/test-fixtures'
 import { createMockHandler } from '@/lib/test-mock-handler'
-import HomePage from './page'
+import HomePage from './[locale]/page'
 
 describe('HomePage', () => {
   setupMSW()

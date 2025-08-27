@@ -1,12 +1,13 @@
 'use client'
 
-import Link from 'next/link'
-import { useSession, signIn, signOut } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
 import { NavLink } from '@/components/ui/nav-link'
-import { MapPin, User, Users, Calendar } from 'lucide-react'
+import { Calendar, MapPin, User, Users } from 'lucide-react'
+import { signIn, signOut, useSession } from 'next-auth/react'
+import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
-const QuebecRunLogo = () => (
+const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
   <div className="flex items-center space-x-3">
     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-sm">
       <MapPin size={18} className="text-text-inverse" />
@@ -16,7 +17,7 @@ const QuebecRunLogo = () => (
         quebec<span className="text-secondary">.run</span>
       </div>
       <div className="text-xs text-text-secondary font-body opacity-75 -mt-0.5">
-        Running Community
+        {t('logoTagline')}
       </div>
     </div>
   </div>
@@ -24,6 +25,7 @@ const QuebecRunLogo = () => (
 
 export function Header() {
   const { data: session, status } = useSession()
+  const t = useTranslations('navigation')
 
   return (
     <header className="bg-surface shadow-sm border-b border-border">
@@ -33,18 +35,18 @@ export function Header() {
             href="/"
             className="flex items-center hover:opacity-90 transition-opacity"
           >
-            <QuebecRunLogo />
+            <QuebecRunLogo t={t} />
           </Link>
 
           <div className="flex items-center space-x-4 md:space-x-8">
             <nav className="hidden sm:flex items-center space-x-4 md:space-x-6">
               <NavLink href="/clubs">
                 <Users size={18} />
-                <span className="hidden md:inline">Clubs</span>
+                <span className="hidden md:inline">{t('clubs')}</span>
               </NavLink>
               <NavLink href="/events">
                 <Calendar size={18} />
-                <span className="hidden md:inline">Events</span>
+                <span className="hidden md:inline">{t('events')}</span>
               </NavLink>
             </nav>
 
@@ -58,18 +60,18 @@ export function Header() {
                 <div className="flex items-center space-x-2 md:space-x-3">
                   {session.user?.isAdmin && (
                     <NavLink href="/admin">
-                      <span>Admin</span>
+                      <span>{t('admin')}</span>
                     </NavLink>
                   )}
                   <div className="hidden sm:flex items-center space-x-2 px-2 py-1 bg-surface-variant rounded-lg">
                     <User size={14} className="text-text-secondary" />
                     <span className="text-xs text-text-secondary font-body max-w-20 truncate">
-                      {session.user?.name?.split(' ')[0] || 'User'}
+                      {session.user?.name?.split(' ')[0] || t('user')}
                     </span>
                   </div>
                   <Button variant="outline" size="sm" onClick={() => signOut()}>
-                    <span className="hidden sm:inline">Sign Out</span>
-                    <span className="sm:hidden">Out</span>
+                    <span className="hidden sm:inline">{t('signOut')}</span>
+                    <span className="sm:hidden">{t('signOutShort')}</span>
                   </Button>
                 </div>
               ) : (
@@ -79,11 +81,11 @@ export function Header() {
                     onClick={() => signIn()}
                     variant="outline-primary"
                   >
-                    Sign In
+                    {t('signIn')}
                   </Button>
                   <Button size="sm" variant="secondary">
-                    <span className="hidden sm:inline">Join Run</span>
-                    <span className="sm:hidden">Join</span>
+                    <span className="hidden sm:inline">{t('joinRun')}</span>
+                    <span className="sm:hidden">{t('joinShort')}</span>
                   </Button>
                 </div>
               )}

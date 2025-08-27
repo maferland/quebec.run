@@ -1,0 +1,86 @@
+{
+  "navigation": {
+    "clubs": "Clubs",
+    "events": "Events",
+    "admin": "Admin",
+    "user": "User",
+    "signIn": "Sign In",
+    "signOut": "Sign Out",
+    "signOutShort": "Out",
+    "joinRun": "Join Run",
+    "joinShort": "Join",
+    "logoTagline": "Running Community"
+  },
+  "footer": {
+    "tagline": "Running Community in Quebec City",
+    "clubs": "Clubs",
+    "events": "Events",
+    "calendar": "Calendar"
+  },
+  "metadata": {
+    "title": "quebec.run - Find Your Next Run in Quebec City",
+    "description": "Discover running clubs and events in Quebec City. Connect with fellow runners and explore new routes together."
+  },
+  "home": {
+    "hero": {
+      "title": "Discover Running in Quebec City",
+      "description": "Connect with local running clubs, find upcoming events, and explore scenic routes through Quebec City's historic neighborhoods.",
+      "findEvents": "Find Events Near You",
+      "browseClubs": "Browse Running Clubs",
+      "mapTitle": "Interactive Map",
+      "mapDescription": "Explore routes and locations across Quebec City"
+    },
+    "search": {
+      "title": "Find Your Next Run",
+      "placeholder": "Search events, clubs, or locations...",
+      "filters": "Filters",
+      "searchButton": "Search"
+    },
+    "clubs": {
+      "title": "Featured Run Clubs",
+      "viewAll": "View All Clubs"
+    },
+    "quickActions": {
+      "events": {
+        "title": "Upcoming Events",
+        "description": "Don't miss out on the next group run. Check our calendar for all scheduled events and races.",
+        "button": "Browse Events"
+      },
+      "routes": {
+        "title": "Explore Routes",
+        "description": "Discover scenic running routes throughout Quebec City, from Old Quebec to the Plains of Abraham.",
+        "button": "View Calendar"
+      }
+    }
+  },
+  "calendar": {
+    "loading": "Loading runs...",
+    "title": "Upcoming Runs Calendar",
+    "description": "Browse all scheduled runs and events from Quebec City run clubs.",
+    "empty": {
+      "title": "No upcoming runs scheduled",
+      "description": "Check back soon for new running events in Quebec City"
+    },
+    "meetingLocation": "Meeting Location"
+  },
+  "clubs": {
+    "title": "Running Clubs",
+    "backToClubs": "Back to All Clubs",
+    "empty": {
+      "title": "No running clubs found",
+      "description": "Be the first to create a running club in Quebec City"
+    },
+    "noEvents": {
+      "title": "No upcoming events",
+      "description": "This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+    }
+  },
+  "events": {
+    "title": "Running Events",
+    "backToEvents": "Back to All Events",
+    "empty": {
+      "title": "No upcoming events found",
+      "description": "Check back soon for new running events in Quebec City"
+    }
+  }
+}

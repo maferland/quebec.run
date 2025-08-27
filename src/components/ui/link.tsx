@@ -1,4 +1,4 @@
-import NextLink from 'next/link'
+import { Link as NextIntlLink } from '@/i18n/navigation'
 import { cn } from '@/lib/utils'
 import { ExternalLink } from 'lucide-react'
 
@@ -39,8 +39,8 @@ export function Link({
   }
 
   return (
-    <NextLink href={href} className={cn(baseStyles, className)} {...props}>
+    <NextIntlLink href={href} className={cn(baseStyles, className)} {...props}>
       {children}
-    </NextLink>
+    </NextIntlLink>
   )
 }

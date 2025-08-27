@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { getAllEvents } from '@/lib/services/events'
 import { EventCard } from '@/components/events/event-card'
 import { ContentGrid } from '@/components/ui/content-grid'
@@ -7,17 +8,18 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Calendar } from 'lucide-react'
 
 export default async function EventsPage() {
+  const t = await getTranslations('events')
   const events = await getAllEvents({ data: {} })
 
   return (
     <PageContainer>
-      <PageTitle>Running Events</PageTitle>
+      <PageTitle>{t('title')}</PageTitle>
 
       {events.length === 0 ? (
         <EmptyState
           icon={Calendar}
-          title="No upcoming events found"
-          description="Check back soon for new running events in Quebec City"
+          title={t('empty.title')}
+          description={t('empty.description')}
         />
       ) : (
         <ContentGrid>
