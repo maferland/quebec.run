@@ -32,26 +32,55 @@ function loadTranslations(locale: Locale): Record<string, unknown> {
   }
 }
 
-/**
- * Get nested translation value by key path (e.g., "calendar.title")
- */
-function getNestedValue(obj: Record<string, unknown>, keyPath: string): string {
-  const keys = keyPath.split('.')
-  let value = obj
+// ---- Shared types & guards ----
+type AnyObject = Record<string | number | symbol, unknown>
 
-  for (const key of keys) {
-    if (value && typeof value === 'object' && key in value) {
-      value = value[key]
+function isObjectRecord(v: unknown): v is AnyObject {
+  return v !== null && typeof v === 'object'
+}
+
+// ---- getNestedValue ----
+/**
+ * Resolve a dot-path (e.g., "calendar.title" or "items.0.label") into a string.
+ * - Safely narrows before indexing (works with `unknown`).
+ * - Treats numeric segments as array indices when present (e.g., "0").
+ * - Throws if the path is missing or does not resolve to a string.
+ */
+export function getNestedValue(obj: unknown, keyPath: string): string {
+  const keys = keyPath.split('.')
+  let value: unknown = obj
+
+  for (const rawKey of keys) {
+    const key: string | number = Number.isInteger(Number(rawKey))
+      ? Number(rawKey)
+      : rawKey
+
+    if (isObjectRecord(value) && key in value) {
+      value = (value as AnyObject)[key]
     } else {
-      throw new Error(`Translation key "${keyPath}" not found`)
+      throw new Error(
+        `Translation key "${keyPath}" not found (stopped at "${rawKey}")`
+      )
     }
   }
 
-  if (typeof value !== 'string') {
-    throw new Error(`Translation key "${keyPath}" does not resolve to a string`)
-  }
+  if (typeof value === 'string') return value
+  throw new Error(`Translation key "${keyPath}" does not resolve to a string`)
+}
 
-  return value
+/**
+ * Optional helper if you prefer a fallback instead of throwing.
+ */
+export function getNestedValueOrDefault(
+  obj: unknown,
+  keyPath: string,
+  fallback: string
+): string {
+  try {
+    return getNestedValue(obj, keyPath)
+  } catch {
+    return fallback
+  }
 }
 
 /**
@@ -86,25 +115,30 @@ export function validateTranslationKey(keyPath: string): boolean {
 }
 
 /**
- * Get all available translation keys (useful for debugging)
+ * Return all translation paths that resolve to string leaves.
+ * The emitted keys are compatible with getNestedValue (numeric segments for arrays).
  */
 export function getAvailableKeys(locale: Locale = 'en'): string[] {
-  const translations = loadTranslations(locale)
+  const translations: unknown = loadTranslations(locale)
 
-  function flattenKeys(obj: Record<string, unknown>, prefix = ''): string[] {
-    const keys: string[] = []
-
-    for (const [key, value] of Object.entries(obj)) {
-      const fullKey = prefix ? `${prefix}.${key}` : key
-
-      if (typeof value === 'object' && value !== null) {
-        keys.push(...flattenKeys(value, fullKey))
-      } else if (typeof value === 'string') {
-        keys.push(fullKey)
-      }
+  function flattenKeys(node: unknown, prefix = ''): string[] {
+    // String leaf → record current path
+    if (typeof node === 'string') {
+      return prefix ? [prefix] : []
     }
 
-    return keys
+    // Recurse into any object (includes arrays)
+    if (isObjectRecord(node)) {
+      const acc: string[] = []
+      for (const [k, v] of Object.entries(node)) {
+        const fullKey = prefix ? `${prefix}.${k}` : k
+        acc.push(...flattenKeys(v, fullKey))
+      }
+      return acc
+    }
+
+    // Ignore non-string primitives/functions/etc.
+    return []
   }
 
   return flattenKeys(translations)
