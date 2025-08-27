@@ -6,13 +6,13 @@ const prisma = new PrismaClient()
 async function main() {
   // Create admin user
   const adminUser = await prisma.user.upsert({
-    where: { email: 'me@maferland.com' },
+    where: { email: 'maferland@quebec.run' },
     update: {
       isAdmin: true,
     },
     create: {
-      email: 'me@maferland.com',
-      name: 'Admin User',
+      email: 'maferland@quebec.run',
+      name: 'Marc-André Ferland',
       isAdmin: true,
     },
   })
