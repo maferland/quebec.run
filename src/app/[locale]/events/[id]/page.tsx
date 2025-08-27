@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
 import { getEventById } from '@/lib/services/events'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
@@ -21,6 +22,7 @@ export type EventPageProps = PageProps<{ id: string }>
 
 export default async function EventPage({ params }: EventPageProps) {
   const { id } = await params
+  const t = await getTranslations('events')
   const event = await getEventById({ data: { id } })
 
   if (!event) {
@@ -37,7 +39,7 @@ export default async function EventPage({ params }: EventPageProps) {
             className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
           >
             <Icon icon={ArrowLeft} size="sm" decorative />
-            Back to All Events
+            {t('backToEvents')}
           </Link>
         </div>
 

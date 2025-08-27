@@ -1,0 +1,86 @@
+{
+  "navigation": {
+    "clubs": "Clubs",
+    "events": "Événements",
+    "admin": "Admin",
+    "user": "Utilisateur",
+    "signIn": "Connexion",
+    "signOut": "Déconnexion",
+    "signOutShort": "Sortir",
+    "joinRun": "M'inscrire",
+    "joinShort": "M'inscrire",
+    "logoTagline": "Communauté de course"
+  },
+  "footer": {
+    "tagline": "Communauté de course à Québec",
+    "clubs": "Clubs",
+    "events": "Événements",
+    "calendar": "Calendrier"
+  },
+  "metadata": {
+    "title": "quebec.run - Trouvez votre prochaine course à Québec",
+    "description": "Découvrez les clubs de course et événements à Québec. Connectez-vous avec d'autres coureurs et explorez de nouveaux parcours ensemble."
+  },
+  "home": {
+    "hero": {
+      "title": "Découvrez la course à pied à Québec",
+      "description": "Connectez-vous avec les clubs de course locaux, trouvez les événements à venir et explorez des parcours pittoresques à travers les quartiers historiques de Québec.",
+      "findEvents": "Trouvez des événements près de chez vous",
+      "browseClubs": "Parcourir les clubs de course",
+      "mapTitle": "Carte interactive",
+      "mapDescription": "Explorez les parcours et lieux à travers Québec"
+    },
+    "search": {
+      "title": "Trouvez votre prochaine course",
+      "placeholder": "Recherchez des événements, clubs ou endroits...",
+      "filters": "Filtres",
+      "searchButton": "Rechercher"
+    },
+    "clubs": {
+      "title": "Clubs de course en vedette",
+      "viewAll": "Voir tous les clubs"
+    },
+    "quickActions": {
+      "events": {
+        "title": "Événements à venir",
+        "description": "Ne manquez pas la prochaine course de groupe. Consultez notre calendrier pour tous les événements et courses programmés.",
+        "button": "Parcourir les événements"
+      },
+      "routes": {
+        "title": "Explorez les parcours",
+        "description": "Découvrez des parcours de course pittoresques à travers Québec, du Vieux-Québec aux plaines d'Abraham.",
+        "button": "Voir le calendrier"
+      }
+    }
+  },
+  "calendar": {
+    "loading": "Chargement des courses...",
+    "title": "Calendrier des courses à venir",
+    "description": "Parcourez toutes les courses et événements programmés des clubs de course de Québec.",
+    "empty": {
+      "title": "Aucune course programmée",
+      "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+    },
+    "meetingLocation": "Lieu de rencontre"
+  },
+  "clubs": {
+    "title": "Clubs de course",
+    "backToClubs": "Retour à tous les clubs",
+    "empty": {
+      "title": "Aucun club de course trouvé",
+      "description": "Soyez le premier à créer un club de course à Québec"
+    },
+    "noEvents": {
+      "title": "Aucun événement à venir",
+      "description": "Ce club n'a aucun événement programmé pour les 7 prochains jours. Revenez bientôt pour de nouvelles activités!"
+    }
+  },
+  "events": {
+    "title": "Événements de course",
+    "backToEvents": "Retour à tous les événements",
+    "empty": {
+      "title": "Aucun événement à venir trouvé",
+      "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+    }
+  }
+}

@@ -1,5 +1,6 @@
 'use client'
 
+import { useTranslations } from 'next-intl'
 import { useUpcomingEvents } from '@/lib/hooks/use-events'
 import { Card } from '@/components/ui/card'
 import { Tag } from '@/components/ui/tag'
@@ -11,6 +12,7 @@ import { dateUtils } from '@/lib/utils/date-formatting'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
 export default function CalendarPage() {
+  const t = useTranslations('calendar')
   const { data: events = [], isLoading } = useUpcomingEvents()
 
   const groupedEvents = events.reduce(
@@ -38,7 +40,7 @@ export default function CalendarPage() {
               className="mx-auto mb-4"
             />
             <p className="text-text-secondary text-lg font-body">
-              Loading runs...
+              {t('loading')}
             </p>
           </div>
         </PageContainer>
@@ -58,11 +60,11 @@ export default function CalendarPage() {
                   <Icon icon={Calendar} size="xl" color="primary" decorative />
                 </div>
                 <h1 className="text-4xl font-heading font-bold text-primary">
-                  Upcoming Runs Calendar
+                  {t('title')}
                 </h1>
               </div>
               <p className="text-lg text-text-primary font-body leading-relaxed max-w-3xl mx-auto">
-                Browse all scheduled runs and events from Quebec City run clubs.
+                {t('description')}
               </p>
             </div>
           </div>
@@ -72,8 +74,8 @@ export default function CalendarPage() {
         {Object.keys(groupedEvents).length === 0 ? (
           <EmptyState
             icon={Calendar}
-            title="No upcoming runs scheduled"
-            description="Check back soon for new running events in Quebec City"
+            title={t('empty.title')}
+            description={t('empty.description')}
           />
         ) : (
           <div className="space-y-8">
@@ -163,7 +165,7 @@ export default function CalendarPage() {
                                 />
                                 <div>
                                   <h4 className="font-heading font-semibold text-text-primary mb-1 text-sm">
-                                    Meeting Location
+                                    {t('meetingLocation')}
                                   </h4>
                                   <p className="text-text-secondary font-body text-sm">
                                     {event.address}

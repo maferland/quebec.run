@@ -3,7 +3,7 @@ import { Tag } from '@/components/ui/tag'
 import { Card } from '@/components/ui/card'
 import { LocationCard } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
-import Link from 'next/link'
+import { Link } from '@/i18n/navigation'
 import { Clock } from 'lucide-react'
 
 export type EventCardProps = {

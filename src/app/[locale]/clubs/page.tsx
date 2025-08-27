@@ -1,3 +1,4 @@
+import { getTranslations } from 'next-intl/server'
 import { getAllClubs } from '@/lib/services/clubs'
 import { ClubCard } from '@/components/clubs/club-card'
 import { ContentGrid } from '@/components/ui/content-grid'
@@ -7,17 +8,18 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Users } from 'lucide-react'
 
 export default async function ClubsPage() {
+  const t = await getTranslations('clubs')
   const clubs = await getAllClubs({ data: {} })
 
   return (
     <PageContainer>
-      <PageTitle>Running Clubs</PageTitle>
+      <PageTitle>{t('title')}</PageTitle>
 
       {clubs.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No running clubs found"
-          description="Be the first to create a running club in Quebec City"
+          title={t('empty.title')}
+          description={t('empty.description')}
         />
       ) : (
         <ContentGrid>

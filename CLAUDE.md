@@ -18,6 +18,47 @@
 
 ## General Principles
 
+### ⚡ Efficiency and Tool Usage Optimization
+
+**CRITICAL: Maximize daily allowance usage through batching and efficiency.**
+
+- **ALWAYS batch tool calls when possible** — Use single messages with multiple tool invocations instead of sequential single calls
+- **Batch file operations** — `rm file1.txt file2.txt file3.txt` instead of three separate `rm` calls
+- **Batch read operations** — Read multiple files in one message when analyzing related code
+- **Combine related operations** — `npm run lint && npx tsc --noEmit && npm test` instead of three separate bash calls
+- **Use efficient search patterns** — One comprehensive search instead of multiple narrow searches
+- **Plan before executing** — Think through all operations needed and batch them strategically
+- **Prioritize high-impact actions** — Focus on operations that accomplish multiple goals simultaneously
+
+**Examples of good batching:**
+
+```bash
+# ✅ Good - Multiple operations in one call
+npm run lint && npx tsc --noEmit && npm run test -- --coverage
+
+# ✅ Good - Batch file operations
+rm -f src/app/home.e2e.ts src/app/events.e2e.ts src/app/navigation.e2e.ts
+
+# ✅ Good - Combined search and action
+find ./src -name "*.e2e.ts" -delete && ls ./src/app/*.e2e.ts
+```
+
+**Avoid inefficient patterns:**
+
+```bash
+# ❌ Inefficient - Sequential single operations
+npm run lint
+npx tsc --noEmit
+npm run test
+
+# ❌ Inefficient - Individual file operations
+rm src/app/home.e2e.ts
+rm src/app/events.e2e.ts
+rm src/app/navigation.e2e.ts
+```
+
+This optimization is **essential** for productive development sessions and respecting usage limits.
+
 ### UI/UX Quality Standards
 
 **Minimum WCAG AA compliance; aim for AAA where practical.**
@@ -234,6 +275,46 @@ export type ButtonProps = {
 - **Avoid constant overrides** — change defaults if they’re always overridden
 - **Design for the 80%** — common easy, complex possible
 - **Consistent APIs** — shared prop patterns: `variant`, `as`, `className`
+
+### Function Parameter Patterns
+
+**Prefer object parameters over arrays for better extensibility and readability.**
+
+```ts
+// ✅ Good - Object parameters allow easy extension
+export const expectLocalizedText = ({
+  page,
+  translationKey,
+  locale = 'fr'
+}: {
+  page: Page
+  translationKey: string
+  locale?: Locale
+}): Promise<void> => {
+  // implementation
+}
+
+// ❌ Avoid - Array parameters harder to extend and read
+export const expectLocalizedText = (
+  page: Page,
+  translationKey: string,
+  locale: Locale = 'fr'
+): Promise<void> => {
+  // implementation
+}
+```
+
+**Benefits of object parameters:**
+- **Extensible**: New parameters can be added without breaking existing calls
+- **Self-documenting**: Parameter names are explicit at call site
+- **Optional parameters**: Easy to handle with destructuring defaults
+- **Order-independent**: Parameters can be passed in any order
+
+**Use object parameters for:**
+- Functions with 3+ parameters
+- Functions likely to grow new parameters
+- Test utilities and helper functions
+- API functions and service calls
 
 ### Hook Patterns
 
@@ -530,4 +611,16 @@ Full test suite + coverage gates are **not required** for these cases.
 - E2E tests: `home.e2e.ts`, `calendar.e2e.ts`
 
 **Remember:** Quality over speed. Comprehensive tests and documentation make the codebase maintainable and reliable.
+
+## Boy Scout Rule
+
+**"Always leave the code better than you found it."**
+
+- **Track improvements**: Document code areas that need improvement in `RENOVATE.md`
+- **Opportunistic refactoring**: Fix small issues when working nearby
+- **Note technical debt**: Record areas for future improvement during development
+- **Incremental progress**: Small, consistent improvements over time
+- **Quality mindset**: Every interaction with code is an opportunity to improve it
+
+The `RENOVATE.md` file serves as our running list of code improvements, refactoring opportunities, and technical debt that we can address incrementally.
 ````
