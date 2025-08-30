@@ -1,5 +1,6 @@
-import { SessionProvider } from 'next-auth/react'
 import type { Session } from 'next-auth'
+import { SessionProvider } from 'next-auth/react'
+import { NextIntlClientProvider } from 'next-intl'
 
 // Mock session data
 export const mockSessions = {
@@ -52,3 +53,26 @@ export const withUserSessionNoName = withSession({
   user: mockSessions.userWithoutName,
   expires: '2025-12-31',
 })
+
+// Intl provider utilities
+import { ReactNode } from 'react'
+import enMessages from '../../messages/en.json'
+import frMessages from '../../messages/fr.json'
+
+const messages = { en: enMessages, fr: frMessages }
+
+const IntlDecorator = ({
+  locale = 'fr',
+  ...props
+}: {
+  children: ReactNode
+  locale: 'en' | 'fr'
+}) => (
+  <NextIntlClientProvider
+    messages={messages[locale]}
+    locale={locale}
+    {...props}
+  />
+)
+
+export { IntlDecorator }
