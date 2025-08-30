@@ -12,14 +12,18 @@ async function main() {
     },
     create: {
       email: 'maferland@quebec.run',
-      name: 'Marc-André Ferland',
+      name: 'Marc-Antoine Ferland',
       isAdmin: true,
     },
   })
 
   // Create the 6AM Club
-  const sixAmClub = await prisma.club.create({
-    data: {
+  const sixAmClub = await prisma.club.upsert({
+    where: { slug: createSlug('6AM Club') },
+    update: {
+      ownerId: adminUser.id,
+    },
+    create: {
       name: '6AM Club',
       slug: createSlug('6AM Club'),
       description:

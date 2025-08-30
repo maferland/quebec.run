@@ -3,11 +3,34 @@
 import { Link, usePathname } from '@/i18n/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 
-export function Footer() {
+type LinkProps = Parameters<typeof Link>[0]
+const FooterLink = (props: Omit<LinkProps, 'className'>) => {
+  return (
+    <Link
+      className="text-text-secondary hover:text-primary transition-colors underline"
+      {...props}
+    />
+  )
+}
+
+const LanguageToggle = () => {
   const pathname = usePathname()
   const currentLocale = useLocale()
-  const year = new Date().getFullYear()
   const t = useTranslations('footer')
+  const nextLocale = currentLocale === 'en' ? 'fr' : 'en'
+  console.log({ currentLocale, nextLocale, pathname })
+  return (
+    <div className="text-sm">
+      <FooterLink href={pathname} locale={nextLocale}>
+        {t(nextLocale)}
+      </FooterLink>
+    </div>
+  )
+}
+
+export function Footer() {
+  const t = useTranslations('footer')
+  const year = new Date().getFullYear()
 
   return (
     <footer className="bg-surface border-t border-border mt-auto">
@@ -27,48 +50,15 @@ export function Footer() {
           <div className="flex flex-col items-center md:items-end space-y-4">
             {/* Navigation Links */}
             <div className="flex items-center space-x-6 text-sm">
-              <Link
-                href="/clubs"
-                className="text-text-secondary hover:text-primary transition-colors"
-              >
-                {t('clubs')}
-              </Link>
-              <span className="text-text-secondary">•</span>
-              <Link
-                href="/events"
-                className="text-text-secondary hover:text-primary transition-colors"
-              >
-                {t('events')}
-              </Link>
-              <span className="text-text-secondary">•</span>
-              <Link
-                href="/calendar"
-                className="text-text-secondary hover:text-primary transition-colors"
-              >
-                {t('calendar')}
-              </Link>
+              <FooterLink href="/clubs">{t('clubs')}</FooterLink>
+
+              <FooterLink href="/events">{t('events')}</FooterLink>
+
+              <FooterLink href="/calendar">{t('calendar')}</FooterLink>
             </div>
 
             {/* Language Toggle */}
-            <div className="text-sm">
-              {currentLocale === 'fr' ? (
-                <Link
-                  href={pathname}
-                  locale="en"
-                  className="text-text-secondary hover:text-primary transition-colors underline"
-                >
-                  English
-                </Link>
-              ) : (
-                <Link
-                  href={pathname}
-                  locale="fr"
-                  className="text-text-secondary hover:text-primary transition-colors underline"
-                >
-                  Français
-                </Link>
-              )}
-            </div>
+            <LanguageToggle />
           </div>
         </div>
 
