@@ -15,7 +15,9 @@
     "tagline": "Communauté de course à Québec",
     "clubs": "Clubs",
     "events": "Événements",
-    "calendar": "Calendrier"
+    "calendar": "Calendrier",
+    "en": "English",
+    "fr": "Français"
   },
   "metadata": {
     "title": "quebec.run - Trouvez votre prochaine course à Québec",
@@ -81,6 +83,58 @@
     "empty": {
       "title": "Aucun événement à venir trouvé",
       "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+    }
+  },
+  "validation": {
+    "required": "Ce champ est requis",
+    "min_length": "Doit contenir au moins {min} caractères",
+    "max_length": "Doit contenir au plus {max} caractères",
+    "invalid_email": "Veuillez entrer une adresse courriel valide",
+    "invalid_url": "Veuillez entrer une URL valide",
+    "invalid_format": "Format invalide",
+    "invalid_type": "Type invalide"
+  },
+  "forms": {
+    "club": {
+      "name": "Nom du club",
+      "description": "Description",
+      "website": "Site web",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "language": "Langue principale"
+    },
+    "actions": {
+      "save": "Enregistrer",
+      "cancel": "Annuler",
+      "delete": "Supprimer",
+      "create": "Créer",
+      "update": "Mettre à jour",
+      "saving": "Enregistrement...",
+      "creating": "Création...",
+      "updating": "Mise à jour...",
+      "deleting": "Suppression..."
+    }
+  },
+  "admin": {
+    "navigation": {
+      "dashboard": "Tableau de bord",
+      "clubs": "Clubs",
+      "events": "Événements",
+      "settings": "Paramètres"
+    },
+    "dashboard": {
+      "title": "Tableau de bord administrateur",
+      "overview": "Aperçu",
+      "totalClubs": "Nombre de clubs",
+      "totalEvents": "Nombre d'événements",
+      "totalUsers": "Nombre d'utilisateurs"
+    },
+    "clubs": {
+      "title": "Gérer les clubs",
+      "addNew": "Ajouter un nouveau club",
+      "editClub": "Modifier le club",
+      "deleteClub": "Supprimer le club",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce club ?"
     }
   }
 }
