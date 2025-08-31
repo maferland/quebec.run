@@ -28,4 +28,35 @@ vi.mock('next/font/google', () => ({
     variable: '--font-geist-mono',
     className: 'font-geist-mono',
   })),
+  Montserrat: vi.fn(() => ({
+    variable: '--font-heading',
+    className: 'font-heading',
+  })),
+  Inter: vi.fn(() => ({
+    variable: '--font-body',
+    className: 'font-body',
+  })),
+}))
+
+// Mock next-intl navigation
+vi.mock('@/i18n/navigation', () => ({
+  Link: ({
+    href,
+    children,
+    ...props
+  }: {
+    href: string
+    children: React.ReactNode
+    [key: string]: unknown
+  }) => React.createElement('a', { href, ...props }, children),
+  redirect: vi.fn(),
+  usePathname: vi.fn(() => '/'),
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  })),
+  getPathname: vi.fn(() => '/'),
 }))

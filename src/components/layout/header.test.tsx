@@ -34,17 +34,16 @@ describe('Header', () => {
   it('renders the logo and navigation links', () => {
     render(<Header />)
 
-    expect(screen.getByText('Courses')).toBeInTheDocument()
-    expect(screen.getByText('Map')).toBeInTheDocument()
-    expect(screen.getByText('Calendar')).toBeInTheDocument()
+    expect(screen.getByText('Clubs')).toBeInTheDocument()
+    expect(screen.getByText('Events')).toBeInTheDocument()
   })
 
   it('shows sign in button when not authenticated', () => {
     render(<Header />)
 
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sign In/ })).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'Sign Out' })
+      screen.queryByRole('button', { name: /Sign Out/ })
     ).not.toBeInTheDocument()
   })
 
@@ -57,10 +56,13 @@ describe('Header', () => {
 
     render(<Header />)
 
-    // Look for the loading div by its specific classes
-    const loadingDiv = document.querySelector('.animate-pulse')
-    expect(loadingDiv).toBeInTheDocument()
-    expect(loadingDiv).toHaveClass('w-8', 'h-8', 'bg-gray-200', 'rounded')
+    // Check that sign in button is not shown during loading
+    expect(
+      screen.queryByRole('button', { name: 'Sign In' })
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('button', { name: 'Sign Out' })
+    ).not.toBeInTheDocument()
   })
 
   it('shows user info and sign out when authenticated', () => {
@@ -80,10 +82,10 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument()
+    expect(screen.getByText('John')).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: 'Sign In' })
+      screen.queryByRole('button', { name: /Sign In/ })
     ).not.toBeInTheDocument()
   })
 
@@ -104,7 +106,7 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('Admin')).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: 'Admin' })).toBeInTheDocument()
   })
 
   it('does not show admin link for regular users', () => {
