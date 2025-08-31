@@ -1,6 +1,9 @@
 import type { Session } from 'next-auth'
 import { SessionProvider } from 'next-auth/react'
 import { NextIntlClientProvider } from 'next-intl'
+import { ReactNode } from 'react'
+import enMessages from '../../messages/en.json'
+import frMessages from '../../messages/fr.json'
 
 // Mock session data
 export const mockSessions = {
@@ -53,11 +56,6 @@ export const withUserSessionNoName = withSession({
   user: mockSessions.userWithoutName,
   expires: '2025-12-31',
 })
-
-// Intl provider utilities
-import { ReactNode } from 'react'
-import enMessages from '../../messages/en.json'
-import frMessages from '../../messages/fr.json'
 
 const messages = { en: enMessages, fr: frMessages }
 

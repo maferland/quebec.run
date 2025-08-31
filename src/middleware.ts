@@ -1,8 +1,9 @@
+import { defaultLocale, locales } from '@/i18n'
 import createMiddleware from 'next-intl/middleware'
 
 export default createMiddleware({
-  locales: ['en', 'fr'],
-  defaultLocale: 'fr',
+  locales,
+  defaultLocale,
   localePrefix: 'always',
 })
 
