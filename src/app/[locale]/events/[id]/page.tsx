@@ -105,7 +105,7 @@ export default async function EventPage({ params }: EventPageProps) {
                     <Icon icon={MapPin} size="md" color="primary" decorative />
                     <div>
                       <h3 className="font-heading font-semibold text-text-primary mb-1">
-                        Meeting Location
+                        {t('details.meetingLocation')}
                       </h3>
                       <p className="text-text-secondary font-body">
                         {event.address}
@@ -124,7 +124,7 @@ export default async function EventPage({ params }: EventPageProps) {
             <div className="flex items-center gap-3 mb-8">
               <Icon icon={Clock} size="lg" color="primary" decorative />
               <h2 className="text-2xl font-heading font-bold text-primary">
-                Event Details
+                {t('details.title')}
               </h2>
             </div>
 
@@ -140,7 +140,7 @@ export default async function EventPage({ params }: EventPageProps) {
                       decorative
                     />
                     <h3 className="font-heading font-semibold text-text-primary">
-                      When
+                      {t('details.when')}
                     </h3>
                   </div>
                   <p className="text-text-secondary font-body">
@@ -158,7 +158,7 @@ export default async function EventPage({ params }: EventPageProps) {
                         decorative
                       />
                       <h3 className="font-heading font-semibold text-text-primary">
-                        Distance
+                        {t('details.distance')}
                       </h3>
                     </div>
                     <p className="text-text-secondary font-body">
@@ -177,7 +177,7 @@ export default async function EventPage({ params }: EventPageProps) {
                         decorative
                       />
                       <h3 className="font-heading font-semibold text-text-primary">
-                        Pace
+                        {t('details.pace')}
                       </h3>
                     </div>
                     <p className="text-text-secondary font-body">
@@ -199,7 +199,7 @@ export default async function EventPage({ params }: EventPageProps) {
                         decorative
                       />
                       <h3 className="font-heading font-semibold text-text-primary">
-                        Organized by
+                        {t('details.organizedBy')}
                       </h3>
                     </div>
                     <Link

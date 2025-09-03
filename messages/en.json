@@ -9,7 +9,9 @@
     "signOutShort": "Out",
     "joinRun": "Join Run",
     "joinShort": "Join",
-    "logoTagline": "Running Community"
+    "logoTagline": "Running Community",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "footer": {
     "tagline": "Running Community in Quebec City",
@@ -17,7 +19,11 @@
     "events": "Events",
     "calendar": "Calendar",
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "language": {
+      "english": "English",
+      "french": "Français"
+    }
   },
   "metadata": {
     "title": "quebec.run - Find Your Next Run in Quebec City",
@@ -75,6 +81,13 @@
     "noEvents": {
       "title": "No upcoming events",
       "description": "This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+    },
+    "card": {
+      "location": "Quebec City",
+      "moreEvents": "+{count} more events this week",
+      "upcomingEvents": "{count} upcoming events",
+      "viewClub": "View Club →",
+      "upcomingEventsTitle": "Upcoming Events"
     }
   },
   "events": {
@@ -83,6 +96,14 @@
     "empty": {
       "title": "No upcoming events found",
       "description": "Check back soon for new running events in Quebec City"
+    },
+    "details": {
+      "title": "Event Details",
+      "meetingLocation": "Meeting Location",
+      "when": "When",
+      "distance": "Distance",
+      "pace": "Pace",
+      "organizedBy": "Organized by"
     }
   },
   "validation": {

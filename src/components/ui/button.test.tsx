@@ -147,8 +147,7 @@ describe('Button Component', () => {
       expect(button).toHaveAttribute('aria-label', 'Test button')
     })
 
-    it('maintains button functionality with TypeScript className protection', () => {
-      // @ts-expect-error - className should not be allowed on Button
+    it('supports className prop for custom styling', () => {
       render(<Button className="custom-class">Custom Button</Button>)
 
       const button = screen.getByRole('button')

@@ -12,6 +12,12 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     headless: true, // Always headless by default
+    locale: 'fr-CA', // Set French Canadian as default locale for browser
+    extraHTTPHeaders: {
+      'Accept-Language': 'fr-CA,fr;q=0.9,en;q=0.8',
+    },
+    screenshot: 'only-on-failure',
+    video: 'retain-on-failure',
   },
   projects: [
     {

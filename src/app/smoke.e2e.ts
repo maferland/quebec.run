@@ -1,15 +1,17 @@
-import { test, expect } from '@playwright/test'
 import {
-  navigateToLocalizedPage,
+  clickLocalizedLink,
   expectLocalizedText,
   expectLocalizedURL,
-  clickLocalizedLink,
+  getLocalizedText,
+  gotoHomePage,
+  navigateToLocalizedPage,
   navigateViaHeader,
 } from '@/lib/test-e2e-helpers'
+import { expect, test } from '@playwright/test'
 
 test.describe('Smoke Tests - Core User Journeys', () => {
   test('homepage loads and displays content', async ({ page }) => {
-    await page.goto('/')
+    await gotoHomePage(page)
 
     // Should show hero content in French (default locale)
     await expectLocalizedText({
@@ -18,17 +20,28 @@ test.describe('Smoke Tests - Core User Journeys', () => {
       locale: 'fr',
     })
 
-    // Should have navigation
-    await expectLocalizedText({
-      page,
-      translationKey: 'navigation.clubs',
-      locale: 'fr',
-    })
-    await expectLocalizedText({
-      page,
-      translationKey: 'navigation.events',
-      locale: 'fr',
-    })
+    // Should have navigation (icons are always visible, text hidden on mobile)
+    const viewport = page.viewportSize()
+    const isMobile = viewport && viewport.width < 768
+
+    if (isMobile) {
+      // On mobile, navigation text is hidden but icons should be visible
+      const clubsLink = page.getByRole('navigation').getByRole('link').nth(0)
+      await expect(clubsLink).toBeVisible()
+      const eventsLink = page.getByRole('navigation').getByRole('link').nth(1)
+      await expect(eventsLink).toBeVisible()
+    } else {
+      // On desktop, navigation text should be visible
+      const navigationClubs = page
+        .getByRole('navigation')
+        .getByRole('link', { name: 'Clubs' })
+      await expect(navigationClubs).toBeVisible()
+
+      const navigationEvents = page
+        .getByRole('navigation')
+        .getByRole('link', { name: 'Événements' })
+      await expect(navigationEvents).toBeVisible()
+    }
 
     // Should show featured clubs section
     await expectLocalizedText({
@@ -53,7 +66,11 @@ test.describe('Smoke Tests - Core User Journeys', () => {
     })
 
     // Should show club cards
-    const clubCard = page.getByTestId('club-card').first()
+
+    const viewClubText = getLocalizedText('clubs.card.viewClub', 'fr')
+    const clubCard = page.getByRole('link', {
+      name: new RegExp(viewClubText.replace('→', '')),
+    })
     await expect(clubCard).toBeVisible()
 
     // Navigate to individual club
@@ -83,26 +100,15 @@ test.describe('Smoke Tests - Core User Journeys', () => {
       locale: 'fr',
     })
 
-    // Should show events or empty state
-    const hasEvents = await page
-      .getByRole('article')
-      .first()
-      .isVisible({ timeout: 5000 })
-      .catch(() => false)
+    // Should show events (since there are events in the database)
+    await expect(page.getByRole('article').first()).toBeVisible({
+      timeout: 10000,
+    })
 
-    if (hasEvents) {
-      // If events exist, verify basic structure
-      const firstEvent = page.getByRole('article').first()
-      await expect(firstEvent.getByRole('heading', { level: 3 })).toBeVisible()
-      await expect(firstEvent.getByText(/\d{2}:\d{2}/)).toBeVisible()
-    } else {
-      // If no events, should show empty state
-      await expectLocalizedText({
-        page,
-        translationKey: 'events.empty.title',
-        locale: 'fr',
-      })
-    }
+    // Verify event structure
+    const firstEvent = page.getByRole('article').first()
+    await expect(firstEvent.getByRole('heading', { level: 3 })).toBeVisible()
+    await expect(firstEvent.getByText(/\d{2}:\d{2}/)).toBeVisible()
   })
 
   test('calendar page displays correctly', async ({ page }) => {
@@ -118,15 +124,29 @@ test.describe('Smoke Tests - Core User Journeys', () => {
       locale: 'fr',
     })
 
-    // Should show runs or empty state
-    const hasRuns = await page
-      .getByRole('article')
+    // Wait for loading to complete
+    const loadingText = getLocalizedText('calendar.loading', 'fr')
+    const isLoadingVisible = await page.getByText(loadingText).isVisible()
+    if (isLoadingVisible) {
+      await expect(page.getByText(loadingText)).not.toBeVisible({
+        timeout: 10000,
+      })
+    }
+
+    // Should show events (since there are events in the database)
+    const eventCards = await page
+      .locator('.bg-surface.border.border-border.rounded-lg')
       .first()
       .isVisible({ timeout: 5000 })
       .catch(() => false)
 
-    if (!hasRuns) {
-      // If no runs, should show empty state
+    if (eventCards) {
+      // Verify event structure when events exist
+      await expect(
+        page.locator('.bg-surface.border.border-border.rounded-lg').first()
+      ).toBeVisible()
+    } else {
+      // If no events, should show empty state
       await expectLocalizedText({
         page,
         translationKey: 'calendar.empty.title',
@@ -163,7 +183,7 @@ test.describe('Smoke Tests - Core User Journeys', () => {
 
   test('core navigation between pages', async ({ page }) => {
     // Start at home
-    await page.goto('/')
+    await gotoHomePage(page)
     await expectLocalizedText({
       page,
       translationKey: 'home.hero.title',
@@ -191,6 +211,6 @@ test.describe('Smoke Tests - Core User Journeys', () => {
       .getByRole('banner')
       .getByRole('link', { name: /quebec\.run/ })
       .click()
-    await expect(page).toHaveURL('/')
+    await expect(page).toHaveURL('/fr')
   })
 })

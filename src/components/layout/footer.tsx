@@ -57,7 +57,7 @@ export function Footer() {
                   locale="en"
                   className="text-text-secondary hover:text-primary transition-colors underline"
                 >
-                  English
+                  {t('language.english')}
                 </Link>
               ) : (
                 <Link
@@ -65,7 +65,7 @@ export function Footer() {
                   locale="fr"
                   className="text-text-secondary hover:text-primary transition-colors underline"
                 >
-                  Français
+                  {t('language.french')}
                 </Link>
               )}
             </div>

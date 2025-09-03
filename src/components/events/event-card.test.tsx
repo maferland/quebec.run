@@ -38,7 +38,7 @@ describe('EventCard Component', () => {
     it('displays as a structured card with proper content', () => {
       const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      const card = container.querySelector('section')
+      const card = container.querySelector('article')
       expect(card).toBeVisible()
       expect(card).toContainElement(
         screen.getByRole('heading', { name: 'Morning 5K Run' })
@@ -303,9 +303,9 @@ describe('EventCard Component', () => {
     it('uses semantic HTML elements', () => {
       const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      // Should use section for the card content
-      const section = container.querySelector('section')
-      expect(section).toBeInTheDocument()
+      // Should use article for the card content
+      const article = container.querySelector('article')
+      expect(article).toBeInTheDocument()
     })
 
     it('provides proper icon accessibility', () => {

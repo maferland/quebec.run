@@ -113,7 +113,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             <div className="flex items-center gap-3 mb-8">
               <Icon icon={Calendar} size="lg" color="primary" decorative />
               <h2 className="text-2xl font-heading font-bold text-primary">
-                Upcoming Events
+                {t('card.upcomingEventsTitle')}
               </h2>
             </div>
 

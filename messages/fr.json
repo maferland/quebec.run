@@ -9,7 +9,9 @@
     "signOutShort": "Sortir",
     "joinRun": "M'inscrire",
     "joinShort": "M'inscrire",
-    "logoTagline": "Communauté de course"
+    "logoTagline": "Communauté de course",
+    "openMenu": "Ouvrir le menu",
+    "closeMenu": "Fermer le menu"
   },
   "footer": {
     "tagline": "Communauté de course à Québec",
@@ -17,7 +19,11 @@
     "events": "Événements",
     "calendar": "Calendrier",
     "en": "English",
-    "fr": "Français"
+    "fr": "Français",
+    "language": {
+      "english": "English",
+      "french": "Français"
+    }
   },
   "metadata": {
     "title": "quebec.run - Trouvez votre prochaine course à Québec",
@@ -75,6 +81,13 @@
     "noEvents": {
       "title": "Aucun événement à venir",
       "description": "Ce club n'a aucun événement programmé pour les 7 prochains jours. Revenez bientôt pour de nouvelles activités!"
+    },
+    "card": {
+      "location": "Québec",
+      "moreEvents": "+{count} autres événements cette semaine",
+      "upcomingEvents": "{count} événements à venir",
+      "viewClub": "Voir le club →",
+      "upcomingEventsTitle": "Événements à venir"
     }
   },
   "events": {
@@ -83,6 +96,14 @@
     "empty": {
       "title": "Aucun événement à venir trouvé",
       "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+    },
+    "details": {
+      "title": "Détails de l'événement",
+      "meetingLocation": "Lieu de rencontre",
+      "when": "Quand",
+      "distance": "Distance",
+      "pace": "Rythme",
+      "organizedBy": "Organisé par"
     }
   },
   "validation": {
