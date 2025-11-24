@@ -1,5 +1,8 @@
+import { config } from 'dotenv'
 import { PrismaClient } from '@prisma/client'
 import { createSlug } from '../src/lib/utils/slug'
+
+config()
 
 const prisma = new PrismaClient()
 

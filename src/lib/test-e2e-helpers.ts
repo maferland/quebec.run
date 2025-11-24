@@ -4,6 +4,23 @@ import { getBilingualTranslations, getTranslation } from './test-i18n'
 type Locale = 'en' | 'fr'
 
 /**
+ * Get localized text for a translation key
+ */
+export function getLocalizedText(
+  translationKey: string,
+  locale: Locale = 'fr'
+): string {
+  return getTranslation(translationKey, locale)
+}
+
+/**
+ * Navigate to home page with default French locale
+ */
+export async function gotoHomePage(page: Page): Promise<void> {
+  await page.goto('/fr')
+}
+
+/**
  * Navigate to a localized page path
  */
 export async function navigateToLocalizedPage({
@@ -15,12 +32,6 @@ export async function navigateToLocalizedPage({
   path: string
   locale?: Locale
 }): Promise<void> {
-  // Handle root path special case
-  if (path === '/') {
-    await page.goto('/')
-    return
-  }
-
   // Remove leading slash for consistency
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
   const localizedPath = `/${locale}/${cleanPath}`
@@ -40,12 +51,6 @@ export async function expectLocalizedURL({
   path: string
   locale?: Locale
 }): Promise<void> {
-  if (path === '/') {
-    // Root redirects to default locale
-    await expect(page).toHaveURL('/')
-    return
-  }
-
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
   const expectedPath = `/${locale}/${cleanPath}`
 
@@ -65,7 +70,7 @@ export async function expectLocalizedText({
   translationKey: string
   locale?: Locale
 }): Promise<void> {
-  const translatedText = getTranslation(translationKey, locale)
+  const translatedText = getLocalizedText(translationKey, locale)
   await expect(page.getByText(translatedText).first()).toBeVisible()
 }
 
@@ -83,7 +88,7 @@ export async function expectLocalizedHeading({
   level?: number
   locale?: Locale
 }): Promise<void> {
-  const translatedText = getTranslation(translationKey, locale)
+  const translatedText = getLocalizedText(translationKey, locale)
   const headingLocator = level
     ? page.getByRole('heading', { level, name: translatedText })
     : page.getByRole('heading', { name: translatedText })
@@ -103,7 +108,7 @@ export async function clickLocalizedLink({
   translationKey: string
   locale?: Locale
 }): Promise<void> {
-  const translatedText = getTranslation(translationKey, locale)
+  const translatedText = getLocalizedText(translationKey, locale)
   await page.getByRole('link', { name: translatedText }).click()
 }
 
@@ -115,7 +120,7 @@ export async function clickLocalizedButton(
   translationKey: string,
   locale: Locale = 'fr'
 ): Promise<void> {
-  const translatedText = getTranslation(translationKey, locale)
+  const translatedText = getLocalizedText(translationKey, locale)
   await page.getByRole('button', { name: translatedText }).click()
 }
 
@@ -140,7 +145,7 @@ export async function waitForLocalizedContent(
   locale: Locale = 'fr',
   options?: { timeout?: number }
 ): Promise<void> {
-  const translatedText = getTranslation(translationKey, locale)
+  const translatedText = getLocalizedText(translationKey, locale)
   await expect(page.getByText(translatedText)).toBeVisible(options)
 }
 
@@ -242,6 +247,7 @@ export function getFlexibleTextLocator(page: Page, text: string): Locator {
 
 /**
  * Navigate using header navigation links with specific selectors
+ * Handles mobile by opening the hamburger menu first
  */
 export async function navigateViaHeader({
   page,
@@ -253,8 +259,26 @@ export async function navigateViaHeader({
   locale?: Locale
 }): Promise<void> {
   const linkText = getTranslation(translationKey, locale)
-  await page
-    .getByRole('navigation')
-    .getByRole('link', { name: linkText })
-    .click()
+
+  // Check if mobile viewport
+  const viewport = page.viewportSize()
+  const isMobile = viewport && viewport.width < 768
+
+  if (isMobile) {
+    // Open mobile menu first
+    const menuButton = page.getByRole('button', {
+      name: /menu|ouvrir le menu/i,
+    })
+    await menuButton.click()
+    // Wait for menu to open
+    await page.waitForTimeout(300)
+    // Click link in mobile menu (use first() to avoid strict mode violation with multiple matching links)
+    await page.getByRole('link', { name: linkText }).first().click()
+  } else {
+    // Desktop: click link in navigation
+    await page
+      .getByRole('navigation')
+      .getByRole('link', { name: linkText })
+      .click()
+  }
 }

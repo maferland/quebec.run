@@ -1,23 +1,17 @@
+import { Footer } from '@/components/layout/footer'
+import { Header } from '@/components/layout/header'
 import type { Metadata } from 'next'
-import { Montserrat, Inter } from 'next/font/google'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
-import '../globals.css'
+import { notFound } from 'next/navigation'
 import { Providers } from '../providers'
-import { Header } from '@/components/layout/header'
-import { Footer } from '@/components/layout/footer'
+import { locales } from '@/i18n'
 
-const montserrat = Montserrat({
-  variable: '--font-heading',
-  subsets: ['latin'],
-  display: 'swap',
-})
+export const dynamicParams = false
 
-const inter = Inter({
-  variable: '--font-body',
-  subsets: ['latin'],
-  display: 'swap',
-})
+export function generateStaticParams() {
+  return locales.map((locale) => ({ locale }))
+}
 
 export async function generateMetadata({
   params,
@@ -41,24 +35,23 @@ type Props = {
 export default async function LocaleLayout({ children, params }: Props) {
   const { locale } = await params
 
+  // Validate locale in child layout where notFound() is allowed
+  if (!locales.includes(locale as (typeof locales)[number])) {
+    notFound()
+  }
+
   // Providing all messages to the client
   const messages = await getMessages({ locale })
 
   return (
-    <html lang={locale}>
-      <body
-        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant`}
-      >
-        <NextIntlClientProvider messages={messages}>
-          <Providers>
-            <div className="flex flex-col min-h-screen">
-              <Header />
-              <main className="flex-1">{children}</main>
-              <Footer />
-            </div>
-          </Providers>
-        </NextIntlClientProvider>
-      </body>
-    </html>
+    <NextIntlClientProvider locale={locale} messages={messages}>
+      <Providers>
+        <div className="flex flex-col min-h-screen">
+          <Header />
+          <main className="flex-1">{children}</main>
+          <Footer />
+        </div>
+      </Providers>
+    </NextIntlClientProvider>
   )
 }

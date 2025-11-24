@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils'
 
-interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | 'primary'
     | 'secondary'
@@ -15,6 +14,7 @@ export function Button({
   children,
   variant = 'primary',
   size = 'md',
+  className,
   ...props
 }: ButtonProps) {
   const baseStyles =
@@ -41,7 +41,7 @@ export function Button({
 
   return (
     <button
-      className={cn(baseStyles, variants[variant], sizes[size])}
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
       {...props}
     >
       {children}
