@@ -20,16 +20,27 @@ test.describe('Smoke Tests - Core User Journeys', () => {
       locale: 'fr',
     })
 
-    // Should have navigation (icons are always visible, text hidden on mobile)
+    // Should have navigation
     const viewport = page.viewportSize()
     const isMobile = viewport && viewport.width < 768
 
     if (isMobile) {
-      // On mobile, navigation text is hidden but icons should be visible
-      const clubsLink = page.getByRole('navigation').getByRole('link').nth(0)
-      await expect(clubsLink).toBeVisible()
-      const eventsLink = page.getByRole('navigation').getByRole('link').nth(1)
-      await expect(eventsLink).toBeVisible()
+      // On mobile, check hamburger menu is visible
+      const menuButton = page.getByRole('button', {
+        name: /menu|ouvrir le menu/i,
+      })
+      await expect(menuButton).toBeVisible()
+
+      // Open mobile menu
+      await menuButton.click()
+
+      // Now navigation links should be visible in the menu (use first() to avoid strict mode violation)
+      await expect(
+        page.getByRole('link', { name: 'Clubs' }).first()
+      ).toBeVisible()
+      await expect(
+        page.getByRole('link', { name: 'Événements' }).first()
+      ).toBeVisible()
     } else {
       // On desktop, navigation text should be visible
       const navigationClubs = page

@@ -247,6 +247,7 @@ export function getFlexibleTextLocator(page: Page, text: string): Locator {
 
 /**
  * Navigate using header navigation links with specific selectors
+ * Handles mobile by opening the hamburger menu first
  */
 export async function navigateViaHeader({
   page,
@@ -258,8 +259,26 @@ export async function navigateViaHeader({
   locale?: Locale
 }): Promise<void> {
   const linkText = getTranslation(translationKey, locale)
-  await page
-    .getByRole('navigation')
-    .getByRole('link', { name: linkText })
-    .click()
+
+  // Check if mobile viewport
+  const viewport = page.viewportSize()
+  const isMobile = viewport && viewport.width < 768
+
+  if (isMobile) {
+    // Open mobile menu first
+    const menuButton = page.getByRole('button', {
+      name: /menu|ouvrir le menu/i,
+    })
+    await menuButton.click()
+    // Wait for menu to open
+    await page.waitForTimeout(300)
+    // Click link in mobile menu (use first() to avoid strict mode violation with multiple matching links)
+    await page.getByRole('link', { name: linkText }).first().click()
+  } else {
+    // Desktop: click link in navigation
+    await page
+      .getByRole('navigation')
+      .getByRole('link', { name: linkText })
+      .click()
+  }
 }
