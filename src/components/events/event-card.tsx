@@ -14,7 +14,7 @@ export type EventCardProps = {
 export function EventCard({ event, showClubName = false }: EventCardProps) {
   return (
     <Link href={`/events/${event.id}`} className="block h-full">
-      <Card variant="interactive" className="h-full flex flex-col">
+      <Card as="article" variant="interactive" className="h-full flex flex-col">
         {/* Fixed height header section */}
         <div className="h-16 mb-3">
           <div className="flex items-start gap-3 h-full">

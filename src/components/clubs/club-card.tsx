@@ -4,6 +4,7 @@ import { Tag } from '@/components/ui/tag'
 import { Card } from '@/components/ui/card'
 import { LocationInline } from '@/components/ui/location'
 import { formatEventDateFr } from '@/lib/utils/date-formatting'
+import { useTranslations } from 'next-intl'
 import { Calendar, Users, Clock, MapPin } from 'lucide-react'
 
 const MAX_EVENTS_TO_DISPLAY = 3
@@ -13,6 +14,7 @@ export type ClubCardProps = {
 }
 
 export function ClubCard({ club }: ClubCardProps) {
+  const t = useTranslations('clubs.card')
   const upcomingEvents = club.events || []
   const eventCount = upcomingEvents.length
 
@@ -42,7 +44,7 @@ export function ClubCard({ club }: ClubCardProps) {
                 {club.name}
               </h2>
               <div className="mt-1">
-                <LocationInline address="Quebec City" className="text-sm" />
+                <LocationInline address={t('location')} className="text-sm" />
               </div>
             </div>
           </div>
@@ -102,7 +104,7 @@ export function ClubCard({ club }: ClubCardProps) {
           {eventCount > MAX_EVENTS_TO_DISPLAY && (
             <div className="flex items-center justify-center p-3 bg-gradient-to-r from-primary/5 to-secondary/5 rounded-xl border border-dashed border-primary/20">
               <p className="text-sm text-text-secondary font-body text-center">
-                +{eventCount - MAX_EVENTS_TO_DISPLAY} more events this week
+                {t('moreEvents', { count: eventCount - MAX_EVENTS_TO_DISPLAY })}
               </p>
             </div>
           )}
@@ -112,10 +114,10 @@ export function ClubCard({ club }: ClubCardProps) {
         <div className="flex items-center justify-between pt-4 border-t border-border">
           <div className="flex items-center gap-1 text-xs text-text-secondary font-body">
             <Calendar className="h-3 w-3" />
-            <span>{eventCount} upcoming events</span>
+            <span>{t('upcomingEvents', { count: eventCount })}</span>
           </div>
           <div className="text-sm text-primary group-hover:text-primary/80 font-medium font-body">
-            View Club →
+            {t('viewClub')}
           </div>
         </div>
       </Card>

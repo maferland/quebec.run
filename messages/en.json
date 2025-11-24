@@ -9,13 +9,21 @@
     "signOutShort": "Out",
     "joinRun": "Join Run",
     "joinShort": "Join",
-    "logoTagline": "Running Community"
+    "logoTagline": "Running Community",
+    "openMenu": "Open menu",
+    "closeMenu": "Close menu"
   },
   "footer": {
     "tagline": "Running Community in Quebec City",
     "clubs": "Clubs",
     "events": "Events",
-    "calendar": "Calendar"
+    "calendar": "Calendar",
+    "en": "English",
+    "fr": "Français",
+    "language": {
+      "english": "English",
+      "french": "Français"
+    }
   },
   "metadata": {
     "title": "quebec.run - Find Your Next Run in Quebec City",
@@ -73,6 +81,13 @@
     "noEvents": {
       "title": "No upcoming events",
       "description": "This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+    },
+    "card": {
+      "location": "Quebec City",
+      "moreEvents": "+{count} more events this week",
+      "upcomingEvents": "{count} upcoming events",
+      "viewClub": "View Club →",
+      "upcomingEventsTitle": "Upcoming Events"
     }
   },
   "events": {
@@ -81,6 +96,66 @@
     "empty": {
       "title": "No upcoming events found",
       "description": "Check back soon for new running events in Quebec City"
+    },
+    "details": {
+      "title": "Event Details",
+      "meetingLocation": "Meeting Location",
+      "when": "When",
+      "distance": "Distance",
+      "pace": "Pace",
+      "organizedBy": "Organized by"
+    }
+  },
+  "validation": {
+    "required": "This field is required",
+    "min_length": "Must be at least {min} characters",
+    "max_length": "Must be at most {max} characters",
+    "invalid_email": "Please enter a valid email address",
+    "invalid_url": "Please enter a valid URL",
+    "invalid_format": "Invalid format",
+    "invalid_type": "Invalid type"
+  },
+  "forms": {
+    "club": {
+      "name": "Club Name",
+      "description": "Description",
+      "website": "Website",
+      "instagram": "Instagram",
+      "facebook": "Facebook",
+      "language": "Primary Language"
+    },
+    "actions": {
+      "save": "Save",
+      "cancel": "Cancel",
+      "delete": "Delete",
+      "create": "Create",
+      "update": "Update",
+      "saving": "Saving...",
+      "creating": "Creating...",
+      "updating": "Updating...",
+      "deleting": "Deleting..."
+    }
+  },
+  "admin": {
+    "navigation": {
+      "dashboard": "Dashboard",
+      "clubs": "Clubs",
+      "events": "Events",
+      "settings": "Settings"
+    },
+    "dashboard": {
+      "title": "Admin Dashboard",
+      "overview": "Overview",
+      "totalClubs": "Total Clubs",
+      "totalEvents": "Total Events",
+      "totalUsers": "Total Users"
+    },
+    "clubs": {
+      "title": "Manage Clubs",
+      "addNew": "Add New Club",
+      "editClub": "Edit Club",
+      "deleteClub": "Delete Club",
+      "confirmDelete": "Are you sure you want to delete this club?"
     }
   }
 }

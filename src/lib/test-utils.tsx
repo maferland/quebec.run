@@ -7,6 +7,8 @@ import {
   RenderHookOptions,
 } from '@testing-library/react'
 import type { ReactElement } from 'react'
+import { NextIntlClientProvider } from 'next-intl'
+import enMessages from '../../messages/en.json'
 
 // Create a test query client with sensible defaults
 function createTestQueryClient() {
@@ -28,7 +30,9 @@ function TestWrapper({ children }: { children: React.ReactNode }) {
   const queryClient = createTestQueryClient()
 
   return (
-    <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    <NextIntlClientProvider locale="en" messages={enMessages}>
+      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+    </NextIntlClientProvider>
   )
 }
 TestWrapper.displayName = 'TestWrapper'
