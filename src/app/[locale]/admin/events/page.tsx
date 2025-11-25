@@ -125,10 +125,7 @@ export default async function AdminEventsPage() {
                             <Edit className="w-3 h-3" />
                           </Button>
                         </Link>
-                        <DeleteEventButton
-                          eventId={event.id}
-                          eventTitle={event.title}
-                        />
+                        <DeleteEventButton eventId={event.id} />
                       </div>
                     </td>
                   </tr>
