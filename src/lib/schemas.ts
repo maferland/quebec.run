@@ -96,6 +96,20 @@ export const eventIdSchema = z.object({
 })
 export type EventId = z.infer<typeof eventIdSchema>
 
+// User schemas
+export const userIdSchema = z.object({
+  id: z.string().min(1, 'User ID is required'),
+})
+
+export const toggleUserAdminSchema = z.object({
+  id: z.string().min(1, 'User ID is required'),
+  isAdmin: z.boolean(),
+})
+
+export const usersQuerySchema = paginationQuerySchema.extend({
+  isAdmin: z.enum(['true', 'false']).optional(),
+})
+
 // API response schemas
 export const clubWithEventsSchema = clubSchema.extend({
   events: z.array(eventSchema).default([]),
@@ -133,3 +147,7 @@ export type EventWithClub = z.infer<typeof eventWithClubSchema>
 
 export type ClubsQuery = z.infer<typeof clubsQuerySchema>
 export type EventsQuery = z.infer<typeof eventsQuerySchema>
+
+export type UserId = z.infer<typeof userIdSchema>
+export type ToggleUserAdmin = z.infer<typeof toggleUserAdminSchema>
+export type UsersQuery = z.infer<typeof usersQuerySchema>
