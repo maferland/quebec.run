@@ -1,5 +1,10 @@
-import { useQuery } from '@tanstack/react-query'
-import type { EventsQuery, EventWithClub } from '@/lib/schemas'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import type {
+  EventsQuery,
+  EventWithClub,
+  EventCreate,
+  EventUpdate,
+} from '@/lib/schemas'
 
 // API functions
 async function fetchUpcomingEvents(
@@ -25,5 +30,60 @@ export function useUpcomingEvents(query: EventsQuery = {}) {
   return useQuery({
     queryKey: ['events', 'upcoming', query],
     queryFn: () => fetchUpcomingEvents(query),
+  })
+}
+
+export function useCreateEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (data: EventCreate) => {
+      const res = await fetch('/api/events', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error('Failed to create event')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
+}
+
+export function useUpdateEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, data }: { id: string; data: EventUpdate }) => {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      })
+      if (!res.ok) throw new Error('Failed to update event')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
+  })
+}
+
+export function useDeleteEvent() {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const res = await fetch(`/api/events/${id}`, {
+        method: 'DELETE',
+      })
+      if (!res.ok) throw new Error('Failed to delete event')
+      return res.json()
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['events'] })
+    },
   })
 }
