@@ -109,7 +109,7 @@
       "date": "Date",
       "time": "Heure",
       "club": "Club",
-      "address": "Adresse",
+      "address": "Lieu de rencontre",
       "distance": "Distance",
       "pace": "Allure"
     },
@@ -147,6 +147,9 @@
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce club ?"
     },
     "events": {
+      "title": "Gérer les événements",
+      "addNew": "Ajouter un événement",
+      "editEvent": "Modifier l'événement",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
     }
   }
