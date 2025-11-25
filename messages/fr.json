@@ -151,7 +151,7 @@
       "dashboard": "Tableau de bord",
       "clubs": "Clubs",
       "events": "Événements",
-      "settings": "Paramètres"
+      "users": "Utilisateurs"
     },
     "dashboard": {
       "title": "Tableau de bord administrateur",
@@ -172,6 +172,10 @@
       "addNew": "Ajouter un événement",
       "editEvent": "Modifier l'événement",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
+    },
+    "users": {
+      "title": "Gérer les utilisateurs",
+      "toggleAdmin": "Basculer le statut administrateur"
     }
   }
 }
