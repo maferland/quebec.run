@@ -129,3 +129,30 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     },
   })
 }
+
+export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
+  const { id } = data
+
+  // Check permissions: must be admin OR own the event's club
+  const event = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      club: {
+        select: { ownerId: true },
+      },
+    },
+  })
+
+  if (!event) {
+    throw new Error('Event not found')
+  }
+
+  if (!user.isAdmin && event.club.ownerId !== user.id) {
+    throw new Error('Unauthorized')
+  }
+
+  return await prisma.event.delete({
+    where: { id },
+  })
+}

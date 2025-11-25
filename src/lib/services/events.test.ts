@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
-import { getAllEvents, createEvent, updateEvent } from './events'
+import { getAllEvents, createEvent, updateEvent, deleteEvent } from './events'
 
 describe('Events Service Integration Tests', () => {
   let testUserId: string
@@ -223,6 +223,88 @@ describe('Events Service Integration Tests', () => {
             address: 'Address',
             clubId: testClub.id,
           },
+        })
+      ).rejects.toThrow('Unauthorized')
+    })
+  })
+
+  describe('deleteEvent', () => {
+    it('deletes event when user is admin', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const adminUser = await testPrisma.user.create({
+        data: { email: 'admin2@test.com', isAdmin: true },
+      })
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Event',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      await deleteEvent({
+        user: { id: adminUser.id, isAdmin: true },
+        data: { id: event.id },
+      })
+
+      const deleted = await testPrisma.event.findUnique({
+        where: { id: event.id },
+      })
+      expect(deleted).toBeNull()
+    })
+
+    it('deletes event when user owns the club', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Event',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      await deleteEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: { id: event.id },
+      })
+
+      const deleted = await testPrisma.event.findUnique({
+        where: { id: event.id },
+      })
+      expect(deleted).toBeNull()
+    })
+
+    it('throws error when user unauthorized', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const otherUser = await testPrisma.user.create({
+        data: { email: 'other2@test.com', isAdmin: false },
+      })
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Event',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      await expect(
+        deleteEvent({
+          user: { id: otherUser.id, isAdmin: false },
+          data: { id: event.id },
         })
       ).rejects.toThrow('Unauthorized')
     })
