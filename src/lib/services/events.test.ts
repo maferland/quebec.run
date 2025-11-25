@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
-import { getAllEvents, createEvent } from './events'
+import { getAllEvents, createEvent, updateEvent } from './events'
 
 describe('Events Service Integration Tests', () => {
   let testUserId: string
@@ -127,6 +127,104 @@ describe('Events Service Integration Tests', () => {
       expect(result.club).toBeDefined()
       expect(result.club.id).toBe(testClub.id)
       expect(result.club.name).toBe(testClub.name)
+    })
+  })
+
+  describe('updateEvent', () => {
+    it('updates event when user is admin', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const adminUser = await testPrisma.user.create({
+        data: { email: 'admin@test.com', isAdmin: true },
+      })
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Old Title',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Old Address',
+          clubId: testClub.id,
+        },
+      })
+
+      const result = await updateEvent({
+        user: { id: adminUser.id, isAdmin: true },
+        data: {
+          id: event.id,
+          title: 'New Title',
+          date: '2025-12-02',
+          time: '11:00',
+          address: 'New Address',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(result.title).toBe('New Title')
+      expect(result.address).toBe('New Address')
+    })
+
+    it('updates event when user owns the club', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Old Title',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      const result = await updateEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: {
+          id: event.id,
+          title: 'New Title',
+          date: '2025-12-02',
+          time: '11:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(result.title).toBe('New Title')
+    })
+
+    it('throws error when user does not own club and is not admin', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const otherUser = await testPrisma.user.create({
+        data: { email: 'other@test.com', isAdmin: false },
+      })
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Title',
+          date: new Date('2025-12-01'),
+          time: '10:00',
+          address: 'Address',
+          clubId: testClub.id,
+        },
+      })
+
+      await expect(
+        updateEvent({
+          user: { id: otherUser.id, isAdmin: false },
+          data: {
+            id: event.id,
+            title: 'New Title',
+            date: '2025-12-02',
+            time: '11:00',
+            address: 'Address',
+            clubId: testClub.id,
+          },
+        })
+      ).rejects.toThrow('Unauthorized')
     })
   })
 })
