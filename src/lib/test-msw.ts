@@ -166,6 +166,24 @@ export const handlers = [
     )
     return HttpResponse.json(event, { status: 201 })
   }),
+
+  http.put('/api/events/:id', async ({ params, request }) => {
+    const updates = await parseRequestBody(request)
+    const event = mockEvents.find((e) => e.id === params.id)
+    if (!event) {
+      return HttpResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+    const updatedEvent = createMockResponse(event, updates)
+    return HttpResponse.json(updatedEvent)
+  }),
+
+  http.delete('/api/events/:id', ({ params }) => {
+    const event = mockEvents.find((e) => e.id === params.id)
+    if (!event) {
+      return HttpResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+    return HttpResponse.json({ success: true })
+  }),
 ]
 
 // Create MSW server
