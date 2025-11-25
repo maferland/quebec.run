@@ -8,7 +8,16 @@ interface ButtonProps
     | 'outline'
     | 'outline-primary'
     | 'outline-accent'
+    | 'destructive'
   size?: 'sm' | 'md' | 'lg'
+}
+
+function filterClassName<T extends Record<string, unknown>>(
+  props: T
+): Omit<T, 'className'> {
+  const { className, ...rest } = props as T & { className?: unknown }
+  void className // Explicitly mark as intentionally unused
+  return rest as Omit<T, 'className'>
 }
 
 export function Button({
@@ -31,6 +40,8 @@ export function Button({
       'border border-primary bg-surface text-primary hover:bg-primary/5 hover:border-primary/80 focus:ring-focus',
     'outline-accent':
       'border border-accent bg-surface text-accent hover:bg-accent/5 hover:border-accent/80 focus:ring-focus',
+    destructive:
+      'border border-red-200 bg-surface text-red-600 hover:bg-red-50 hover:border-red-300 focus:ring-red-500',
   }
 
   const sizes = {
@@ -39,10 +50,15 @@ export function Button({
     lg: 'px-6 py-3 text-base',
   }
 
+  // Filter out className to ensure it cannot be applied even if TypeScript is bypassed
+  const buttonProps = filterClassName(
+    props as ButtonProps & { className?: string }
+  )
+
   return (
     <button
       className={cn(baseStyles, variants[variant], sizes[size])}
-      {...props}
+      {...buttonProps}
     >
       {children}
     </button>

@@ -28,4 +28,12 @@ vi.mock('next/font/google', () => ({
     variable: '--font-geist-mono',
     className: 'font-geist-mono',
   })),
+  Montserrat: vi.fn(() => ({
+    variable: '--font-heading',
+    className: 'font-heading',
+  })),
+  Inter: vi.fn(() => ({
+    variable: '--font-sans',
+    className: 'font-sans',
+  })),
 }))

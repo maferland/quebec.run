@@ -8,11 +8,16 @@ interface UseFormFieldProps<T extends FieldValues = FieldValues> {
   t: TFunction
 }
 
-export function useFormField<T extends FieldValues = FieldValues>({ name, t }: UseFormFieldProps<T>) {
-  const { formState: { errors } } = useFormContext<T>()
+export function useFormField<T extends FieldValues = FieldValues>({
+  name,
+  t,
+}: UseFormFieldProps<T>) {
+  const {
+    formState: { errors },
+  } = useFormContext<T>()
   const error = getError(errors, name)
   const hasError = !!error
-  
+
   return {
     error,
     hasError,

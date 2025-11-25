@@ -1,7 +1,10 @@
 import { z } from 'zod'
 
 // Type for validation translation function
-type ValidationTranslate = (key: string, params?: Record<string, string | number>) => string
+type ValidationTranslate = (
+  key: string,
+  params?: Record<string, string | number>
+) => string
 
 // Setup Zod error map with localized messages
 export function setupZodLocalization(t: ValidationTranslate) {

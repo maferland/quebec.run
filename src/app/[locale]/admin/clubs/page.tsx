@@ -8,13 +8,13 @@ async function getAllClubsForAdmin() {
   return await prisma.club.findMany({
     include: {
       owner: {
-        select: { name: true, email: true }
+        select: { name: true, email: true },
       },
       _count: {
-        select: { events: true }
-      }
+        select: { events: true },
+      },
     },
-    orderBy: { createdAt: 'desc' }
+    orderBy: { createdAt: 'desc' },
   })
 }
 

@@ -156,7 +156,7 @@ describe('Button Component', () => {
       const button = screen.getByRole('button')
       expect(button).toHaveClass(
         'bg-secondary',
-        'text-white',
+        'text-text-inverse',
         'px-6',
         'py-3',
         'text-base'
@@ -306,7 +306,7 @@ describe('Button Component', () => {
 
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveClass('bg-secondary', 'text-white')
+      expect(button).toHaveClass('bg-secondary', 'text-text-inverse')
       expect(button).toHaveClass('disabled:opacity-50')
     })
 

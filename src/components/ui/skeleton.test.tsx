@@ -17,7 +17,7 @@ describe('Skeleton Component', () => {
 
     const skeleton = container.firstChild as HTMLElement
     expect(skeleton).toHaveClass(
-      'bg-gray-200',
+      'bg-surface-secondary',
       'animate-pulse',
       'rounded-md',
       'h-4',
@@ -85,8 +85,9 @@ describe('SkeletonCard Component', () => {
 
     expect(container.firstChild).toHaveClass(
       'p-6',
-      'bg-white',
+      'bg-surface',
       'border',
+      'border-border',
       'rounded-xl'
     )
     expect(container.firstChild).toHaveAttribute('role', 'status')
@@ -119,7 +120,7 @@ describe('SkeletonCard Component', () => {
 
     const actionsSection = document.querySelector('.border-t')
     expect(actionsSection).toBeInTheDocument()
-    expect(actionsSection).toHaveClass('border-gray-100', 'pt-4')
+    expect(actionsSection).toHaveClass('border-border', 'pt-4')
   })
 
   it('applies compact styling for compact variant', () => {
@@ -342,7 +343,7 @@ describe('Convenience Components', () => {
       expect(avatar).toBeInTheDocument()
 
       // Should have club border
-      const card = document.querySelector('.border-l-4.border-l-gray-200')
+      const card = document.querySelector('.border-l-4.border-l-border')
       expect(card).toBeInTheDocument()
 
       // Should have action buttons
@@ -358,7 +359,7 @@ describe('Convenience Components', () => {
       expect(container.firstChild).toHaveClass(
         'custom-club-skeleton',
         'border-l-4',
-        'border-l-gray-200'
+        'border-l-border'
       )
     })
   })

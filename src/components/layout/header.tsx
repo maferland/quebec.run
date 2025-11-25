@@ -62,7 +62,7 @@ export function Header() {
                   <div className="w-20 h-9 bg-surface-secondary rounded-md animate-pulse" />
                 </div>
               ) : session ? (
-                <UserDropdown 
+                <UserDropdown
                   userName={session.user?.name || t('user')}
                   userEmail={session.user?.email || undefined}
                 />

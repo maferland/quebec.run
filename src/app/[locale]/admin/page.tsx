@@ -48,9 +48,7 @@ export default async function AdminDashboard() {
         <h1 className="text-3xl font-heading font-bold text-primary">
           {t('title')}
         </h1>
-        <p className="text-text-secondary mt-2">
-          {t('overview')}
-        </p>
+        <p className="text-text-secondary mt-2">{t('overview')}</p>
       </div>
 
       {/* Stats Grid */}
@@ -71,7 +69,9 @@ export default async function AdminDashboard() {
                     {stat.value}
                   </p>
                 </div>
-                <div className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}>
+                <div
+                  className={`w-12 h-12 ${stat.color} rounded-lg flex items-center justify-center`}
+                >
                   <Icon className="w-6 h-6 text-white" />
                 </div>
               </div>

@@ -7,17 +7,16 @@ import { Link } from '@/i18n/navigation'
 import { useClub } from '@/lib/hooks/use-clubs'
 import { ClubForm } from '@/components/admin/club-form'
 
-
-export default function AdminEditClubPage({ 
-  params 
-}: { 
-  params: Promise<{ slug: string }> 
+export default function AdminEditClubPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>
 }) {
   const router = useRouter()
   const [slug, setSlug] = useState<string | null>(null)
-  
+
   useEffect(() => {
-    params.then(resolved => setSlug(resolved.slug))
+    params.then((resolved) => setSlug(resolved.slug))
   }, [params])
 
   const { data: club, isLoading, error } = useClub(slug || '')
@@ -64,9 +63,7 @@ export default function AdminEditClubPage({
         <h1 className="text-3xl font-heading font-bold text-primary">
           Edit Club: {club.name}
         </h1>
-        <p className="text-text-secondary mt-1">
-          Modify club information
-        </p>
+        <p className="text-text-secondary mt-1">Modify club information</p>
       </div>
 
       {/* Form */}

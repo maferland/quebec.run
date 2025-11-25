@@ -10,14 +10,14 @@ import { redirect } from 'next/navigation'
  */
 export async function requireAdmin() {
   const session = await getServerSession(authOptions)
-  
+
   if (!session?.user?.email) {
     redirect('/api/auth/signin')
   }
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true, email: true, name: true, isAdmin: true }
+    select: { id: true, email: true, name: true, isAdmin: true },
   })
 
   if (!user || !user.isAdmin) {
@@ -32,7 +32,12 @@ export async function requireAdmin() {
  * Returns user or creates error response
  */
 export async function withAdminAuth<T>(
-  handler: (user: { id: string; email: string; name: string | null; isAdmin: boolean }) => Promise<T>
+  handler: (user: {
+    id: string
+    email: string
+    name: string | null
+    isAdmin: boolean
+  }) => Promise<T>
 ) {
   try {
     const user = await requireAdmin()
@@ -40,10 +45,16 @@ export async function withAdminAuth<T>(
   } catch (error) {
     if (error instanceof Error) {
       if (error.message === 'Admin access required') {
-        return NextResponse.json({ error: 'Admin access required' }, { status: 403 })
+        return NextResponse.json(
+          { error: 'Admin access required' },
+          { status: 403 }
+        )
       }
     }
-    return NextResponse.json({ error: 'Internal server error' }, { status: 500 })
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
   }
 }
 

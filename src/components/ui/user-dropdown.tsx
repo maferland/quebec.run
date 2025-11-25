@@ -17,7 +17,10 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target as Node)
+      ) {
         setIsOpen(false)
       }
     }
@@ -45,9 +48,9 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
         <span className="text-sm text-text-primary font-medium max-w-24 truncate">
           {userName.split(' ')[0]}
         </span>
-        <ChevronDown 
-          size={14} 
-          className={`text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`} 
+        <ChevronDown
+          size={14}
+          className={`text-text-secondary transition-transform ${isOpen ? 'rotate-180' : ''}`}
         />
       </button>
 
