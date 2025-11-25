@@ -80,7 +80,9 @@ describe('useUsers hooks', () => {
         })
       })
 
-      expect(result.current.isSuccess).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
     })
 
     it('handles toggle errors', async () => {

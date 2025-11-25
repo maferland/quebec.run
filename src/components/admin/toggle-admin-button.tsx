@@ -33,7 +33,7 @@ export function ToggleAdminButton({
         id: userId,
         isAdmin: !isAdmin,
       })
-    } catch (error) {
+    } catch {
       alert('Failed to update admin status. Please try again.')
     }
   }
