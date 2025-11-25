@@ -215,6 +215,8 @@ export const handlers = [
     if (!user) {
       return HttpResponse.json({ error: 'User not found' }, { status: 404 })
     }
+    // Add small delay to simulate network request
+    await new Promise((resolve) => setTimeout(resolve, 100))
     const updatedUser = createMockResponse(user, updates)
     return HttpResponse.json(updatedUser)
   }),
