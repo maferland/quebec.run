@@ -25,6 +25,52 @@ async function fetchUpcomingEvents(
   return response.json()
 }
 
+async function createEvent(data: EventCreate): Promise<EventWithClub> {
+  const response = await fetch('/api/events', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to create event')
+  }
+
+  return response.json()
+}
+
+async function updateEvent({
+  id,
+  data,
+}: {
+  id: string
+  data: EventUpdate
+}): Promise<EventWithClub> {
+  const response = await fetch(`/api/events/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to update event')
+  }
+
+  return response.json()
+}
+
+async function deleteEvent(id: string): Promise<{ success: boolean }> {
+  const response = await fetch(`/api/events/${id}`, {
+    method: 'DELETE',
+  })
+
+  if (!response.ok) {
+    throw new Error('Failed to delete event')
+  }
+
+  return response.json()
+}
+
 // React Query hooks
 export function useUpcomingEvents(query: EventsQuery = {}) {
   return useQuery({
@@ -37,15 +83,7 @@ export function useCreateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (data: EventCreate) => {
-      const res = await fetch('/api/events', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error('Failed to create event')
-      return res.json()
-    },
+    mutationFn: createEvent,
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
     },
@@ -56,17 +94,10 @@ export function useUpdateEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async ({ id, data }: { id: string; data: EventUpdate }) => {
-      const res = await fetch(`/api/events/${id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(data),
-      })
-      if (!res.ok) throw new Error('Failed to update event')
-      return res.json()
-    },
-    onSuccess: () => {
+    mutationFn: updateEvent,
+    onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event', variables.id] })
     },
   })
 }
@@ -75,15 +106,10 @@ export function useDeleteEvent() {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/events/${id}`, {
-        method: 'DELETE',
-      })
-      if (!res.ok) throw new Error('Failed to delete event')
-      return res.json()
-    },
-    onSuccess: () => {
+    mutationFn: deleteEvent,
+    onSuccess: (_, id) => {
       queryClient.invalidateQueries({ queryKey: ['events'] })
+      queryClient.invalidateQueries({ queryKey: ['event', id] })
     },
   })
 }
