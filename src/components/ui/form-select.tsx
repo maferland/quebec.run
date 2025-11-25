@@ -1,33 +1,34 @@
-import { UseFormRegister, FieldValues, Path } from 'react-hook-form'
+import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
-import { useFormField } from '@/lib/form/use-form-field'
 import { cn } from '@/lib/utils'
 
-type TFunction = (key: string) => string
-
-interface FormSelectProps<T extends FieldValues = FieldValues> extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
+export interface FormSelectProps<T extends FieldValues = FieldValues>
+  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
-  t: TFunction
+  label: string
+  error?: FieldError
   required?: boolean
-  options: { value: string; label: string }[]
+  options: Array<{ value: string; label: string }>
 }
 
 export function FormSelect<T extends FieldValues = FieldValues>({
   register,
   name,
-  t,
+  label,
+  error,
   required,
   options,
   className,
   ...props
 }: FormSelectProps<T>) {
-  const { error, label, hasError, 'aria-invalid': ariaInvalid } = useFormField({ name, t })
-  
+  const hasError = !!error
+  const ariaInvalid = hasError ? 'true' : 'false'
+
   return (
     <FormControl
       name={name}
-      error={error}
+      error={error?.message}
       label={label}
       required={required}
     >
@@ -42,6 +43,7 @@ export function FormSelect<T extends FieldValues = FieldValues>({
           className
         )}
         aria-invalid={ariaInvalid}
+        required={required}
         {...props}
       >
         {options.map((option) => (

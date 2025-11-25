@@ -1,31 +1,32 @@
-import { UseFormRegister, FieldValues, Path } from 'react-hook-form'
+import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
-import { useFormField } from '@/lib/form/use-form-field'
 import { cn } from '@/lib/utils'
 
-type TFunction = (key: string) => string
-
-interface FormTextareaProps<T extends FieldValues = FieldValues> extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
+export interface FormTextareaProps<T extends FieldValues = FieldValues>
+  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
-  t: TFunction
+  label: string
+  error?: FieldError
   required?: boolean
 }
 
 export function FormTextarea<T extends FieldValues = FieldValues>({
   register,
   name,
-  t,
+  label,
+  error,
   required,
   className,
   ...props
 }: FormTextareaProps<T>) {
-  const { error, label, hasError, 'aria-invalid': ariaInvalid } = useFormField({ name, t })
-  
+  const hasError = !!error
+  const ariaInvalid = hasError ? 'true' : 'false'
+
   return (
     <FormControl
       name={name}
-      error={error}
+      error={error?.message}
       label={label}
       required={required}
     >
@@ -33,13 +34,14 @@ export function FormTextarea<T extends FieldValues = FieldValues>({
         id={name}
         {...register(name)}
         className={cn(
-          'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent transition-colors resize-vertical',
+          'w-full px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-focus focus:border-transparent transition-colors',
           hasError
             ? 'border-red-500 bg-red-50'
             : 'border-border bg-surface hover:border-border-secondary',
           className
         )}
         aria-invalid={ariaInvalid}
+        required={required}
         {...props}
       />
     </FormControl>

@@ -1,31 +1,32 @@
-import { UseFormRegister, FieldValues, Path } from 'react-hook-form'
+import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
-import { useFormField } from '@/lib/form/use-form-field'
 import { cn } from '@/lib/utils'
 
-type TFunction = (key: string) => string
-
-interface FormInputProps<T extends FieldValues = FieldValues> extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
+export interface FormInputProps<T extends FieldValues = FieldValues>
+  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
-  t: TFunction
+  label: string
+  error?: FieldError
   required?: boolean
 }
 
 export function FormInput<T extends FieldValues = FieldValues>({
   register,
   name,
-  t,
+  label,
+  error,
   required,
   className,
   ...props
 }: FormInputProps<T>) {
-  const { error, label, hasError, 'aria-invalid': ariaInvalid } = useFormField({ name, t })
-  
+  const hasError = !!error
+  const ariaInvalid = hasError ? 'true' : 'false'
+
   return (
     <FormControl
       name={name}
-      error={error}
+      error={error?.message}
       label={label}
       required={required}
     >
@@ -40,6 +41,7 @@ export function FormInput<T extends FieldValues = FieldValues>({
           className
         )}
         aria-invalid={ariaInvalid}
+        required={required}
         {...props}
       />
     </FormControl>
