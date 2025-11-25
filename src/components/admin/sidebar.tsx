@@ -2,7 +2,7 @@
 
 import { Link } from '@/i18n/navigation'
 import { usePathname } from 'next/navigation'
-import { BarChart3, Users, Calendar, Settings, Home } from 'lucide-react'
+import { BarChart3, Users, Calendar, UserCheck, Home } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
@@ -10,7 +10,7 @@ const navigation = [
   { name: 'dashboard', href: '/admin', icon: BarChart3 },
   { name: 'clubs', href: '/admin/clubs', icon: Users },
   { name: 'events', href: '/admin/events', icon: Calendar },
-  { name: 'settings', href: '/admin/settings', icon: Settings },
+  { name: 'users', href: '/admin/users', icon: UserCheck },
 ]
 
 export function AdminSidebar() {
@@ -23,15 +23,13 @@ export function AdminSidebar() {
       <div className="flex items-center px-6 py-4 border-b border-border">
         <div className="flex items-center space-x-2">
           <div className="w-8 h-8 bg-primary rounded-lg flex items-center justify-center">
-            <Settings className="w-4 h-4 text-text-inverse" />
+            <BarChart3 className="w-4 h-4 text-text-inverse" />
           </div>
           <div>
             <h1 className="text-lg font-heading font-semibold text-primary">
               Admin
             </h1>
-            <p className="text-xs text-text-secondary">
-              Management Dashboard
-            </p>
+            <p className="text-xs text-text-secondary">Management Dashboard</p>
           </div>
         </div>
       </div>
@@ -39,9 +37,11 @@ export function AdminSidebar() {
       {/* Navigation */}
       <nav className="flex-1 px-4 py-4 space-y-1">
         {navigation.map((item) => {
-          const isActive = pathname === item.href || (item.href !== '/admin' && pathname?.startsWith(item.href))
+          const isActive =
+            pathname === item.href ||
+            (item.href !== '/admin' && pathname?.startsWith(item.href))
           const Icon = item.icon
-          
+
           return (
             <Link
               key={item.name}

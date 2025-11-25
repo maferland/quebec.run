@@ -130,7 +130,7 @@
       "dashboard": "Dashboard",
       "clubs": "Clubs",
       "events": "Events",
-      "settings": "Settings"
+      "users": "Users"
     },
     "dashboard": {
       "title": "Admin Dashboard",
@@ -151,6 +151,10 @@
       "addNew": "Add New Event",
       "editEvent": "Edit Event",
       "confirmDelete": "Are you sure you want to delete this event?"
+    },
+    "users": {
+      "title": "Manage Users",
+      "toggleAdmin": "Toggle Admin Status"
     }
   }
 }
