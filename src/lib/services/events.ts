@@ -97,7 +97,12 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
   // Check permissions: must be admin OR own the event's club
   const event = await prisma.event.findUnique({
     where: { id },
-    include: { club: { select: { ownerId: true } } },
+    select: {
+      id: true,
+      club: {
+        select: { ownerId: true },
+      },
+    },
   })
 
   if (!event) {
