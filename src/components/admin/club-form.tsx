@@ -2,7 +2,11 @@
 
 import { useFormWithSchema } from '@/lib/form/use-form-with-schema'
 import { clubCreateSchema, type ClubWithEvents } from '@/lib/schemas'
-import { useCreateClub, useUpdateClub, useDeleteClub } from '@/lib/hooks/use-clubs'
+import {
+  useCreateClub,
+  useUpdateClub,
+  useDeleteClub,
+} from '@/lib/hooks/use-clubs'
 import { FormInput } from '@/components/ui/form-input'
 import { FormTextarea } from '@/components/ui/form-textarea'
 import { FormSelect } from '@/components/ui/form-select'
@@ -22,7 +26,7 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
   const tActions = useTranslations('forms.actions')
   const tClub = useTranslations('forms.club')
   const router = useRouter()
-  
+
   const createMutation = useCreateClub()
   const updateMutation = useUpdateClub()
   const deleteMutation = useDeleteClub()
@@ -35,10 +39,15 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
       website: initialData?.website || '',
       instagram: initialData?.instagram || '',
       facebook: initialData?.facebook || '',
+      language: initialData?.language || 'both',
     },
   })
 
-  const { register, handleSubmit, formState: { errors, isSubmitting } } = form
+  const {
+    register,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+  } = form
 
   const handleFormSubmit = handleSubmit(async (data) => {
     try {
@@ -48,7 +57,7 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
       } else if (mode === 'edit' && initialData) {
         const updatedClub = await updateMutation.mutateAsync({
           id: initialData.id,
-          data,
+          data: { ...data, id: initialData.id },
         })
         onSuccess?.(updatedClub)
       }
@@ -59,7 +68,7 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
 
   const handleDelete = async () => {
     if (!initialData || mode !== 'edit') return
-    
+
     const confirmed = confirm(t('admin.clubs.confirmDelete'))
     if (!confirmed) return
 
@@ -77,12 +86,16 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
     { value: 'both', label: 'Bilingue / Bilingual' },
   ]
 
-  const isLoading = isSubmitting || createMutation.isPending || updateMutation.isPending
+  const isLoading =
+    isSubmitting || createMutation.isPending || updateMutation.isPending
   const isDeleting = deleteMutation.isPending
 
   return (
     <div className="max-w-2xl">
-      <form onSubmit={handleFormSubmit} className="bg-surface rounded-lg border border-border p-6">
+      <form
+        onSubmit={handleFormSubmit}
+        className="bg-surface rounded-lg border border-border p-6"
+      >
         <div className="space-y-6">
           <FormInput
             register={register}
@@ -143,16 +156,15 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
           {mode === 'edit' && (
             <Button
               type="button"
-              variant="outline"
+              variant="destructive"
               onClick={handleDelete}
               disabled={isDeleting}
-              className="text-red-600 border-red-200 hover:bg-red-50 hover:border-red-300"
             >
               <Trash2 className="w-4 h-4 mr-2" />
               {isDeleting ? tActions('deleting') : tActions('delete')}
             </Button>
           )}
-          
+
           <div className="flex space-x-4 ml-auto">
             <Button
               type="button"
@@ -162,15 +174,15 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
             >
               {tActions('cancel')}
             </Button>
-            <Button 
-              type="submit" 
-              disabled={isLoading}
-            >
+            <Button type="submit" disabled={isLoading}>
               <Save className="w-4 h-4 mr-2" />
-              {isLoading 
-                ? mode === 'create' ? tActions('creating') : tActions('updating')
-                : mode === 'create' ? tActions('create') : tActions('save')
-              }
+              {isLoading
+                ? mode === 'create'
+                  ? tActions('creating')
+                  : tActions('updating')
+                : mode === 'create'
+                  ? tActions('create')
+                  : tActions('save')}
             </Button>
           </div>
         </div>

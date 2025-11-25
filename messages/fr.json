@@ -103,6 +103,16 @@
       "facebook": "Facebook",
       "language": "Langue principale"
     },
+    "event": {
+      "title": "Titre de l'événement",
+      "description": "Description",
+      "date": "Date",
+      "time": "Heure",
+      "club": "Club",
+      "address": "Adresse",
+      "distance": "Distance",
+      "pace": "Allure"
+    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",
@@ -135,6 +145,9 @@
       "editClub": "Modifier le club",
       "deleteClub": "Supprimer le club",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce club ?"
+    },
+    "events": {
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
     }
   }
 }

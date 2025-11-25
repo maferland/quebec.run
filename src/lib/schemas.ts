@@ -35,6 +35,7 @@ export const clubCreateSchema = z.object({
   website: z.string().url('Must be a valid URL').optional(),
   instagram: z.string().optional(),
   facebook: z.string().optional(),
+  language: z.string().optional(),
 })
 
 export const clubUpdateSchema = clubCreateSchema.partial().extend({
