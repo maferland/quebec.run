@@ -7,6 +7,7 @@ import type {
   PublicPayload,
   AuthPayload,
 } from '@/lib/schemas'
+import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -66,7 +67,7 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   })
 
   if (!event) {
-    throw new Error('Event not found')
+    throw new NotFoundError('Event not found')
   }
 
   return event
@@ -106,11 +107,11 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
   })
 
   if (!event) {
-    throw new Error('Event not found')
+    throw new NotFoundError('Event not found')
   }
 
   if (!user.isAdmin && event.club.ownerId !== user.id) {
-    throw new Error('Unauthorized')
+    throw new UnauthorizedError('Unauthorized')
   }
 
   return await prisma.event.update({
@@ -145,11 +146,11 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
   })
 
   if (!event) {
-    throw new Error('Event not found')
+    throw new NotFoundError('Event not found')
   }
 
   if (!user.isAdmin && event.club.ownerId !== user.id) {
-    throw new Error('Unauthorized')
+    throw new UnauthorizedError('Unauthorized')
   }
 
   return await prisma.event.delete({

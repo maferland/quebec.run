@@ -2,6 +2,7 @@ import { authOptions } from '@/lib/auth'
 import type { ServiceUser } from '@/lib/schemas'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
+import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // Shared type for Next.js route handler context
 export type RouteHandlerContext = {
@@ -17,6 +18,16 @@ function withErrorHandler<T extends unknown[]>(
       return await handler(...args)
     } catch (error) {
       console.error('API Error:', error)
+
+      // Handle not found errors
+      if (error instanceof NotFoundError) {
+        return Response.json({ error: error.message }, { status: 404 })
+      }
+
+      // Handle unauthorized errors
+      if (error instanceof UnauthorizedError) {
+        return Response.json({ error: error.message }, { status: 403 })
+      }
 
       // Handle authentication errors
       if (
