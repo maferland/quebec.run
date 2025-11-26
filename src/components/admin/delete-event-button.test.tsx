@@ -51,7 +51,9 @@ describe('DeleteEventButton', () => {
 
     await user.click(screen.getByRole('button'))
 
-    expect(mockConfirm).toHaveBeenCalledWith('confirmDelete')
+    expect(mockConfirm).toHaveBeenCalledWith(
+      'Are you sure you want to delete this event?'
+    )
   })
 
   it('calls delete mutation when confirmed', async () => {

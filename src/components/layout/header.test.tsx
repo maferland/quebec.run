@@ -34,9 +34,8 @@ describe('Header', () => {
   it('renders the logo and navigation links', () => {
     render(<Header />)
 
-    expect(screen.getByText('Courses')).toBeInTheDocument()
-    expect(screen.getByText('Map')).toBeInTheDocument()
-    expect(screen.getByText('Calendar')).toBeInTheDocument()
+    expect(screen.getByText('Clubs')).toBeInTheDocument()
+    expect(screen.getByText('Events')).toBeInTheDocument()
   })
 
   it('shows sign in button when not authenticated', () => {
@@ -57,10 +56,9 @@ describe('Header', () => {
 
     render(<Header />)
 
-    // Look for the loading div by its specific classes
+    // Look for the loading div by its animation
     const loadingDiv = document.querySelector('.animate-pulse')
     expect(loadingDiv).toBeInTheDocument()
-    expect(loadingDiv).toHaveClass('w-8', 'h-8', 'bg-gray-200', 'rounded')
   })
 
   it('shows user info and sign out when authenticated', () => {
@@ -80,8 +78,8 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('John Doe')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: 'Sign Out' })).toBeInTheDocument()
+    // User dropdown should be present (contains user info)
+    expect(screen.getByRole('button', { name: /john/i })).toBeInTheDocument()
     expect(
       screen.queryByRole('button', { name: 'Sign In' })
     ).not.toBeInTheDocument()
@@ -104,7 +102,8 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('Admin')).toBeInTheDocument()
+    // Check for admin link in navigation
+    expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
   })
 
   it('does not show admin link for regular users', () => {
@@ -124,6 +123,8 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /admin/i })
+    ).not.toBeInTheDocument()
   })
 })

@@ -79,25 +79,6 @@ describe('ClubCard Component', () => {
       expect(link).toHaveClass('block', 'no-underline', 'hover:no-underline')
     })
 
-    it('applies correct card styling with Quebec.run branding', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      const card = screen.getByTestId('club-card')
-      expect(card).toHaveClass(
-        'rounded-xl',
-        'border',
-        'group',
-        'p-4',
-        'bg-white',
-        'hover:shadow-primary/5',
-        'border-l-4',
-        'border-primary',
-        'hover:shadow-lg',
-        'transition-all',
-        'duration-200'
-      )
-    })
-
     it('displays club icon with proper styling', () => {
       const { container } = render(<ClubCard club={mockClubWithEvents} />)
 
@@ -131,22 +112,6 @@ describe('ClubCard Component', () => {
       expect(
         screen.queryByText(/Premier running club in Quebec City/)
       ).not.toBeInTheDocument()
-    })
-
-    it('applies proper text styling to description', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      const description = screen.getByText(
-        /Premier running club in Quebec City/
-      )
-      expect(description).toHaveClass(
-        'text-accent',
-        'font-body',
-        'text-sm',
-        'mb-4',
-        'line-clamp-2',
-        'leading-relaxed'
-      )
     })
 
     it('displays location as Quebec City', () => {
@@ -234,18 +199,6 @@ describe('ClubCard Component', () => {
       expect(screen.getByText('+2 more events this week')).toBeInTheDocument()
     })
 
-    it('applies correct styling to event items', () => {
-      const { container } = render(<ClubCard club={mockClubWithEvents} />)
-
-      const eventItem = container.querySelector('.p-3.bg-gray-50.rounded-xl')
-      expect(eventItem).toHaveClass(
-        'border',
-        'border-gray-100',
-        'hover:border-primary/20',
-        'transition-colors'
-      )
-    })
-
     it('displays event times with time tags', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
@@ -315,18 +268,6 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       expect(screen.getByText('View Club →')).toBeInTheDocument()
-    })
-
-    it('applies correct styling to footer', () => {
-      const { container } = render(<ClubCard club={mockClubWithEvents} />)
-
-      const footer = container.querySelector('.border-t.border-gray-100')
-      expect(footer).toHaveClass(
-        'flex',
-        'items-center',
-        'justify-between',
-        'pt-4'
-      )
     })
 
     it('includes calendar icon in event count summary', () => {

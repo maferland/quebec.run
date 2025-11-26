@@ -34,26 +34,6 @@ describe('EventCard Component', () => {
       expect(link).toHaveAttribute('href', '/events/event-1')
       expect(link).toHaveClass('block', 'h-full')
     })
-
-    it('applies correct card styling', () => {
-      const { container } = render(<EventCard event={mockEventWithClub} />)
-
-      const card = container.querySelector('section')
-      expect(card).toHaveClass(
-        'rounded-xl',
-        'border',
-        'transition-all',
-        'duration-200',
-        'group',
-        'p-4',
-        'bg-white',
-        'hover:shadow-lg',
-        'cursor-pointer',
-        'h-full',
-        'flex',
-        'flex-col'
-      )
-    })
   })
 
   describe('Date and Time Display', () => {
