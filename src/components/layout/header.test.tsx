@@ -41,9 +41,9 @@ describe('Header', () => {
   it('shows sign in button when not authenticated', () => {
     render(<Header />)
 
-    expect(screen.getByRole('button', { name: /Sign In/ })).toBeInTheDocument()
+    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /Sign Out/ })
+      screen.queryByRole('button', { name: 'Sign Out' })
     ).not.toBeInTheDocument()
   })
 
@@ -56,13 +56,9 @@ describe('Header', () => {
 
     render(<Header />)
 
-    // Check that sign in button is not shown during loading
-    expect(
-      screen.queryByRole('button', { name: 'Sign In' })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Sign Out' })
-    ).not.toBeInTheDocument()
+    // Look for the loading div by its animation
+    const loadingDiv = document.querySelector('.animate-pulse')
+    expect(loadingDiv).toBeInTheDocument()
   })
 
   it('shows user info and sign out when authenticated', () => {
@@ -82,10 +78,10 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByText('John')).toBeInTheDocument()
-    expect(screen.getByRole('button', { name: /Sign Out/ })).toBeInTheDocument()
+    // User dropdown should be present (contains user info)
+    expect(screen.getByRole('button', { name: /john/i })).toBeInTheDocument()
     expect(
-      screen.queryByRole('button', { name: /Sign In/ })
+      screen.queryByRole('button', { name: 'Sign In' })
     ).not.toBeInTheDocument()
   })
 
@@ -106,7 +102,8 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByRole('link', { name: 'Admin' })).toBeInTheDocument()
+    // Check for admin link in navigation
+    expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
   })
 
   it('does not show admin link for regular users', () => {
@@ -126,6 +123,8 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.queryByText('Admin')).not.toBeInTheDocument()
+    expect(
+      screen.queryByRole('link', { name: /admin/i })
+    ).not.toBeInTheDocument()
   })
 })

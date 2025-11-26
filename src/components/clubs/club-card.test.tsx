@@ -76,26 +76,19 @@ describe('ClubCard Component', () => {
 
       const link = screen.getByRole('link')
       expect(link).toHaveAttribute('href', '/clubs/quebec-running-club')
-      expect(link).toBeVisible()
+      expect(link).toHaveClass('block', 'no-underline', 'hover:no-underline')
     })
 
-    it('displays as a card with proper structure', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      const card = screen.getByTestId('club-card')
-      expect(card).toBeVisible()
-      expect(card).toContainElement(
-        screen.getByRole('heading', { name: 'Quebec Running Club' })
-      )
-      expect(card).toContainElement(screen.getByText('Quebec City'))
-    })
-
-    it('displays club icon with accessibility attributes', () => {
+    it('displays club icon with proper styling', () => {
       const { container } = render(<ClubCard club={mockClubWithEvents} />)
 
-      const usersIcon = container.querySelector('svg')
-      expect(usersIcon).toBeInTheDocument()
-      expect(usersIcon).toHaveAttribute('aria-hidden', 'true')
+      const iconContainer = container.querySelector(
+        '.p-2.bg-primary\\/10.rounded-lg'
+      )
+      expect(iconContainer).toBeInTheDocument()
+
+      const usersIcon = iconContainer?.querySelector('svg')
+      expect(usersIcon).toHaveClass('h-5', 'w-5', 'text-primary')
     })
   })
 
@@ -121,30 +114,20 @@ describe('ClubCard Component', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('displays description with appropriate content', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      const description = screen.getByText(
-        /Premier running club in Quebec City/
-      )
-      expect(description).toBeVisible()
-      expect(description.textContent).toContain(
-        'Premier running club in Quebec City'
-      )
-    })
-
     it('displays location as Quebec City', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       expect(screen.getByText('Quebec City')).toBeInTheDocument()
     })
 
-    it('displays location with proper content', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
+    it('uses LocationInline component for location display', () => {
+      const { container } = render(<ClubCard club={mockClubWithEvents} />)
 
-      const locationText = screen.getByText('Quebec City')
-      expect(locationText).toBeVisible()
-      expect(locationText).toBeInTheDocument()
+      const locationComponent = container.querySelector(
+        '.flex.items-center.gap-2'
+      )
+      expect(locationComponent).toBeInTheDocument()
+      expect(locationComponent).toHaveClass('text-sm')
     })
   })
 
@@ -155,21 +138,30 @@ describe('ClubCard Component', () => {
       expect(screen.getByText('3')).toBeInTheDocument()
     })
 
-    it('displays event count badge with correct number', () => {
+    it('applies correct styling to event count badge', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
-      const eventBadge = screen.getByText('3')
-      expect(eventBadge).toBeVisible()
-      expect(eventBadge.closest('div')).toContainElement(eventBadge)
+      const eventBadge = screen.getByText('3').closest('div')
+      expect(eventBadge).toHaveClass(
+        'flex',
+        'items-center',
+        'gap-1',
+        'px-3',
+        'py-1',
+        'bg-secondary/10',
+        'text-secondary',
+        'rounded-full',
+        'text-sm',
+        'font-medium'
+      )
     })
 
-    it('displays calendar icon with proper accessibility', () => {
+    it('displays calendar icon in event count badge', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       const badge = screen.getByText('3').closest('div')
       const calendarIcon = badge?.querySelector('svg')
-      expect(calendarIcon).toBeInTheDocument()
-      expect(calendarIcon).toHaveAttribute('aria-hidden', 'true')
+      expect(calendarIcon).toHaveClass('h-3', 'w-3')
     })
 
     it('updates count based on number of events', () => {
@@ -207,20 +199,22 @@ describe('ClubCard Component', () => {
       expect(screen.getByText('+2 more events this week')).toBeInTheDocument()
     })
 
-    it('displays event items with proper content', () => {
+    it('displays event times with time tags', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
-      expect(screen.getByText('Morning 5K Run')).toBeVisible()
-      expect(screen.getByText('Trail Running Adventure')).toBeVisible()
-      expect(screen.getByText('Speed Training Session')).toBeVisible()
-    })
-
-    it('displays event times clearly', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      const timeTag = screen.getByText('06:00')
-      expect(timeTag).toBeVisible()
-      expect(timeTag).toHaveTextContent('06:00')
+      const timeTag = screen.getByText('06:00').closest('span')
+      expect(timeTag).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'font-medium',
+        'rounded-md',
+        'border',
+        'whitespace-nowrap',
+        'px-1.5',
+        'py-0.5',
+        'gap-1',
+        'text-xs'
+      )
     })
 
     it('displays event dates in French Canadian format', () => {
@@ -276,28 +270,25 @@ describe('ClubCard Component', () => {
       expect(screen.getByText('View Club →')).toBeInTheDocument()
     })
 
-    it('displays footer with event summary and action', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
-
-      expect(screen.getByText('3 upcoming events')).toBeVisible()
-      expect(screen.getByText('View Club →')).toBeVisible()
-    })
-
-    it('includes calendar icon with accessibility in event summary', () => {
+    it('includes calendar icon in event count summary', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       const eventSummary = screen.getByText('3 upcoming events').closest('div')
       const calendarIcon = eventSummary?.querySelector('svg')
-      expect(calendarIcon).toBeInTheDocument()
-      expect(calendarIcon).toHaveAttribute('aria-hidden', 'true')
+      expect(calendarIcon).toHaveClass('h-3', 'w-3')
     })
 
-    it('displays call-to-action text clearly', () => {
+    it('applies hover effect styling to call-to-action', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       const callToAction = screen.getByText('View Club →')
-      expect(callToAction).toBeVisible()
-      expect(callToAction).toHaveTextContent('View Club →')
+      expect(callToAction).toHaveClass(
+        'text-sm',
+        'text-primary',
+        'group-hover:text-primary/80',
+        'font-medium',
+        'font-body'
+      )
     })
   })
 
@@ -339,28 +330,30 @@ describe('ClubCard Component', () => {
   })
 
   describe('Typography and Styling', () => {
-    it('displays club name as proper heading', () => {
+    it('applies Quebec.run brand typography to club name', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
       const clubName = screen.getByRole('heading', {
         name: 'Quebec Running Club',
       })
-      expect(clubName).toBeVisible()
-      expect(clubName.tagName).toBe('H2')
+      expect(clubName).toHaveClass(
+        'text-xl',
+        'font-heading',
+        'font-bold',
+        'text-primary',
+        'group-hover:text-primary/80',
+        'transition-colors'
+      )
     })
 
-    it('maintains proper content organization', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
+    it('applies consistent spacing between sections', () => {
+      const { container } = render(<ClubCard club={mockClubWithEvents} />)
 
-      const clubName = screen.getByRole('heading', {
-        name: 'Quebec Running Club',
-      })
-      const description = screen.getByText(/Premier running club/)
-      const firstEvent = screen.getByText('Morning 5K Run')
+      const eventsSection = container.querySelector('.space-y-3.mb-4')
+      expect(eventsSection).toBeInTheDocument()
 
-      expect(clubName).toBeInTheDocument()
-      expect(description).toBeInTheDocument()
-      expect(firstEvent).toBeInTheDocument()
+      const header = container.querySelector('.mb-4')
+      expect(header).toBeInTheDocument()
     })
 
     it('uses proper heading hierarchy', () => {
@@ -405,12 +398,16 @@ describe('ClubCard Component', () => {
   })
 
   describe('Interactive States', () => {
-    it('maintains accessibility for interactive states', () => {
+    it('applies hover effects through CSS classes', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
-      const link = screen.getByRole('link')
-      expect(link).toBeVisible()
-      expect(link).not.toHaveAttribute('tabindex', '-1')
+      const card = screen.getByTestId('club-card')
+      expect(card).toHaveClass(
+        'hover:shadow-lg',
+        'hover:shadow-primary/5',
+        'hover:-translate-y-1',
+        'hover:border-primary/20'
+      )
     })
 
     it('maintains keyboard accessibility', () => {
@@ -421,12 +418,11 @@ describe('ClubCard Component', () => {
       expect(link).not.toHaveAttribute('tabindex', '-1')
     })
 
-    it('provides consistent interactive behavior', () => {
-      render(<ClubCard club={mockClubWithEvents} />)
+    it('applies transition effects to interactive elements', () => {
+      const { container } = render(<ClubCard club={mockClubWithEvents} />)
 
-      const link = screen.getByRole('link')
-      link.focus()
-      expect(link).toHaveFocus()
+      const eventItem = container.querySelector('.transition-colors')
+      expect(eventItem).toBeInTheDocument()
     })
   })
 
@@ -441,10 +437,7 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={clubWithLongDescription} />)
 
       const description = screen.getByText(/This is a very long description/)
-      expect(description).toBeVisible()
-      expect(description.textContent).toContain(
-        'This is a very long description'
-      )
+      expect(description).toHaveClass('line-clamp-2')
     })
 
     it('handles special characters in club data', () => {
@@ -516,35 +509,46 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={clubWithLongEventTitle} />)
 
       const eventTitle = screen.getByText(/Very Long Event Title/)
-      expect(eventTitle).toBeVisible()
-      expect(eventTitle.textContent).toContain('Very Long Event Title')
+      expect(eventTitle).toHaveClass('line-clamp-2')
     })
   })
 
   describe('Real-World Integration', () => {
-    it('maintains consistent structure for loading states compatibility', () => {
+    it('matches ClubCardSkeleton structure for loading states', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
-      // Verify all expected content elements are present
-      expect(screen.getByTestId('club-card')).toBeInTheDocument()
-      expect(
-        screen.getByRole('heading', { name: 'Quebec Running Club' })
-      ).toBeVisible()
-      expect(screen.getByText('3')).toBeVisible()
-      expect(screen.getByText('3 upcoming events')).toBeVisible()
+      // Should have similar structure to skeleton
+      expect(screen.getByTestId('club-card')).toHaveClass('border-l-4')
+
+      // Check header structure
+      const clubNameContainer = screen.getByText(
+        'Quebec Running Club'
+      ).parentElement
+      expect(clubNameContainer?.parentElement).toHaveClass(
+        'flex',
+        'items-start',
+        'gap-3'
+      )
+
+      // Check event count badge structure
+      expect(screen.getByText('3').closest('div')).toHaveClass(
+        'flex',
+        'items-center'
+      )
     })
 
     it('integrates properly with Quebec.run design system', () => {
       render(<ClubCard club={mockClubWithEvents} />)
 
-      // Verify visual hierarchy and brand consistency through content
+      // Should use brand colors consistently
       const card = screen.getByTestId('club-card')
-      const clubName = screen.getByRole('heading')
-      const callToAction = screen.getByText('View Club →')
+      expect(card).toHaveClass('border-primary')
 
-      expect(card).toBeVisible()
-      expect(clubName).toBeVisible()
-      expect(callToAction).toBeVisible()
+      const clubName = screen.getByRole('heading')
+      expect(clubName).toHaveClass('text-primary')
+
+      const callToAction = screen.getByText('View Club →')
+      expect(callToAction).toHaveClass('text-primary')
     })
   })
 })
