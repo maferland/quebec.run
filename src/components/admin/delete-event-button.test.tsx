@@ -6,11 +6,6 @@ import { setupMSW } from '@/lib/test-msw-setup'
 
 setupMSW()
 
-// Mock next-intl
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
-}))
-
 // Mock useDeleteEvent hook
 const mockMutateAsync = vi.fn()
 const mockUseDeleteEvent = vi.fn(() => ({
