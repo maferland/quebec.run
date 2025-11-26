@@ -25,7 +25,7 @@ describe('EventForm', () => {
       expect(screen.getByLabelText(/date/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/time/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/club/i)).toBeInTheDocument()
-      expect(screen.getByLabelText(/address/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/meeting location/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/distance/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/pace/i)).toBeInTheDocument()
     })
@@ -45,7 +45,7 @@ describe('EventForm', () => {
       await user.type(screen.getByLabelText(/title/i), 'Morning Run')
       await user.type(screen.getByLabelText(/date/i), '2025-12-01')
       await user.type(screen.getByLabelText(/time/i), '10:00')
-      await user.type(screen.getByLabelText(/address/i), '123 Main St')
+      await user.type(screen.getByLabelText(/meeting location/i), '123 Main St')
 
       await user.click(screen.getByRole('button', { name: /create/i }))
 
@@ -109,7 +109,9 @@ describe('EventForm', () => {
       )
 
       expect(screen.getByLabelText(/title/i)).toHaveValue('Existing Event')
-      expect(screen.getByLabelText(/address/i)).toHaveValue('123 Main St')
+      expect(screen.getByLabelText(/meeting location/i)).toHaveValue(
+        '123 Main St'
+      )
     })
 
     it('shows delete button in edit mode', () => {
