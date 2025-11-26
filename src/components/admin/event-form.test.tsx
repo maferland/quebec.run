@@ -6,10 +6,6 @@ import { setupMSW } from '@/lib/test-msw-setup'
 
 setupMSW()
 
-vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
-}))
-
 const mockPush = vi.fn()
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: mockPush }),
