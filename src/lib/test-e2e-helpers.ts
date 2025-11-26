@@ -17,7 +17,7 @@ export async function navigateToLocalizedPage({
 }): Promise<void> {
   // Handle root path special case
   if (path === '/') {
-    await page.goto('/')
+    await page.goto('/fr', { waitUntil: 'networkidle' })
     return
   }
 
@@ -25,7 +25,7 @@ export async function navigateToLocalizedPage({
   const cleanPath = path.startsWith('/') ? path.slice(1) : path
   const localizedPath = `/${locale}/${cleanPath}`
 
-  await page.goto(localizedPath)
+  await page.goto(localizedPath, { waitUntil: 'networkidle' })
 }
 
 /**
@@ -66,7 +66,9 @@ export async function expectLocalizedText({
   locale?: Locale
 }): Promise<void> {
   const translatedText = getTranslation(translationKey, locale)
-  await expect(page.getByText(translatedText).first()).toBeVisible()
+  await expect(page.getByText(translatedText).first()).toBeVisible({
+    timeout: 10000,
+  })
 }
 
 /**

@@ -12,6 +12,7 @@ export default defineConfig({
     baseURL: 'http://localhost:3000',
     trace: 'on-first-retry',
     headless: true, // Always headless by default
+    locale: 'fr-CA', // Set French Canadian locale for tests
   },
   projects: [
     {
