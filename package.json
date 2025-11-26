@@ -4,8 +4,12 @@
   "private": true,
   "scripts": {
     "dev": "concurrently \"npm run dev:*\"",
-    "dev:app": "next dev --turbopack",
+    "dev:app": "next dev --turbopack --port ${PORT:-3000}",
     "dev:mail": "mailhog",
+    "dev:docker": "docker-compose up -d && next dev --turbopack --port ${PORT:-3000}",
+    "docker:up": "docker-compose up -d",
+    "docker:down": "docker-compose down",
+    "docker:logs": "docker-compose logs -f mailhog",
     "build": "next build",
     "build:ci": "next build && prisma migrate deploy",
     "postinstall": "prisma generate",

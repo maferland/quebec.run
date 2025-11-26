@@ -1,5 +1,8 @@
 import { defineConfig, devices } from '@playwright/test'
 
+const PORT = process.env.PORT || '3000'
+const BASE_URL = `http://localhost:${PORT}`
+
 export default defineConfig({
   testDir: './src',
   testMatch: '**/*.e2e.ts',
@@ -9,7 +12,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:3000',
+    baseURL: BASE_URL,
     trace: 'on-first-retry',
     headless: true, // Always headless by default
     locale: 'fr-CA', // Set French Canadian locale for tests
@@ -26,7 +29,7 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: 'http://localhost:3000',
+    url: BASE_URL,
     reuseExistingServer: !process.env.CI,
   },
 })
