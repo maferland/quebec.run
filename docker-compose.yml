@@ -5,8 +5,8 @@ services:
     image: mailhog/mailhog:latest
     container_name: quebec-run-mailhog
     ports:
-      - "${MAILHOG_SMTP_PORT:-1025}:1025" # SMTP port
-      - "${MAILHOG_WEB_PORT:-8025}:8025"  # Web UI port
+      - '${MAILHOG_SMTP_PORT:-1025}:1025' # SMTP port
+      - '${MAILHOG_WEB_PORT:-8025}:8025' # Web UI port
     environment:
       - MH_STORAGE=memory
     restart: unless-stopped

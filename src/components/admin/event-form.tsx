@@ -1,7 +1,11 @@
 'use client'
 
 import { useFormWithSchema } from '@/lib/form/use-form-with-schema'
-import { eventCreateSchema, type EventWithClub } from '@/lib/schemas'
+import {
+  eventCreateSchema,
+  type EventWithClub,
+  type Event,
+} from '@/lib/schemas'
 import {
   useCreateEvent,
   useUpdateEvent,
@@ -15,9 +19,16 @@ import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
 
+type EventFormData = Event & {
+  club: {
+    id: string
+    name: string
+  }
+}
+
 interface EventFormProps {
   mode: 'create' | 'edit'
-  initialData?: EventWithClub
+  initialData?: EventFormData
   clubs: Array<{ id: string; name: string }>
   onSuccess?: (event: EventWithClub) => void
 }

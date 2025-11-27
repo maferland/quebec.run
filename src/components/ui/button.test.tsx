@@ -203,20 +203,19 @@ describe('Button Component', () => {
       expect(button).toHaveAttribute('aria-label', 'Test button')
     })
 
-    it('prevents className prop via TypeScript', () => {
-      // @ts-expect-error - className should not be allowed on Button
+    it('allows className prop for customization', () => {
       render(<Button className="custom-class">Custom Button</Button>)
 
       const button = screen.getByRole('button')
-      // Should still have default styles
+      // Should have default styles
       expect(button).toHaveClass(
         'inline-flex',
         'items-center',
         'justify-center'
       )
       expect(button).toHaveClass('bg-primary', 'px-4', 'py-2')
-      // Should NOT have custom class since it's blocked
-      expect(button).not.toHaveClass('custom-class')
+      // Should have custom class
+      expect(button).toHaveClass('custom-class')
     })
 
     it('applies custom styles through style prop', () => {

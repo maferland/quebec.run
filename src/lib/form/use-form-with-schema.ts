@@ -1,18 +1,25 @@
-import { useForm, UseFormProps, UseFormReturn } from 'react-hook-form'
+import {
+  useForm,
+  UseFormProps,
+  UseFormReturn,
+  FieldValues,
+} from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { z } from 'zod'
 import { useTranslations } from 'next-intl'
 import { useEffect } from 'react'
 import { setupZodLocalization } from './zod-localization'
 
-type UseFormWithSchemaProps<T extends z.ZodSchema> = {
-  schema: T
-} & Omit<UseFormProps<z.infer<T>>, 'resolver'>
+type UseFormWithSchemaProps<TFieldValues extends FieldValues> = {
+  schema: z.ZodTypeAny
+} & Omit<UseFormProps<TFieldValues>, 'resolver'>
 
-export function useFormWithSchema<T extends z.ZodSchema>({
+export function useFormWithSchema<
+  TFieldValues extends FieldValues = FieldValues,
+>({
   schema,
   ...options
-}: UseFormWithSchemaProps<T>): UseFormReturn<z.infer<T>> {
+}: UseFormWithSchemaProps<TFieldValues>): UseFormReturn<TFieldValues> {
   const t = useTranslations('validation')
 
   // Setup Zod localization on mount
@@ -20,8 +27,9 @@ export function useFormWithSchema<T extends z.ZodSchema>({
     setupZodLocalization(t)
   }, [t])
 
-  return useForm<z.infer<T>>({
-    resolver: zodResolver(schema),
+  return useForm<TFieldValues>({
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    resolver: zodResolver(schema as any) as any,
     ...options,
   })
 }

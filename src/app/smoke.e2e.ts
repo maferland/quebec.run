@@ -163,7 +163,7 @@ test.describe('Smoke Tests - Core User Journeys', () => {
 
   test('core navigation between pages', async ({ page }) => {
     const viewport = page.viewportSize()
-    const isMobile = viewport && viewport.width < 640
+    const isMobile = viewport ? viewport.width < 640 : false
 
     // Skip navigation tests on mobile - nav is hidden below sm: breakpoint
     test.skip(isMobile, 'Navigation hidden on mobile')

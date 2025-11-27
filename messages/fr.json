@@ -134,6 +134,11 @@
       "distance": "Distance",
       "pace": "Allure"
     },
+    "admin": {
+      "events": {
+        "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
+      }
+    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",

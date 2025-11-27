@@ -1,7 +1,7 @@
 import { cn } from '@/lib/utils'
 
-interface ButtonProps
-  extends Omit<React.ButtonHTMLAttributes<HTMLButtonElement>, 'className'> {
+export interface ButtonProps
+  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | 'primary'
     | 'secondary'
@@ -12,18 +12,11 @@ interface ButtonProps
   size?: 'sm' | 'md' | 'lg'
 }
 
-function filterClassName<T extends Record<string, unknown>>(
-  props: T
-): Omit<T, 'className'> {
-  const { className, ...rest } = props as T & { className?: unknown }
-  void className // Explicitly mark as intentionally unused
-  return rest as Omit<T, 'className'>
-}
-
 export function Button({
   children,
   variant = 'primary',
   size = 'md',
+  className,
   ...props
 }: ButtonProps) {
   const baseStyles =
@@ -50,15 +43,10 @@ export function Button({
     lg: 'px-6 py-3 text-base',
   }
 
-  // Filter out className to ensure it cannot be applied even if TypeScript is bypassed
-  const buttonProps = filterClassName(
-    props as ButtonProps & { className?: string }
-  )
-
   return (
     <button
-      className={cn(baseStyles, variants[variant], sizes[size])}
-      {...buttonProps}
+      className={cn(baseStyles, variants[variant], sizes[size], className)}
+      {...props}
     >
       {children}
     </button>

@@ -299,11 +299,11 @@ describe('EventCard Component', () => {
     })
 
     it('uses semantic HTML elements', () => {
-      const { container } = render(<EventCard event={mockEventWithClub} />)
+      render(<EventCard event={mockEventWithClub} />)
 
-      // Should use section for the card content
-      const section = container.querySelector('section')
-      expect(section).toBeInTheDocument()
+      // Should use article for the card content
+      const article = screen.getByRole('article')
+      expect(article).toBeInTheDocument()
     })
 
     it('provides proper icon accessibility', () => {
@@ -422,16 +422,15 @@ describe('EventCard Component', () => {
   })
 
   describe('Interactive States', () => {
-    it('applies hover effects through CSS classes', () => {
-      const { container } = render(<EventCard event={mockEventWithClub} />)
+    it('renders as interactive card', () => {
+      render(<EventCard event={mockEventWithClub} />)
 
-      const card = container.querySelector('section')
-      expect(card).toHaveClass(
-        'hover:shadow-lg',
-        'hover:shadow-primary/5',
-        'hover:-translate-y-1',
-        'hover:border-primary/20'
-      )
+      // Card should be clickable via wrapping link
+      const link = screen.getByRole('link', {
+        name: new RegExp(mockEventWithClub.title),
+      })
+      expect(link).toBeInTheDocument()
+      expect(link).toHaveAttribute('href', `/events/${mockEventWithClub.id}`)
     })
 
     it('maintains keyboard accessibility', () => {

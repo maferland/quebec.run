@@ -7,7 +7,12 @@ async function getEventById(id: string) {
   const event = await prisma.event.findUnique({
     where: { id },
     include: {
-      club: true,
+      club: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
     },
   })
 
