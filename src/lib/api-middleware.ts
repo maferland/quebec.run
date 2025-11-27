@@ -121,10 +121,13 @@ export function withPublic<T extends z.ZodType>(schema: T) {
 // Simplified auth routes handler
 export function withAuth<T extends z.ZodType>(schema: T) {
   return (
-    fn: (args: {
-      user: ServiceUser
-      data: z.infer<T>
-    }, request: Request) => Response | Promise<Response>
+    fn: (
+      args: {
+        user: ServiceUser
+        data: z.infer<T>
+      },
+      request: Request
+    ) => Response | Promise<Response>
   ) => {
     return withErrorHandler(
       async (

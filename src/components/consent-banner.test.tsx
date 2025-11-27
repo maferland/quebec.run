@@ -7,13 +7,14 @@ import { ConsentBanner } from './consent-banner'
 vi.mock('next-intl', () => ({
   useTranslations: () => {
     const t = (key: string) => key
-    t.rich = (key: string, values?: Record<string, (chunks: React.ReactNode) => React.ReactNode>) => {
+    t.rich = (
+      key: string,
+      values?: Record<string, (chunks: React.ReactNode) => React.ReactNode>
+    ) => {
       if (values && key === 'message') {
         return (
           <>
-            {values.termsLink?.('terms')}
-            {' '}
-            {values.privacyLink?.('privacy')}
+            {values.termsLink?.('terms')} {values.privacyLink?.('privacy')}
           </>
         )
       }

@@ -3,6 +3,7 @@ import { render, screen, waitFor } from '@/lib/test-utils'
 import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import type { MockedFunction } from 'vitest'
+import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import PrivacySettingsPage from './page'
 
 vi.mock('next-auth/react')
@@ -24,7 +25,7 @@ describe('PrivacySettingsPage', () => {
       refresh: vi.fn(),
       replace: vi.fn(),
       prefetch: vi.fn(),
-    } as any)
+    } as AppRouterInstance)
 
     mockFetch.mockResolvedValue({
       ok: true,

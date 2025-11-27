@@ -13,6 +13,7 @@ Implement Terms of Service, Privacy Policy, and data management features to comp
 quebec.run collects personal data (email, name, photos, location data via events) and requires legal compliance for Quebec jurisdiction. Currently in development with no existing legal documentation.
 
 **Key compliance needs:**
+
 - Law 25 (Quebec privacy law)
 - Right to data export
 - Right to deletion with grace period
@@ -60,6 +61,7 @@ model DataDeletionRequest {
 ```
 
 Update `User` model with relations:
+
 ```prisma
 consents UserConsent[]
 deletionRequests DataDeletionRequest[]
@@ -70,10 +72,12 @@ deletionRequests DataDeletionRequest[]
 ### 1. Legal Pages
 
 **Routes:**
+
 - `/[locale]/legal/terms` - Terms of Service
 - `/[locale]/legal/privacy` - Privacy Policy
 
 **Content:**
+
 - Static pages with markdown/HTML content
 - Bilingual via next-intl
 - Include standard clauses:
@@ -86,12 +90,14 @@ deletionRequests DataDeletionRequest[]
 ### 2. Consent Banner (`ConsentBanner.tsx`)
 
 **Behavior:**
+
 - Fixed bottom banner (dismissible)
 - Shows for authenticated users without `UserConsent` record
 - Text: "By using quebec.run, you agree to our [Terms of Service] and [Privacy Policy]"
 - Accept button creates consent record with IP + timestamp
 
 **Technical:**
+
 - Check consent status on app load (via React Query)
 - POST to `/api/user/consent` on accept
 - Capture IP address server-side for audit trail
@@ -99,12 +105,14 @@ deletionRequests DataDeletionRequest[]
 ### 3. Privacy Settings Page (`/[locale]/settings/privacy`)
 
 **Features:**
+
 - Data export: Download all user data as JSON
 - Account deletion: Request deletion with 30-day grace period
 - Show active deletion request status (if pending)
 - Cancel deletion option (within 30 days)
 
 **Data export includes:**
+
 - User profile (email, name, image)
 - Clubs owned
 - Events created
@@ -117,16 +125,19 @@ deletionRequests DataDeletionRequest[]
 Create consent record for authenticated user.
 
 **Request:**
+
 ```typescript
 // Body empty, IP captured server-side
 ```
 
 **Response:**
+
 ```typescript
 { success: true, consentId: string }
 ```
 
 **Validation:**
+
 - User authenticated (session)
 - No existing consent for user
 - Capture IP from request headers
@@ -136,6 +147,7 @@ Create consent record for authenticated user.
 Export all user data.
 
 **Response:**
+
 ```typescript
 {
   user: { id, email, name, image, createdAt },
@@ -146,6 +158,7 @@ Export all user data.
 ```
 
 **Validation:**
+
 - User authenticated
 - Select only necessary fields (avoid over-fetching)
 
@@ -154,6 +167,7 @@ Export all user data.
 Request account deletion (30-day grace period).
 
 **Response:**
+
 ```typescript
 {
   success: true,
@@ -163,6 +177,7 @@ Request account deletion (30-day grace period).
 ```
 
 **Validation:**
+
 - User authenticated
 - No active deletion request exists
 - Set `scheduledFor` to 30 days from now
@@ -172,11 +187,15 @@ Request account deletion (30-day grace period).
 Cancel pending deletion request.
 
 **Response:**
+
 ```typescript
-{ success: true }
+{
+  success: true
+}
 ```
 
 **Validation:**
+
 - User authenticated
 - Request belongs to user
 - Status is "pending"
@@ -224,6 +243,7 @@ Cancel pending deletion request.
 ### Zod Validation
 
 Create schemas for API boundaries:
+
 ```typescript
 // lib/validations/legal.ts
 export const ConsentSchema = z.object({
@@ -238,15 +258,18 @@ export const DeletionRequestSchema = z.object({
 ### IP Address Capture
 
 Use Next.js request headers:
+
 ```typescript
-const ip = request.headers.get('x-forwarded-for')
-  || request.headers.get('x-real-ip')
-  || 'unknown'
+const ip =
+  request.headers.get('x-forwarded-for') ||
+  request.headers.get('x-real-ip') ||
+  'unknown'
 ```
 
 ### Footer Links
 
 Update site footer to include:
+
 - Terms of Service
 - Privacy Policy
 - Both languages accessible via locale switcher
@@ -254,15 +277,18 @@ Update site footer to include:
 ### Testing Strategy
 
 **Unit tests:**
+
 - API route handlers (consent creation, data export logic)
 - Validation schemas
 
 **Integration tests:**
+
 - Full consent flow (banner → accept → record creation)
 - Data export completeness
 - Deletion request lifecycle
 
 **E2E tests:**
+
 - First-time user sees and accepts consent banner
 - User can export data from settings
 - User can request and cancel deletion
@@ -272,16 +298,19 @@ Update site footer to include:
 **Initial approach:** Manual processing (query pending requests with `scheduledFor < now`)
 
 **Future:** Add cron job or scheduled task:
+
 ```bash
 # Daily at 2 AM
 0 2 * * * node scripts/process-deletions.js
 ```
 
 Script queries `DataDeletionRequest` records where:
+
 - `status = 'pending'`
 - `scheduledFor <= now()`
 
 Then:
+
 1. Delete user data (cascading via Prisma schema)
 2. Update request `status = 'completed'`
 
@@ -301,6 +330,7 @@ Then:
 ## Future Enhancements
 
 **Not needed for launch, consider later:**
+
 - Cookie policy (when adding analytics)
 - Email notifications for TOS updates
 - Automated cron for deletion processing

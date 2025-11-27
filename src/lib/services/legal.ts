@@ -10,7 +10,10 @@ import type {
 export const createUserConsent = async ({
   user,
   ipAddress,
-}: { user: AuthPayload<ConsentCreate>['user']; ipAddress: string }) => {
+}: {
+  user: AuthPayload<ConsentCreate>['user']
+  ipAddress: string
+}) => {
   // Check if consent already exists
   const existing = await prisma.userConsent.findUnique({
     where: { userId: user.id },
@@ -149,7 +152,9 @@ export const cancelDeletionRequest = async ({
 
 export const getPendingDeletionRequest = async ({
   userId,
-}: { userId: string }) => {
+}: {
+  userId: string
+}) => {
   return await prisma.dataDeletionRequest.findFirst({
     where: {
       userId,

@@ -2,7 +2,7 @@ import { withAuth } from '@/lib/api-middleware'
 import { consentCreateSchema } from '@/lib/schemas'
 import { createUserConsent, getUserConsent } from '@/lib/services/legal'
 
-export const POST = withAuth(consentCreateSchema)(async ({ user, data }, request) => {
+export const POST = withAuth(consentCreateSchema)(async ({ user }, request) => {
   // Capture IP from headers
   const ip =
     request.headers.get('x-forwarded-for') ||

@@ -13,6 +13,7 @@
 ## Task 1: Database Schema Migration
 
 **Files:**
+
 - Modify: `prisma/schema.prisma`
 - Create: `prisma/migrations/YYYYMMDDHHMMSS_add_legal_compliance/migration.sql`
 
@@ -76,6 +77,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 2: Zod Validation Schemas
 
 **Files:**
+
 - Create: `src/lib/schemas/legal.ts`
 - Modify: `src/lib/schemas/index.ts`
 
@@ -129,6 +131,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 3: Legal Service Functions - Tests First
 
 **Files:**
+
 - Create: `src/lib/services/legal.test.ts`
 - Create: `src/lib/services/legal.ts`
 
@@ -600,6 +603,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 4: Consent API Route
 
 **Files:**
+
 - Create: `src/app/api/user/consent/route.ts`
 - Create: `src/app/api/user/consent/route.test.ts`
 
@@ -768,7 +772,10 @@ import { withAuth } from '@/lib/api-middleware'
 import { consentCreateSchema } from '@/lib/schemas'
 import { createUserConsent, getUserConsent } from '@/lib/services/legal'
 
-export const POST = withAuth(consentCreateSchema)(async ({ user, data }, request) => {
+export const POST = withAuth(consentCreateSchema)(async (
+  { user, data },
+  request
+) => {
   // Capture IP from headers
   const ip =
     request.headers.get('x-forwarded-for') ||
@@ -802,10 +809,13 @@ In the `withAuth` function, change line 116-133:
 ```typescript
 export function withAuth<T extends z.ZodType>(schema: T) {
   return (
-    fn: (args: {
-      user: ServiceUser
-      data: z.infer<T>
-    }, request: Request) => Response | Promise<Response>
+    fn: (
+      args: {
+        user: ServiceUser
+        data: z.infer<T>
+      },
+      request: Request
+    ) => Response | Promise<Response>
   ) => {
     return withErrorHandler(
       async (
@@ -857,6 +867,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 5: Data Export API Route
 
 **Files:**
+
 - Create: `src/app/api/user/data/route.ts`
 - Create: `src/app/api/user/data/route.test.ts`
 
@@ -979,6 +990,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 6: Deletion Request API Routes
 
 **Files:**
+
 - Create: `src/app/api/user/delete/route.ts`
 - Create: `src/app/api/user/delete/route.test.ts`
 - Create: `src/app/api/user/delete/[id]/route.ts`
@@ -1219,12 +1231,9 @@ describe('DELETE /api/user/delete/[id]', () => {
       expires: '2025-01-01',
     })
 
-    const req = new Request(
-      `http://localhost/api/user/delete/${request.id}`,
-      {
-        method: 'DELETE',
-      }
-    )
+    const req = new Request(`http://localhost/api/user/delete/${request.id}`, {
+      method: 'DELETE',
+    })
 
     const response = await DELETE(req, {
       params: Promise.resolve({ id: request.id }),
@@ -1277,12 +1286,10 @@ import { withAuth } from '@/lib/api-middleware'
 import { deletionCancelSchema } from '@/lib/schemas'
 import { cancelDeletionRequest } from '@/lib/services/legal'
 
-export const DELETE = withAuth(deletionCancelSchema)(
-  async ({ user, data }) => {
-    await cancelDeletionRequest({ user, data })
-    return Response.json({ success: true })
-  }
-)
+export const DELETE = withAuth(deletionCancelSchema)(async ({ user, data }) => {
+  await cancelDeletionRequest({ user, data })
+  return Response.json({ success: true })
+})
 ```
 
 **Step 8: Run test to verify it passes**
@@ -1308,6 +1315,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 7: Translations for Legal Pages
 
 **Files:**
+
 - Modify: `messages/en.json`
 - Modify: `messages/fr.json`
 
@@ -1426,6 +1434,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 8: Legal Static Pages
 
 **Files:**
+
 - Create: `src/app/[locale]/legal/terms/page.tsx`
 - Create: `src/app/[locale]/legal/privacy/page.tsx`
 
@@ -1460,16 +1469,20 @@ export default function TermsPage() {
 
       <div className="prose prose-lg max-w-none">
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">1. Acceptance of Terms</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            1. Acceptance of Terms
+          </h2>
           <p>
-            By accessing and using quebec.run (&quot;the Platform&quot;), you accept and
-            agree to be bound by these Terms of Service. If you do not agree,
-            please do not use the Platform.
+            By accessing and using quebec.run (&quot;the Platform&quot;), you
+            accept and agree to be bound by these Terms of Service. If you do
+            not agree, please do not use the Platform.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">2. Description of Service</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            2. Description of Service
+          </h2>
           <p>
             quebec.run is a platform for discovering running clubs and events in
             Quebec City. We provide tools for club organizers to manage their
@@ -1491,9 +1504,9 @@ export default function TermsPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">4. User Content</h2>
           <p>
-            You may submit information about running clubs and events. You retain
-            ownership of content you submit, but grant us a license to use,
-            display, and distribute that content on the Platform.
+            You may submit information about running clubs and events. You
+            retain ownership of content you submit, but grant us a license to
+            use, display, and distribute that content on the Platform.
           </p>
           <p>
             You represent that your content does not violate any third-party
@@ -1517,7 +1530,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold mb-4">6. Privacy</h2>
           <p>
             Your use of the Platform is subject to our Privacy Policy, which
-            describes how we collect, use, and protect your personal information.
+            describes how we collect, use, and protect your personal
+            information.
           </p>
         </section>
 
@@ -1525,8 +1539,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold mb-4">7. Modifications</h2>
           <p>
             We reserve the right to modify these Terms at any time. We will
-            notify users of material changes. Continued use of the Platform after
-            changes constitutes acceptance of the modified Terms.
+            notify users of material changes. Continued use of the Platform
+            after changes constitutes acceptance of the modified Terms.
           </p>
         </section>
 
@@ -1542,14 +1556,16 @@ export default function TermsPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">9. Disclaimers</h2>
           <p>
-            The Platform is provided &quot;as is&quot; without warranties of any kind.
-            We do not guarantee the accuracy, completeness, or reliability of any
-            content on the Platform.
+            The Platform is provided &quot;as is&quot; without warranties of any
+            kind. We do not guarantee the accuracy, completeness, or reliability
+            of any content on the Platform.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">10. Limitation of Liability</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            10. Limitation of Liability
+          </h2>
           <p>
             To the maximum extent permitted by law, quebec.run shall not be
             liable for any indirect, incidental, special, or consequential
@@ -1561,8 +1577,8 @@ export default function TermsPage() {
           <h2 className="text-2xl font-semibold mb-4">11. Governing Law</h2>
           <p>
             These Terms are governed by the laws of the Province of Quebec and
-            the laws of Canada applicable therein. Any disputes shall be resolved
-            in the courts of Quebec.
+            the laws of Canada applicable therein. Any disputes shall be
+            resolved in the courts of Quebec.
           </p>
         </section>
 
@@ -1611,30 +1627,40 @@ export default function PrivacyPage() {
         <section className="mb-8">
           <h2 className="text-2xl font-semibold mb-4">1. Introduction</h2>
           <p>
-            quebec.run (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;) respects your privacy and is
-            committed to protecting your personal information. This Privacy
-            Policy explains how we collect, use, disclose, and safeguard your
-            information in compliance with Quebec&apos;s Law 25 and applicable privacy
-            laws.
+            quebec.run (&quot;we&quot;, &quot;us&quot;, &quot;our&quot;)
+            respects your privacy and is committed to protecting your personal
+            information. This Privacy Policy explains how we collect, use,
+            disclose, and safeguard your information in compliance with
+            Quebec&apos;s Law 25 and applicable privacy laws.
           </p>
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">2. Information We Collect</h2>
-          <h3 className="text-xl font-semibold mb-2">2.1 Account Information</h3>
+          <h2 className="text-2xl font-semibold mb-4">
+            2. Information We Collect
+          </h2>
+          <h3 className="text-xl font-semibold mb-2">
+            2.1 Account Information
+          </h3>
           <ul className="list-disc ml-6 space-y-2 mb-4">
             <li>Email address (required)</li>
             <li>Name (optional)</li>
             <li>Profile photo (optional)</li>
           </ul>
 
-          <h3 className="text-xl font-semibold mb-2">2.2 Content You Provide</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            2.2 Content You Provide
+          </h3>
           <ul className="list-disc ml-6 space-y-2 mb-4">
             <li>Club information (name, description, social media links)</li>
-            <li>Event information (title, date, time, location, description)</li>
+            <li>
+              Event information (title, date, time, location, description)
+            </li>
           </ul>
 
-          <h3 className="text-xl font-semibold mb-2">2.3 Technical Information</h3>
+          <h3 className="text-xl font-semibold mb-2">
+            2.3 Technical Information
+          </h3>
           <ul className="list-disc ml-6 space-y-2">
             <li>IP address (for consent audit trail)</li>
             <li>Browser type and version</li>
@@ -1644,7 +1670,9 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">3. How We Use Your Information</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            3. How We Use Your Information
+          </h2>
           <p>We use your information to:</p>
           <ul className="list-disc ml-6 space-y-2">
             <li>Provide and maintain the Platform</li>
@@ -1657,7 +1685,9 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">4. Legal Basis for Processing</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            4. Legal Basis for Processing
+          </h2>
           <p>We process your personal information based on:</p>
           <ul className="list-disc ml-6 space-y-2">
             <li>Your consent (by using the Platform)</li>
@@ -1668,7 +1698,9 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">5. Data Sharing and Disclosure</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            5. Data Sharing and Disclosure
+          </h2>
           <p>
             We do not sell your personal information. We may share information
             with:
@@ -1690,25 +1722,29 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">6. Your Rights (Law 25 Compliance)</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            6. Your Rights (Law 25 Compliance)
+          </h2>
           <p>Under Quebec&apos;s Law 25, you have the right to:</p>
           <ul className="list-disc ml-6 space-y-2">
             <li>
-              <strong>Access:</strong> Request access to your personal information
+              <strong>Access:</strong> Request access to your personal
+              information
             </li>
             <li>
               <strong>Correction:</strong> Request correction of inaccurate data
             </li>
             <li>
-              <strong>Portability:</strong> Export your data in a structured format
+              <strong>Portability:</strong> Export your data in a structured
+              format
             </li>
             <li>
-              <strong>Deletion:</strong> Request deletion of your account and data
-              (30-day grace period)
+              <strong>Deletion:</strong> Request deletion of your account and
+              data (30-day grace period)
             </li>
             <li>
-              <strong>Withdrawal of Consent:</strong> You may withdraw consent at
-              any time by deleting your account
+              <strong>Withdrawal of Consent:</strong> You may withdraw consent
+              at any time by deleting your account
             </li>
           </ul>
           <p className="mt-4">
@@ -1742,7 +1778,9 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">9. International Transfers</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            9. International Transfers
+          </h2>
           <p>
             Your information may be stored and processed in servers located
             outside Quebec. We ensure adequate protections are in place for any
@@ -1751,7 +1789,9 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">10. Children&apos;s Privacy</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            10. Children&apos;s Privacy
+          </h2>
           <p>
             The Platform is not intended for users under 13 years of age. We do
             not knowingly collect information from children. If we discover we
@@ -1760,11 +1800,13 @@ export default function PrivacyPage() {
         </section>
 
         <section className="mb-8">
-          <h2 className="text-2xl font-semibold mb-4">11. Changes to This Policy</h2>
+          <h2 className="text-2xl font-semibold mb-4">
+            11. Changes to This Policy
+          </h2>
           <p>
             We may update this Privacy Policy from time to time. We will notify
-            you of material changes by email or prominent notice on the Platform.
-            Continued use after changes constitutes acceptance.
+            you of material changes by email or prominent notice on the
+            Platform. Continued use after changes constitutes acceptance.
           </p>
         </section>
 
@@ -1805,6 +1847,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 9: Consent Banner Component
 
 **Files:**
+
 - Create: `src/components/consent-banner.tsx`
 - Create: `src/components/consent-banner.test.tsx`
 
@@ -1941,6 +1984,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 10: Privacy Settings Page
 
 **Files:**
+
 - Create: `src/app/[locale]/settings/privacy/page.tsx`
 
 **Step 1: Create privacy settings page**
@@ -2120,6 +2164,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 11: Integrate Consent Banner in App
 
 **Files:**
+
 - Modify: `src/app/[locale]/layout.tsx`
 
 **Step 1: Read current layout**
@@ -2171,9 +2216,11 @@ const showConsentBanner = session && !consentData?.hasConsent
 Add before closing `</body>` tag:
 
 ```tsx
-{showConsentBanner && (
-  <ConsentBanner onAccept={() => consentMutation.mutate()} />
-)}
+{
+  showConsentBanner && (
+    <ConsentBanner onAccept={() => consentMutation.mutate()} />
+  )
+}
 ```
 
 **Step 3: Test manually**
@@ -2200,6 +2247,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 12: Update Footer with Legal Links
 
 **Files:**
+
 - Modify: `src/components/layout/footer.tsx`
 
 **Step 1: Add legal links to footer**
@@ -2247,6 +2295,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 13: Run Quality Gates
 
 **Files:**
+
 - N/A (verification step)
 
 **Step 1: Run linter**
@@ -2283,6 +2332,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 14: E2E Test for Consent Flow
 
 **Files:**
+
 - Create: `src/app/consent-flow.e2e.ts`
 
 **Step 1: Write E2E test**
@@ -2377,13 +2427,14 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 ## Task 15: Documentation
 
 **Files:**
+
 - Create: `docs/legal-compliance.md`
 
 **Step 1: Create documentation**
 
 Create `docs/legal-compliance.md`:
 
-```markdown
+````markdown
 # Legal Compliance Documentation
 
 ## Overview
@@ -2402,11 +2453,13 @@ quebec.run implements Terms of Service, Privacy Policy, and data management feat
 ### Database Schema
 
 **UserConsent:**
+
 - `userId` (unique) - One consent per user
 - `acceptedAt` - Timestamp
 - `ipAddress` - For audit trail
 
 **DataDeletionRequest:**
+
 - `userId` - Who requested
 - `requestedAt` - When requested
 - `scheduledFor` - 30 days from request
@@ -2415,42 +2468,55 @@ quebec.run implements Terms of Service, Privacy Policy, and data management feat
 ## API Endpoints
 
 ### POST /api/user/consent
+
 Create consent record (authenticated)
+
 - Captures IP from request headers
 - Returns 400 if consent exists
 
 ### GET /api/user/consent
+
 Check consent status (authenticated)
+
 - Returns `{ hasConsent: boolean, consent: UserConsent | null }`
 
 ### GET /api/user/data
+
 Export all user data (authenticated)
+
 - Returns JSON with user profile, clubs, events, consents
 
 ### POST /api/user/delete
+
 Request account deletion (authenticated)
+
 - Creates deletion request 30 days out
 - Returns 400 if pending request exists
 
 ### DELETE /api/user/delete/[id]
+
 Cancel pending deletion (authenticated)
+
 - Updates status to 'cancelled'
 - Returns 404 if not found or not owned by user
 
 ## UI Components
 
 ### ConsentBanner
+
 - Fixed bottom banner
 - Links to Terms and Privacy pages
 - Accept button calls `/api/user/consent`
 - Dismisses on success
 
 ### Legal Pages
+
 - `/[locale]/legal/terms` - Terms of Service
 - `/[locale]/legal/privacy` - Privacy Policy
 - Bilingual (en/fr) via next-intl
 
 ### Privacy Settings
+
 - `/[locale]/settings/privacy`
 - Export data as JSON download
 - Request deletion (30-day grace period)
@@ -2459,6 +2525,7 @@ Cancel pending deletion (authenticated)
 ## Processing Deletions
 
 **Manual (current):**
+
 ```sql
 -- Query pending deletions
 SELECT * FROM data_deletion_requests
@@ -2468,20 +2535,22 @@ WHERE status = 'pending' AND scheduled_for <= NOW();
 -- 1. Delete user (cascades to all related data)
 -- 2. Update request status to 'completed'
 ```
+````
 
 **Automated (future):**
 Create `scripts/process-deletions.js`:
+
 ```javascript
 // Run daily via cron: 0 2 * * *
 const pending = await prisma.dataDeletionRequest.findMany({
-  where: { status: 'pending', scheduledFor: { lte: new Date() } }
+  where: { status: 'pending', scheduledFor: { lte: new Date() } },
 })
 
 for (const request of pending) {
   await prisma.user.delete({ where: { id: request.userId } })
   await prisma.dataDeletionRequest.update({
     where: { id: request.id },
-    data: { status: 'completed' }
+    data: { status: 'completed' },
   })
 }
 ```
@@ -2511,7 +2580,8 @@ for (const request of pending) {
 - Automated cron job for deletion processing
 - Cookie policy (if adding analytics)
 - Content moderation guidelines (at scale)
-```
+
+````
 
 **Step 2: Commit**
 
@@ -2526,7 +2596,7 @@ git commit -m "docs: add legal compliance documentation
 - Processing deletions guide
 
 Co-Authored-By: Claude <noreply@anthropic.com>"
-```
+````
 
 ---
 
@@ -2535,6 +2605,7 @@ Co-Authored-By: Claude <noreply@anthropic.com>"
 All tasks complete! Legal compliance implementation finished.
 
 **Summary:**
+
 - ✅ Database schema (UserConsent, DataDeletionRequest)
 - ✅ Zod validation schemas
 - ✅ Service layer with tests (≥95% coverage)
@@ -2547,6 +2618,7 @@ All tasks complete! Legal compliance implementation finished.
 - ✅ Quality gates (lint, typecheck, tests, prettier)
 
 **Verify:**
+
 ```bash
 npm run lint && npm run typecheck && npm test -- --coverage
 ```

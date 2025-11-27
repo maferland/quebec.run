@@ -37,12 +37,9 @@ describe('DELETE /api/user/delete/[id]', () => {
       expires: '2025-01-01',
     })
 
-    const req = new Request(
-      `http://localhost/api/user/delete/${request.id}`,
-      {
-        method: 'DELETE',
-      }
-    )
+    const req = new Request(`http://localhost/api/user/delete/${request.id}`, {
+      method: 'DELETE',
+    })
 
     const response = await DELETE(req, {
       params: Promise.resolve({ id: request.id }),
