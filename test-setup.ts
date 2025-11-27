@@ -6,11 +6,12 @@ import { setupTestDatabase } from './src/lib/test-seed'
 // Polyfill Web APIs for jsdom environment
 // Node 18+ has these built-in, but jsdom doesn't expose them
 if (typeof global.Request === 'undefined') {
-  const { Request, Response, Headers, fetch } = await import('node:fetch')
-  global.Request = Request as typeof global.Request
-  global.Response = Response as typeof global.Response
-  global.Headers = Headers as typeof global.Headers
-  global.fetch = fetch as typeof global.fetch
+  // @ts-expect-error - node:fetch exists in Node 18+ but types not in @types/node yet
+  const nodeFetch = await import('node:fetch')
+  global.Request = nodeFetch.Request as typeof global.Request
+  global.Response = nodeFetch.Response as typeof global.Response
+  global.Headers = nodeFetch.Headers as typeof global.Headers
+  global.fetch = nodeFetch.fetch as typeof global.fetch
 }
 
 // Make vi available globally
@@ -69,4 +70,19 @@ vi.mock('@/i18n/navigation', () => ({
     refresh: vi.fn(),
   })),
   getPathname: vi.fn(() => '/'),
+}))
+
+// Mock next/navigation
+vi.mock('next/navigation', () => ({
+  useRouter: vi.fn(() => ({
+    push: vi.fn(),
+    replace: vi.fn(),
+    back: vi.fn(),
+    forward: vi.fn(),
+    refresh: vi.fn(),
+  })),
+  useSearchParams: vi.fn(() => ({
+    get: vi.fn(),
+  })),
+  usePathname: vi.fn(() => '/'),
 }))
