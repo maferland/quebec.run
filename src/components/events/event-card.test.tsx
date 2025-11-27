@@ -32,18 +32,7 @@ describe('EventCard Component', () => {
 
       const link = screen.getByRole('link')
       expect(link).toHaveAttribute('href', '/events/event-1')
-      expect(link).toBeVisible()
-    })
-
-    it('displays as a structured card with proper content', () => {
-      const { container } = render(<EventCard event={mockEventWithClub} />)
-
-      const card = container.querySelector('article')
-      expect(card).toBeVisible()
-      expect(card).toContainElement(
-        screen.getByRole('heading', { name: 'Morning 5K Run' })
-      )
-      expect(card).toContainElement(screen.getByText(/Thu, Sep 4/))
+      expect(link).toHaveClass('block', 'h-full')
     })
   })
 
@@ -75,30 +64,41 @@ describe('EventCard Component', () => {
       expect(screen.getByText(/18:30/)).toBeInTheDocument()
     })
 
-    it('displays datetime information clearly', () => {
+    it('uses datetime tag variant for date/time display', () => {
       render(<EventCard event={mockEventWithClub} />)
 
-      const datetimeTag = screen.getByText(/Thu, Sep 4/)
-      expect(datetimeTag).toBeVisible()
-      expect(datetimeTag).toHaveTextContent('Thu, Sep 4')
+      const datetimeTag = screen.getByText(/Thu, Sep 4/).closest('span')
+      expect(datetimeTag).toHaveClass(
+        'bg-secondary/10',
+        'text-secondary',
+        'border-secondary/20'
+      )
     })
   })
 
   describe('Event Details Tags', () => {
-    it('displays distance information when provided', () => {
+    it('displays distance tag when distance is provided', () => {
       render(<EventCard event={mockEventWithClub} />)
 
       const distanceTag = screen.getByText('5K')
-      expect(distanceTag).toBeVisible()
-      expect(distanceTag).toHaveTextContent('5K')
+      expect(distanceTag).toBeInTheDocument()
+      expect(distanceTag.closest('span')).toHaveClass(
+        'bg-primary/10',
+        'text-primary',
+        'border-primary/20'
+      )
     })
 
-    it('displays pace information when provided', () => {
+    it('displays pace tag when pace is provided', () => {
       render(<EventCard event={mockEventWithClub} />)
 
       const paceTag = screen.getByText('5:30 /km')
-      expect(paceTag).toBeVisible()
-      expect(paceTag).toHaveTextContent('5:30 /km')
+      expect(paceTag).toBeInTheDocument()
+      expect(paceTag.closest('span')).toHaveClass(
+        'bg-accent/10',
+        'text-accent',
+        'border-accent/20'
+      )
     })
 
     it('hides distance tag when distance is null', () => {
@@ -132,23 +132,23 @@ describe('EventCard Component', () => {
 
       render(<EventCard event={minimalEvent} />)
 
-      // Should still display basic event information
-      expect(
-        screen.getByRole('heading', { name: 'Morning 5K Run' })
-      ).toBeVisible()
-      expect(screen.getByText(/Thu, Sep 4/)).toBeVisible()
-      expect(screen.queryByText('5K')).not.toBeInTheDocument()
-      expect(screen.queryByText('5:30 /km')).not.toBeInTheDocument()
+      // Tags section should still exist but be empty
+      const tagsSection = document.querySelector(
+        '.flex.items-center.gap-2.flex-wrap'
+      )
+      expect(tagsSection).toBeInTheDocument()
+      expect(tagsSection?.children).toHaveLength(0)
     })
 
-    it('displays tags with proper content', () => {
+    it('applies correct tag sizes (xs)', () => {
       render(<EventCard event={mockEventWithClub} />)
 
-      const distanceTag = screen.getByText('5K')
-      const paceTag = screen.getByText('5:30 /km')
+      const distanceTag = screen.getByText('5K').closest('span')
+      const paceTag = screen.getByText('5:30 /km').closest('span')
 
-      expect(distanceTag).toBeVisible()
-      expect(paceTag).toBeVisible()
+      // xs size classes
+      expect(distanceTag).toHaveClass('px-1.5', 'py-0.5', 'text-xs')
+      expect(paceTag).toHaveClass('px-1.5', 'py-0.5', 'text-xs')
     })
   })
 
@@ -180,26 +180,35 @@ describe('EventCard Component', () => {
       ).not.toBeInTheDocument()
     })
 
-    it('handles missing address gracefully', () => {
+    it('maintains layout height when address is null', () => {
       const eventWithoutAddress = {
         ...mockEventWithClub,
         address: null,
       }
 
-      render(<EventCard event={eventWithoutAddress} />)
+      const { container } = render(<EventCard event={eventWithoutAddress} />)
 
-      // Should still display event details without location
-      expect(
-        screen.getByRole('heading', { name: 'Morning 5K Run' })
-      ).toBeVisible()
-      expect(screen.queryByText('Location')).not.toBeInTheDocument()
+      // Should have a spacer div with h-16 class
+      const spacer = container.querySelector('.h-16')
+      expect(spacer).toBeInTheDocument()
     })
 
-    it('displays location information clearly', () => {
+    it('uses LocationCard component for address display', () => {
       render(<EventCard event={mockEventWithClub} />)
 
-      expect(screen.getByText('Location')).toBeVisible()
-      expect(screen.getByText('250 3e Rue, Québec, QC G1L 2B3')).toBeVisible()
+      const locationContainer = screen
+        .getByText('Location')
+        .closest('div')?.parentElement
+      expect(locationContainer).toHaveClass(
+        'flex',
+        'items-center',
+        'gap-3',
+        'p-3',
+        'bg-gray-50',
+        'rounded-lg',
+        'border',
+        'border-gray-100'
+      )
     })
   })
 
@@ -229,56 +238,45 @@ describe('EventCard Component', () => {
       expect(screen.queryByText('Quebec Running Club')).not.toBeInTheDocument()
     })
 
-    it('displays club name when enabled', () => {
+    it('applies correct styling to club name', () => {
       render(<EventCard event={mockEventWithClub} showClubName={true} />)
 
       const clubName = screen.getByText('Quebec Running Club')
-      expect(clubName).toBeVisible()
-      expect(clubName).toHaveTextContent('Quebec Running Club')
+      expect(clubName).toHaveClass('text-xs', 'text-accent', 'font-body')
     })
   })
 
   describe('Layout and Structure', () => {
-    it('displays header content properly', () => {
-      render(<EventCard event={mockEventWithClub} />)
+    it('maintains fixed header height', () => {
+      const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      expect(
-        screen.getByRole('heading', { name: 'Morning 5K Run' })
-      ).toBeVisible()
-      expect(screen.getByText(/Thu, Sep 4/)).toBeVisible()
+      const header = container.querySelector('.h-16')
+      expect(header).toBeInTheDocument()
+      expect(header).toHaveClass('mb-3')
     })
 
-    it('maintains proper content structure', () => {
-      render(<EventCard event={mockEventWithClub} />)
+    it('uses flex layout for responsive design', () => {
+      const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      const heading = screen.getByRole('heading', { name: 'Morning 5K Run' })
-      const location = screen.getByText('Location')
-      const address = screen.getByText('250 3e Rue, Québec, QC G1L 2B3')
-
-      expect(heading).toBeInTheDocument()
-      expect(location).toBeInTheDocument()
-      expect(address).toBeInTheDocument()
+      const flexContainer = container.querySelector('.flex-1.flex.flex-col')
+      expect(flexContainer).toBeInTheDocument()
     })
 
-    it('positions location information appropriately', () => {
-      render(<EventCard event={mockEventWithClub} />)
+    it('positions location at bottom with mt-auto', () => {
+      const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      const locationText = screen.getByText('Location')
-      const addressText = screen.getByText('250 3e Rue, Québec, QC G1L 2B3')
-      expect(locationText).toBeVisible()
-      expect(addressText).toBeVisible()
+      const locationContainer = container.querySelector('.mt-auto')
+      expect(locationContainer).toBeInTheDocument()
     })
 
-    it('organizes content elements properly', () => {
-      render(<EventCard event={mockEventWithClub} />)
+    it('applies correct gap spacing between elements', () => {
+      const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      const title = screen.getByRole('heading', { name: 'Morning 5K Run' })
-      const distance = screen.getByText('5K')
-      const pace = screen.getByText('5:30 /km')
+      const headerFlex = container.querySelector('.flex.items-start.gap-3')
+      expect(headerFlex).toBeInTheDocument()
 
-      expect(title).toBeVisible()
-      expect(distance).toBeVisible()
-      expect(pace).toBeVisible()
+      const tagsFlex = container.querySelector('.flex.items-center.gap-2')
+      expect(tagsFlex).toBeInTheDocument()
     })
   })
 
@@ -301,10 +299,10 @@ describe('EventCard Component', () => {
     })
 
     it('uses semantic HTML elements', () => {
-      const { container } = render(<EventCard event={mockEventWithClub} />)
+      render(<EventCard event={mockEventWithClub} />)
 
       // Should use article for the card content
-      const article = container.querySelector('article')
+      const article = screen.getByRole('article')
       expect(article).toBeInTheDocument()
     })
 
@@ -320,30 +318,29 @@ describe('EventCard Component', () => {
   })
 
   describe('Typography and Styling', () => {
-    it('displays title as proper heading', () => {
+    it('applies Quebec.run brand typography to title', () => {
       render(<EventCard event={mockEventWithClub} />)
 
       const title = screen.getByRole('heading', { name: 'Morning 5K Run' })
-      expect(title).toBeVisible()
-      expect(title.tagName).toBe('H3')
-      expect(title).toHaveTextContent('Morning 5K Run')
+      expect(title).toHaveClass(
+        'text-lg',
+        'font-heading',
+        'font-bold',
+        'text-primary',
+        'mb-2',
+        'line-clamp-2',
+        'leading-tight'
+      )
     })
 
-    it('maintains logical content flow', () => {
-      render(<EventCard event={mockEventWithClub} />)
+    it('applies consistent spacing between sections', () => {
+      const { container } = render(<EventCard event={mockEventWithClub} />)
 
-      const title = screen.getByRole('heading', { name: 'Morning 5K Run' })
-      const datetime = screen.getByText(/Thu, Sep 4/)
-      const distance = screen.getByText('5K')
-      const location = screen.getByText('Location')
-
-      expect(title).toBeInTheDocument()
-      expect(datetime).toBeInTheDocument()
-      expect(distance).toBeInTheDocument()
-      expect(location).toBeInTheDocument()
+      const tagsSection = container.querySelector('.mb-4.pt-2')
+      expect(tagsSection).toBeInTheDocument()
     })
 
-    it('handles long titles appropriately', () => {
+    it('handles long titles with line clamping', () => {
       const eventWithLongTitle = {
         ...mockEventWithClub,
         title:
@@ -353,8 +350,7 @@ describe('EventCard Component', () => {
       render(<EventCard event={eventWithLongTitle} />)
 
       const title = screen.getByRole('heading')
-      expect(title).toBeVisible()
-      expect(title.textContent).toContain('Very Long Event Title')
+      expect(title).toHaveClass('line-clamp-2')
     })
   })
 
@@ -407,7 +403,7 @@ describe('EventCard Component', () => {
       expect(screen.getByText('4\'30" /km')).toBeInTheDocument()
     })
 
-    it('handles very long address gracefully', () => {
+    it('handles very long address with truncation', () => {
       const eventWithLongAddress = {
         ...mockEventWithClub,
         address:
@@ -417,7 +413,7 @@ describe('EventCard Component', () => {
       render(<EventCard event={eventWithLongAddress} />)
 
       const addressElement = screen.getByText(eventWithLongAddress.address)
-      expect(addressElement).toBeVisible()
+      expect(addressElement).toHaveClass('truncate')
       expect(addressElement).toHaveAttribute(
         'title',
         eventWithLongAddress.address
@@ -426,14 +422,15 @@ describe('EventCard Component', () => {
   })
 
   describe('Interactive States', () => {
-    it('maintains accessibility for interactive states', () => {
+    it('renders as interactive card', () => {
       render(<EventCard event={mockEventWithClub} />)
 
-      const link = screen.getByRole('link')
-      expect(link).toBeVisible()
-      expect(link).not.toHaveAttribute('tabindex', '-1')
-      link.focus()
-      expect(link).toHaveFocus()
+      // Card should be clickable via wrapping link
+      const link = screen.getByRole('link', {
+        name: new RegExp(mockEventWithClub.title),
+      })
+      expect(link).toBeInTheDocument()
+      expect(link).toHaveAttribute('href', `/events/${mockEventWithClub.id}`)
     })
 
     it('maintains keyboard accessibility', () => {

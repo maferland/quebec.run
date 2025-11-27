@@ -16,11 +16,16 @@ describe('Skeleton Component', () => {
     const { container } = render(<Skeleton className="h-4 w-24" />)
 
     const skeleton = container.firstChild as HTMLElement
-    expect(skeleton).toBeVisible()
-    expect(skeleton).toHaveClass('h-4', 'w-24')
+    expect(skeleton).toHaveClass(
+      'bg-surface-secondary',
+      'animate-pulse',
+      'rounded-md',
+      'h-4',
+      'w-24'
+    )
   })
 
-  it('supports different animation types', () => {
+  it('applies different animations', () => {
     const { container: pulseContainer } = render(
       <Skeleton className="h-4 w-24" animation="pulse" />
     )
@@ -31,30 +36,31 @@ describe('Skeleton Component', () => {
       <Skeleton className="h-4 w-24" animation="none" />
     )
 
-    expect(pulseContainer.firstChild).toBeVisible()
-    expect(shimmerContainer.firstChild).toBeVisible()
-    expect(noneContainer.firstChild).toBeVisible()
+    expect(pulseContainer.firstChild).toHaveClass('animate-pulse')
+    expect(shimmerContainer.firstChild).toHaveClass('bg-gradient-to-r')
+    expect(noneContainer.firstChild).not.toHaveClass('animate-pulse')
+    expect(noneContainer.firstChild).not.toHaveClass('bg-gradient-to-r')
   })
 
-  it('supports different rounded variants', () => {
+  it('applies different rounded variants', () => {
     const variants = [
-      { rounded: 'none' as const },
-      { rounded: 'sm' as const },
-      { rounded: 'md' as const },
-      { rounded: 'lg' as const },
-      { rounded: 'xl' as const },
-      { rounded: 'full' as const },
+      { rounded: 'none' as const, expected: 'rounded-none' },
+      { rounded: 'sm' as const, expected: 'rounded-sm' },
+      { rounded: 'md' as const, expected: 'rounded-md' },
+      { rounded: 'lg' as const, expected: 'rounded-lg' },
+      { rounded: 'xl' as const, expected: 'rounded-xl' },
+      { rounded: 'full' as const, expected: 'rounded-full' },
     ]
 
-    variants.forEach(({ rounded }) => {
+    variants.forEach(({ rounded, expected }) => {
       const { container } = render(
         <Skeleton className="h-4 w-24" rounded={rounded} />
       )
-      expect(container.firstChild).toBeVisible()
+      expect(container.firstChild).toHaveClass(expected)
     })
   })
 
-  it('applies custom className correctly', () => {
+  it('merges custom className with default classes', () => {
     const { container } = render(
       <Skeleton
         className="h-8 w-32 custom-skeleton"
@@ -63,16 +69,27 @@ describe('Skeleton Component', () => {
       />
     )
 
-    expect(container.firstChild).toBeVisible()
-    expect(container.firstChild).toHaveClass('h-8', 'w-32', 'custom-skeleton')
+    expect(container.firstChild).toHaveClass(
+      'bg-gradient-to-r',
+      'rounded-lg',
+      'h-8',
+      'w-32',
+      'custom-skeleton'
+    )
   })
 })
 
 describe('SkeletonCard Component', () => {
-  it('renders with proper accessibility attributes', () => {
+  it('renders with default props', () => {
     const { container } = render(<SkeletonCard />)
 
-    expect(container.firstChild).toBeVisible()
+    expect(container.firstChild).toHaveClass(
+      'p-6',
+      'bg-surface',
+      'border',
+      'border-border',
+      'rounded-xl'
+    )
     expect(container.firstChild).toHaveAttribute('role', 'status')
     expect(container.firstChild).toHaveAttribute(
       'aria-label',
@@ -80,36 +97,36 @@ describe('SkeletonCard Component', () => {
     )
   })
 
-  it('includes avatar placeholder when showAvatar is true', () => {
+  it('renders with avatar when showAvatar is true', () => {
     render(<SkeletonCard showAvatar />)
 
     // Should have avatar skeleton in the header
     const avatarSkeleton = document.querySelector('.flex-shrink-0')
     expect(avatarSkeleton).toBeInTheDocument()
-    expect(avatarSkeleton).toBeVisible()
+    expect(avatarSkeleton).toHaveClass('w-12', 'h-12')
   })
 
-  it('renders specified number of content lines', () => {
-    render(<SkeletonCard lines={4} />)
+  it('renders correct number of content lines', () => {
+    const { container } = render(<SkeletonCard lines={4} />)
 
-    // Should render the component with lines configuration
-    const skeletonCard = screen.getByRole('status')
-    expect(skeletonCard).toBeVisible()
-    expect(skeletonCard).toHaveAttribute('aria-label', 'Loading content...')
+    // Should have 4 content line skeletons in the content section
+    const contentSection = container.querySelector('.space-y-2.mb-4')
+    const contentLines = contentSection?.querySelectorAll('div') || []
+    expect(contentLines).toHaveLength(4)
   })
 
-  it('includes action section when showActions is true', () => {
+  it('renders with action buttons when showActions is true', () => {
     render(<SkeletonCard showActions />)
 
     const actionsSection = document.querySelector('.border-t')
     expect(actionsSection).toBeInTheDocument()
-    expect(actionsSection).toBeVisible()
+    expect(actionsSection).toHaveClass('border-border', 'pt-4')
   })
 
-  it('renders compact variant correctly', () => {
+  it('applies compact styling for compact variant', () => {
     const { container } = render(<SkeletonCard variant="compact" />)
 
-    expect(container.firstChild).toBeVisible()
+    expect(container.firstChild).toHaveClass('p-4')
     // Compact variant should not render the main content lines section
     const mainContentSection = container.querySelector('.space-y-2.mb-4')
     expect(mainContentSection).not.toBeInTheDocument()
@@ -118,9 +135,9 @@ describe('SkeletonCard Component', () => {
   it('renders event-specific elements for event variant', () => {
     render(<SkeletonCard variant="event" showAvatar />)
 
-    // Should have avatar for events
+    // Should have smaller avatar for events
     const avatar = document.querySelector('.flex-shrink-0')
-    expect(avatar).toBeVisible()
+    expect(avatar).toHaveClass('w-10', 'h-10')
 
     // Should have event datetime tag skeleton
     const datetimeTag = document.querySelector('.h-6.w-32')
@@ -134,9 +151,9 @@ describe('SkeletonCard Component', () => {
   it('renders club-specific elements for club variant', () => {
     render(<SkeletonCard variant="club" showAvatar />)
 
-    // Should have avatar for clubs
+    // Should have larger avatar for clubs
     const avatar = document.querySelector('.flex-shrink-0')
-    expect(avatar).toBeVisible()
+    expect(avatar).toHaveClass('w-12', 'h-12')
 
     // Should have club event count badge
     const eventBadge = document.querySelector('.h-8.w-8')
@@ -147,12 +164,11 @@ describe('SkeletonCard Component', () => {
     expect(eventsPreview).toBeInTheDocument()
   })
 
-  it('applies custom className correctly', () => {
+  it('applies custom className', () => {
     const { container } = render(
       <SkeletonCard className="custom-skeleton-card" />
     )
 
-    expect(container.firstChild).toBeVisible()
     expect(container.firstChild).toHaveClass('custom-skeleton-card')
   })
 })
@@ -182,7 +198,7 @@ describe('LoadingState Component', () => {
     expect(spinner).not.toBeInTheDocument()
   })
 
-  it('renders different sizes correctly', () => {
+  it('applies different sizes correctly', () => {
     const { container: smContainer } = render(
       <LoadingState size="sm" showSpinner text="Small" />
     )
@@ -193,21 +209,20 @@ describe('LoadingState Component', () => {
       <LoadingState size="lg" showSpinner text="Large" />
     )
 
-    // Check that all sizes render properly
-    expect(smContainer.querySelector('.animate-spin')).toBeVisible()
-    expect(mdContainer.querySelector('.animate-spin')).toBeVisible()
-    expect(lgContainer.querySelector('.animate-spin')).toBeVisible()
+    // Check spinner sizes
+    expect(smContainer.querySelector('.animate-spin')).toHaveClass('w-4', 'h-4')
+    expect(mdContainer.querySelector('.animate-spin')).toHaveClass('w-5', 'h-5')
+    expect(lgContainer.querySelector('.animate-spin')).toHaveClass('w-6', 'h-6')
 
-    // Check text content
-    expect(smContainer.querySelector('p')).toHaveTextContent('Small')
-    expect(mdContainer.querySelector('p')).toHaveTextContent('Medium')
-    expect(lgContainer.querySelector('p')).toHaveTextContent('Large')
+    // Check text sizes
+    expect(smContainer.querySelector('p')).toHaveClass('text-sm')
+    expect(mdContainer.querySelector('p')).toHaveClass('text-base')
+    expect(lgContainer.querySelector('p')).toHaveClass('text-lg')
   })
 
-  it('applies custom className correctly', () => {
+  it('applies custom className', () => {
     const { container } = render(<LoadingState className="custom-loading" />)
 
-    expect(container.firstChild).toBeVisible()
     expect(container.firstChild).toHaveClass('custom-loading')
   })
 
@@ -250,32 +265,32 @@ describe('SkeletonList Component', () => {
     expect(skeletonCards).toHaveLength(5)
   })
 
-  it('renders vertical layout by default', () => {
+  it('applies vertical layout by default', () => {
     const { container } = render(<SkeletonList />)
 
-    expect(container.firstChild).toBeVisible()
-    expect(container.firstChild).toHaveAttribute('role', 'status')
+    expect(container.firstChild).toHaveClass('space-y-6')
+    expect(container.firstChild).not.toHaveClass('flex', 'gap-6')
   })
 
-  it('renders horizontal layout when specified', () => {
+  it('applies horizontal layout when specified', () => {
     const { container } = render(<SkeletonList direction="horizontal" />)
 
-    expect(container.firstChild).toBeVisible()
-    expect(container.firstChild).toHaveAttribute('role', 'status')
+    expect(container.firstChild).toHaveClass('flex', 'gap-6', 'overflow-x-auto')
+    expect(container.firstChild).not.toHaveClass('space-y-6')
   })
 
-  it('renders horizontal items with proper structure', () => {
+  it('applies fixed width for horizontal items', () => {
     const { container } = render(
       <SkeletonList direction="horizontal" count={2} />
     )
 
     const listContainer = container.querySelector('[role="status"]')
-    expect(listContainer).toBeVisible()
+    expect(listContainer).toHaveClass('flex', 'overflow-x-auto')
 
     const wrapperItems = listContainer?.children || []
     expect(wrapperItems).toHaveLength(2)
     Array.from(wrapperItems).forEach((item) => {
-      expect(item).toBeVisible()
+      expect(item).toHaveClass('flex-shrink-0', 'w-80')
     })
   })
 
@@ -287,12 +302,11 @@ describe('SkeletonList Component', () => {
     expect(datetimeTag).toBeInTheDocument()
   })
 
-  it('applies custom className correctly', () => {
+  it('applies custom className', () => {
     const { container } = render(
       <SkeletonList className="custom-skeleton-list" />
     )
 
-    expect(container.firstChild).toBeVisible()
     expect(container.firstChild).toHaveClass('custom-skeleton-list')
   })
 })
@@ -311,40 +325,42 @@ describe('Convenience Components', () => {
       expect(tagsSection).toBeInTheDocument()
     })
 
-    it('applies custom className correctly', () => {
+    it('applies custom className', () => {
       const { container } = render(
         <EventCardSkeleton className="custom-event-skeleton" />
       )
 
-      expect(container.firstChild).toBeVisible()
       expect(container.firstChild).toHaveClass('custom-event-skeleton')
     })
   })
 
   describe('ClubCardSkeleton', () => {
     it('renders with club-specific configuration', () => {
-      const { container } = render(<ClubCardSkeleton />)
+      render(<ClubCardSkeleton />)
 
-      // Should render as a visible skeleton
-      expect(container.firstChild).toBeVisible()
-      expect(container.firstChild).toHaveAttribute('role', 'status')
-
-      // Should have avatar placeholder
+      // Should have avatar
       const avatar = document.querySelector('.flex-shrink-0')
       expect(avatar).toBeInTheDocument()
 
-      // Should have action section
+      // Should have club border
+      const card = document.querySelector('.border-l-4.border-l-border')
+      expect(card).toBeInTheDocument()
+
+      // Should have action buttons
       const actions = document.querySelector('.border-t')
       expect(actions).toBeInTheDocument()
     })
 
-    it('applies custom className while maintaining structure', () => {
+    it('applies custom className while preserving border', () => {
       const { container } = render(
         <ClubCardSkeleton className="custom-club-skeleton" />
       )
 
-      expect(container.firstChild).toBeVisible()
-      expect(container.firstChild).toHaveClass('custom-club-skeleton')
+      expect(container.firstChild).toHaveClass(
+        'custom-club-skeleton',
+        'border-l-4',
+        'border-l-border'
+      )
     })
   })
 
@@ -361,19 +377,17 @@ describe('Convenience Components', () => {
       expect(screen.getByText('Loading dashboard...')).toBeInTheDocument()
     })
 
-    it('renders with appropriate height for page loading', () => {
+    it('applies minimum height for full page loading', () => {
       const { container } = render(<PageLoading />)
 
-      expect(container.firstChild).toBeVisible()
-      expect(screen.getByText('Loading page...')).toBeInTheDocument()
+      expect(container.firstChild).toHaveClass('min-h-96')
     })
 
-    it('applies custom className correctly', () => {
+    it('applies custom className', () => {
       const { container } = render(
         <PageLoading className="custom-page-loading" />
       )
 
-      expect(container.firstChild).toBeVisible()
       expect(container.firstChild).toHaveClass('custom-page-loading')
     })
   })
@@ -391,19 +405,17 @@ describe('Convenience Components', () => {
       expect(screen.getByText('Loading events...')).toBeInTheDocument()
     })
 
-    it('renders with appropriate spacing for sections', () => {
+    it('applies section padding', () => {
       const { container } = render(<SectionLoading />)
 
-      expect(container.firstChild).toBeVisible()
-      expect(screen.getByText('Loading...')).toBeInTheDocument()
+      expect(container.firstChild).toHaveClass('py-12')
     })
 
-    it('applies custom className correctly', () => {
+    it('applies custom className', () => {
       const { container } = render(
         <SectionLoading className="custom-section-loading" />
       )
 
-      expect(container.firstChild).toBeVisible()
       expect(container.firstChild).toHaveClass('custom-section-loading')
     })
   })
@@ -474,15 +486,15 @@ describe('Real-world Usage Patterns', () => {
       <SkeletonList count={8} direction="horizontal" variant="event" />
     )
 
-    expect(container.firstChild).toBeVisible()
+    expect(container.firstChild).toHaveClass('flex', 'overflow-x-auto')
 
     const listContainer = container.querySelector('[role="status"]')
     const wrapperItems = listContainer?.children || []
     expect(wrapperItems).toHaveLength(8)
 
-    // Each item should be visible in horizontal layout
+    // Each item should have fixed width for horizontal scrolling
     Array.from(wrapperItems).forEach((item) => {
-      expect(item).toBeVisible()
+      expect(item).toHaveClass('w-80')
     })
   })
 

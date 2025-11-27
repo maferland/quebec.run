@@ -124,6 +124,21 @@
       "facebook": "Facebook",
       "language": "Langue principale"
     },
+    "event": {
+      "title": "Titre de l'événement",
+      "description": "Description",
+      "date": "Date",
+      "time": "Heure",
+      "club": "Club",
+      "address": "Lieu de rencontre",
+      "distance": "Distance",
+      "pace": "Allure"
+    },
+    "admin": {
+      "events": {
+        "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
+      }
+    },
     "actions": {
       "save": "Enregistrer",
       "cancel": "Annuler",
@@ -141,7 +156,7 @@
       "dashboard": "Tableau de bord",
       "clubs": "Clubs",
       "events": "Événements",
-      "settings": "Paramètres"
+      "users": "Utilisateurs"
     },
     "dashboard": {
       "title": "Tableau de bord administrateur",
@@ -156,6 +171,16 @@
       "editClub": "Modifier le club",
       "deleteClub": "Supprimer le club",
       "confirmDelete": "Êtes-vous sûr de vouloir supprimer ce club ?"
+    },
+    "events": {
+      "title": "Gérer les événements",
+      "addNew": "Ajouter un événement",
+      "editEvent": "Modifier l'événement",
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
+    },
+    "users": {
+      "title": "Gérer les utilisateurs",
+      "toggleAdmin": "Basculer le statut administrateur"
     }
   }
 }

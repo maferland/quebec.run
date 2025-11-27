@@ -22,85 +22,131 @@ describe('Button Component', () => {
       expect(button).not.toHaveAttribute('type')
     })
 
-    it('renders as a functional button', () => {
+    it('applies base styles correctly', () => {
       render(<Button>Base Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Base Button')
+      expect(button).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'justify-center',
+        'rounded-md',
+        'font-medium',
+        'focus:outline-none',
+        'focus:ring-2',
+        'focus:ring-offset-2',
+        'disabled:opacity-50',
+        'cursor-pointer',
+        'disabled:cursor-not-allowed',
+        'shadow-sm',
+        'hover:shadow-md',
+        'hover:scale-105',
+        'transition-all',
+        'duration-200'
+      )
     })
   })
 
-  describe('Button Variants', () => {
-    it('renders primary variant correctly', () => {
+  describe('Variant Styling', () => {
+    it('applies primary variant by default', () => {
       render(<Button>Primary Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Primary Button')
+      expect(button).toHaveClass(
+        'bg-primary',
+        'text-text-inverse',
+        'hover:bg-primary/90',
+        'focus:ring-focus',
+        'border',
+        'border-primary'
+      )
     })
 
-    it('renders secondary variant correctly', () => {
+    it('applies secondary variant when specified', () => {
       render(<Button variant="secondary">Secondary Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Secondary Button')
+      expect(button).toHaveClass(
+        'bg-secondary',
+        'text-text-inverse',
+        'hover:bg-secondary/90',
+        'focus:ring-focus',
+        'border',
+        'border-secondary'
+      )
     })
 
-    it('renders outline variant correctly', () => {
+    it('applies outline variant when specified', () => {
       render(<Button variant="outline">Outline Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Outline Button')
+      expect(button).toHaveClass(
+        'border',
+        'border-border',
+        'bg-surface',
+        'text-text-primary',
+        'hover:bg-hover',
+        'hover:border-border-secondary',
+        'focus:ring-focus'
+      )
     })
 
-    it('renders outline-primary variant correctly', () => {
+    it('applies outline-primary variant when specified', () => {
       render(<Button variant="outline-primary">Outline Primary Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Outline Primary Button')
+      expect(button).toHaveClass(
+        'border',
+        'border-primary',
+        'bg-surface',
+        'text-primary',
+        'hover:bg-primary/5',
+        'hover:border-primary/80',
+        'focus:ring-focus'
+      )
     })
 
-    it('renders outline-accent variant correctly', () => {
+    it('applies outline-accent variant when specified', () => {
       render(<Button variant="outline-accent">Outline Accent Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Outline Accent Button')
+      expect(button).toHaveClass(
+        'border',
+        'border-accent',
+        'bg-surface',
+        'text-accent',
+        'hover:bg-accent/5',
+        'hover:border-accent/80',
+        'focus:ring-focus'
+      )
     })
   })
 
-  describe('Button Sizes', () => {
-    it('renders medium size by default', () => {
+  describe('Size Styling', () => {
+    it('applies medium size by default', () => {
       render(<Button>Medium Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Medium Button')
+      expect(button).toHaveClass('px-4', 'py-2', 'text-sm')
     })
 
-    it('renders small size when specified', () => {
+    it('applies small size when specified', () => {
       render(<Button size="sm">Small Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Small Button')
+      expect(button).toHaveClass('px-3', 'py-1.5', 'text-sm')
     })
 
-    it('renders large size when specified', () => {
+    it('applies large size when specified', () => {
       render(<Button size="lg">Large Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Large Button')
+      expect(button).toHaveClass('px-6', 'py-3', 'text-base')
     })
   })
 
   describe('Variant and Size Combinations', () => {
-    it('renders variant and size combinations correctly', () => {
+    it('applies both variant and size classes correctly', () => {
       render(
         <Button variant="secondary" size="lg">
           Large Secondary
@@ -108,11 +154,16 @@ describe('Button Component', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Large Secondary')
+      expect(button).toHaveClass(
+        'bg-secondary',
+        'text-text-inverse',
+        'px-6',
+        'py-3',
+        'text-base'
+      )
     })
 
-    it('renders outline variant with small size', () => {
+    it('applies outline variant with small size', () => {
       render(
         <Button variant="outline" size="sm">
           Small Outline
@@ -120,8 +171,13 @@ describe('Button Component', () => {
       )
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Small Outline')
+      expect(button).toHaveClass(
+        'border-border',
+        'bg-surface',
+        'px-3',
+        'py-1.5',
+        'text-sm'
+      )
     })
   })
 
@@ -147,13 +203,19 @@ describe('Button Component', () => {
       expect(button).toHaveAttribute('aria-label', 'Test button')
     })
 
-    it('supports className prop for custom styling', () => {
+    it('allows className prop for customization', () => {
       render(<Button className="custom-class">Custom Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Custom Button')
-      // Note: className prop exists at runtime but TypeScript prevents it
+      // Should have default styles
+      expect(button).toHaveClass(
+        'inline-flex',
+        'items-center',
+        'justify-center'
+      )
+      expect(button).toHaveClass('bg-primary', 'px-4', 'py-2')
+      // Should have custom class
+      expect(button).toHaveClass('custom-class')
     })
 
     it('applies custom styles through style prop', () => {
@@ -223,15 +285,18 @@ describe('Button Component', () => {
   })
 
   describe('Disabled State', () => {
-    it('renders disabled state correctly', () => {
+    it('applies disabled styling when disabled', () => {
       render(<Button disabled>Disabled Button</Button>)
 
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveTextContent('Disabled Button')
+      expect(button).toHaveClass(
+        'disabled:opacity-50',
+        'disabled:cursor-not-allowed'
+      )
     })
 
-    it('maintains button content when disabled with variants', () => {
+    it('maintains variant styling when disabled', () => {
       render(
         <Button variant="secondary" disabled>
           Disabled Secondary
@@ -240,7 +305,8 @@ describe('Button Component', () => {
 
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveTextContent('Disabled Secondary')
+      expect(button).toHaveClass('bg-secondary', 'text-text-inverse')
+      expect(button).toHaveClass('disabled:opacity-50')
     })
 
     it('prevents interaction when disabled', () => {
@@ -279,12 +345,15 @@ describe('Button Component', () => {
       expect(button).toHaveFocus()
     })
 
-    it('supports focus for keyboard navigation', () => {
+    it('applies focus ring styles for keyboard navigation', () => {
       render(<Button>Focus Button</Button>)
 
       const button = screen.getByRole('button')
-      button.focus()
-      expect(button).toHaveFocus()
+      expect(button).toHaveClass(
+        'focus:outline-none',
+        'focus:ring-2',
+        'focus:ring-offset-2'
+      )
     })
 
     it('supports aria attributes', () => {
@@ -304,12 +373,12 @@ describe('Button Component', () => {
       expect(button).toHaveAttribute('aria-pressed', 'true')
     })
 
-    it('handles focus state when disabled', () => {
+    it('maintains focus visibility when disabled', () => {
       render(<Button disabled>Disabled Focus Button</Button>)
 
       const button = screen.getByRole('button')
       expect(button).toBeDisabled()
-      expect(button).toHaveTextContent('Disabled Focus Button')
+      expect(button).toHaveClass('focus:outline-none', 'focus:ring-2')
     })
   })
 
@@ -400,40 +469,51 @@ describe('Button Component', () => {
   })
 
   describe('Quebec.run Brand Integration', () => {
-    it('renders primary variant with brand consistency', () => {
+    it('uses Quebec.run primary color in primary variant', () => {
       render(<Button variant="primary">Primary Brand</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Primary Brand')
+      expect(button).toHaveClass(
+        'bg-primary',
+        'border-primary',
+        'focus:ring-focus'
+      )
     })
 
-    it('renders secondary variant with brand consistency', () => {
+    it('uses Quebec.run secondary color in secondary variant', () => {
       render(<Button variant="secondary">Secondary Brand</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Secondary Brand')
+      expect(button).toHaveClass(
+        'bg-secondary',
+        'border-secondary',
+        'focus:ring-focus'
+      )
     })
 
-    it('renders outline-accent variant with brand consistency', () => {
+    it('uses Quebec.run accent color in outline-accent variant', () => {
       render(<Button variant="outline-accent">Accent Brand</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Accent Brand')
+      expect(button).toHaveClass(
+        'border-accent',
+        'text-accent',
+        'hover:bg-accent/5',
+        'hover:border-accent/80',
+        'focus:ring-focus'
+      )
     })
 
-    it('maintains interactive behavior consistency', () => {
+    it('applies consistent Quebec.run interaction effects', () => {
       render(<Button>Interactive Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toBeVisible()
-      expect(button).toHaveTextContent('Interactive Button')
-
-      // Test that the button is interactive
-      button.focus()
-      expect(button).toHaveFocus()
+      expect(button).toHaveClass(
+        'hover:shadow-md',
+        'hover:scale-105',
+        'transition-all',
+        'duration-200'
+      )
     })
   })
 })

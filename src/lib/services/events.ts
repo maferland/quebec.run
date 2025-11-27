@@ -2,10 +2,12 @@ import { prisma } from '@/lib/prisma'
 import type {
   EventsQuery,
   EventCreate,
+  EventUpdate,
   EventId,
   PublicPayload,
   AuthPayload,
 } from '@/lib/schemas'
+import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -65,7 +67,7 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   })
 
   if (!event) {
-    throw new Error('Event not found')
+    throw new NotFoundError('Event not found')
   }
 
   return event
@@ -88,4 +90,70 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
   })
 
   return event
+}
+
+export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
+  const { id, ...updateData } = data
+
+  // Check permissions: must be admin OR own the event's club
+  const event = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      club: {
+        select: { ownerId: true },
+      },
+    },
+  })
+
+  if (!event) {
+    throw new NotFoundError('Event not found')
+  }
+
+  if (!user.isAdmin && event.club.ownerId !== user.id) {
+    throw new UnauthorizedError('Unauthorized')
+  }
+
+  return await prisma.event.update({
+    where: { id },
+    data: {
+      ...updateData,
+      date: updateData.date ? new Date(updateData.date) : undefined,
+    },
+    include: {
+      club: {
+        select: {
+          id: true,
+          name: true,
+        },
+      },
+    },
+  })
+}
+
+export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
+  const { id } = data
+
+  // Check permissions: must be admin OR own the event's club
+  const event = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      club: {
+        select: { ownerId: true },
+      },
+    },
+  })
+
+  if (!event) {
+    throw new NotFoundError('Event not found')
+  }
+
+  if (!user.isAdmin && event.club.ownerId !== user.id) {
+    throw new UnauthorizedError('Unauthorized')
+  }
+
+  return await prisma.event.delete({
+    where: { id },
+  })
 }
