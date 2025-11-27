@@ -3,6 +3,16 @@ import React from 'react'
 import { vi } from 'vitest'
 import { setupTestDatabase } from './src/lib/test-seed'
 
+// Polyfill Web APIs for jsdom environment
+// Node 18+ has these built-in, but jsdom doesn't expose them
+if (typeof global.Request === 'undefined') {
+  const { Request, Response, Headers, fetch } = await import('node:fetch')
+  global.Request = Request as typeof global.Request
+  global.Response = Response as typeof global.Response
+  global.Headers = Headers as typeof global.Headers
+  global.fetch = fetch as typeof global.fetch
+}
+
 // Make vi available globally
 ;(globalThis as typeof globalThis & { vi: typeof vi }).vi = vi
 
