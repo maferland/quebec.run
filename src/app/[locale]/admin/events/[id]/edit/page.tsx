@@ -36,10 +36,11 @@ async function getClubsForSelect() {
 export default async function EditEventPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
   const t = await getTranslations('admin.events')
-  const event = await getEventById(params.id)
+  const { id } = await params
+  const event = await getEventById(id)
   const clubs = await getClubsForSelect()
 
   return (
