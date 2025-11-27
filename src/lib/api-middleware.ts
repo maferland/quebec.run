@@ -49,6 +49,16 @@ function withErrorHandler<T extends unknown[]>(
         )
       }
 
+      // Handle business logic errors (already exists, pending request, etc.)
+      if (error instanceof Error) {
+        if (
+          error.message.includes('already exists') ||
+          error.message.includes('Pending deletion request')
+        ) {
+          return Response.json({ error: error.message }, { status: 400 })
+        }
+      }
+
       // Handle other errors
       return Response.json(
         { error: error instanceof Error ? error.message : 'Unknown error' },
@@ -77,9 +87,16 @@ async function getParams<T extends z.ZodType>(
   // Extract URL parameters from context
   const urlParams = await context.params
 
-  const body = methodsWithBody.includes(request.method)
-    ? await request.json()
-    : {}
+  // Parse body only if it exists
+  let body = {}
+  if (methodsWithBody.includes(request.method)) {
+    try {
+      const text = await request.text()
+      body = text ? JSON.parse(text) : {}
+    } catch {
+      body = {}
+    }
+  }
 
   const params = { ...urlParams, ...queryParams }
 
@@ -107,7 +124,7 @@ export function withAuth<T extends z.ZodType>(schema: T) {
     fn: (args: {
       user: ServiceUser
       data: z.infer<T>
-    }) => Response | Promise<Response>
+    }, request: Request) => Response | Promise<Response>
   ) => {
     return withErrorHandler(
       async (
@@ -129,7 +146,7 @@ export function withAuth<T extends z.ZodType>(schema: T) {
         }
 
         const data = await getParams(request, context, schema)
-        return await fn({ user, data })
+        return await fn({ user, data }, request)
       }
     )
   }
