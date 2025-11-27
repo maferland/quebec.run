@@ -13,10 +13,7 @@ test.describe('Auth Sign In', () => {
     ).toBeVisible()
   })
 
-  // Skip: requires Task 4 implementation (sign in button in navigation)
-  test.skip('clicking sign in button redirects to custom page', async ({
-    page,
-  }) => {
+  test('clicking sign in button redirects to custom page', async ({ page }) => {
     await page.goto('/en')
 
     await page

@@ -3,8 +3,9 @@
 import { Button } from '@/components/ui/button'
 import { NavLink } from '@/components/ui/nav-link'
 import { User } from 'lucide-react'
-import { signIn, signOut, useSession } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { useRouter } from 'next/navigation'
 
 type AuthButtonsProps = {
   variant: 'desktop' | 'mobile'
@@ -14,6 +15,7 @@ type AuthButtonsProps = {
 export function AuthButtons({ variant, onAction }: AuthButtonsProps) {
   const { data: session, status } = useSession()
   const t = useTranslations('navigation')
+  const router = useRouter()
 
   if (status === 'loading') {
     return (
@@ -90,7 +92,7 @@ export function AuthButtons({ variant, onAction }: AuthButtonsProps) {
       <Button
         size="sm"
         onClick={() => {
-          signIn()
+          router.push('/auth/signin')
           onAction?.()
         }}
         variant="outline-primary"
