@@ -69,10 +69,10 @@ export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [createEmailProvider()],
   pages: {
-    // Use locale-prefixed paths since app uses localePrefix: 'always'
-    // NextAuth requires explicit locale; using 'en' as default
-    signIn: '/en/auth/signin',
-    verifyRequest: '/en/auth/signin',
+    // Use locale-independent path - NextAuth doesn't support dynamic locales
+    // Auth pages moved outside [locale] directory to avoid hardcoding language
+    signIn: '/auth/signin',
+    verifyRequest: '/auth/signin',
   },
   callbacks: {
     session: async ({ session, user }) => {
