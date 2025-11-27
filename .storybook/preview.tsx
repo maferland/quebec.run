@@ -1,11 +1,7 @@
 import type { Preview } from '@storybook/nextjs'
 import React from 'react'
-import { initialize, mswLoader } from 'msw-storybook-addon'
 import '../src/app/globals.css'
 import { IntlDecorator } from '../src/lib/storybook-utils'
-
-// Initialize MSW
-initialize()
 
 const preview: Preview = {
   parameters: {
@@ -23,7 +19,6 @@ const preview: Preview = {
       </IntlDecorator>
     ),
   ],
-  loaders: [mswLoader],
   globalTypes: {
     locale: {
       description: 'Internationalization locale',

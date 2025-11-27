@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
-import { expect, userEvent, within } from '@storybook/test'
+import { expect, userEvent, within } from 'storybook/test'
 import { http, HttpResponse, delay } from 'msw'
 import { withLoggedOutSession } from '@/lib/storybook-utils'
 import SignInPage from './page'
