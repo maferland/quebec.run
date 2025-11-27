@@ -47,6 +47,20 @@ export function Footer() {
               >
                 {t('calendar')}
               </Link>
+              <span className="text-text-secondary">•</span>
+              <Link
+                href="/legal/terms"
+                className="text-text-secondary hover:text-primary transition-colors"
+              >
+                {t('terms')}
+              </Link>
+              <span className="text-text-secondary">•</span>
+              <Link
+                href="/legal/privacy"
+                className="text-text-secondary hover:text-primary transition-colors"
+              >
+                {t('privacy')}
+              </Link>
             </div>
 
             {/* Language Toggle */}
