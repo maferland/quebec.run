@@ -14,6 +14,9 @@ import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
+import { z } from 'zod'
+
+type ClubFormData = z.infer<typeof clubCreateSchema>
 
 interface ClubFormProps {
   mode: 'create' | 'edit'
@@ -49,7 +52,7 @@ export function ClubForm({ mode, initialData, onSuccess }: ClubFormProps) {
     formState: { errors, isSubmitting },
   } = form
 
-  const handleFormSubmit = handleSubmit(async (data) => {
+  const handleFormSubmit = handleSubmit(async (data: ClubFormData) => {
     try {
       if (mode === 'create') {
         const newClub = await createMutation.mutateAsync(data)

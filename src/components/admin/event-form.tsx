@@ -18,6 +18,7 @@ import { Button } from '@/components/ui/button'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
+import { z } from 'zod'
 
 type EventFormData = Event & {
   club: {
@@ -25,6 +26,8 @@ type EventFormData = Event & {
     name: string
   }
 }
+
+type EventFormInput = z.infer<typeof eventCreateSchema>
 
 interface EventFormProps {
   mode: 'create' | 'edit'
@@ -70,7 +73,7 @@ export function EventForm({
     formState: { errors, isSubmitting },
   } = form
 
-  const handleFormSubmit = handleSubmit(async (data) => {
+  const handleFormSubmit = handleSubmit(async (data: EventFormInput) => {
     try {
       if (mode === 'create') {
         const newEvent = await createMutation.mutateAsync(data)
