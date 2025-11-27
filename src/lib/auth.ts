@@ -68,6 +68,10 @@ const createEmailProvider = () => {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [createEmailProvider()],
+  pages: {
+    signIn: '/auth/signin',
+    verifyRequest: '/auth/signin',
+  },
   callbacks: {
     session: async ({ session, user }) => {
       if (session?.user) {
