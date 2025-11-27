@@ -9,7 +9,7 @@ export const POST = withAuth(consentCreateSchema)(async ({ user, data }, request
     request.headers.get('x-real-ip') ||
     'unknown'
 
-  const consent = await createUserConsent({ user, data, ipAddress: ip })
+  const consent = await createUserConsent({ user, ipAddress: ip })
 
   return Response.json(
     { success: true, consentId: consent.id },
@@ -18,7 +18,7 @@ export const POST = withAuth(consentCreateSchema)(async ({ user, data }, request
 })
 
 export const GET = withAuth(consentCreateSchema)(async ({ user }) => {
-  const consent = await getUserConsent({ data: {}, userId: user.id })
+  const consent = await getUserConsent({ userId: user.id })
 
   return Response.json({
     hasConsent: !!consent,

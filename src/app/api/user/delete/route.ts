@@ -20,7 +20,6 @@ export const POST = withAuth(deletionRequestSchema)(async ({ user, data }) => {
 
 export const GET = withAuth(deletionRequestSchema)(async ({ user }) => {
   const request = await getPendingDeletionRequest({
-    data: {},
     userId: user.id,
   })
 

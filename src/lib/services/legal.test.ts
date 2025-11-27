@@ -23,7 +23,6 @@ describe('Legal Services', () => {
 
       const consent = await createUserConsent({
         user: { id: user.id, isAdmin: false },
-        data: {},
         ipAddress: '192.168.1.1',
       })
 
@@ -44,7 +43,6 @@ describe('Legal Services', () => {
       await expect(
         createUserConsent({
           user: { id: user.id, isAdmin: false },
-          data: {},
           ipAddress: '192.168.1.1',
         })
       ).rejects.toThrow('Consent already exists')
@@ -62,7 +60,6 @@ describe('Legal Services', () => {
       })
 
       const consent = await getUserConsent({
-        data: {},
         userId: user.id,
       })
 
@@ -76,7 +73,6 @@ describe('Legal Services', () => {
       })
 
       const consent = await getUserConsent({
-        data: {},
         userId: user.id,
       })
 
@@ -238,7 +234,6 @@ describe('Legal Services', () => {
       })
 
       const found = await getPendingDeletionRequest({
-        data: {},
         userId: user.id,
       })
 
@@ -251,7 +246,6 @@ describe('Legal Services', () => {
       })
 
       const found = await getPendingDeletionRequest({
-        data: {},
         userId: user.id,
       })
 
