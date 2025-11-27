@@ -13,6 +13,20 @@
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu"
   },
+  "auth": {
+    "signIn": "Se connecter",
+    "signInTitle": "Bienvenue à Quebec Run",
+    "signInSubtitle": "Entrez votre courriel pour recevoir un lien magique",
+    "emailLabel": "Adresse courriel",
+    "emailPlaceholder": "vous@exemple.com",
+    "sendMagicLink": "Envoyer le lien magique",
+    "checkYourEmail": "Vérifiez votre courriel",
+    "magicLinkSent": "Nous avons envoyé un lien magique à",
+    "checkSpam": "Vérifiez vos courriels indésirables si vous ne le voyez pas",
+    "invalidEmail": "Veuillez entrer une adresse courriel valide",
+    "sendingLink": "Envoi du lien...",
+    "backToHome": "Retour à l'accueil"
+  },
   "footer": {
     "tagline": "Communauté de course à Québec",
     "clubs": "Clubs",
