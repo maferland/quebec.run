@@ -1,13 +1,24 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useSession } from 'next-auth/react'
+import { useRouter } from 'next/navigation'
 
 export default function PrivacySettingsPage() {
   const t = useTranslations('settings.privacy')
   const queryClient = useQueryClient()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const { data: session, status } = useSession()
+  const router = useRouter()
+
+  // Redirect to signin if not authenticated
+  useEffect(() => {
+    if (status === 'unauthenticated') {
+      router.push('/api/auth/signin')
+    }
+  }, [status, router])
 
   // Fetch pending deletion request
   const { data: deletionData } = useQuery({
@@ -17,6 +28,7 @@ export default function PrivacySettingsPage() {
       if (!res.ok) throw new Error('Failed to fetch deletion request')
       return res.json()
     },
+    enabled: status === 'authenticated',
   })
 
   // Export data mutation
@@ -67,10 +79,28 @@ export default function PrivacySettingsPage() {
     },
   })
 
+  // Show loading state while checking auth
+  if (status === 'loading') {
+    return (
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="h-12 w-64 bg-surface-secondary rounded-md animate-pulse mb-8" />
+        <div className="bg-surface border border-border rounded-lg p-6 mb-6">
+          <div className="h-8 w-48 bg-surface-secondary rounded-md animate-pulse mb-4" />
+          <div className="h-20 bg-surface-secondary rounded-md animate-pulse" />
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render content if not authenticated
+  if (status !== 'authenticated' || !session) {
+    return null
+  }
+
   const hasPendingDeletion = deletionData?.hasPendingRequest
   const scheduledDate = hasPendingDeletion
     ? new Date(deletionData.request.scheduledFor).toLocaleDateString()
-    : null
+    : ''
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
