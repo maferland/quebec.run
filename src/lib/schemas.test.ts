@@ -9,6 +9,9 @@ import {
   eventCreateSchema,
   eventUpdateSchema,
   eventsQuerySchema,
+  userIdSchema,
+  toggleUserAdminSchema,
+  usersQuerySchema,
 } from './schemas'
 
 describe('schemas', () => {
@@ -216,6 +219,32 @@ describe('schemas', () => {
 
       const result = eventsQuerySchema.parse(queryData)
       expect(result.clubId).toBe('club123')
+    })
+  })
+
+  describe('User schemas', () => {
+    it('validates userIdSchema', () => {
+      const valid = userIdSchema.parse({ id: 'user-123' })
+      expect(valid.id).toBe('user-123')
+
+      expect(() => userIdSchema.parse({ id: '' })).toThrow()
+      expect(() => userIdSchema.parse({})).toThrow()
+    })
+
+    it('validates toggleUserAdminSchema', () => {
+      const valid = toggleUserAdminSchema.parse({
+        id: 'user-123',
+        isAdmin: true,
+      })
+      expect(valid.isAdmin).toBe(true)
+
+      expect(() => toggleUserAdminSchema.parse({ id: 'user-123' })).toThrow()
+    })
+
+    it('validates usersQuerySchema', () => {
+      const valid = usersQuerySchema.parse({ limit: '10', isAdmin: 'true' })
+      expect(valid.limit).toBe(10)
+      expect(valid.isAdmin).toBe('true')
     })
   })
 })

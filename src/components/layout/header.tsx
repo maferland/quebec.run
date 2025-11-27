@@ -1,8 +1,10 @@
 'use client'
 
-import { MobileMenu } from '@/components/ui/mobile-menu'
-import { DesktopNavigation } from '@/components/layout/desktop-navigation'
-import { MapPin } from 'lucide-react'
+import { Button } from '@/components/ui/button'
+import { NavLink } from '@/components/ui/nav-link'
+import { UserDropdown } from '@/components/ui/user-dropdown'
+import { Calendar, MapPin, Users } from 'lucide-react'
+import { signIn, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 
@@ -23,6 +25,7 @@ const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
 )
 
 export function Header() {
+  const { data: session, status } = useSession()
   const t = useTranslations('navigation')
 
   return (
@@ -36,9 +39,49 @@ export function Header() {
             <QuebecRunLogo t={t} />
           </Link>
 
-          <div className="flex items-center space-x-4">
-            <DesktopNavigation />
-            <MobileMenu />
+          <div className="flex items-center space-x-6 md:space-x-8">
+            <nav className="hidden sm:flex items-center space-x-4 md:space-x-6">
+              <NavLink href="/clubs">
+                <Users size={18} />
+                <span className="hidden md:inline">{t('clubs')}</span>
+              </NavLink>
+              <NavLink href="/events">
+                <Calendar size={18} />
+                <span className="hidden md:inline">{t('events')}</span>
+              </NavLink>
+              {session?.user?.isAdmin && (
+                <NavLink href="/admin">
+                  <span>{t('admin')}</span>
+                </NavLink>
+              )}
+            </nav>
+
+            <div className="flex items-center space-x-3">
+              {status === 'loading' ? (
+                <div className="flex items-center space-x-2">
+                  <div className="w-20 h-9 bg-surface-secondary rounded-md animate-pulse" />
+                </div>
+              ) : session ? (
+                <UserDropdown
+                  userName={session.user?.name || t('user')}
+                  userEmail={session.user?.email || undefined}
+                />
+              ) : (
+                <div className="flex items-center space-x-2">
+                  <Button
+                    size="sm"
+                    onClick={() => signIn()}
+                    variant="outline-primary"
+                  >
+                    {t('signIn')}
+                  </Button>
+                  <Button size="sm" variant="secondary">
+                    <span className="hidden sm:inline">{t('joinRun')}</span>
+                    <span className="sm:hidden">{t('joinShort')}</span>
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

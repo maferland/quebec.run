@@ -1,7 +1,13 @@
 import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@/lib/test-utils'
 import { setupMSW } from '@/lib/test-msw-setup'
-import { useUpcomingEvents } from './use-events'
+import { act } from 'react'
+import {
+  useUpcomingEvents,
+  useCreateEvent,
+  useUpdateEvent,
+  useDeleteEvent,
+} from './use-events'
 
 // Setup MSW
 setupMSW()
@@ -69,6 +75,152 @@ describe('useEvents hooks', () => {
         expect(result.current.isError).toBe(true)
       })
 
+      expect(result.current.error).toBeDefined()
+    })
+  })
+
+  describe('useCreateEvent', () => {
+    it('creates event and invalidates cache', async () => {
+      const { result } = renderHook(() => useCreateEvent(), {})
+
+      await act(async () => {
+        await result.current.mutateAsync({
+          title: 'New Event',
+          date: '2025-12-01',
+          time: '10:00',
+          address: '123 Main St',
+          clubId: 'club-1',
+        })
+      })
+
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    it('handles creation errors', async () => {
+      const { server } = await import('@/lib/test-msw')
+      const { http, HttpResponse } = await import('msw')
+
+      server.use(
+        http.post('/api/events', () => {
+          return HttpResponse.json(
+            { error: 'Validation error' },
+            { status: 400 }
+          )
+        })
+      )
+
+      const { result } = renderHook(() => useCreateEvent(), {})
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync({
+            title: 'New Event',
+            date: '2025-12-01',
+            time: '10:00',
+            address: '123 Main St',
+            clubId: 'club-1',
+          })
+        } catch {
+          // Expected to throw
+        }
+      })
+
+      expect(result.current.isError).toBe(true)
+      expect(result.current.error).toBeDefined()
+    })
+  })
+
+  describe('useUpdateEvent', () => {
+    it('updates event and invalidates cache', async () => {
+      const { result } = renderHook(() => useUpdateEvent(), {})
+
+      await act(async () => {
+        await result.current.mutateAsync({
+          id: 'event-1',
+          data: {
+            id: 'event-1',
+            title: 'Updated',
+            date: '2025-12-01',
+            time: '11:00',
+            address: 'Address',
+            clubId: 'club-1',
+          },
+        })
+      })
+
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    it('handles update errors', async () => {
+      const { server } = await import('@/lib/test-msw')
+      const { http, HttpResponse } = await import('msw')
+
+      server.use(
+        http.put('/api/events/:id', () => {
+          return HttpResponse.json(
+            { error: 'Validation error' },
+            { status: 400 }
+          )
+        })
+      )
+
+      const { result } = renderHook(() => useUpdateEvent(), {})
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync({
+            id: 'event-1',
+            data: {
+              id: 'event-1',
+              title: 'Updated',
+              date: '2025-12-01',
+              time: '11:00',
+              address: 'Address',
+              clubId: 'club-1',
+            },
+          })
+        } catch {
+          // Expected to throw
+        }
+      })
+
+      expect(result.current.isError).toBe(true)
+      expect(result.current.error).toBeDefined()
+    })
+  })
+
+  describe('useDeleteEvent', () => {
+    it('deletes event and invalidates cache', async () => {
+      const { result } = renderHook(() => useDeleteEvent(), {})
+
+      await act(async () => {
+        await result.current.mutateAsync('event-1')
+      })
+
+      expect(result.current.isSuccess).toBe(true)
+    })
+
+    it('handles deletion errors', async () => {
+      const { server } = await import('@/lib/test-msw')
+      const { http, HttpResponse } = await import('msw')
+
+      server.use(
+        http.delete('/api/events/:id', () => {
+          return HttpResponse.json({ error: 'Not found' }, { status: 400 })
+        })
+      )
+
+      const { result } = renderHook(() => useDeleteEvent(), {})
+
+      await act(async () => {
+        try {
+          await result.current.mutateAsync('event-1')
+        } catch {
+          // Expected to throw
+        }
+      })
+
+      expect(result.current.isError).toBe(true)
       expect(result.current.error).toBeDefined()
     })
   })

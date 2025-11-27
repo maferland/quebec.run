@@ -105,6 +105,25 @@ export const mockEvents = [
   },
 ]
 
+export const mockUsers = [
+  {
+    id: 'user-1',
+    email: 'admin@example.com',
+    name: 'Admin User',
+    isAdmin: true,
+    createdAt: new Date('2024-01-01'),
+    updatedAt: new Date('2024-01-01'),
+  },
+  {
+    id: 'user-2',
+    email: 'user@example.com',
+    name: 'Regular User',
+    isAdmin: false,
+    createdAt: new Date('2024-01-02'),
+    updatedAt: new Date('2024-01-02'),
+  },
+]
+
 // MSW handlers
 export const handlers = [
   // Clubs API
@@ -165,6 +184,41 @@ export const handlers = [
       newEvent
     )
     return HttpResponse.json(event, { status: 201 })
+  }),
+
+  http.put('/api/events/:id', async ({ params, request }) => {
+    const updates = await parseRequestBody(request)
+    const event = mockEvents.find((e) => e.id === params.id)
+    if (!event) {
+      return HttpResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+    const updatedEvent = createMockResponse(event, updates)
+    return HttpResponse.json(updatedEvent)
+  }),
+
+  http.delete('/api/events/:id', ({ params }) => {
+    const event = mockEvents.find((e) => e.id === params.id)
+    if (!event) {
+      return HttpResponse.json({ error: 'Event not found' }, { status: 404 })
+    }
+    return HttpResponse.json({ success: true })
+  }),
+
+  // Admin Users API
+  http.get('/api/admin/users', () => {
+    return HttpResponse.json(mockUsers)
+  }),
+
+  http.patch('/api/admin/users/:id', async ({ params, request }) => {
+    const updates = await parseRequestBody(request)
+    const user = mockUsers.find((u) => u.id === params.id)
+    if (!user) {
+      return HttpResponse.json({ error: 'User not found' }, { status: 404 })
+    }
+    // Add small delay to simulate network request
+    await new Promise((resolve) => setTimeout(resolve, 100))
+    const updatedUser = createMockResponse(user, updates)
+    return HttpResponse.json(updatedUser)
   }),
 ]
 
