@@ -5,14 +5,12 @@ import type {
   DataExport,
   DeletionRequest,
   DeletionCancel,
-  PublicPayload,
 } from '@/lib/schemas'
 
 export const createUserConsent = async ({
   user,
-  data,
   ipAddress,
-}: AuthPayload<ConsentCreate> & { ipAddress: string }) => {
+}: { user: AuthPayload<ConsentCreate>['user']; ipAddress: string }) => {
   // Check if consent already exists
   const existing = await prisma.userConsent.findUnique({
     where: { userId: user.id },
@@ -30,9 +28,7 @@ export const createUserConsent = async ({
   })
 }
 
-export const getUserConsent = async ({
-  userId,
-}: PublicPayload<Record<string, never>> & { userId: string }) => {
+export const getUserConsent = async ({ userId }: { userId: string }) => {
   return await prisma.userConsent.findUnique({
     where: { userId },
     select: {
@@ -90,8 +86,12 @@ export const exportUserData = async ({ user }: AuthPayload<DataExport>) => {
     },
   })
 
+  if (!userData) {
+    throw new Error('User not found')
+  }
+
   return {
-    user: userData!,
+    user: userData,
     clubs,
     events,
     consents,
@@ -149,7 +149,7 @@ export const cancelDeletionRequest = async ({
 
 export const getPendingDeletionRequest = async ({
   userId,
-}: PublicPayload<Record<string, never>> & { userId: string }) => {
+}: { userId: string }) => {
   return await prisma.dataDeletionRequest.findFirst({
     where: {
       userId,
