@@ -45,8 +45,11 @@ export default function SignInPage() {
 
       if (result?.ok) {
         setEmailSent(true)
+      } else {
+        setError(result?.error || t('invalidEmail'))
       }
-    } catch {
+    } catch (error) {
+      console.error('Sign-in error:', error)
       setError(t('invalidEmail'))
     } finally {
       setIsLoading(false)
