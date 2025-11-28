@@ -33,6 +33,8 @@ vi.mock('next-intl', () => {
 
   return {
     useTranslations: createMockTranslations,
+    NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
+      children,
   }
 })
 
