@@ -31,15 +31,18 @@ Four features to implement incrementally, one at a time. Each builds on existing
 
 ---
 
-## 2. Map Markers (Events Only)
+## 2. Map Markers (Events Only) 🚧
 
+**Status:** In Progress
 **Scope:** Interactive Leaflet map showing event locations
+**Design:** [2025-11-28-map-markers-design.md](./2025-11-28-map-markers-design.md)
 
 **Current State:**
 
 - Leaflet + react-leaflet installed
 - Events have lat/long fields (optional)
 - No map UI yet
+- Design complete: OSM Nominatim auto-geocoding
 
 **What to build:**
 
@@ -47,6 +50,7 @@ Four features to implement incrementally, one at a time. Each builds on existing
 - Event markers clustered for dense areas
 - Click marker → event details popup
 - Handle events without coordinates gracefully
+- Auto-geocode addresses server-side (no manual lat/long entry)
 
 **Complexity:** Moderate
 **Priority:** Second (core discovery feature)
