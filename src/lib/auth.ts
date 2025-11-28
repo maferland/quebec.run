@@ -81,9 +81,9 @@ export const authOptions: NextAuthOptions = {
         // Check if user is admin
         const dbUser = await prisma.user.findUnique({
           where: { id: user.id },
-          select: { isAdmin: true },
+          select: { isStaff: true },
         })
-        session.user.isAdmin = dbUser?.isAdmin ?? false
+        session.user.isStaff = dbUser?.isStaff ?? false
       }
       return session
     },
