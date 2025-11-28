@@ -1,6 +1,10 @@
 import { render, screen } from '@testing-library/react'
-import { describe, test, expect } from 'vitest'
+import { describe, test, expect, vi } from 'vitest'
 import { EventMap } from './event-map'
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string) => key,
+}))
 
 describe('EventMap', () => {
   const mockEvents = [
@@ -52,10 +56,6 @@ describe('EventMap', () => {
     ]
 
     render(<EventMap events={eventsWithoutCoords} />)
-    expect(
-      screen.getByText(
-        /events will appear on the map once addresses are geocoded/i
-      )
-    ).toBeInTheDocument()
+    expect(screen.getByText('emptyState')).toBeInTheDocument()
   })
 })

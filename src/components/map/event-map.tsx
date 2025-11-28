@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react'
 import dynamic from 'next/dynamic'
+import { useTranslations } from 'next-intl'
 import 'leaflet/dist/leaflet.css'
 
 // Dynamic import to avoid SSR issues with Leaflet
@@ -32,6 +33,7 @@ export function EventMap({
   initialCenter = [46.8139, -71.208], // Quebec City
   initialZoom = 10,
 }: EventMapProps) {
+  const t = useTranslations('home.map')
   const eventsWithCoords = useMemo(
     () =>
       events.filter(
@@ -50,9 +52,7 @@ export function EventMap({
         role="application"
         aria-label="Interactive event map"
       >
-        <p className="text-gray-500 text-center px-4">
-          Events will appear on the map once addresses are geocoded.
-        </p>
+        <p className="text-gray-500 text-center px-4">{t('emptyState')}</p>
       </div>
     )
   }
