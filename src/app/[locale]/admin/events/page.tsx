@@ -1,30 +1,31 @@
 import { getTranslations } from 'next-intl/server'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
 import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, ExternalLink } from 'lucide-react'
-import { prisma } from '@/lib/prisma'
+import { getAllEventsForAdmin } from '@/lib/services/events'
+import { getAllClubs } from '@/lib/services/clubs'
+import { EventFilters } from '@/components/events/event-filters'
 import { DeleteEventButton } from '@/components/admin/delete-event-button'
 
-async function getAllEventsForAdmin() {
-  return await prisma.event.findMany({
-    select: {
-      id: true,
-      title: true,
-      description: true,
-      date: true,
-      time: true,
-      address: true,
-      club: {
-        select: { name: true, slug: true },
-      },
-    },
-    orderBy: { date: 'desc' },
-  })
+type AdminEventsPageProps = {
+  searchParams: {
+    search?: string
+    clubId?: string
+  }
 }
 
-export default async function AdminEventsPage() {
+export default async function AdminEventsPage({
+  searchParams,
+}: AdminEventsPageProps) {
   const t = await getTranslations('admin.events')
-  const events = await getAllEventsForAdmin()
+  const session = await getServerSession(authOptions)
+  const clubs = await getAllClubs({ data: {} })
+  const events = await getAllEventsForAdmin({
+    user: session!.user,
+    data: searchParams,
+  })
 
   return (
     <div>
@@ -46,16 +47,16 @@ export default async function AdminEventsPage() {
         </Link>
       </div>
 
+      {/* Filters */}
+      <EventFilters
+        clubs={clubs.map((club) => ({ id: club.id, name: club.name }))}
+        showDateRange={false}
+      />
+
       {/* Events Table */}
       {events.length === 0 ? (
         <div className="bg-surface rounded-lg border border-border p-8 text-center">
-          <p className="text-text-secondary mb-4">No events found</p>
-          <Link href="/admin/events/new">
-            <Button>
-              <Plus className="w-4 h-4 mr-2" />
-              Create First Event
-            </Button>
-          </Link>
+          <p className="text-text-secondary mb-4">{t('empty.noEvents')}</p>
         </div>
       ) : (
         <div className="bg-surface rounded-lg border border-border overflow-hidden">
