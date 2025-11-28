@@ -44,4 +44,35 @@ describe('geocodeAddress', () => {
 
     expect(result).toBeNull()
   })
+
+  test('returns null on HTTP error response', async () => {
+    mockFetch.mockResolvedValueOnce({
+      ok: false,
+      status: 500,
+      json: async () => ({}),
+    })
+
+    const result = await geocodeAddress('123 Rue Principale')
+
+    expect(result).toBeNull()
+  })
+
+  test('enforces rate limit of 1 req/sec', async () => {
+    const mockResponse = [{ lat: '46.8139', lon: '-71.2080' }]
+    mockFetch.mockResolvedValue({
+      ok: true,
+      json: async () => mockResponse,
+    })
+
+    const startTime = Date.now()
+
+    await geocodeAddress('Address 1')
+    await geocodeAddress('Address 2')
+
+    const elapsed = Date.now() - startTime
+
+    // Should take at least 1000ms due to rate limiting
+    expect(elapsed).toBeGreaterThanOrEqual(1000)
+    expect(mockFetch).toHaveBeenCalledTimes(2)
+  })
 })

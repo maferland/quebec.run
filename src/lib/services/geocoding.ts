@@ -19,6 +19,18 @@ async function rateLimitedFetch(
   return fetch(url, options)
 }
 
+/**
+ * Geocodes an address to geographic coordinates using Nominatim API.
+ *
+ * @param address - The address string to geocode (e.g., "123 Rue Principale, Quebec City, QC")
+ * @returns Object with lat/lng coordinates, or null if geocoding fails
+ *
+ * @remarks
+ * - Rate limited to 1 request per second per Nominatim usage policy
+ * - Searches limited to Canadian addresses only (countrycodes=ca)
+ * - 5 second timeout per request
+ * - Returns null on network errors, HTTP errors, or no results
+ */
 export async function geocodeAddress(
   address: string
 ): Promise<{ lat: number; lng: number } | null> {
