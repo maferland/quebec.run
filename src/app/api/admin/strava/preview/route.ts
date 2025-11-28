@@ -1,8 +1,20 @@
 // src/app/api/admin/strava/preview/route.ts
 import { NextRequest, NextResponse } from 'next/server'
 import { getServerSession } from 'next-auth'
+import { z } from 'zod'
 import { authOptions } from '@/lib/auth'
-import { fetchStravaClub, fetchStravaEvents } from '@/lib/services/strava'
+import {
+  fetchStravaClub,
+  fetchStravaEvents,
+  StravaNotFoundError,
+  StravaRateLimitError,
+  StravaAuthError,
+} from '@/lib/services/strava'
+
+const slugSchema = z
+  .string()
+  .min(1, 'slug is required')
+  .regex(/-\d+$/, 'Invalid slug format (expected: club-name-123456)')
 
 export async function GET(request: NextRequest) {
   // Check admin
@@ -22,17 +34,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ error: 'slug is required' }, { status: 400 })
   }
 
+  // Validate slug with Zod
+  const parseResult = slugSchema.safeParse(slug)
+  if (!parseResult.success) {
+    const errorMessage =
+      parseResult.error?.issues?.[0]?.message || 'Invalid slug format'
+    return NextResponse.json({ error: errorMessage }, { status: 400 })
+  }
+
   try {
     // Extract club ID from slug (format: club-name-123456)
     const clubIdMatch = slug.match(/-(\d+)$/)
-    if (!clubIdMatch) {
-      return NextResponse.json(
-        { error: 'Invalid slug format (expected: club-name-123456)' },
-        { status: 400 }
-      )
-    }
-
-    const clubId = parseInt(clubIdMatch[1], 10)
+    const clubId = parseInt(clubIdMatch![1], 10)
 
     // Fetch from Strava
     const [club, upcomingEvents] = await Promise.all([
@@ -47,14 +60,16 @@ export async function GET(request: NextRequest) {
   } catch (error: unknown) {
     console.error('Strava preview error:', error)
 
-    const err = error as { name?: string; message?: string }
-
-    if (err.name === 'StravaNotFoundError') {
-      return NextResponse.json({ error: err.message }, { status: 404 })
+    if (error instanceof StravaNotFoundError) {
+      return NextResponse.json({ error: error.message }, { status: 404 })
     }
 
-    if (err.name === 'StravaRateLimitError') {
-      return NextResponse.json({ error: err.message }, { status: 429 })
+    if (error instanceof StravaRateLimitError) {
+      return NextResponse.json({ error: error.message }, { status: 429 })
+    }
+
+    if (error instanceof StravaAuthError) {
+      return NextResponse.json({ error: error.message }, { status: 401 })
     }
 
     return NextResponse.json(
