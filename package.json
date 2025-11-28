@@ -23,7 +23,9 @@
     "test:e2e:ui": "playwright test --ui",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "npx prisma migrate reset --force && npm run db:seed",
-    "storybook": "storybook dev -p 6006",
+    "storybook": "storybook dev -p ${STORYBOOK_PORT:-6006}",
+    "worktree": "npx tsx scripts/create-worktree.ts",
+    "remove-worktree": "npx tsx scripts/remove-worktree.ts",
     "build-storybook": "storybook build",
     "prepare": "husky",
     "typecheck": "npx tsc --noEmit"
