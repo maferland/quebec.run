@@ -24,7 +24,9 @@ const mockEvent = {
   latitude: 46.8139,
   longitude: -71.208,
   club: {
+    id: 'club-1',
     name: '6AM Club Quebec',
+    slug: '6am-club-quebec',
   },
 }
 

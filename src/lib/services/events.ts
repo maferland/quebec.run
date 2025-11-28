@@ -43,7 +43,9 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
       longitude: true,
       club: {
         select: {
+          id: true,
           name: true,
+          slug: true,
         },
       },
     },

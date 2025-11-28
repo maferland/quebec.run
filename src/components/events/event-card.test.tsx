@@ -15,7 +15,9 @@ const mockEventWithClub: GetAllEventsReturn = {
   latitude: 46.8139,
   longitude: -71.208,
   club: {
+    id: 'club-1',
     name: 'Quebec Running Club',
+    slug: 'quebec-running-club',
   },
 }
 
@@ -369,7 +371,9 @@ describe('EventCard Component', () => {
         latitude: null,
         longitude: null,
         club: {
+          id: 'club-1',
           name: 'Test Club',
+          slug: 'test-club',
         },
       }
 

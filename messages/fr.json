@@ -120,6 +120,12 @@
   "events": {
     "title": "Événements de course",
     "backToEvents": "Retour à tous les événements",
+    "map": {
+      "title": "Événements près de chez vous"
+    },
+    "list": {
+      "title": "Tous les événements"
+    },
     "empty": {
       "title": "Aucun événement à venir trouvé",
       "description": "Revenez bientôt pour de nouveaux événements de course à Québec"

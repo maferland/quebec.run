@@ -120,6 +120,12 @@
   "events": {
     "title": "Running Events",
     "backToEvents": "Back to All Events",
+    "map": {
+      "title": "Events Near You"
+    },
+    "list": {
+      "title": "All Events"
+    },
     "empty": {
       "title": "No upcoming events found",
       "description": "Check back soon for new running events in Quebec City"
