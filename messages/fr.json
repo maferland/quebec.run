@@ -57,7 +57,8 @@
     "search": {
       "title": "Trouvez votre prochaine course",
       "placeholder": "Où voulez-vous courir?",
-      "searchButton": "Rechercher des événements"
+      "searchButton": "Rechercher des événements",
+      "browseAll": "Parcourir tous les événements"
     },
     "clubs": {
       "title": "Clubs de course en vedette",
@@ -113,6 +114,8 @@
       "allClubs": "Tous les clubs",
       "selectClub": "Filtrer par club",
       "dateRange": "Plage de dates",
+      "dateFrom": "Date de début",
+      "dateTo": "Date de fin",
       "clearFilters": "Effacer les filtres"
     },
     "empty": {

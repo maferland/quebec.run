@@ -94,9 +94,33 @@ export function EventFilters({
 
       {/* Date Range (conditional) */}
       {showDateRange && (
-        <div className="sm:w-64">
-          <span className="text-sm text-text-secondary">{t('dateRange')}</span>
-          {/* Placeholder for future date range picker */}
+        <div className="flex gap-2">
+          <div className="sm:w-40">
+            <label htmlFor="date-from" className="sr-only">
+              {t('dateFrom')}
+            </label>
+            <input
+              id="date-from"
+              type="date"
+              defaultValue={searchParams.get('dateFrom') ?? ''}
+              onChange={(e) => updateUrl({ dateFrom: e.target.value || null })}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+              placeholder={t('dateFrom')}
+            />
+          </div>
+          <div className="sm:w-40">
+            <label htmlFor="date-to" className="sr-only">
+              {t('dateTo')}
+            </label>
+            <input
+              id="date-to"
+              type="date"
+              defaultValue={searchParams.get('dateTo') ?? ''}
+              onChange={(e) => updateUrl({ dateTo: e.target.value || null })}
+              className="w-full px-3 py-2 border border-border rounded-lg focus:ring-2 focus:ring-primary focus:border-primary text-sm"
+              placeholder={t('dateTo')}
+            />
+          </div>
         </div>
       )}
 

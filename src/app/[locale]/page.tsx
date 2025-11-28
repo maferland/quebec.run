@@ -2,7 +2,7 @@
 
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
-import { useState, FormEvent } from 'react'
+import { useState } from 'react'
 import { useClubs } from '@/lib/hooks/use-clubs'
 import { ClubCard } from '@/components/clubs/club-card'
 import { Button } from '@/components/ui/button'
@@ -10,6 +10,7 @@ import { ContentGrid } from '@/components/ui/content-grid'
 import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
 import { MapPin, Search, Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
+import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback'
 
 export default function Home() {
   const t = useTranslations('home')
@@ -17,13 +18,15 @@ export default function Home() {
   const { data: clubs, isLoading: clubsLoading } = useClubs()
   const [search, setSearch] = useState('')
 
-  const handleSearch = (e: FormEvent) => {
-    e.preventDefault()
-    if (search.trim()) {
-      router.push(`/events?search=${encodeURIComponent(search.trim())}`)
-    } else {
-      router.push('/events')
+  const debouncedNavigate = useDebouncedCallback((value: string) => {
+    if (value.trim()) {
+      router.push(`/events?search=${encodeURIComponent(value.trim())}`)
     }
+  }, 500)
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value)
+    debouncedNavigate(value)
   }
 
   return (
@@ -76,10 +79,7 @@ export default function Home() {
             <h2 className="text-3xl font-heading font-bold text-primary text-center mb-8">
               {t('search.title')}
             </h2>
-            <form
-              onSubmit={handleSearch}
-              className="bg-gray-50 rounded-2xl p-6"
-            >
+            <div className="bg-gray-50 rounded-2xl p-6">
               <div className="flex flex-col md:flex-row gap-4">
                 <div className="flex-1 relative">
                   <Search
@@ -89,16 +89,16 @@ export default function Home() {
                   <input
                     type="text"
                     value={search}
-                    onChange={(e) => setSearch(e.target.value)}
+                    onChange={(e) => handleSearchChange(e.target.value)}
                     placeholder={t('search.placeholder')}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary font-body"
                   />
                 </div>
-                <Button type="submit" variant="secondary">
-                  {t('search.searchButton')}
-                </Button>
+                <Link href="/events">
+                  <Button variant="secondary">{t('search.browseAll')}</Button>
+                </Link>
               </div>
-            </form>
+            </div>
           </div>
         </div>
       </section>
