@@ -3,7 +3,6 @@
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormControl } from '@/components/ui/form-control'
-import { Link } from '@/components/ui/link'
 import { PageContainer } from '@/components/ui/page-container'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
@@ -60,8 +59,8 @@ export default function SignInPage() {
     return (
       <PageContainer>
         <div className="min-h-[60vh] flex items-center justify-center">
-          <Card className="max-w-md w-full p-8 text-center space-y-4">
-            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">
+          <Card className="max-w-md w-full p-8 space-y-4">
+            <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4">
               <svg
                 className="w-8 h-8 text-primary"
                 fill="none"
@@ -84,9 +83,6 @@ export default function SignInPage() {
               <strong className="text-text-primary">{email}</strong>
             </p>
             <p className="text-sm text-text-secondary">{t('checkSpam')}</p>
-            <Link href="/" className="inline-block mt-4">
-              {t('backToHome')}
-            </Link>
           </Card>
         </div>
       </PageContainer>
@@ -97,7 +93,7 @@ export default function SignInPage() {
     <PageContainer>
       <div className="min-h-[60vh] flex items-center justify-center">
         <Card className="max-w-md w-full p-8">
-          <div className="text-center mb-8">
+          <div className="mb-8">
             <h1 className="text-3xl font-bold text-text-primary mb-2">
               {t('signInTitle')}
             </h1>
@@ -128,15 +124,6 @@ export default function SignInPage() {
             >
               {isLoading ? t('sendingLink') : t('sendMagicLink')}
             </Button>
-
-            <div className="text-center">
-              <Link
-                href="/"
-                className="text-sm text-text-secondary hover:text-text-primary"
-              >
-                {t('backToHome')}
-              </Link>
-            </div>
           </form>
         </Card>
       </div>

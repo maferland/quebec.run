@@ -15,16 +15,16 @@
   },
   "auth": {
     "signIn": "Se connecter",
-    "signInTitle": "Bienvenue à Quebec Run",
-    "signInSubtitle": "Entrez votre courriel pour recevoir un lien magique",
+    "signInTitle": "Connexion",
+    "signInSubtitle": "Entrez votre courriel pour recevoir un lien de connexion",
     "emailLabel": "Adresse courriel",
     "emailPlaceholder": "vous@exemple.com",
-    "sendMagicLink": "Envoyer le lien magique",
+    "sendMagicLink": "Envoyer le lien",
     "checkYourEmail": "Vérifiez votre courriel",
-    "magicLinkSent": "Nous avons envoyé un lien magique à",
+    "magicLinkSent": "Nous avons envoyé un lien de connexion à",
     "checkSpam": "Vérifiez vos courriels indésirables si vous ne le voyez pas",
     "invalidEmail": "Veuillez entrer une adresse courriel valide",
-    "sendingLink": "Envoi du lien...",
+    "sendingLink": "Envoi en cours...",
     "backToHome": "Retour à l'accueil"
   },
   "footer": {

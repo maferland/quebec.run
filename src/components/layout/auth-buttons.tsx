@@ -84,36 +84,16 @@ export function AuthButtons({ variant, onAction }: AuthButtonsProps) {
   }
 
   return (
-    <div
-      className={
-        variant === 'desktop' ? 'flex items-center space-x-2' : 'space-y-3'
-      }
+    <Button
+      size="sm"
+      onClick={() => {
+        router.push('/auth/signin')
+        onAction?.()
+      }}
+      variant="outline-primary"
+      className={variant === 'mobile' ? 'w-full justify-center' : ''}
     >
-      <Button
-        size="sm"
-        onClick={() => {
-          router.push('/auth/signin')
-          onAction?.()
-        }}
-        variant="outline-primary"
-        className={variant === 'mobile' ? 'w-full justify-center' : ''}
-      >
-        {t('signIn')}
-      </Button>
-      <Button
-        size="sm"
-        variant="secondary"
-        className={variant === 'mobile' ? 'w-full justify-center' : ''}
-      >
-        {variant === 'desktop' ? (
-          <>
-            <span className="hidden sm:inline">{t('joinRun')}</span>
-            <span className="sm:hidden">{t('joinShort')}</span>
-          </>
-        ) : (
-          t('joinRun')
-        )}
-      </Button>
-    </div>
+      {t('signIn')}
+    </Button>
   )
 }
