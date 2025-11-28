@@ -1,7 +1,8 @@
 // src/lib/services/strava.test.ts
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { fetchStravaClub, fetchStravaEvents } from './strava'
+import { fetchStravaClub, fetchStravaEvents, mapStravaClubToDb } from './strava'
 import * as stravaLib from '@/lib/strava'
+import type { StravaClub } from './strava-types'
 
 vi.mock('@/lib/strava')
 
@@ -101,5 +102,50 @@ describe('fetchStravaEvents', () => {
     const result = await fetchStravaEvents(123)
 
     expect(result).toEqual(mockEvents)
+  })
+})
+
+describe('mapStravaClubToDb', () => {
+  const mockClub: StravaClub = {
+    id: 123,
+    name: 'Test Club',
+    description: 'Test Description',
+    sport_type: 'running',
+    city: 'Quebec',
+    country: 'Canada',
+    member_count: 50,
+    url: 'https://strava.com/clubs/test',
+    profile: 'photo.jpg',
+    cover_photo: 'cover.jpg',
+    cover_photo_small: 'cover-small.jpg',
+  }
+
+  test('maps all fields when no overrides', () => {
+    const result = mapStravaClubToDb(mockClub, [])
+
+    expect(result).toEqual({
+      stravaClubId: '123',
+      name: 'Test Club',
+      description: 'Test Description',
+      website: 'https://strava.com/clubs/test',
+    })
+  })
+
+  test('skips fields in manualOverrides', () => {
+    const result = mapStravaClubToDb(mockClub, ['description', 'website'])
+
+    expect(result).toEqual({
+      stravaClubId: '123',
+      name: 'Test Club',
+      description: undefined,
+      website: undefined,
+    })
+  })
+
+  test('handles empty description', () => {
+    const clubNoDesc = { ...mockClub, description: '' }
+    const result = mapStravaClubToDb(clubNoDesc, [])
+
+    expect(result.description).toBeNull()
   })
 })

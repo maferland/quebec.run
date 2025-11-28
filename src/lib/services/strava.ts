@@ -72,3 +72,33 @@ export async function fetchStravaEvents(
     throw new StravaError('Failed to fetch events', error)
   }
 }
+
+type ClubUpdateData = {
+  stravaClubId: string
+  name?: string
+  description?: string | null
+  website?: string
+}
+
+export function mapStravaClubToDb(
+  club: StravaClub,
+  manualOverrides: string[]
+): ClubUpdateData {
+  const data: ClubUpdateData = {
+    stravaClubId: club.id.toString(),
+  }
+
+  if (!manualOverrides.includes('name')) {
+    data.name = club.name
+  }
+
+  if (!manualOverrides.includes('description')) {
+    data.description = club.description || null
+  }
+
+  if (!manualOverrides.includes('website')) {
+    data.website = club.url
+  }
+
+  return data
+}
