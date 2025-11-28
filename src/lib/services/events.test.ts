@@ -449,5 +449,15 @@ describe('Events Service Integration Tests', () => {
       expect(result[0].title).toBe('Quebec Trail Run')
       expect(result[1].title).toBe('Montreal Morning Run')
     })
+
+    it('enforces today boundary even when dateFrom is in past', async () => {
+      const result = await getAllEvents({
+        data: {
+          dateFrom: '2020-01-01T00:00:00Z',
+          dateTo: '2020-12-31T23:59:59Z',
+        },
+      })
+      expect(result).toHaveLength(0)
+    })
   })
 })

@@ -29,9 +29,6 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   today.setHours(0, 0, 0, 0)
 
   const where: Prisma.EventWhereInput = {
-    date: {
-      gte: today, // Include events from today (00:00) forward, excluding yesterday and earlier
-    },
     ...(clubId && { clubId }),
     ...(search && {
       OR: [
@@ -39,17 +36,13 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
         { address: { contains: search, mode: 'insensitive' } },
       ],
     }),
-    ...(dateFrom &&
-      dateTo && {
-        date: {
-          gte: new Date(dateFrom),
-          lte: new Date(dateTo),
-        },
-      }),
-    ...(dateFrom &&
-      !dateTo && {
-        date: { gte: new Date(dateFrom) },
-      }),
+    // Combine today boundary with optional dateFrom/dateTo filters
+    date: {
+      gte: dateFrom
+        ? new Date(Math.max(today.getTime(), new Date(dateFrom).getTime()))
+        : today,
+      ...(dateTo && { lte: new Date(dateTo) }),
+    },
   }
 
   const orderBy: Prisma.EventOrderByWithRelationInput = {
