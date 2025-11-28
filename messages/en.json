@@ -196,7 +196,17 @@
     },
     "users": {
       "title": "Manage Users",
-      "toggleAdmin": "Toggle Admin Status"
+      "makeStaff": "Make Staff",
+      "removeStaff": "Remove Staff",
+      "confirmMakeStaff": "Make {name} platform staff?",
+      "confirmRemoveStaff": "Remove {name} from staff?",
+      "staffPrivileges": "Staff members can:",
+      "privilegeManageClubs": "Manage all clubs and events",
+      "privilegeManageUsers": "View and modify all user accounts",
+      "privilegeGrantStaff": "Grant or revoke staff access",
+      "removalWarning": "This user will lose all platform administrative privileges.",
+      "typeToConfirm": "Type \"{phrase}\" to confirm:",
+      "cannotRemoveSelf": "Cannot remove your own staff access"
     }
   },
   "legal": {
