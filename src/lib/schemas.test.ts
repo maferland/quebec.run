@@ -205,20 +205,41 @@ describe('schemas', () => {
   })
 
   describe('eventsQuerySchema', () => {
-    it('validates query parameters with no defaults', () => {
-      const result = eventsQuerySchema.parse({})
-
-      expect(result.limit).toBeUndefined()
-      expect(result.offset).toBeUndefined()
+    it('validates search param', () => {
+      const result = eventsQuerySchema.parse({ search: 'montreal' })
+      expect(result.search).toBe('montreal')
     })
 
-    it('validates clubId filter', () => {
-      const queryData = {
-        clubId: 'club123',
-      }
+    it('validates clubId param', () => {
+      const result = eventsQuerySchema.parse({ clubId: 'clxyz12345678' })
+      expect(result.clubId).toBe('clxyz12345678')
+    })
 
-      const result = eventsQuerySchema.parse(queryData)
-      expect(result.clubId).toBe('club123')
+    it('validates dateFrom and dateTo', () => {
+      const result = eventsQuerySchema.parse({
+        dateFrom: '2025-12-01T00:00:00Z',
+        dateTo: '2025-12-31T00:00:00Z',
+      })
+      expect(result.dateFrom).toBe('2025-12-01T00:00:00Z')
+      expect(result.dateTo).toBe('2025-12-31T00:00:00Z')
+    })
+
+    it('uses default values for sortBy and sortOrder', () => {
+      const result = eventsQuerySchema.parse({})
+      expect(result.sortBy).toBe('date')
+      expect(result.sortOrder).toBe('asc')
+    })
+
+    it('accepts optional params', () => {
+      const result = eventsQuerySchema.parse({})
+      expect(result.search).toBeUndefined()
+      expect(result.clubId).toBeUndefined()
+    })
+
+    it('coerces limit and offset to numbers', () => {
+      const result = eventsQuerySchema.parse({ limit: '10', offset: '5' })
+      expect(result.limit).toBe(10)
+      expect(result.offset).toBe(5)
     })
   })
 
