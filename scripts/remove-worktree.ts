@@ -28,9 +28,17 @@ function getDatabaseName(worktreePath: string): string | null {
   }
 
   const envContent = readFileSync(envFile, 'utf-8')
-  const dbUrlMatch = envContent.match(/DATABASE_URL="[^"]*\/([^/?]+)/)
+  // Find all DATABASE_URL matches and get the last one (worktree override)
+  const matches = envContent.matchAll(/DATABASE_URL="[^"]*\/([^/?]+)/g)
+  const allMatches = Array.from(matches)
 
-  return dbUrlMatch ? dbUrlMatch[1] : null
+  if (allMatches.length === 0) {
+    return null
+  }
+
+  // Return the last match (worktree-specific override)
+  const lastMatch = allMatches[allMatches.length - 1]
+  return lastMatch[1]
 }
 
 async function main() {
