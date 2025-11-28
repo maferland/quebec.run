@@ -18,6 +18,8 @@
     "clubs": "Clubs",
     "events": "Événements",
     "calendar": "Calendrier",
+    "terms": "Conditions",
+    "privacy": "Confidentialité",
     "en": "English",
     "fr": "Français",
     "language": {
@@ -181,6 +183,36 @@
     "users": {
       "title": "Gérer les utilisateurs",
       "toggleAdmin": "Basculer le statut administrateur"
+    }
+  },
+  "legal": {
+    "terms": {
+      "title": "Conditions d'utilisation",
+      "lastUpdated": "Dernière mise à jour : 27 novembre 2024"
+    },
+    "privacy": {
+      "title": "Politique de confidentialité",
+      "lastUpdated": "Dernière mise à jour : 27 novembre 2024"
+    }
+  },
+  "consent": {
+    "banner": {
+      "message": "En utilisant quebec.run, vous acceptez nos {termsLink} et notre {privacyLink}.",
+      "terms": "conditions d'utilisation",
+      "privacy": "politique de confidentialité",
+      "accept": "Accepter et continuer"
+    }
+  },
+  "settings": {
+    "privacy": {
+      "title": "Confidentialité et données",
+      "exportTitle": "Exporter vos données",
+      "exportDescription": "Téléchargez toutes vos données au format JSON",
+      "exportButton": "Télécharger mes données",
+      "deleteTitle": "Supprimer le compte",
+      "deleteDescription": "Supprimer définitivement votre compte et toutes les données associées",
+      "deleteButton": "Supprimer le compte",
+      "deleteWarning": "Cette action supprimera immédiatement et définitivement votre compte et toutes vos données. Cette action est irréversible."
     }
   }
 }

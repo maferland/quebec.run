@@ -73,7 +73,23 @@ export function Footer() {
         </div>
 
         <div className="mt-6 pt-6 border-t border-border text-center">
-          <p className="text-xs text-text-secondary">© {year} quebec.run</p>
+          <p className="text-xs text-text-secondary">
+            © {year} quebec.run
+            <span className="mx-2">•</span>
+            <Link
+              href="/legal/terms"
+              className="hover:text-primary transition-colors"
+            >
+              {t('terms')}
+            </Link>
+            <span className="mx-2">•</span>
+            <Link
+              href="/legal/privacy"
+              className="hover:text-primary transition-colors"
+            >
+              {t('privacy')}
+            </Link>
+          </p>
         </div>
       </div>
     </footer>
