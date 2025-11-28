@@ -75,6 +75,48 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 
 export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
+export const getAllEventsForAdmin = async ({
+  user,
+  data,
+}: AuthPayload<EventsQuery>) => {
+  if (!user.isAdmin) {
+    throw new UnauthorizedError('Admin access required')
+  }
+
+  const { clubId, search, sortBy = 'date', sortOrder = 'desc' } = data
+
+  const where: Prisma.EventWhereInput = {
+    // NO date restriction - admins see all history
+    ...(clubId && { clubId }),
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+  }
+
+  const orderBy: Prisma.EventOrderByWithRelationInput = {
+    [sortBy]: sortOrder,
+  }
+
+  return await prisma.event.findMany({
+    where,
+    orderBy,
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      date: true,
+      time: true,
+      address: true,
+      club: {
+        select: { name: true, slug: true },
+      },
+    },
+  })
+}
+
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
   const event = await prisma.event.findUnique({
