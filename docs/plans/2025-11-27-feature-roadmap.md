@@ -9,8 +9,9 @@ Four features to implement incrementally, one at a time. Each builds on existing
 
 ---
 
-## 1. Auth UI Improvement
+## 1. Auth UI Improvement ✅
 
+**Status:** Completed
 **Scope:** Custom branded sign-in page replacing NextAuth defaults
 
 **Current State:**
