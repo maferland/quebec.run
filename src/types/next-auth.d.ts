@@ -7,7 +7,7 @@ declare module 'next-auth' {
       email: string
       name?: string | null
       image?: string | null
-      isAdmin: boolean
+      isStaff: boolean
     }
   }
 
@@ -16,6 +16,6 @@ declare module 'next-auth' {
     email: string
     name?: string | null
     image?: string | null
-    isAdmin: boolean
+    isStaff: boolean
   }
 }
