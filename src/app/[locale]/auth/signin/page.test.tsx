@@ -10,6 +10,8 @@ vi.mock('next-auth/react', () => ({
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
+  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) =>
+    children,
 }))
 
 vi.mock('next/navigation', () => ({
