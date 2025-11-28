@@ -34,7 +34,7 @@ vi.mock('next-intl', () => ({
       dashboard: 'Dashboard',
       clubs: 'Clubs',
       events: 'Events',
-      settings: 'Settings',
+      users: 'Users',
     }
     return translations[key] || key
   },
@@ -56,7 +56,7 @@ describe('AdminSidebar', () => {
     expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /clubs/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /events/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /settings/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /users/i })).toBeInTheDocument()
   })
 
   it('renders back to site link', () => {
@@ -103,13 +103,13 @@ describe('AdminSidebar', () => {
     expect(eventsLink).toHaveClass('bg-primary', 'text-text-inverse')
   })
 
-  it('highlights active settings link', () => {
-    mockPathname.mockReturnValue('/admin/settings')
+  it('highlights active users link', () => {
+    mockPathname.mockReturnValue('/admin/users')
 
     render(<AdminSidebar />)
 
-    const settingsLink = screen.getByRole('link', { name: /settings/i })
-    expect(settingsLink).toHaveClass('bg-primary', 'text-text-inverse')
+    const usersLink = screen.getByRole('link', { name: /users/i })
+    expect(usersLink).toHaveClass('bg-primary', 'text-text-inverse')
   })
 
   it('does not highlight dashboard link on sub-routes', () => {
@@ -137,9 +137,9 @@ describe('AdminSidebar', () => {
       'href',
       '/admin/events'
     )
-    expect(screen.getByRole('link', { name: /settings/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /users/i })).toHaveAttribute(
       'href',
-      '/admin/settings'
+      '/admin/users'
     )
     expect(screen.getByRole('link', { name: /back to site/i })).toHaveAttribute(
       'href',

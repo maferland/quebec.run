@@ -133,6 +133,16 @@ describe('ClubForm', () => {
     it('disables submit button while creating', async () => {
       const user = userEvent.setup()
 
+      // Add delay to MSW handler to capture loading state
+      const { http, HttpResponse, delay } = await import('msw')
+      const { server } = await import('@/lib/test-msw')
+      server.use(
+        http.post('/api/clubs', async () => {
+          await delay(100)
+          return HttpResponse.json({ id: 'new-club' }, { status: 201 })
+        })
+      )
+
       render(<ClubForm mode="create" />)
 
       await user.type(screen.getByLabelText(/name/i), 'Test Club')
@@ -240,6 +250,16 @@ describe('ClubForm', () => {
     it('disables buttons while updating', async () => {
       const user = userEvent.setup()
 
+      // Add delay to MSW handler to capture loading state
+      const { http, HttpResponse, delay } = await import('msw')
+      const { server } = await import('@/lib/test-msw')
+      server.use(
+        http.put('/api/clubs/:id', async () => {
+          await delay(100)
+          return HttpResponse.json(mockClub)
+        })
+      )
+
       render(<ClubForm mode="edit" initialData={mockClub} />)
 
       const nameInput = screen.getByLabelText(/name/i)
@@ -257,6 +277,16 @@ describe('ClubForm', () => {
     it('disables buttons while deleting', async () => {
       const user = userEvent.setup()
       global.confirm = vi.fn(() => true)
+
+      // Add delay to MSW handler to capture loading state
+      const { http, HttpResponse, delay } = await import('msw')
+      const { server } = await import('@/lib/test-msw')
+      server.use(
+        http.delete('/api/clubs/:id', async () => {
+          await delay(100)
+          return HttpResponse.json({ success: true })
+        })
+      )
 
       render(<ClubForm mode="edit" initialData={mockClub} />)
 
