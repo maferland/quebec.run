@@ -14,6 +14,7 @@ export default defineConfig(({ mode }) => {
       globals: true,
       // Run database tests sequentially to prevent deadlocks
       fileParallelism: false,
+      exclude: ['node_modules', 'e2e/**', '**/*.spec.ts'],
       env,
       coverage: {
         reporter: ['text', 'json', 'html'],

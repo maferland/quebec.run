@@ -67,19 +67,13 @@ export function Header() {
                   userEmail={session.user?.email || undefined}
                 />
               ) : (
-                <div className="flex items-center space-x-2">
-                  <Button
-                    size="sm"
-                    onClick={() => signIn()}
-                    variant="outline-primary"
-                  >
-                    {t('signIn')}
-                  </Button>
-                  <Button size="sm" variant="secondary">
-                    <span className="hidden sm:inline">{t('joinRun')}</span>
-                    <span className="sm:hidden">{t('joinShort')}</span>
-                  </Button>
-                </div>
+                <Button
+                  size="sm"
+                  onClick={() => signIn()}
+                  variant="outline-primary"
+                >
+                  {t('signIn')}
+                </Button>
               )}
             </div>
           </div>

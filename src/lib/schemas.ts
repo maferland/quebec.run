@@ -32,7 +32,11 @@ export const clubSchema = z.object({
 export const clubCreateSchema = z.object({
   name: z.string().min(1, 'Name is required'),
   description: z.string().optional(),
-  website: z.string().url('Must be a valid URL').optional(),
+  website: z
+    .string()
+    .optional()
+    .transform((val) => (val === '' ? undefined : val))
+    .pipe(z.string().url('Must be a valid URL').optional()),
   instagram: z.string().optional(),
   facebook: z.string().optional(),
   language: z.string().optional(),

@@ -68,6 +68,12 @@ const createEmailProvider = () => {
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   providers: [createEmailProvider()],
+  pages: {
+    // Use path without locale prefix - middleware will add locale automatically
+    // Signin page is in [locale]/auth/signin and inherits i18n context from [locale]/layout.tsx
+    signIn: '/auth/signin',
+    verifyRequest: '/auth/signin',
+  },
   callbacks: {
     session: async ({ session, user }) => {
       if (session?.user) {
