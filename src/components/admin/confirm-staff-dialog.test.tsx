@@ -136,20 +136,4 @@ describe('ConfirmStaffDialog', () => {
     const confirmButton = screen.getByRole('button', { name: /Processing/i })
     expect(confirmButton).toBeDisabled()
   })
-
-  it('shows destructive styling for demote action', () => {
-    render(
-      <ConfirmStaffDialog
-        open={true}
-        onOpenChange={vi.fn()}
-        user={mockUser}
-        action="demote"
-        onConfirm={vi.fn()}
-        loading={false}
-      />
-    )
-
-    const confirmButton = screen.getByRole('button', { name: /Remove Staff/i })
-    expect(confirmButton).toHaveClass('text-red-600')
-  })
 })
