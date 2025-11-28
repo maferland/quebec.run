@@ -10,18 +10,19 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Calendar } from 'lucide-react'
 
 type EventsPageProps = {
-  searchParams: {
+  searchParams: Promise<{
     search?: string
     clubId?: string
     dateFrom?: string
     dateTo?: string
-  }
+  }>
 }
 
 export default async function EventsPage({ searchParams }: EventsPageProps) {
+  const params = await searchParams
   const t = await getTranslations('events')
   const clubs = await getAllClubs({ data: {} })
-  const events = await getAllEvents({ data: searchParams })
+  const events = await getAllEvents({ data: params })
 
   return (
     <PageContainer>

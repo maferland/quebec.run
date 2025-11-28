@@ -10,21 +10,22 @@ import { EventFilters } from '@/components/events/event-filters'
 import { DeleteEventButton } from '@/components/admin/delete-event-button'
 
 type AdminEventsPageProps = {
-  searchParams: {
+  searchParams: Promise<{
     search?: string
     clubId?: string
-  }
+  }>
 }
 
 export default async function AdminEventsPage({
   searchParams,
 }: AdminEventsPageProps) {
+  const params = await searchParams
   const t = await getTranslations('admin.events')
   const session = await getServerSession(authOptions)
   const clubs = await getAllClubs({ data: {} })
   const events = await getAllEventsForAdmin({
     user: session!.user,
-    data: searchParams,
+    data: params,
   })
 
   return (

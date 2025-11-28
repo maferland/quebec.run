@@ -65,7 +65,7 @@ describe('EventsPage', () => {
     vi.mocked(getAllEvents).mockResolvedValue(mockEvents)
 
     const searchParams = { search: 'montreal', clubId: 'club1' }
-    await EventsPage({ searchParams })
+    await EventsPage({ searchParams: Promise.resolve(searchParams) })
 
     expect(getAllEvents).toHaveBeenCalledWith({ data: searchParams })
   })
@@ -73,7 +73,7 @@ describe('EventsPage', () => {
   it('renders EventFilters with clubs', async () => {
     vi.mocked(getAllEvents).mockResolvedValue(mockEvents)
 
-    const Component = await EventsPage({ searchParams: {} })
+    const Component = await EventsPage({ searchParams: Promise.resolve({}) })
     render(Component)
 
     expect(screen.getByRole('combobox')).toBeInTheDocument()
@@ -82,7 +82,7 @@ describe('EventsPage', () => {
   it('renders events when results exist', async () => {
     vi.mocked(getAllEvents).mockResolvedValue(mockEvents)
 
-    const Component = await EventsPage({ searchParams: {} })
+    const Component = await EventsPage({ searchParams: Promise.resolve({}) })
     render(Component)
 
     expect(screen.getByText('Morning Run')).toBeInTheDocument()
@@ -91,7 +91,7 @@ describe('EventsPage', () => {
   it('renders empty state when no events', async () => {
     vi.mocked(getAllEvents).mockResolvedValue([])
 
-    const Component = await EventsPage({ searchParams: {} })
+    const Component = await EventsPage({ searchParams: Promise.resolve({}) })
     render(Component)
 
     expect(screen.getByText('empty.noResults')).toBeInTheDocument()

@@ -79,7 +79,7 @@ describe('AdminEventsPage', () => {
     vi.mocked(getAllEventsForAdmin).mockResolvedValue(mockEvents)
 
     const searchParams = { search: 'past', clubId: 'club1' }
-    await AdminEventsPage({ searchParams })
+    await AdminEventsPage({ searchParams: Promise.resolve(searchParams) })
 
     expect(getAllEventsForAdmin).toHaveBeenCalledWith({
       user: mockSession.user,
@@ -90,7 +90,9 @@ describe('AdminEventsPage', () => {
   it('renders EventFilters without date range', async () => {
     vi.mocked(getAllEventsForAdmin).mockResolvedValue(mockEvents)
 
-    const Component = await AdminEventsPage({ searchParams: {} })
+    const Component = await AdminEventsPage({
+      searchParams: Promise.resolve({}),
+    })
     render(Component)
 
     expect(screen.queryByText('Date Range Picker')).not.toBeInTheDocument()
@@ -99,7 +101,9 @@ describe('AdminEventsPage', () => {
   it('renders past events for admin', async () => {
     vi.mocked(getAllEventsForAdmin).mockResolvedValue(mockEvents)
 
-    const Component = await AdminEventsPage({ searchParams: {} })
+    const Component = await AdminEventsPage({
+      searchParams: Promise.resolve({}),
+    })
     render(Component)
 
     expect(screen.getByText('Past Event')).toBeInTheDocument()
