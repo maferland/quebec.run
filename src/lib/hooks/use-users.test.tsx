@@ -69,9 +69,9 @@ describe('useUsers hooks', () => {
     })
   })
 
-  describe('useToggleUserAdmin', () => {
+  describe('useToggleUserStaff', () => {
     it('toggles user admin status and invalidates cache', async () => {
-      const { result } = renderHook(() => useToggleUserAdmin(), {})
+      const { result } = renderHook(() => useToggleUserStaff(), {})
 
       await act(async () => {
         await result.current.mutateAsync({
@@ -98,7 +98,7 @@ describe('useUsers hooks', () => {
         })
       )
 
-      const { result } = renderHook(() => useToggleUserAdmin(), {})
+      const { result } = renderHook(() => useToggleUserStaff(), {})
 
       await act(async () => {
         try {
