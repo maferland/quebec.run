@@ -34,7 +34,7 @@ export const Default: Story = {
     const canvas = within(canvasElement)
 
     await expect(
-      canvas.getByRole('heading', { name: /welcome/i })
+      canvas.getByRole('heading', { name: /sign in/i })
     ).toBeInTheDocument()
     await expect(canvas.getByLabelText(/email/i)).toBeInTheDocument()
   },
@@ -47,7 +47,7 @@ export const WithValidationError: Story = {
 
     const emailInput = canvas.getByLabelText(/email/i)
     const submitButton = canvas.getByRole('button', {
-      name: /send magic link/i,
+      name: /send link/i,
     })
 
     await user.type(emailInput, 'invalid-email')
@@ -74,7 +74,7 @@ export const LoadingState: Story = {
 
     const emailInput = canvas.getByLabelText(/email/i)
     const submitButton = canvas.getByRole('button', {
-      name: /send magic link/i,
+      name: /send link/i,
     })
 
     await user.type(emailInput, 'test@example.com')
