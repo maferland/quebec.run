@@ -196,7 +196,17 @@
     },
     "users": {
       "title": "Gérer les utilisateurs",
-      "toggleAdmin": "Basculer le statut administrateur"
+      "makeStaff": "Rendre Staff",
+      "removeStaff": "Retirer Staff",
+      "confirmMakeStaff": "Rendre {name} staff de la plateforme?",
+      "confirmRemoveStaff": "Retirer {name} du staff?",
+      "staffPrivileges": "Les membres du staff peuvent:",
+      "privilegeManageClubs": "Gérer tous les clubs et événements",
+      "privilegeManageUsers": "Voir et modifier tous les comptes utilisateurs",
+      "privilegeGrantStaff": "Accorder ou révoquer l'accès staff",
+      "removalWarning": "Cet utilisateur perdra tous les privilèges administratifs de la plateforme.",
+      "typeToConfirm": "Tapez \"{phrase}\" pour confirmer:",
+      "cannotRemoveSelf": "Impossible de retirer votre propre accès staff"
     }
   },
   "legal": {
