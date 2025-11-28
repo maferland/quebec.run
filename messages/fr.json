@@ -210,12 +210,9 @@
       "exportDescription": "Téléchargez toutes vos données au format JSON",
       "exportButton": "Télécharger mes données",
       "deleteTitle": "Supprimer le compte",
-      "deleteDescription": "Demander la suppression du compte (délai de grâce de 30 jours)",
-      "deleteButton": "Demander la suppression",
-      "deleteWarning": "Cette action planifiera la suppression de votre compte dans 30 jours. Vous pouvez annuler à tout moment avant cette date.",
-      "pendingDeletion": "Suppression planifiée",
-      "pendingDescription": "Votre compte est prévu pour suppression le {date}",
-      "cancelButton": "Annuler la suppression"
+      "deleteDescription": "Supprimer définitivement votre compte et toutes les données associées",
+      "deleteButton": "Supprimer le compte",
+      "deleteWarning": "Cette action supprimera immédiatement et définitivement votre compte et toutes vos données. Cette action est irréversible."
     }
   }
 }

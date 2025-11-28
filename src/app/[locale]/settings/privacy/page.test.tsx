@@ -29,7 +29,7 @@ describe('PrivacySettingsPage', () => {
 
     mockFetch.mockResolvedValue({
       ok: true,
-      json: async () => ({ hasPendingRequest: false }),
+      json: async () => ({}),
     } as Response)
   })
 
@@ -149,7 +149,7 @@ describe('PrivacySettingsPage', () => {
 
       await waitFor(() => {
         expect(
-          screen.getByRole('button', { name: /request deletion/i })
+          screen.getByRole('button', { name: /delete account/i })
         ).toBeInTheDocument()
       })
     })
@@ -159,67 +159,9 @@ describe('PrivacySettingsPage', () => {
 
       await waitFor(() => {
         const deleteButton = screen.getByRole('button', {
-          name: /request deletion/i,
+          name: /delete account/i,
         })
         expect(deleteButton).not.toBeDisabled()
-      })
-    })
-  })
-
-  describe('Pending Deletion', () => {
-    beforeEach(() => {
-      mockUseSession.mockReturnValue({
-        data: {
-          user: {
-            id: '1',
-            email: 'user@example.com',
-            name: 'Test User',
-            isAdmin: false,
-          },
-          expires: '2024-01-01',
-        },
-        status: 'authenticated',
-        update: vi.fn(),
-      })
-    })
-
-    it('displays pending deletion message when request exists', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          hasPendingRequest: true,
-          request: {
-            id: 'req-123',
-            scheduledFor: '2024-12-31T00:00:00Z',
-          },
-        }),
-      } as Response)
-
-      render(<PrivacySettingsPage />)
-
-      await waitFor(() => {
-        expect(screen.getByText(/deletion scheduled/i)).toBeInTheDocument()
-      })
-    })
-
-    it('displays cancel button when deletion is pending', async () => {
-      mockFetch.mockResolvedValue({
-        ok: true,
-        json: async () => ({
-          hasPendingRequest: true,
-          request: {
-            id: 'req-123',
-            scheduledFor: '2024-12-31T00:00:00Z',
-          },
-        }),
-      } as Response)
-
-      render(<PrivacySettingsPage />)
-
-      await waitFor(() => {
-        expect(
-          screen.getByRole('button', { name: /cancel/i })
-        ).toBeInTheDocument()
       })
     })
   })

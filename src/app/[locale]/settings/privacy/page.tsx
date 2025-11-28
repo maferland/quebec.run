@@ -2,13 +2,12 @@
 
 import { useTranslations } from 'next-intl'
 import { useState, useEffect } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useSession } from 'next-auth/react'
+import { useMutation } from '@tanstack/react-query'
+import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 
 export default function PrivacySettingsPage() {
   const t = useTranslations('settings.privacy')
-  const queryClient = useQueryClient()
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const { data: session, status } = useSession()
   const router = useRouter()
@@ -19,17 +18,6 @@ export default function PrivacySettingsPage() {
       router.push('/api/auth/signin')
     }
   }, [status, router])
-
-  // Fetch pending deletion request
-  const { data: deletionData } = useQuery({
-    queryKey: ['deletion-request'],
-    queryFn: async () => {
-      const res = await fetch('/api/user/delete')
-      if (!res.ok) throw new Error('Failed to fetch deletion request')
-      return res.json()
-    },
-    enabled: status === 'authenticated',
-  })
 
   // Export data mutation
   const exportMutation = useMutation({
@@ -54,28 +42,16 @@ export default function PrivacySettingsPage() {
     },
   })
 
-  // Delete request mutation
+  // Delete account mutation
   const deleteMutation = useMutation({
     mutationFn: async () => {
       const res = await fetch('/api/user/delete', { method: 'POST' })
-      if (!res.ok) throw new Error('Deletion request failed')
+      if (!res.ok) throw new Error('Deletion failed')
       return res.json()
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deletion-request'] })
-      setShowDeleteConfirm(false)
-    },
-  })
-
-  // Cancel deletion mutation
-  const cancelMutation = useMutation({
-    mutationFn: async (id: string) => {
-      const res = await fetch(`/api/user/delete/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Cancel failed')
-      return res.json()
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['deletion-request'] })
+      // Sign out and redirect
+      signOut({ callbackUrl: '/' })
     },
   })
 
@@ -96,11 +72,6 @@ export default function PrivacySettingsPage() {
   if (status !== 'authenticated' || !session) {
     return null
   }
-
-  const hasPendingDeletion = deletionData?.hasPendingRequest
-  const scheduledDate = hasPendingDeletion
-    ? new Date(deletionData.request.scheduledFor).toLocaleDateString()
-    : ''
 
   return (
     <div className="max-w-4xl mx-auto px-4 py-12">
@@ -124,56 +95,34 @@ export default function PrivacySettingsPage() {
         <h2 className="text-2xl font-semibold mb-2">{t('deleteTitle')}</h2>
         <p className="text-text-secondary mb-4">{t('deleteDescription')}</p>
 
-        {hasPendingDeletion ? (
-          <div className="bg-yellow-50 border border-yellow-200 rounded-md p-4">
-            <h3 className="font-semibold text-yellow-900 mb-2">
-              {t('pendingDeletion')}
-            </h3>
-            <p className="text-yellow-800 mb-4">
-              {t('pendingDescription', { date: scheduledDate })}
-            </p>
-            <button
-              onClick={() => cancelMutation.mutate(deletionData.request.id)}
-              disabled={cancelMutation.isPending}
-              className="bg-yellow-600 text-white px-6 py-2 rounded-md hover:bg-yellow-700 transition-colors disabled:opacity-50"
-            >
-              {cancelMutation.isPending ? 'Cancelling...' : t('cancelButton')}
-            </button>
-          </div>
+        {!showDeleteConfirm ? (
+          <button
+            onClick={() => setShowDeleteConfirm(true)}
+            className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors"
+          >
+            {t('deleteButton')}
+          </button>
         ) : (
-          <>
-            {!showDeleteConfirm ? (
+          <div className="bg-red-50 border border-red-200 rounded-md p-4">
+            <p className="text-red-900 mb-4 font-medium">
+              {t('deleteWarning')}
+            </p>
+            <div className="flex gap-3">
               <button
-                onClick={() => setShowDeleteConfirm(true)}
-                className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors"
+                onClick={() => deleteMutation.mutate()}
+                disabled={deleteMutation.isPending}
+                className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
               >
-                {t('deleteButton')}
+                {deleteMutation.isPending ? 'Deleting...' : 'Confirm Deletion'}
               </button>
-            ) : (
-              <div className="bg-red-50 border border-red-200 rounded-md p-4">
-                <p className="text-red-900 mb-4 font-medium">
-                  {t('deleteWarning')}
-                </p>
-                <div className="flex gap-3">
-                  <button
-                    onClick={() => deleteMutation.mutate()}
-                    disabled={deleteMutation.isPending}
-                    className="bg-red-600 text-white px-6 py-2 rounded-md hover:bg-red-700 transition-colors disabled:opacity-50"
-                  >
-                    {deleteMutation.isPending
-                      ? 'Processing...'
-                      : 'Confirm Deletion'}
-                  </button>
-                  <button
-                    onClick={() => setShowDeleteConfirm(false)}
-                    className="bg-gray-200 text-gray-900 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-            )}
-          </>
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="bg-gray-200 text-gray-900 px-6 py-2 rounded-md hover:bg-gray-300 transition-colors"
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
         )}
       </section>
     </div>

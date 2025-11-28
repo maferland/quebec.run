@@ -4,7 +4,6 @@ import type {
   ConsentCreate,
   DataExport,
   DeletionRequest,
-  DeletionCancel,
 } from '@/lib/schemas'
 
 export const createUserConsent = async ({
@@ -101,70 +100,13 @@ export const exportUserData = async ({ user }: AuthPayload<DataExport>) => {
   }
 }
 
-export const createDeletionRequest = async ({
+export const deleteUserAccount = async ({
   user,
 }: AuthPayload<DeletionRequest>) => {
-  // Check for existing pending request
-  const existing = await prisma.dataDeletionRequest.findFirst({
-    where: {
-      userId: user.id,
-      status: 'pending',
-    },
+  // Delete user (cascade will handle related data)
+  await prisma.user.delete({
+    where: { id: user.id },
   })
 
-  if (existing) {
-    throw new Error('Pending deletion request already exists')
-  }
-
-  // Calculate 30 days from now
-  const scheduledFor = new Date()
-  scheduledFor.setDate(scheduledFor.getDate() + 30)
-
-  return await prisma.dataDeletionRequest.create({
-    data: {
-      userId: user.id,
-      scheduledFor,
-    },
-  })
-}
-
-export const cancelDeletionRequest = async ({
-  user,
-  data,
-}: AuthPayload<DeletionCancel>) => {
-  const request = await prisma.dataDeletionRequest.findFirst({
-    where: {
-      id: data.id,
-      userId: user.id,
-      status: 'pending',
-    },
-  })
-
-  if (!request) {
-    throw new Error('Deletion request not found')
-  }
-
-  return await prisma.dataDeletionRequest.update({
-    where: { id: data.id },
-    data: { status: 'cancelled' },
-  })
-}
-
-export const getPendingDeletionRequest = async ({
-  userId,
-}: {
-  userId: string
-}) => {
-  return await prisma.dataDeletionRequest.findFirst({
-    where: {
-      userId,
-      status: 'pending',
-    },
-    select: {
-      id: true,
-      requestedAt: true,
-      scheduledFor: true,
-      status: true,
-    },
-  })
+  return { success: true }
 }

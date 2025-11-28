@@ -210,12 +210,9 @@
       "exportDescription": "Download all your data in JSON format",
       "exportButton": "Download My Data",
       "deleteTitle": "Delete Account",
-      "deleteDescription": "Request account deletion (30-day grace period)",
-      "deleteButton": "Request Deletion",
-      "deleteWarning": "This action will schedule your account for deletion in 30 days. You can cancel anytime before then.",
-      "pendingDeletion": "Deletion Scheduled",
-      "pendingDescription": "Your account is scheduled for deletion on {date}",
-      "cancelButton": "Cancel Deletion"
+      "deleteDescription": "Permanently delete your account and all associated data",
+      "deleteButton": "Delete Account",
+      "deleteWarning": "This action will immediately and permanently delete your account and all your data. This cannot be undone."
     }
   }
 }

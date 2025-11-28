@@ -5,9 +5,7 @@ import {
   createUserConsent,
   getUserConsent,
   exportUserData,
-  createDeletionRequest,
-  cancelDeletionRequest,
-  getPendingDeletionRequest,
+  deleteUserAccount,
 } from './legal'
 
 describe('Legal Services', () => {
@@ -119,137 +117,43 @@ describe('Legal Services', () => {
     })
   })
 
-  describe('createDeletionRequest', () => {
-    it('creates deletion request 30 days out', async () => {
+  describe('deleteUserAccount', () => {
+    it('deletes user and all related data', async () => {
       const user = await prisma.user.create({
         data: { email: 'user@test.com' },
       })
 
-      const request = await createDeletionRequest({
+      const club = await prisma.club.create({
+        data: { name: 'Club', slug: 'club', ownerId: user.id },
+      })
+
+      await prisma.userConsent.create({
+        data: { userId: user.id, ipAddress: '192.168.1.1' },
+      })
+
+      const result = await deleteUserAccount({
         user: { id: user.id, isAdmin: false },
         data: {},
       })
 
-      expect(request.userId).toBe(user.id)
-      expect(request.status).toBe('pending')
+      expect(result.success).toBe(true)
 
-      const daysDiff = Math.floor(
-        (request.scheduledFor.getTime() - request.requestedAt.getTime()) /
-          (1000 * 60 * 60 * 24)
-      )
-      expect(daysDiff).toBeGreaterThanOrEqual(29)
-      expect(daysDiff).toBeLessThanOrEqual(30)
-    })
-
-    it('throws if pending request exists', async () => {
-      const user = await prisma.user.create({
-        data: { email: 'user@test.com' },
+      // Verify user deleted
+      const deletedUser = await prisma.user.findUnique({
+        where: { id: user.id },
       })
+      expect(deletedUser).toBeNull()
 
-      await prisma.dataDeletionRequest.create({
-        data: {
-          userId: user.id,
-          scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
+      // Verify cascaded deletions
+      const deletedClub = await prisma.club.findUnique({
+        where: { id: club.id },
       })
+      expect(deletedClub).toBeNull()
 
-      await expect(
-        createDeletionRequest({
-          user: { id: user.id, isAdmin: false },
-          data: {},
-        })
-      ).rejects.toThrow('Pending deletion request already exists')
-    })
-  })
-
-  describe('cancelDeletionRequest', () => {
-    it('cancels pending deletion request', async () => {
-      const user = await prisma.user.create({
-        data: { email: 'user@test.com' },
+      const deletedConsent = await prisma.userConsent.findUnique({
+        where: { userId: user.id },
       })
-
-      const request = await prisma.dataDeletionRequest.create({
-        data: {
-          userId: user.id,
-          scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      })
-
-      const cancelled = await cancelDeletionRequest({
-        user: { id: user.id, isAdmin: false },
-        data: { id: request.id },
-      })
-
-      expect(cancelled.status).toBe('cancelled')
-    })
-
-    it('throws if request not found', async () => {
-      const user = await prisma.user.create({
-        data: { email: 'user@test.com' },
-      })
-
-      await expect(
-        cancelDeletionRequest({
-          user: { id: user.id, isAdmin: false },
-          data: { id: 'invalid' },
-        })
-      ).rejects.toThrow('Deletion request not found')
-    })
-
-    it('throws if not owned by user', async () => {
-      const user1 = await prisma.user.create({
-        data: { email: 'user1@test.com' },
-      })
-      const user2 = await prisma.user.create({
-        data: { email: 'user2@test.com' },
-      })
-
-      const request = await prisma.dataDeletionRequest.create({
-        data: {
-          userId: user1.id,
-          scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      })
-
-      await expect(
-        cancelDeletionRequest({
-          user: { id: user2.id, isAdmin: false },
-          data: { id: request.id },
-        })
-      ).rejects.toThrow('Deletion request not found')
-    })
-  })
-
-  describe('getPendingDeletionRequest', () => {
-    it('returns pending request if exists', async () => {
-      const user = await prisma.user.create({
-        data: { email: 'user@test.com' },
-      })
-
-      const request = await prisma.dataDeletionRequest.create({
-        data: {
-          userId: user.id,
-          scheduledFor: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-        },
-      })
-
-      const found = await getPendingDeletionRequest({
-        userId: user.id,
-      })
-
-      expect(found?.id).toBe(request.id)
-    })
-
-    it('returns null if no pending request', async () => {
-      const user = await prisma.user.create({
-        data: { email: 'user@test.com' },
-      })
-
-      const found = await getPendingDeletionRequest({
-        userId: user.id,
-      })
-
-      expect(found).toBeNull()
+      expect(deletedConsent).toBeNull()
     })
   })
 })

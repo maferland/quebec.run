@@ -61,7 +61,7 @@ Under Quebec's Law 25, you have the right to:
 - **Access:** Request access to your personal information
 - **Correction:** Request correction of inaccurate data
 - **Portability:** Export your data in a structured format
-- **Deletion:** Request deletion of your account and data (30-day grace period)
+- **Deletion:** Request immediate deletion of your account and data
 - **Withdrawal of Consent:** You may withdraw consent at any time by deleting your account
 
 To exercise these rights, visit your [Privacy Settings](/settings/privacy) or contact us at [maferland@quebec.run](mailto:maferland@quebec.run).
@@ -71,8 +71,7 @@ To exercise these rights, visit your [Privacy Settings](/settings/privacy) or co
 We retain your information:
 
 - As long as your account is active
-- For 30 days after deletion request (grace period)
-- As required by law for legal, accounting, or audit purposes
+- As required by law for legal, accounting, or audit purposes after account deletion
 
 ## 8. Data Security
 

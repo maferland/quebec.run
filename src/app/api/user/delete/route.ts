@@ -1,30 +1,14 @@
 import { withAuth } from '@/lib/api-middleware'
 import { deletionRequestSchema } from '@/lib/schemas'
-import {
-  createDeletionRequest,
-  getPendingDeletionRequest,
-} from '@/lib/services/legal'
+import { deleteUserAccount } from '@/lib/services/legal'
 
 export const POST = withAuth(deletionRequestSchema)(async ({ user, data }) => {
-  const request = await createDeletionRequest({ user, data })
+  await deleteUserAccount({ user, data })
 
   return Response.json(
     {
       success: true,
-      requestId: request.id,
-      scheduledFor: request.scheduledFor.toISOString(),
     },
-    { status: 201 }
+    { status: 200 }
   )
-})
-
-export const GET = withAuth(deletionRequestSchema)(async ({ user }) => {
-  const request = await getPendingDeletionRequest({
-    userId: user.id,
-  })
-
-  return Response.json({
-    hasPendingRequest: !!request,
-    request,
-  })
 })

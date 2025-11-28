@@ -61,7 +61,7 @@ En vertu de la Loi 25 du Québec, vous avez le droit de :
 - **Accès :** Demander l'accès à vos informations personnelles
 - **Correction :** Demander la correction de données inexactes
 - **Portabilité :** Exporter vos données dans un format structuré
-- **Suppression :** Demander la suppression de votre compte et de vos données (délai de grâce de 30 jours)
+- **Suppression :** Demander la suppression immédiate de votre compte et de vos données
 - **Retrait du consentement :** Vous pouvez retirer votre consentement à tout moment en supprimant votre compte
 
 Pour exercer ces droits, visitez vos [Paramètres de confidentialité](/settings/privacy) ou contactez-nous à [maferland@quebec.run](mailto:maferland@quebec.run).
@@ -71,8 +71,7 @@ Pour exercer ces droits, visitez vos [Paramètres de confidentialité](/settings
 Nous conservons vos informations :
 
 - Tant que votre compte est actif
-- Pendant 30 jours après la demande de suppression (période de grâce)
-- Tel que requis par la loi à des fins légales, comptables ou d'audit
+- Tel que requis par la loi à des fins légales, comptables ou d'audit après la suppression du compte
 
 ## 8. Sécurité des données
 
