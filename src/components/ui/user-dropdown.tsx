@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useRef, useEffect } from 'react'
-import { User, LogOut, ChevronDown, Shield } from 'lucide-react'
+import { User, LogOut, ChevronDown } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
@@ -73,7 +73,6 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
               className="flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              <Shield size={16} className="mr-3 text-text-secondary" />
               Privacy Settings
             </Link>
             <button
