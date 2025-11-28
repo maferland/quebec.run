@@ -21,7 +21,7 @@ describe('ToggleAdminButton', () => {
       <ToggleAdminButton
         userId="user-1"
         userName="John Doe"
-        isAdmin={false}
+        isStaff={false}
         isCurrentUser={false}
       />
     )
@@ -40,7 +40,7 @@ describe('ToggleAdminButton', () => {
       <ToggleAdminButton
         userId="user-1"
         userName="Jane Admin"
-        isAdmin={true}
+        isStaff={true}
         isCurrentUser={false}
       />
     )
@@ -57,7 +57,7 @@ describe('ToggleAdminButton', () => {
       <ToggleAdminButton
         userId="user-1"
         userName="Current User"
-        isAdmin={true}
+        isStaff={true}
         isCurrentUser={true}
       />
     )
@@ -73,7 +73,7 @@ describe('ToggleAdminButton', () => {
       <ToggleAdminButton
         userId="user-1"
         userName="John Doe"
-        isAdmin={false}
+        isStaff={false}
         isCurrentUser={false}
       />
     )

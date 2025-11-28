@@ -21,7 +21,7 @@ describe('useUsers hooks', () => {
       expect(result.current.data!.length).toBeGreaterThan(0)
       expect(result.current.data![0]).toHaveProperty('id')
       expect(result.current.data![0]).toHaveProperty('email')
-      expect(result.current.data![0]).toHaveProperty('isAdmin')
+      expect(result.current.data![0]).toHaveProperty('isStaff')
     })
 
     it('handles query parameters', async () => {
@@ -38,8 +38,8 @@ describe('useUsers hooks', () => {
       expect(Array.isArray(result.current.data)).toBe(true)
     })
 
-    it('filters by isAdmin', async () => {
-      const { result } = renderHook(() => useAllUsers({ isAdmin: 'true' }), {})
+    it('filters by isStaff', async () => {
+      const { result } = renderHook(() => useAllUsers({ isStaff: 'true' }), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -76,7 +76,7 @@ describe('useUsers hooks', () => {
       await act(async () => {
         await result.current.mutateAsync({
           id: 'user-1',
-          isAdmin: true,
+          isStaff: true,
         })
       })
 
@@ -104,7 +104,7 @@ describe('useUsers hooks', () => {
         try {
           await result.current.mutateAsync({
             id: 'user-1',
-            isAdmin: true,
+            isStaff: true,
           })
         } catch {
           // Expected to throw
