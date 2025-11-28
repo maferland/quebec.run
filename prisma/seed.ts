@@ -11,12 +11,12 @@ async function main() {
   const adminUser = await prisma.user.upsert({
     where: { email: 'maferland@quebec.run' },
     update: {
-      isAdmin: true,
+      isStaff: true,
     },
     create: {
       email: 'maferland@quebec.run',
       name: 'Marc-André Ferland',
-      isAdmin: true,
+      isStaff: true,
     },
   })
 
