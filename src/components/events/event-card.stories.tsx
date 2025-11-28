@@ -21,6 +21,8 @@ const mockEvent = {
   time: '06:00',
   distance: '5-8 km',
   pace: 'Rythme modéré',
+  latitude: 46.8139,
+  longitude: -71.208,
   club: {
     name: '6AM Club Quebec',
   },
