@@ -54,6 +54,8 @@ export const eventSchema = z.object({
   date: z.date(),
   time: z.string(),
   address: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
   distance: z.string().nullable(),
   pace: z.string().nullable(),
   createdAt: z.date(),
