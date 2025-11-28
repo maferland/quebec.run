@@ -309,4 +309,145 @@ describe('Events Service Integration Tests', () => {
       ).rejects.toThrow('Unauthorized')
     })
   })
+
+  describe('getAllEvents with filtering', () => {
+    beforeEach(async () => {
+      await testPrisma.event.deleteMany()
+      await testPrisma.club.deleteMany()
+      await testPrisma.user.deleteMany()
+
+      const user = await testPrisma.user.create({
+        data: { email: 'owner@test.com', name: 'Owner' },
+      })
+
+      const club1 = await testPrisma.club.create({
+        data: {
+          name: 'Montreal Runners',
+          slug: 'montreal-runners',
+          ownerId: user.id,
+        },
+      })
+
+      const club2 = await testPrisma.club.create({
+        data: {
+          name: 'Quebec Joggers',
+          slug: 'quebec-joggers',
+          ownerId: user.id,
+        },
+      })
+
+      // Future event 1 - Montreal
+      await testPrisma.event.create({
+        data: {
+          title: 'Montreal Morning Run',
+          date: new Date('2025-12-15'),
+          time: '08:00',
+          address: '123 Montreal Street',
+          clubId: club1.id,
+        },
+      })
+
+      // Future event 2 - Quebec
+      await testPrisma.event.create({
+        data: {
+          title: 'Quebec Trail Run',
+          date: new Date('2025-12-20'),
+          time: '09:00',
+          address: '456 Quebec Avenue',
+          clubId: club2.id,
+        },
+      })
+
+      // Past event (should be excluded)
+      await testPrisma.event.create({
+        data: {
+          title: 'Past Event',
+          date: new Date('2020-01-01'),
+          time: '10:00',
+          clubId: club1.id,
+        },
+      })
+    })
+
+    it('filters by search term matching title', async () => {
+      const result = await getAllEvents({ data: { search: 'Montreal' } })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Montreal Morning Run')
+    })
+
+    it('filters by search term matching address', async () => {
+      const result = await getAllEvents({ data: { search: 'Quebec Avenue' } })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Quebec Trail Run')
+    })
+
+    it('filters by search term case-insensitive', async () => {
+      const result = await getAllEvents({ data: { search: 'MONTREAL' } })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Montreal Morning Run')
+    })
+
+    it('filters by clubId', async () => {
+      const club = await testPrisma.club.findFirst({
+        where: { slug: 'montreal-runners' },
+      })
+      const result = await getAllEvents({ data: { clubId: club!.id } })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Montreal Morning Run')
+    })
+
+    it('filters by dateFrom', async () => {
+      const result = await getAllEvents({
+        data: { dateFrom: '2025-12-18T00:00:00Z' },
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Quebec Trail Run')
+    })
+
+    it('filters by dateFrom and dateTo range', async () => {
+      const result = await getAllEvents({
+        data: {
+          dateFrom: '2025-12-14T00:00:00Z',
+          dateTo: '2025-12-16T00:00:00Z',
+        },
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Montreal Morning Run')
+    })
+
+    it('combines multiple filters', async () => {
+      const club = await testPrisma.club.findFirst({
+        where: { slug: 'montreal-runners' },
+      })
+      const result = await getAllEvents({
+        data: { search: 'Montreal', clubId: club!.id },
+      })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Montreal Morning Run')
+    })
+
+    it('returns empty array when no matches', async () => {
+      const result = await getAllEvents({ data: { search: 'NonExistent' } })
+      expect(result).toHaveLength(0)
+    })
+
+    it('excludes past events even with filters', async () => {
+      const result = await getAllEvents({ data: { search: 'Past' } })
+      expect(result).toHaveLength(0)
+    })
+
+    it('sorts by date ascending by default', async () => {
+      const result = await getAllEvents({ data: {} })
+      expect(result[0].title).toBe('Montreal Morning Run')
+      expect(result[1].title).toBe('Quebec Trail Run')
+    })
+
+    it('sorts by date descending when specified', async () => {
+      const result = await getAllEvents({
+        data: { sortBy: 'date', sortOrder: 'desc' },
+      })
+      expect(result[0].title).toBe('Quebec Trail Run')
+      expect(result[1].title).toBe('Montreal Morning Run')
+    })
+  })
 })

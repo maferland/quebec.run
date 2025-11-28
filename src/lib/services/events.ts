@@ -1,4 +1,5 @@
 import { prisma } from '@/lib/prisma'
+import { Prisma } from '@prisma/client'
 import type {
   EventsQuery,
   EventCreate,
@@ -12,22 +13,52 @@ import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 // Pure business logic functions - let TypeScript infer return types
 
 export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
-  const { limit = 50, offset = 0, clubId } = data
+  const {
+    limit = 50,
+    offset = 0,
+    clubId,
+    search,
+    dateFrom,
+    dateTo,
+    sortBy = 'date',
+    sortOrder = 'asc',
+  } = data
 
   // Get today's date at midnight to include today's events but exclude past days
   const today = new Date()
   today.setHours(0, 0, 0, 0)
 
-  const where = {
+  const where: Prisma.EventWhereInput = {
     date: {
       gte: today, // Include events from today (00:00) forward, excluding yesterday and earlier
     },
     ...(clubId && { clubId }),
+    ...(search && {
+      OR: [
+        { title: { contains: search, mode: 'insensitive' } },
+        { address: { contains: search, mode: 'insensitive' } },
+      ],
+    }),
+    ...(dateFrom &&
+      dateTo && {
+        date: {
+          gte: new Date(dateFrom),
+          lte: new Date(dateTo),
+        },
+      }),
+    ...(dateFrom &&
+      !dateTo && {
+        date: { gte: new Date(dateFrom) },
+      }),
+  }
+
+  const orderBy: Prisma.EventOrderByWithRelationInput = {
+    [sortBy]: sortOrder,
   }
 
   const events = await prisma.event.findMany({
     where,
-    orderBy: { date: 'asc' },
+    orderBy,
     take: limit,
     skip: offset,
     select: {
