@@ -128,10 +128,12 @@ The script automatically:
 - Creates isolated database `quebec.run_<branch-name>`
 - Runs Prisma migrations on new database
 - Appends unique config to `.env`:
-  - `PORT` for dev server (range 3001-4000)
-  - `STORYBOOK_PORT` for Storybook (range 6007-7000)
+  - `PORT` for dev server (60XX)
+  - `STORYBOOK_PORT` for Storybook (61XX)
+  - `EMAIL_SERVER_PORT` for Mailhog SMTP (62XX)
   - `DATABASE_URL` for isolated PostgreSQL database
   - `TEST_DATABASE_URL` for test database
+  - All ports share the same random XX suffix (01-99)
 - Runs `npm install`
 
 Example:
@@ -142,8 +144,9 @@ npm run worktree my-feature
 # Branch: maferland/my-feature
 # Path: /path/to/.worktrees/my-feature
 # Database: quebec.run_my_feature
-# Dev server: http://localhost:3002
-# Storybook: http://localhost:6008
+# Dev server: http://localhost:6042
+# Storybook: http://localhost:6142
+# Mailhog: http://localhost:6242
 ```
 
 **Removing worktrees:** Use `npm run remove-worktree <branch-name>` to clean up.

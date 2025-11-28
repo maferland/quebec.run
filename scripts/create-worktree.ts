@@ -109,10 +109,15 @@ async function main() {
       console.log(`✓ Copied .env from main`)
     }
 
-    // Find free ports
-    console.log('Finding available ports...')
-    const devPort = await findFreePort(3001, 4000)
-    const storybookPort = await findFreePort(6007, 7000)
+    // Generate random port suffix (01-99)
+    console.log('Assigning ports...')
+    const randomSuffix = String(Math.floor(Math.random() * 99) + 1).padStart(
+      2,
+      '0'
+    )
+    const devPort = parseInt(`60${randomSuffix}`, 10)
+    const storybookPort = parseInt(`61${randomSuffix}`, 10)
+    const mailhogPort = parseInt(`62${randomSuffix}`, 10)
 
     // Setup database
     console.log('Setting up database...')
@@ -139,6 +144,7 @@ async function main() {
 # Worktree-specific overrides
 PORT=${devPort}
 STORYBOOK_PORT=${storybookPort}
+EMAIL_SERVER_PORT=${mailhogPort}
 DATABASE_URL="${databaseUrl}"
 TEST_DATABASE_URL="${testDatabaseUrl}"
 `
@@ -162,6 +168,7 @@ TEST_DATABASE_URL="${testDatabaseUrl}"
     console.log(`Database: ${dbName}`)
     console.log(`Dev server: http://localhost:${devPort}`)
     console.log(`Storybook: http://localhost:${storybookPort}`)
+    console.log(`Mailhog: http://localhost:${mailhogPort}`)
     console.log(`\nTo start working:`)
     console.log(`  cd ${worktreePath}`)
     console.log(`  npm run dev\n`)
