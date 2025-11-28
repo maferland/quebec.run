@@ -79,7 +79,7 @@ export default async function AdminUsersPage() {
                       </span>
                     </td>
                     <td className="px-6 py-4">
-                      {user.isAdmin ? (
+                      {user.isStaff ? (
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
                           Admin
                         </span>
@@ -98,7 +98,7 @@ export default async function AdminUsersPage() {
                       <ToggleAdminButton
                         userId={user.id}
                         userName={user.name || user.email}
-                        isAdmin={user.isAdmin}
+                        isStaff={user.isStaff}
                         isCurrentUser={session?.user?.id === user.id}
                       />
                     </td>

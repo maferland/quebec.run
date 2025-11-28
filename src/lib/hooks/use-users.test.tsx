@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@/lib/test-utils'
 import { setupMSW } from '@/lib/test-msw-setup'
 import { act } from 'react'
-import { useAllUsers, useToggleUserAdmin } from './use-users'
+import { useAllUsers, useToggleUserStaff } from './use-users'
 
 // Setup MSW
 setupMSW()

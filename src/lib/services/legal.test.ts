@@ -20,7 +20,7 @@ describe('Legal Services', () => {
       })
 
       const consent = await createUserConsent({
-        user: { id: user.id, isAdmin: false },
+        user: { id: user.id, isStaff: false },
         ipAddress: '192.168.1.1',
       })
 
@@ -40,7 +40,7 @@ describe('Legal Services', () => {
 
       await expect(
         createUserConsent({
-          user: { id: user.id, isAdmin: false },
+          user: { id: user.id, isStaff: false },
           ipAddress: '192.168.1.1',
         })
       ).rejects.toThrow('Consent already exists')
@@ -102,7 +102,7 @@ describe('Legal Services', () => {
       })
 
       const data = await exportUserData({
-        user: { id: user.id, isAdmin: false },
+        user: { id: user.id, isStaff: false },
         data: {},
       })
 
@@ -132,7 +132,7 @@ describe('Legal Services', () => {
       })
 
       const result = await deleteUserAccount({
-        user: { id: user.id, isAdmin: false },
+        user: { id: user.id, isStaff: false },
         data: {},
       })
 

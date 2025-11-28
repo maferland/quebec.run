@@ -2,7 +2,7 @@
 
 import { Shield } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { useToggleUserAdmin } from '@/lib/hooks/use-users'
+import { useToggleUserStaff } from '@/lib/hooks/use-users'
 
 interface ToggleAdminButtonProps {
   userId: string
@@ -17,7 +17,7 @@ export function ToggleAdminButton({
   isStaff,
   isCurrentUser,
 }: ToggleAdminButtonProps) {
-  const toggleAdmin = useToggleUserAdmin()
+  const toggleStaff = useToggleUserStaff()
 
   const handleToggle = async () => {
     const message = isStaff
@@ -29,7 +29,7 @@ export function ToggleAdminButton({
     }
 
     try {
-      await toggleAdmin.mutateAsync({
+      await toggleStaff.mutateAsync({
         id: userId,
         isStaff: !isStaff,
       })
@@ -43,7 +43,7 @@ export function ToggleAdminButton({
       variant={isStaff ? 'outline-primary' : 'outline'}
       size="sm"
       onClick={handleToggle}
-      disabled={isCurrentUser || toggleAdmin.isPending}
+      disabled={isCurrentUser || toggleStaff.isPending}
       aria-label={
         isStaff ? `Revoke admin from ${userName}` : `Grant admin to ${userName}`
       }

@@ -145,7 +145,7 @@ export function withAuth<T extends z.ZodType>(schema: T) {
 
         const user: ServiceUser = {
           id: session.user.id,
-          isAdmin: session.user.isAdmin || false,
+          isStaff: session.user.isStaff || false,
         }
 
         const data = await getParams(request, context, schema)
