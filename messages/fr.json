@@ -47,18 +47,17 @@
   },
   "home": {
     "hero": {
-      "title": "Découvrez la course à pied à Québec",
-      "description": "Connectez-vous avec les clubs de course locaux, trouvez les événements à venir et explorez des parcours pittoresques à travers les quartiers historiques de Québec.",
-      "findEvents": "Trouvez des événements près de chez vous",
-      "browseClubs": "Parcourir les clubs de course",
-      "mapTitle": "Carte interactive",
-      "mapDescription": "Explorez les parcours et lieux à travers Québec"
+      "title": "Découvrez les événements de course au Québec",
+      "description": "Trouvez et rejoignez des groupes et événements de course à travers le Québec",
+      "findEvents": "Trouver des événements",
+      "browseClubs": "Parcourir les clubs",
+      "mapTitle": "Carte des événements",
+      "mapDescription": "Découverte visuelle d'événements"
     },
     "search": {
       "title": "Trouvez votre prochaine course",
-      "placeholder": "Recherchez des événements, clubs ou endroits...",
-      "filters": "Filtres",
-      "searchButton": "Rechercher"
+      "placeholder": "Où voulez-vous courir?",
+      "searchButton": "Rechercher des événements"
     },
     "clubs": {
       "title": "Clubs de course en vedette",
@@ -66,13 +65,13 @@
     },
     "quickActions": {
       "events": {
-        "title": "Événements à venir",
-        "description": "Ne manquez pas la prochaine course de groupe. Consultez notre calendrier pour tous les événements et courses programmés.",
-        "button": "Parcourir les événements"
+        "title": "Parcourir les événements",
+        "description": "Trouvez les événements de course à venir près de chez vous",
+        "button": "Voir les événements"
       },
       "routes": {
-        "title": "Explorez les parcours",
-        "description": "Découvrez des parcours de course pittoresques à travers Québec, du Vieux-Québec aux plaines d'Abraham.",
+        "title": "Explorer les parcours",
+        "description": "Découvrez les parcours de course populaires",
         "button": "Voir le calendrier"
       }
     }
@@ -109,9 +108,18 @@
   "events": {
     "title": "Événements de course",
     "backToEvents": "Retour à tous les événements",
+    "filters": {
+      "searchPlaceholder": "Rechercher par titre ou lieu",
+      "allClubs": "Tous les clubs",
+      "selectClub": "Filtrer par club",
+      "dateRange": "Plage de dates",
+      "clearFilters": "Effacer les filtres"
+    },
     "empty": {
-      "title": "Aucun événement à venir trouvé",
-      "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+      "title": "Aucun événement trouvé",
+      "description": "Revenez bientôt pour les événements à venir",
+      "noResults": "Aucun événement ne correspond à vos filtres",
+      "tryAdjusting": "Essayez d'ajuster votre recherche ou d'effacer les filtres pour voir plus d'événements."
     },
     "details": {
       "title": "Détails de l'événement",
@@ -192,7 +200,11 @@
       "title": "Gérer les événements",
       "addNew": "Ajouter un événement",
       "editEvent": "Modifier l'événement",
-      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?"
+      "confirmDelete": "Êtes-vous sûr de vouloir supprimer cet événement ?",
+      "empty": {
+        "noEvents": "Aucun événement trouvé",
+        "noEventsDescription": "Aucun événement ne correspond à vos filtres actuels. Essayez d'ajuster votre recherche."
+      }
     },
     "users": {
       "title": "Gérer les utilisateurs",

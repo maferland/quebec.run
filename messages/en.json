@@ -47,32 +47,31 @@
   },
   "home": {
     "hero": {
-      "title": "Discover Running in Quebec City",
-      "description": "Connect with local running clubs, find upcoming events, and explore scenic routes through Quebec City's historic neighborhoods.",
-      "findEvents": "Find Events Near You",
-      "browseClubs": "Browse Running Clubs",
-      "mapTitle": "Interactive Map",
-      "mapDescription": "Explore routes and locations across Quebec City"
+      "title": "Discover Running Events in Quebec",
+      "description": "Find and join running groups and events across Quebec",
+      "findEvents": "Find Events",
+      "browseClubs": "Browse Clubs",
+      "mapTitle": "Event Map",
+      "mapDescription": "Visual event discovery"
     },
     "search": {
       "title": "Find Your Next Run",
-      "placeholder": "Search events, clubs, or locations...",
-      "filters": "Filters",
-      "searchButton": "Search"
+      "placeholder": "Where do you want to run?",
+      "searchButton": "Search Events"
     },
     "clubs": {
-      "title": "Featured Run Clubs",
+      "title": "Featured Running Clubs",
       "viewAll": "View All Clubs"
     },
     "quickActions": {
       "events": {
-        "title": "Upcoming Events",
-        "description": "Don't miss out on the next group run. Check our calendar for all scheduled events and races.",
-        "button": "Browse Events"
+        "title": "Browse Events",
+        "description": "Find upcoming running events near you",
+        "button": "View Events"
       },
       "routes": {
         "title": "Explore Routes",
-        "description": "Discover scenic running routes throughout Quebec City, from Old Quebec to the Plains of Abraham.",
+        "description": "Discover popular running routes",
         "button": "View Calendar"
       }
     }
@@ -109,9 +108,18 @@
   "events": {
     "title": "Running Events",
     "backToEvents": "Back to All Events",
+    "filters": {
+      "searchPlaceholder": "Search by title or location",
+      "allClubs": "All Clubs",
+      "selectClub": "Filter by club",
+      "dateRange": "Date range",
+      "clearFilters": "Clear filters"
+    },
     "empty": {
-      "title": "No upcoming events found",
-      "description": "Check back soon for new running events in Quebec City"
+      "title": "No events found",
+      "description": "Check back soon for upcoming events",
+      "noResults": "No events match your filters",
+      "tryAdjusting": "Try adjusting your search or clearing filters to see more events."
     },
     "details": {
       "title": "Event Details",
@@ -192,7 +200,11 @@
       "title": "Manage Events",
       "addNew": "Add New Event",
       "editEvent": "Edit Event",
-      "confirmDelete": "Are you sure you want to delete this event?"
+      "confirmDelete": "Are you sure you want to delete this event?",
+      "empty": {
+        "noEvents": "No events found",
+        "noEventsDescription": "No events match your current filters. Try adjusting your search."
+      }
     },
     "users": {
       "title": "Manage Users",
