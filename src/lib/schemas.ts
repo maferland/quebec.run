@@ -105,9 +105,9 @@ export const userIdSchema = z.object({
   id: z.string().min(1, 'User ID is required'),
 })
 
-export const toggleUserAdminSchema = z.object({
+export const toggleUserStaffSchema = z.object({
   id: z.string().min(1, 'User ID is required'),
-  isAdmin: z.boolean(),
+  isStaff: z.boolean(),
 })
 
 export const usersQuerySchema = paginationQuerySchema.extend({
@@ -129,7 +129,7 @@ export const clubsQuerySchema = paginationQuerySchema
 // Service function utility types
 export type ServiceUser = {
   id: string
-  isAdmin: boolean
+  isStaff: boolean
 }
 
 export type PublicPayload<TData> = { data: TData }
@@ -153,7 +153,7 @@ export type ClubsQuery = z.infer<typeof clubsQuerySchema>
 export type EventsQuery = z.infer<typeof eventsQuerySchema>
 
 export type UserId = z.infer<typeof userIdSchema>
-export type ToggleUserAdmin = z.infer<typeof toggleUserAdminSchema>
+export type ToggleUserStaff = z.infer<typeof toggleUserStaffSchema>
 export type UsersQuery = z.infer<typeof usersQuerySchema>
 
 // Legal schemas
