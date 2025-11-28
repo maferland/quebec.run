@@ -102,3 +102,40 @@ export function mapStravaClubToDb(
 
   return data
 }
+
+type EventCreateData = {
+  stravaEventId: string
+  clubId: string
+  title: string
+  description: string | null
+  address: string
+  date: Date
+  time: string
+  distance: string | null
+}
+
+export function mapStravaEventToDb(
+  event: StravaGroupEvent,
+  clubId: string
+): EventCreateData {
+  const startDate = new Date(event.upcoming_occurrences[0].start_date)
+  const hours = startDate.getUTCHours().toString().padStart(2, '0')
+  const minutes = startDate.getUTCMinutes().toString().padStart(2, '0')
+  const time = `${hours}:${minutes}`
+
+  let distance: string | null = null
+  if (event.route?.distance) {
+    distance = `${(event.route.distance / 1000).toFixed(1)} km`
+  }
+
+  return {
+    stravaEventId: event.id.toString(),
+    clubId,
+    title: event.title,
+    description: event.description || null,
+    address: event.address,
+    date: startDate,
+    time,
+    distance,
+  }
+}

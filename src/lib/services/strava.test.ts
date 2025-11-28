@@ -1,8 +1,13 @@
 // src/lib/services/strava.test.ts
 import { describe, test, expect, vi, beforeEach } from 'vitest'
-import { fetchStravaClub, fetchStravaEvents, mapStravaClubToDb } from './strava'
+import {
+  fetchStravaClub,
+  fetchStravaEvents,
+  mapStravaClubToDb,
+  mapStravaEventToDb,
+} from './strava'
 import * as stravaLib from '@/lib/strava'
-import type { StravaClub } from './strava-types'
+import type { StravaClub, StravaGroupEvent } from './strava-types'
 
 vi.mock('@/lib/strava')
 
@@ -145,6 +150,47 @@ describe('mapStravaClubToDb', () => {
   test('handles empty description', () => {
     const clubNoDesc = { ...mockClub, description: '' }
     const result = mapStravaClubToDb(clubNoDesc, [])
+
+    expect(result.description).toBeNull()
+  })
+})
+
+describe('mapStravaEventToDb', () => {
+  const mockEvent: StravaGroupEvent = {
+    id: 1,
+    title: 'Morning Run',
+    description: 'Test run description',
+    club_id: 123,
+    address: '123 Main St, Quebec',
+    upcoming_occurrences: [{ start_date: '2025-12-01T08:30:00Z' }],
+    route: { distance: 5000 },
+  }
+
+  test('maps Strava event to DB format', () => {
+    const result = mapStravaEventToDb(mockEvent, 'club123')
+
+    expect(result).toEqual({
+      stravaEventId: '1',
+      clubId: 'club123',
+      title: 'Morning Run',
+      description: 'Test run description',
+      address: '123 Main St, Quebec',
+      date: new Date('2025-12-01T08:30:00Z'),
+      time: '08:30',
+      distance: '5.0 km',
+    })
+  })
+
+  test('handles missing route distance', () => {
+    const eventNoRoute = { ...mockEvent, route: undefined }
+    const result = mapStravaEventToDb(eventNoRoute, 'club123')
+
+    expect(result.distance).toBeNull()
+  })
+
+  test('handles empty description', () => {
+    const eventNoDesc = { ...mockEvent, description: '' }
+    const result = mapStravaEventToDb(eventNoDesc, 'club123')
 
     expect(result.description).toBeNull()
   })
