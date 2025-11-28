@@ -23,6 +23,7 @@
     "test:e2e:ui": "playwright test --ui",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "npx prisma migrate reset --force && npm run db:seed",
+    "db:backfill-geocoding": "tsx prisma/scripts/backfill-geocoding.ts",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "prepare": "husky",
