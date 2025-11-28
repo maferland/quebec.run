@@ -2,7 +2,7 @@ import { prisma } from '@/lib/prisma'
 import type {
   AuthPayload,
   PublicPayload,
-  ToggleUserAdmin,
+  ToggleUserStaff,
   UserId,
   UsersQuery,
 } from '@/lib/schemas'
@@ -12,10 +12,10 @@ import type {
 export const getAllUsersForAdmin = async ({
   data,
 }: PublicPayload<UsersQuery>) => {
-  const { limit = 50, offset = 0, isAdmin } = data
+  const { limit = 50, offset = 0, isStaff } = data
 
-  // Build where clause for optional admin filter
-  const where = isAdmin !== undefined ? { isAdmin: isAdmin === 'true' } : {}
+  // Build where clause for optional staff filter
+  const where = isStaff !== undefined ? { isStaff: isStaff === 'true' } : {}
 
   return await prisma.user.findMany({
     skip: offset,
@@ -26,7 +26,7 @@ export const getAllUsersForAdmin = async ({
       id: true,
       email: true,
       name: true,
-      isAdmin: true,
+      isStaff: true,
       createdAt: true,
       updatedAt: true,
       _count: {
@@ -46,7 +46,7 @@ export const getUserByIdForAdmin = async ({ data }: PublicPayload<UserId>) => {
       id: true,
       email: true,
       name: true,
-      isAdmin: true,
+      isStaff: true,
       createdAt: true,
       updatedAt: true,
       _count: {
@@ -64,15 +64,15 @@ export const getUserByIdForAdmin = async ({ data }: PublicPayload<UserId>) => {
   return user
 }
 
-export const toggleUserAdmin = async ({
+export const toggleUserStaff = async ({
   user,
   data,
-}: AuthPayload<ToggleUserAdmin>) => {
-  const { id, isAdmin } = data
+}: AuthPayload<ToggleUserStaff>) => {
+  const { id, isStaff } = data
 
   // Prevent self-demotion
-  if (user.id === id && user.isAdmin && !isAdmin) {
-    throw new Error('Cannot demote yourself')
+  if (user.id === id && user.isStaff && !isStaff) {
+    throw new Error('Cannot remove your own staff access')
   }
 
   // Verify user exists
@@ -86,6 +86,6 @@ export const toggleUserAdmin = async ({
 
   return await prisma.user.update({
     where: { id },
-    data: { isAdmin },
+    data: { isStaff },
   })
 }
