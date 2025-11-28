@@ -47,8 +47,7 @@ async function backfillGeocoding() {
       console.log(`  ✗ Failed to geocode`)
     }
 
-    // Respect rate limit (1 req/sec)
-    await new Promise((resolve) => setTimeout(resolve, 1100))
+    // Note: geocoding service already rate-limits at 1 req/sec
   }
 
   console.log('\nBackfill complete!')
