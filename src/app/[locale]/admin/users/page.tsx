@@ -1,6 +1,5 @@
 import { getTranslations } from 'next-intl/server'
 import { prisma } from '@/lib/prisma'
-import { ToggleAdminButton } from '@/components/admin/toggle-admin-button'
 import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 
@@ -95,12 +94,7 @@ export default async function AdminUsersPage() {
                       </div>
                     </td>
                     <td className="px-6 py-4 text-right">
-                      <ToggleAdminButton
-                        userId={user.id}
-                        userName={user.name || user.email}
-                        isStaff={user.isStaff}
-                        isCurrentUser={session?.user?.id === user.id}
-                      />
+                      {/* TODO: Add StaffActionsMenu */}
                     </td>
                   </tr>
                 ))}

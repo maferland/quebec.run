@@ -150,6 +150,6 @@ describe('ConfirmStaffDialog', () => {
     )
 
     const confirmButton = screen.getByRole('button', { name: /Remove Staff/i })
-    expect(confirmButton).toHaveClass('destructive')
+    expect(confirmButton).toHaveClass('text-red-600')
   })
 })

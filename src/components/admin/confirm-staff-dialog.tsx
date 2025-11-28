@@ -84,10 +84,9 @@ export function ConfirmStaffDialog({
             Cancel
           </Button>
           <Button
-            variant={action === 'demote' ? 'destructive' : 'default'}
+            variant={action === 'demote' ? 'destructive' : 'primary'}
             onClick={onConfirm}
             disabled={!isValid || loading}
-            className={action === 'demote' ? 'destructive' : ''}
           >
             {loading
               ? 'Processing...'

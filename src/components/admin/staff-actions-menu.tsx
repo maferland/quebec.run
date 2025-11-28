@@ -30,7 +30,12 @@ export function StaffActionsMenu({
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Staff actions">
+        <Button
+          variant="outline"
+          size="sm"
+          aria-label="Staff actions"
+          className="h-8 w-8 p-0"
+        >
           <MoreVertical className="h-4 w-4" />
         </Button>
       </DropdownMenuTrigger>
