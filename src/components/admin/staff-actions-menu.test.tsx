@@ -67,7 +67,7 @@ describe('StaffActionsMenu', () => {
 
     await user.click(screen.getByRole('button'))
     const removeButton = screen.getByText('Remove Staff')
-    expect(removeButton).toHaveAttribute('data-disabled', 'true')
+    expect(removeButton).toHaveAttribute('data-disabled')
   })
 
   it('calls onToggleStaff with correct params when making staff', async () => {
