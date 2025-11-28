@@ -52,6 +52,7 @@ export async function syncStravaClub(clubId: string): Promise<SyncSummary> {
     const clubUpdate = mapStravaClubToDb(stravaClub, club.manualOverrides)
 
     // Only update if there are fields to update
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { stravaClubId: _, ...fieldsToUpdate } = clubUpdate
     const hasFieldsToUpdate = Object.values(fieldsToUpdate).some(
       (val) => val !== undefined
@@ -69,28 +70,54 @@ export async function syncStravaClub(clubId: string): Promise<SyncSummary> {
       if (clubUpdate.website) summary.fieldsUpdated.push('website')
     }
 
-    // Sync events (create/update)
+    // Sync events (create/update) - batch to avoid N+1
+    const stravaEventIds = stravaEvents.map((e) => e.id.toString())
+
+    // Fetch all existing events in one query
+    const existingEvents = await prisma.event.findMany({
+      where: {
+        clubId,
+        stravaEventId: { in: stravaEventIds },
+      },
+      select: { stravaEventId: true },
+    })
+
+    // Create lookup map for O(1) existence checks
+    const existingEventIds = new Set(
+      existingEvents
+        .map((e) => e.stravaEventId)
+        .filter((id): id is string => id !== null)
+    )
+
+    // Separate events into create/update batches
+    const eventsToCreate = []
+    const eventsToUpdate = []
+
     for (const stravaEvent of stravaEvents) {
       const eventData = mapStravaEventToDb(stravaEvent, clubId)
-
-      const existing = await prisma.event.findUnique({
-        where: { stravaEventId: eventData.stravaEventId },
-      })
-
-      if (existing) {
-        await prisma.event.update({
-          where: { stravaEventId: eventData.stravaEventId },
-          data: eventData,
-        })
-        summary.eventsUpdated++
+      if (existingEventIds.has(eventData.stravaEventId)) {
+        eventsToUpdate.push(eventData)
       } else {
-        await prisma.event.create({ data: eventData })
-        summary.eventsAdded++
+        eventsToCreate.push(eventData)
       }
     }
 
+    // Batch create new events
+    if (eventsToCreate.length > 0) {
+      await prisma.event.createMany({ data: eventsToCreate })
+      summary.eventsAdded = eventsToCreate.length
+    }
+
+    // Update existing events individually (Prisma limitation)
+    for (const eventData of eventsToUpdate) {
+      await prisma.event.update({
+        where: { stravaEventId: eventData.stravaEventId },
+        data: eventData,
+      })
+      summary.eventsUpdated++
+    }
+
     // Delete events removed from Strava
-    const stravaEventIds = stravaEvents.map((e) => e.id.toString())
     const deleted = await prisma.event.deleteMany({
       where: {
         clubId,
