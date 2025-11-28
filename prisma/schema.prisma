@@ -137,12 +137,13 @@ model Event {
   id          String   @id @default(cuid())
   title       String
   description String?
-  
+
   // Location
   address     String?
   latitude    Float?
   longitude   Float?
-  
+  geocodedAt  DateTime?
+
   // Event timing
   date        DateTime
   time        String
