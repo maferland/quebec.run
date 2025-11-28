@@ -75,6 +75,17 @@
         "description": "Discover scenic running routes throughout Quebec City, from Old Quebec to the Plains of Abraham.",
         "button": "View Calendar"
       }
+    },
+    "map": {
+      "title": "Events Near You",
+      "emptyState": "Events will appear on the map once addresses are geocoded",
+      "popup": {
+        "date": "Date:",
+        "time": "Time:",
+        "club": "Club:",
+        "address": "Address:",
+        "viewDetails": "View Details"
+      }
     }
   },
   "calendar": {

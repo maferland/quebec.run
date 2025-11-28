@@ -75,6 +75,17 @@
         "description": "Découvrez des parcours de course pittoresques à travers Québec, du Vieux-Québec aux plaines d'Abraham.",
         "button": "Voir le calendrier"
       }
+    },
+    "map": {
+      "title": "Événements près de chez vous",
+      "emptyState": "Les événements apparaîtront sur la carte une fois les adresses géocodées",
+      "popup": {
+        "date": "Date :",
+        "time": "Heure :",
+        "club": "Club :",
+        "address": "Adresse :",
+        "viewDetails": "Voir les détails"
+      }
     }
   },
   "calendar": {

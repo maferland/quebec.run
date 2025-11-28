@@ -4,6 +4,7 @@ import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-markercluster'
 import { Icon } from 'leaflet'
 import { format } from 'date-fns'
+import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
@@ -41,6 +42,8 @@ export default function EventMapContent({
   initialCenter,
   initialZoom,
 }: EventMapContentProps) {
+  const t = useTranslations('home.map.popup')
+
   return (
     <MapContainer
       center={initialCenter}
@@ -66,13 +69,13 @@ export default function EventMapContent({
                 </h3>
                 <div className="space-y-1 text-sm text-accent mb-3">
                   <p>
-                    <strong>Date:</strong> {format(event.date, 'PPP')}
+                    <strong>{t('date')}</strong> {format(event.date, 'PPP')}
                   </p>
                   <p>
-                    <strong>Time:</strong> {event.time}
+                    <strong>{t('time')}</strong> {event.time}
                   </p>
                   <p>
-                    <strong>Club:</strong>{' '}
+                    <strong>{t('club')}</strong>{' '}
                     <Link
                       href={`/clubs/${event.club.slug}`}
                       className="text-primary hover:underline"
@@ -82,13 +85,13 @@ export default function EventMapContent({
                   </p>
                   {event.address && (
                     <p>
-                      <strong>Address:</strong> {event.address}
+                      <strong>{t('address')}</strong> {event.address}
                     </p>
                   )}
                 </div>
                 <Link href={`/events/${event.id}`}>
                   <Button size="sm" variant="primary" className="w-full">
-                    View Details
+                    {t('viewDetails')}
                   </Button>
                 </Link>
               </div>
