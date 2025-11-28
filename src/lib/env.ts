@@ -34,8 +34,6 @@ const envSchema = z
     EMAIL_SERVER_PASSWORD: z.string().optional(),
 
     // Strava API
-    STRAVA_CLIENT_ID: z.string().min(1),
-    STRAVA_CLIENT_SECRET: z.string().min(1),
     STRAVA_ACCESS_TOKEN: z.string().min(1),
   })
   .refine(
