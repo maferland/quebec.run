@@ -111,7 +111,7 @@ export const toggleUserStaffSchema = z.object({
 })
 
 export const usersQuerySchema = paginationQuerySchema.extend({
-  isAdmin: z.enum(['true', 'false']).optional(),
+  isStaff: z.enum(['true', 'false']).optional(),
 })
 
 // API response schemas

@@ -7,20 +7,20 @@ import { useToggleUserAdmin } from '@/lib/hooks/use-users'
 interface ToggleAdminButtonProps {
   userId: string
   userName: string
-  isAdmin: boolean
+  isStaff: boolean
   isCurrentUser: boolean
 }
 
 export function ToggleAdminButton({
   userId,
   userName,
-  isAdmin,
+  isStaff,
   isCurrentUser,
 }: ToggleAdminButtonProps) {
   const toggleAdmin = useToggleUserAdmin()
 
   const handleToggle = async () => {
-    const message = isAdmin
+    const message = isStaff
       ? `Revoke admin access from ${userName}?`
       : `Grant admin access to ${userName}?`
 
@@ -31,7 +31,7 @@ export function ToggleAdminButton({
     try {
       await toggleAdmin.mutateAsync({
         id: userId,
-        isAdmin: !isAdmin,
+        isStaff: !isStaff,
       })
     } catch {
       alert('Failed to update admin status. Please try again.')
@@ -40,16 +40,16 @@ export function ToggleAdminButton({
 
   return (
     <Button
-      variant={isAdmin ? 'outline-primary' : 'outline'}
+      variant={isStaff ? 'outline-primary' : 'outline'}
       size="sm"
       onClick={handleToggle}
       disabled={isCurrentUser || toggleAdmin.isPending}
       aria-label={
-        isAdmin ? `Revoke admin from ${userName}` : `Grant admin to ${userName}`
+        isStaff ? `Revoke admin from ${userName}` : `Grant admin to ${userName}`
       }
     >
       <Shield
-        className={`w-4 h-4 ${isAdmin ? 'text-primary' : 'text-text-secondary'}`}
+        className={`w-4 h-4 ${isStaff ? 'text-primary' : 'text-text-secondary'}`}
       />
     </Button>
   )
