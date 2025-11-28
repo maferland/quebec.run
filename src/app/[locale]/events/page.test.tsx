@@ -48,15 +48,11 @@ describe('EventsPage', () => {
       date: new Date('2025-12-15'),
       time: '08:00',
       address: 'Montreal',
-      description: null,
-      createdAt: new Date('2025-01-01'),
-      updatedAt: new Date('2025-01-01'),
       distance: null,
       pace: null,
-      clubId: 'club1',
-      latitude: null,
-      longitude: null,
-      recurringEventId: null,
+      club: {
+        name: 'Montreal Runners',
+      },
     },
   ]
 

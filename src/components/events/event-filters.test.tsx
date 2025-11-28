@@ -25,9 +25,14 @@ describe('EventFilters', () => {
 
   beforeEach(() => {
     vi.clearAllMocks()
-    vi.mocked(useRouter).mockReturnValue({ push: mockPush } as ReturnType<
-      typeof useRouter
-    >)
+    vi.mocked(useRouter).mockReturnValue({
+      push: mockPush,
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+      replace: vi.fn(),
+      prefetch: vi.fn(),
+    } as ReturnType<typeof useRouter>)
     vi.mocked(useSearchParams).mockReturnValue(
       mockSearchParams as ReturnType<typeof useSearchParams>
     )

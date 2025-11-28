@@ -10,9 +10,29 @@ import type {
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
+// Type definitions for service returns
+export type GetAllEventsReturn = Prisma.EventGetPayload<{
+  select: {
+    id: true
+    title: true
+    date: true
+    time: true
+    distance: true
+    pace: true
+    address: true
+    club: {
+      select: {
+        name: true
+      }
+    }
+  }
+}>
+
 // Pure business logic functions - let TypeScript infer return types
 
-export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
+export const getAllEvents = async ({
+  data,
+}: PublicPayload<EventsQuery>): Promise<GetAllEventsReturn[]> => {
   const {
     limit = 50,
     offset = 0,
@@ -52,8 +72,8 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   const events = await prisma.event.findMany({
     where,
     orderBy,
-    take: limit,
-    skip: offset,
+    take: Number(limit),
+    skip: Number(offset),
     select: {
       id: true,
       title: true,
@@ -72,8 +92,6 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 
   return events
 }
-
-export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
 export const getAllEventsForAdmin = async ({
   user,

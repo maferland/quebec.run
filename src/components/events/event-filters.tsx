@@ -102,7 +102,7 @@ export function EventFilters({
 
       {/* Clear Filters */}
       <Button
-        variant="ghost"
+        variant="outline"
         onClick={handleClearFilters}
         className="sm:w-auto"
         aria-label={t('clearFilters')}
