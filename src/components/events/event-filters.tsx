@@ -47,6 +47,7 @@ export function EventFilters({
   }
 
   const handleClearFilters = () => {
+    setSearch('')
     router.push('/events')
   }
 
