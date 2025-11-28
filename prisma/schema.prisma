@@ -22,11 +22,12 @@ model User {
   isAdmin       Boolean   @default(false)
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
-  
+
   accounts Account[]
   sessions Session[]
   clubs    Club[]
-  
+  consents UserConsent[]
+
   @@map("users")
 }
 
@@ -91,7 +92,7 @@ model Club {
   ownerId      String
   
   // Relations
-  owner           User             @relation(fields: [ownerId], references: [id])
+  owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   events          Event[]
   recurringEvents RecurringEvent[]
   
@@ -161,6 +162,17 @@ model Event {
   // Relations
   club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
-  
+
   @@map("events")
+}
+
+model UserConsent {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  acceptedAt  DateTime @default(now())
+  ipAddress   String?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_consents")
 }

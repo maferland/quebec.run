@@ -151,3 +151,16 @@ export type EventsQuery = z.infer<typeof eventsQuerySchema>
 export type UserId = z.infer<typeof userIdSchema>
 export type ToggleUserAdmin = z.infer<typeof toggleUserAdminSchema>
 export type UsersQuery = z.infer<typeof usersQuerySchema>
+
+// Legal schemas
+export const consentCreateSchema = z.object({})
+export const dataExportSchema = z.object({})
+export const deletionRequestSchema = z.object({})
+export const deletionCancelSchema = z.object({
+  id: z.string().cuid(),
+})
+
+export type ConsentCreate = z.infer<typeof consentCreateSchema>
+export type DataExport = z.infer<typeof dataExportSchema>
+export type DeletionRequest = z.infer<typeof deletionRequestSchema>
+export type DeletionCancel = z.infer<typeof deletionCancelSchema>

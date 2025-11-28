@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from 'react'
 import { User, LogOut, ChevronDown } from 'lucide-react'
 import { signOut } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { Link } from '@/i18n/navigation'
 
 interface UserDropdownProps {
   userName: string
@@ -67,6 +68,13 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
                 </p>
               )}
             </div>
+            <Link
+              href="/settings/privacy"
+              className="flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors"
+              onClick={() => setIsOpen(false)}
+            >
+              Privacy Settings
+            </Link>
             <button
               onClick={handleSignOut}
               className="w-full flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors"
