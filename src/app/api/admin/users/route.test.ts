@@ -14,20 +14,20 @@ import { getServerSession } from 'next-auth'
 const mockGetServerSession = getServerSession as ReturnType<typeof vi.fn>
 
 describe('User API Routes', () => {
-  let adminUser: { id: string; email: string; isAdmin: boolean }
-  let testUser: { id: string; email: string; isAdmin: boolean }
+  let adminUser: { id: string; email: string; isStaff: boolean }
+  let testUser: { id: string; email: string; isStaff: boolean }
 
   beforeEach(async () => {
     await cleanDatabase()
 
     adminUser = await prisma.user.create({
-      data: { email: 'admin@test.com', isAdmin: true },
-      select: { id: true, email: true, isAdmin: true },
+      data: { email: 'admin@test.com', isStaff: true },
+      select: { id: true, email: true, isStaff: true },
     })
 
     testUser = await prisma.user.create({
-      data: { email: 'user@test.com', isAdmin: false },
-      select: { id: true, email: true, isAdmin: true },
+      data: { email: 'user@test.com', isStaff: false },
+      select: { id: true, email: true, isStaff: true },
     })
   })
 
@@ -39,7 +39,7 @@ describe('User API Routes', () => {
     it('returns all users for admin', async () => {
       // Mock admin session
       mockGetServerSession.mockResolvedValue({
-        user: { id: adminUser.id, isAdmin: true },
+        user: { id: adminUser.id, isStaff: true },
         expires: '2025-01-01',
       })
 
@@ -54,7 +54,7 @@ describe('User API Routes', () => {
     it('returns 403 for non-admin', async () => {
       // Mock non-admin session
       mockGetServerSession.mockResolvedValue({
-        user: { id: testUser.id, isAdmin: false },
+        user: { id: testUser.id, isStaff: false },
         expires: '2025-01-01',
       })
 
@@ -83,7 +83,7 @@ describe('User API Routes', () => {
     it('toggles admin status', async () => {
       // Mock admin session
       mockGetServerSession.mockResolvedValue({
-        user: { id: adminUser.id, isAdmin: true },
+        user: { id: adminUser.id, isStaff: true },
         expires: '2025-01-01',
       })
 
@@ -91,7 +91,7 @@ describe('User API Routes', () => {
         'http://localhost/api/admin/users/' + testUser.id,
         {
           method: 'PATCH',
-          body: JSON.stringify({ id: testUser.id, isAdmin: true }),
+          body: JSON.stringify({ id: testUser.id, isStaff: true }),
         }
       )
 
@@ -101,13 +101,13 @@ describe('User API Routes', () => {
       const data = await response.json()
 
       expect(response.status).toBe(200)
-      expect(data.isAdmin).toBe(true)
+      expect(data.isStaff).toBe(true)
     })
 
     it('returns 403 for non-admin', async () => {
       // Mock non-admin session
       mockGetServerSession.mockResolvedValue({
-        user: { id: testUser.id, isAdmin: false },
+        user: { id: testUser.id, isStaff: false },
         expires: '2025-01-01',
       })
 
@@ -115,7 +115,7 @@ describe('User API Routes', () => {
         'http://localhost/api/admin/users/' + adminUser.id,
         {
           method: 'PATCH',
-          body: JSON.stringify({ id: adminUser.id, isAdmin: false }),
+          body: JSON.stringify({ id: adminUser.id, isStaff: false }),
         }
       )
 
@@ -136,7 +136,7 @@ describe('User API Routes', () => {
         'http://localhost/api/admin/users/' + testUser.id,
         {
           method: 'PATCH',
-          body: JSON.stringify({ id: testUser.id, isAdmin: true }),
+          body: JSON.stringify({ id: testUser.id, isStaff: true }),
         }
       )
 

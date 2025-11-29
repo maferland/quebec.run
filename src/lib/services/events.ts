@@ -110,7 +110,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     throw new NotFoundError('Event not found')
   }
 
-  if (!user.isAdmin && event.club.ownerId !== user.id) {
+  if (!user.isStaff && event.club.ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 
@@ -149,7 +149,7 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
     throw new NotFoundError('Event not found')
   }
 
-  if (!user.isAdmin && event.club.ownerId !== user.id) {
+  if (!user.isStaff && event.club.ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 

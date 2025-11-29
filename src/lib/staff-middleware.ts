@@ -5,10 +5,10 @@ import { prisma } from './prisma'
 import { redirect } from 'next/navigation'
 
 /**
- * Admin middleware to protect admin routes
- * Returns the admin user if authenticated and authorized, or throws if not
+ * Staff middleware to protect staff routes
+ * Returns the staff user if authenticated and authorized, or throws if not
  */
-export async function requireAdmin() {
+export async function requireStaff() {
   const session = await getServerSession(authOptions)
 
   if (!session?.user?.email) {
@@ -17,36 +17,36 @@ export async function requireAdmin() {
 
   const user = await prisma.user.findUnique({
     where: { email: session.user.email },
-    select: { id: true, email: true, name: true, isAdmin: true },
+    select: { id: true, email: true, name: true, isStaff: true },
   })
 
-  if (!user || !user.isAdmin) {
-    throw new Error('Admin access required')
+  if (!user || !user.isStaff) {
+    throw new Error('Staff access required')
   }
 
   return user
 }
 
 /**
- * API middleware for admin routes
+ * API middleware for staff routes
  * Returns user or creates error response
  */
-export async function withAdminAuth<T>(
+export async function withStaffAuth<T>(
   handler: (user: {
     id: string
     email: string
     name: string | null
-    isAdmin: boolean
+    isStaff: boolean
   }) => Promise<T>
 ) {
   try {
-    const user = await requireAdmin()
+    const user = await requireStaff()
     return await handler(user)
   } catch (error) {
     if (error instanceof Error) {
-      if (error.message === 'Admin access required') {
+      if (error.message === 'Staff access required') {
         return NextResponse.json(
-          { error: 'Admin access required' },
+          { error: 'Staff access required' },
           { status: 403 }
         )
       }
@@ -59,11 +59,11 @@ export async function withAdminAuth<T>(
 }
 
 /**
- * Check if current user is admin (for client-side usage)
+ * Check if current user is staff (for client-side usage)
  */
-export async function isCurrentUserAdmin(): Promise<boolean> {
+export async function isCurrentUserStaff(): Promise<boolean> {
   try {
-    await requireAdmin()
+    await requireStaff()
     return true
   } catch {
     return false

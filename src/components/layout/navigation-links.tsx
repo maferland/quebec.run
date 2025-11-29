@@ -52,7 +52,7 @@ export function NavigationLinks({
           </NavLink>
         </div>
       ))}
-      {session?.user?.isAdmin && (
+      {session?.user?.isStaff && (
         <div onClick={onLinkClick}>
           <NavLink href="/admin">
             <span>{t('admin')}</span>

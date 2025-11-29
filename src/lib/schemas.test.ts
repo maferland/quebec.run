@@ -10,7 +10,7 @@ import {
   eventUpdateSchema,
   eventsQuerySchema,
   userIdSchema,
-  toggleUserAdminSchema,
+  toggleUserStaffSchema,
   usersQuerySchema,
 } from './schemas'
 
@@ -231,20 +231,20 @@ describe('schemas', () => {
       expect(() => userIdSchema.parse({})).toThrow()
     })
 
-    it('validates toggleUserAdminSchema', () => {
-      const valid = toggleUserAdminSchema.parse({
+    it('validates toggleUserStaffSchema', () => {
+      const valid = toggleUserStaffSchema.parse({
         id: 'user-123',
-        isAdmin: true,
+        isStaff: true,
       })
-      expect(valid.isAdmin).toBe(true)
+      expect(valid.isStaff).toBe(true)
 
-      expect(() => toggleUserAdminSchema.parse({ id: 'user-123' })).toThrow()
+      expect(() => toggleUserStaffSchema.parse({ id: 'user-123' })).toThrow()
     })
 
     it('validates usersQuerySchema', () => {
-      const valid = usersQuerySchema.parse({ limit: '10', isAdmin: 'true' })
+      const valid = usersQuerySchema.parse({ limit: '10', isStaff: 'true' })
       expect(valid.limit).toBe(10)
-      expect(valid.isAdmin).toBe('true')
+      expect(valid.isStaff).toBe('true')
     })
   })
 })

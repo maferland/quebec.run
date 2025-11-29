@@ -119,4 +119,28 @@ describe('SignInPage', () => {
       })
     })
   })
+
+  it('shows dev quick login in development', () => {
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
+
+    render(<SignInPage />)
+
+    expect(screen.getByText(/DEV ONLY/i)).toBeInTheDocument()
+    expect(screen.getByText(/Quick Login/i)).toBeInTheDocument()
+
+    process.env.NODE_ENV = originalEnv
+  })
+
+  it('hides dev quick login in production', () => {
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
+
+    render(<SignInPage />)
+
+    expect(screen.queryByText(/DEV ONLY/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Quick Login/i)).not.toBeInTheDocument()
+
+    process.env.NODE_ENV = originalEnv
+  })
 })

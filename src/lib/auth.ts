@@ -2,6 +2,7 @@ import { env } from '@/lib/env'
 import { prisma } from '@/lib/prisma'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import EmailProvider from 'next-auth/providers/email'
 import { Resend } from 'resend'
 
@@ -67,7 +68,38 @@ const createEmailProvider = () => {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
-  providers: [createEmailProvider()],
+  providers: [
+    createEmailProvider(),
+    // Dev-only: bypass email verification
+    ...(env.NODE_ENV !== 'production'
+      ? [
+          CredentialsProvider({
+            id: 'dev-bypass',
+            name: 'Dev Bypass',
+            credentials: {
+              email: { label: 'Email', type: 'text' },
+            },
+            async authorize(credentials) {
+              if (!credentials?.email) return null
+
+              const user = await prisma.user.findUnique({
+                where: { email: credentials.email },
+                select: { id: true, email: true, name: true, isStaff: true },
+              })
+
+              if (!user) return null
+
+              return {
+                id: user.id,
+                email: user.email,
+                name: user.name,
+                isStaff: user.isStaff,
+              }
+            },
+          }),
+        ]
+      : []),
+  ],
   pages: {
     // Use path without locale prefix - middleware will add locale automatically
     // Signin page is in [locale]/auth/signin and inherits i18n context from [locale]/layout.tsx
@@ -75,15 +107,18 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: '/auth/signin',
   },
   callbacks: {
-    session: async ({ session, user }) => {
+    session: async ({ session, user, token }) => {
       if (session?.user) {
-        session.user.id = user.id
-        // Check if user is admin
+        // For credentials provider, user ID comes from token
+        const userId = user?.id || token?.sub
+        if (!userId) return session
+
+        session.user.id = userId
         const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { isAdmin: true },
+          where: { id: userId },
+          select: { isStaff: true },
         })
-        session.user.isAdmin = dbUser?.isAdmin ?? false
+        session.user.isStaff = dbUser?.isStaff ?? false
       }
       return session
     },
