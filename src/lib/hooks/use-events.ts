@@ -113,3 +113,33 @@ export function useDeleteEvent() {
     },
   })
 }
+
+// useEvents hook for home page search
+type UseEventsParams = {
+  search?: string
+  limit?: number
+}
+
+export function useEvents(params: UseEventsParams = {}) {
+  const searchParams = new URLSearchParams()
+
+  if (params.search) {
+    searchParams.set('search', params.search)
+  }
+
+  if (params.limit) {
+    searchParams.set('limit', params.limit.toString())
+  }
+
+  return useQuery({
+    queryKey: ['events', params],
+    queryFn: async () => {
+      const response = await fetch(`/api/events?${searchParams.toString()}`)
+      if (!response.ok) {
+        throw new Error('Failed to fetch events')
+      }
+      return response.json()
+    },
+    enabled: true,
+  })
+}
