@@ -83,7 +83,7 @@ export const eventsQuerySchema = z.object({
   dateTo: z.string().datetime().optional(),
   sortBy: z.enum(['date', 'title']).optional().default('date'),
   sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
-  limit: z.coerce.number().min(1).max(100).optional().default(50),
+  limit: z.coerce.number().min(1).max(100).optional().default(6),
   offset: z.coerce.number().min(0).optional().default(0),
 })
 

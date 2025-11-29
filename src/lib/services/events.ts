@@ -34,7 +34,7 @@ export const getAllEvents = async ({
   data,
 }: PublicPayload<EventsQuery>): Promise<GetAllEventsReturn[]> => {
   const {
-    limit = 50,
+    limit = 6,
     offset = 0,
     clubId,
     search,

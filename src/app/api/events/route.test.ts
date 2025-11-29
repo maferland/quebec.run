@@ -1,9 +1,10 @@
 import { GET } from './route'
 import { getAllEvents, type GetAllEventsReturn } from '@/lib/services/events'
-import { NextRequest } from 'next/server'
 import { vi } from 'vitest'
 
 vi.mock('@/lib/services/events')
+
+const mockContext = { params: Promise.resolve({}) }
 
 describe('/api/events', () => {
   beforeEach(() => {
@@ -26,10 +27,12 @@ describe('/api/events', () => {
     vi.mocked(getAllEvents).mockResolvedValue(mockEvents)
 
     const request = new Request('http://localhost:3000/api/events')
-    const response = await GET(request as NextRequest)
+    const response = await GET(request, mockContext)
     const data = await response.json()
 
-    expect(getAllEvents).toHaveBeenCalledWith({ data: { limit: 6 } })
+    expect(getAllEvents).toHaveBeenCalledWith({
+      data: expect.objectContaining({ limit: 6 }),
+    })
     expect(response.status).toBe(200)
     expect(data).toHaveLength(1)
     expect(data[0]).toMatchObject({
@@ -57,11 +60,11 @@ describe('/api/events', () => {
     const request = new Request(
       'http://localhost:3000/api/events?search=montreal'
     )
-    const response = await GET(request as NextRequest)
+    const response = await GET(request, mockContext)
     const data = await response.json()
 
     expect(getAllEvents).toHaveBeenCalledWith({
-      data: { search: 'montreal', limit: 6 },
+      data: expect.objectContaining({ search: 'montreal', limit: 6 }),
     })
     expect(data).toHaveLength(1)
     expect(data[0]).toMatchObject({
@@ -75,10 +78,10 @@ describe('/api/events', () => {
     vi.mocked(getAllEvents).mockResolvedValue([])
 
     const request = new Request('http://localhost:3000/api/events?limit=10')
-    await GET(request as NextRequest)
+    await GET(request, mockContext)
 
     expect(getAllEvents).toHaveBeenCalledWith({
-      data: { limit: 10 },
+      data: expect.objectContaining({ limit: 10 }),
     })
   })
 
@@ -86,8 +89,19 @@ describe('/api/events', () => {
     vi.mocked(getAllEvents).mockRejectedValue(new Error('DB Error'))
 
     const request = new Request('http://localhost:3000/api/events')
-    const response = await GET(request as NextRequest)
+    const response = await GET(request, mockContext)
 
     expect(response.status).toBe(500)
+  })
+
+  it('validates query parameters with Zod', async () => {
+    const request = new Request(
+      'http://localhost:3000/api/events?limit=invalid'
+    )
+    const response = await GET(request, mockContext)
+
+    expect(response.status).toBe(400)
+    const data = await response.json()
+    expect(data.error).toContain('Validation failed')
   })
 })
