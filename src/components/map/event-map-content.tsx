@@ -10,16 +10,13 @@ import { Button } from '@/components/ui/button'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
-// Fix default marker icon issue with Leaflet + bundlers
-const defaultIcon = new Icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl:
-    'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+// Custom red marker icon matching brand color
+const markerIcon = new Icon({
+  iconUrl:
+    'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iMjUiIGhlaWdodD0iNDEiIHZpZXdCb3g9IjAgMCAyNSA0MSIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48cGF0aCBkPSJNMTIuNSAwQzUuNTk2NDQgMCAwIDUuNTk2NDQgMCAxMi41QzAgMjEuODc1IDEyLjUgNDEgMTIuNSA0MUMyNS41IDE5IDI1IDIxLjg3NSAyNSAxMi41QzI1IDUuNTk2NDQgMTkuNDAzNiAwIDEyLjUgMFoiIGZpbGw9IiNFRjQ0NDQiLz48Y2lyY2xlIGN4PSIxMi41IiBjeT0iMTIuNSIgcj0iNSIgZmlsbD0id2hpdGUiLz48L3N2Zz4=',
   iconSize: [25, 41],
   iconAnchor: [12, 41],
   popupAnchor: [1, -34],
-  shadowSize: [41, 41],
 })
 
 interface EventMapContentProps {
@@ -49,18 +46,16 @@ export default function EventMapContent({
       center={initialCenter}
       zoom={initialZoom}
       scrollWheelZoom={true}
+      attributionControl={false}
       className="h-full w-full"
     >
-      <TileLayer
-        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-      />
+      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
       <MarkerClusterGroup>
         {events.map((event) => (
           <Marker
             key={event.id}
             position={[event.latitude, event.longitude]}
-            icon={defaultIcon}
+            icon={markerIcon}
           >
             <Popup>
               <div className="min-w-[200px]">
