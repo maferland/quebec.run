@@ -63,6 +63,7 @@
     "clubs": {
       "title": "Featured Running Clubs",
       "viewAll": "View All Clubs",
+      "count": "clubs",
       "noResults": "No clubs found matching \"{search}\"",
       "noClubs": "No clubs available"
     },
@@ -111,6 +112,9 @@
   "events": {
     "title": "Running Events",
     "backToEvents": "Back to All Events",
+    "count": "events",
+    "viewAll": "View All Events",
+    "noEvents": "No events available",
     "filters": {
       "searchPlaceholder": "Search by title or location",
       "allClubs": "All Clubs",

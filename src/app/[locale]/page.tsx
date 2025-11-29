@@ -3,7 +3,10 @@
 import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { useClubs } from '@/lib/hooks/use-clubs'
+import { useEvents } from '@/lib/hooks/use-events'
+import type { EventWithClub } from '@/lib/schemas'
 import { ClubCard } from '@/components/clubs/club-card'
+import { EventCard } from '@/components/events/event-card'
 import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
 import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
@@ -14,6 +17,11 @@ export default function Home() {
   const t = useTranslations('home')
   const { data: clubs, isLoading: clubsLoading } = useClubs()
   const [search, setSearch] = useState('')
+
+  const { data: events, isLoading: eventsLoading } = useEvents({
+    search,
+    limit: 6,
+  })
 
   const filteredClubs =
     clubs?.filter((club) =>
@@ -94,12 +102,56 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Upcoming Events Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl font-heading font-bold text-primary">
+              {t('events.title')}
+              {events && events.length > 0 && (
+                <span className="ml-2 text-text-secondary text-xl">
+                  ({events.length} {t('events.count')})
+                </span>
+              )}
+            </h2>
+            <Link href="/events">
+              <Button variant="outline-primary">{t('events.viewAll')}</Button>
+            </Link>
+          </div>
+
+          {eventsLoading ? (
+            <LoadingGrid count={6}>
+              <LoadingCard />
+            </LoadingGrid>
+          ) : events && events.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-secondary">
+                {search
+                  ? t('events.noResults', { search })
+                  : t('events.noEvents')}
+              </p>
+            </div>
+          ) : (
+            <ContentGrid>
+              {events?.slice(0, 6).map((event: EventWithClub) => (
+                <EventCard key={event.id} event={event} showClubName />
+              ))}
+            </ContentGrid>
+          )}
+        </div>
+      </section>
+
       {/* Featured Clubs Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-3xl font-heading font-bold text-primary">
               {t('clubs.title')}
+              {filteredClubs && filteredClubs.length > 0 && (
+                <span className="ml-2 text-text-secondary text-xl">
+                  ({filteredClubs.length} {t('clubs.count')})
+                </span>
+              )}
             </h2>
             <Link href="/clubs">
               <Button variant="outline-primary">{t('clubs.viewAll')}</Button>

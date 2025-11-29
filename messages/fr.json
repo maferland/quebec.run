@@ -63,6 +63,7 @@
     "clubs": {
       "title": "Clubs de course en vedette",
       "viewAll": "Voir tous les clubs",
+      "count": "clubs",
       "noResults": "Aucun club trouvé correspondant à \"{search}\"",
       "noClubs": "Aucun club disponible"
     },
@@ -111,6 +112,9 @@
   "events": {
     "title": "Événements de course",
     "backToEvents": "Retour à tous les événements",
+    "count": "événements",
+    "viewAll": "Voir tous les événements",
+    "noEvents": "Aucun événement disponible",
     "filters": {
       "searchPlaceholder": "Rechercher par titre ou lieu",
       "allClubs": "Tous les clubs",
