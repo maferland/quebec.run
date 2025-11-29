@@ -162,10 +162,10 @@ export default function SignInPage() {
                   <option value="maferland@quebec.run">
                     Marc-Antoine Ferland (Staff)
                   </option>
-                  <option value="owner1@example.com">
+                  <option value="alice.tremblay@quebec.run">
                     Alice Tremblay (Club Owner)
                   </option>
-                  <option value="owner2@example.com">
+                  <option value="bob.gagnon@quebec.run">
                     Bob Gagnon (Club Owner)
                   </option>
                 </select>

@@ -22,20 +22,20 @@ async function main() {
 
   // Create test club owners (regular users, not staff)
   const clubOwner1 = await prisma.user.upsert({
-    where: { email: 'owner1@example.com' },
+    where: { email: 'alice.tremblay@quebec.run' },
     update: {},
     create: {
-      email: 'owner1@example.com',
+      email: 'alice.tremblay@quebec.run',
       name: 'Alice Tremblay',
       isStaff: false,
     },
   })
 
   const clubOwner2 = await prisma.user.upsert({
-    where: { email: 'owner2@example.com' },
+    where: { email: 'bob.gagnon@quebec.run' },
     update: {},
     create: {
-      email: 'owner2@example.com',
+      email: 'bob.gagnon@quebec.run',
       name: 'Bob Gagnon',
       isStaff: false,
     },
