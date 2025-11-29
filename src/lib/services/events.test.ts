@@ -467,6 +467,71 @@ describe('Events Service Integration Tests', () => {
       })
       expect(result).toHaveLength(0)
     })
+
+    it('filters by club name in search', async () => {
+      await testPrisma.event.deleteMany()
+      await testPrisma.club.deleteMany()
+      await testPrisma.user.deleteMany()
+
+      const user = await testPrisma.user.create({
+        data: { email: 'owner@test.com', name: 'Owner' },
+      })
+
+      const club = await testPrisma.club.create({
+        data: {
+          name: '6AM Club Montcalm',
+          slug: '6am-club',
+          ownerId: user.id,
+        },
+      })
+
+      await testPrisma.event.create({
+        data: {
+          title: 'Morning Run',
+          date: new Date('2025-12-15'),
+          time: '08:00',
+          address: '123 Test Street',
+          clubId: club.id,
+        },
+      })
+
+      const result = await getAllEvents({ data: { search: '6AM' } })
+      expect(result).toHaveLength(1)
+      expect(result[0].title).toBe('Morning Run')
+      expect(result[0].club.name).toBe('6AM Club Montcalm')
+    })
+
+    it('filters by club name case-insensitive', async () => {
+      await testPrisma.event.deleteMany()
+      await testPrisma.club.deleteMany()
+      await testPrisma.user.deleteMany()
+
+      const user = await testPrisma.user.create({
+        data: { email: 'owner2@test.com', name: 'Owner2' },
+      })
+
+      const club = await testPrisma.club.create({
+        data: {
+          name: '6AM Club Montcalm',
+          slug: '6am-club-2',
+          ownerId: user.id,
+        },
+      })
+
+      await testPrisma.event.create({
+        data: {
+          title: 'Evening Run',
+          date: new Date('2025-12-16'),
+          time: '18:00',
+          address: '456 Test Avenue',
+          clubId: club.id,
+        },
+      })
+
+      const result = await getAllEvents({ data: { search: 'montcalm' } })
+      expect(result).toHaveLength(1)
+      expect(result[0].club.name).toContain('Montcalm')
+    })
   })
 
   describe('getAllEventsForAdmin', () => {

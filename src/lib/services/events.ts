@@ -54,6 +54,7 @@ export const getAllEvents = async ({
       OR: [
         { title: { contains: search, mode: 'insensitive' } },
         { address: { contains: search, mode: 'insensitive' } },
+        { club: { name: { contains: search, mode: 'insensitive' } } },
       ],
     }),
     // Combine today boundary with optional dateFrom/dateTo filters
