@@ -3,6 +3,9 @@ import React from 'react'
 import { vi } from 'vitest'
 import { setupTestDatabase } from './src/lib/test-seed'
 
+// Set mock Strava token for tests (Strava integration is optional in production)
+process.env.STRAVA_ACCESS_TOKEN = 'test-strava-token-for-tests-only'
+
 // Polyfill Web APIs for jsdom environment
 // Node 18+ has these built-in, but jsdom doesn't expose them
 if (typeof global.Request === 'undefined') {

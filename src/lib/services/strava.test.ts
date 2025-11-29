@@ -9,7 +9,14 @@ import {
 import * as stravaLib from '@/lib/strava'
 import type { StravaClub, StravaGroupEvent } from './strava-types'
 
-vi.mock('@/lib/strava')
+vi.mock('@/lib/strava', () => ({
+  stravaClient: {
+    clubs: {
+      get: vi.fn(),
+      listEvents: vi.fn(),
+    },
+  },
+}))
 
 describe('fetchStravaClub', () => {
   beforeEach(() => {
@@ -74,16 +81,16 @@ describe('fetchStravaEvents', () => {
       },
     ]
 
-    const mockListEvents = vi.fn().mockResolvedValue(mockEvents)
-    vi.mocked(stravaLib.stravaClient).clubs = {
-      ...vi.mocked(stravaLib.stravaClient).clubs,
-      listEvents: mockListEvents,
-    }
+    vi.mocked(stravaLib.stravaClient.clubs.listEvents).mockResolvedValue(
+      mockEvents
+    )
 
     const result = await fetchStravaEvents(123)
 
     expect(result).toEqual(mockEvents)
-    expect(mockListEvents).toHaveBeenCalledWith({ id: 123 })
+    expect(stravaLib.stravaClient.clubs.listEvents).toHaveBeenCalledWith({
+      id: 123,
+    })
   })
 
   test('handles missing route gracefully', async () => {
@@ -98,11 +105,9 @@ describe('fetchStravaEvents', () => {
       },
     ]
 
-    const mockListEvents = vi.fn().mockResolvedValue(mockEvents)
-    vi.mocked(stravaLib.stravaClient).clubs = {
-      ...vi.mocked(stravaLib.stravaClient).clubs,
-      listEvents: mockListEvents,
-    }
+    vi.mocked(stravaLib.stravaClient.clubs.listEvents).mockResolvedValue(
+      mockEvents
+    )
 
     const result = await fetchStravaEvents(123)
 
