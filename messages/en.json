@@ -62,7 +62,9 @@
     },
     "clubs": {
       "title": "Featured Running Clubs",
-      "viewAll": "View All Clubs"
+      "viewAll": "View All Clubs",
+      "noResults": "No clubs found matching \"{search}\"",
+      "noClubs": "No clubs available"
     },
     "quickActions": {
       "events": {

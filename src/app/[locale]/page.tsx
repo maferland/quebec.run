@@ -1,7 +1,6 @@
 'use client'
 
 import { useTranslations } from 'next-intl'
-import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 import { useClubs } from '@/lib/hooks/use-clubs'
 import { ClubCard } from '@/components/clubs/club-card'
@@ -10,24 +9,16 @@ import { ContentGrid } from '@/components/ui/content-grid'
 import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
 import { MapPin, Search, Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
-import { useDebouncedCallback } from '@/lib/hooks/use-debounced-callback'
 
 export default function Home() {
   const t = useTranslations('home')
-  const router = useRouter()
   const { data: clubs, isLoading: clubsLoading } = useClubs()
   const [search, setSearch] = useState('')
 
-  const debouncedNavigate = useDebouncedCallback((value: string) => {
-    if (value.trim()) {
-      router.push(`/events?search=${encodeURIComponent(value.trim())}`)
-    }
-  }, 500)
-
-  const handleSearchChange = (value: string) => {
-    setSearch(value)
-    debouncedNavigate(value)
-  }
+  const filteredClubs =
+    clubs?.filter((club) =>
+      club.name.toLowerCase().includes(search.toLowerCase())
+    ) || []
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -89,7 +80,7 @@ export default function Home() {
                   <input
                     type="text"
                     value={search}
-                    onChange={(e) => handleSearchChange(e.target.value)}
+                    onChange={(e) => setSearch(e.target.value)}
                     placeholder={t('search.placeholder')}
                     className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary font-body"
                   />
@@ -119,9 +110,15 @@ export default function Home() {
             <LoadingGrid count={6}>
               <LoadingCard />
             </LoadingGrid>
+          ) : filteredClubs.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-text-secondary">
+                {search ? t('clubs.noResults', { search }) : t('clubs.noClubs')}
+              </p>
+            </div>
           ) : (
             <ContentGrid>
-              {clubs?.slice(0, 6).map((club) => (
+              {filteredClubs.slice(0, 6).map((club) => (
                 <ClubCard key={club.id} club={club} />
               ))}
             </ContentGrid>

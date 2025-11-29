@@ -62,7 +62,9 @@
     },
     "clubs": {
       "title": "Clubs de course en vedette",
-      "viewAll": "Voir tous les clubs"
+      "viewAll": "Voir tous les clubs",
+      "noResults": "Aucun club trouvé correspondant à \"{search}\"",
+      "noClubs": "Aucun club disponible"
     },
     "quickActions": {
       "events": {
