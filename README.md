@@ -112,6 +112,10 @@ Built with Next.js 14, TypeScript, and Tailwind CSS.
 
    # Production (Resend)
    RESEND_API_KEY="your-resend-api-key"
+
+   # Strava API (optional - for club event sync)
+   # Register app at https://www.strava.com/settings/api
+   STRAVA_ACCESS_TOKEN="your-strava-access-token"
    ```
 
 4. **Set up the database**
@@ -189,6 +193,26 @@ For production, configure Resend:
 1. Get API key from [Resend](https://resend.com/)
 2. Set `USE_RESEND=true` in environment
 3. Add your `RESEND_API_KEY`
+
+### Strava Integration (Optional)
+
+Admins can link clubs to Strava groups to automatically sync events:
+
+1. **Register Strava Application**
+   - Visit https://www.strava.com/settings/api
+   - Create a new application
+   - Note: Callback URL not required for backend-only integration
+
+2. **Get Access Token**
+   - After creating the app, copy your access token
+   - Add to `.env`: `STRAVA_ACCESS_TOKEN="your-token"`
+
+3. **Link Clubs**
+   - Navigate to Admin → Clubs → Edit
+   - Enter Strava club slug (from URL: `strava.com/clubs/[slug]`)
+   - Click "Preview Club Data" to verify
+   - Click "Link & Import" to connect and sync events
+   - Use "Sync Now" button to manually refresh
 
 ## 🚀 Deployment
 

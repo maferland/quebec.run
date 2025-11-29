@@ -32,6 +32,9 @@ const envSchema = z
     EMAIL_SERVER_PORT: z.coerce.number().optional(),
     EMAIL_SERVER_USER: z.string().optional(),
     EMAIL_SERVER_PASSWORD: z.string().optional(),
+
+    // Strava API (required for Strava integration)
+    STRAVA_ACCESS_TOKEN: z.string().min(1),
   })
   .refine(
     (data) => {
