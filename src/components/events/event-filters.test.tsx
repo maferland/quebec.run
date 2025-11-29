@@ -55,13 +55,17 @@ describe('EventFilters', () => {
 
   it('renders date range picker when showDateRange is true', () => {
     render(<EventFilters clubs={clubs} showDateRange={true} />)
-    expect(screen.getByText('events.filters.dateRange')).toBeInTheDocument()
+    expect(screen.getByLabelText('events.filters.dateFrom')).toBeInTheDocument()
+    expect(screen.getByLabelText('events.filters.dateTo')).toBeInTheDocument()
   })
 
   it('does not render date range picker when showDateRange is false', () => {
     render(<EventFilters clubs={clubs} showDateRange={false} />)
     expect(
-      screen.queryByText('events.filters.dateRange')
+      screen.queryByLabelText('events.filters.dateFrom')
+    ).not.toBeInTheDocument()
+    expect(
+      screen.queryByLabelText('events.filters.dateTo')
     ).not.toBeInTheDocument()
   })
 
