@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormControl } from '@/components/ui/form-control'
 import { PageContainer } from '@/components/ui/page-container'
-import { env } from '@/lib/env'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
@@ -146,7 +145,7 @@ export default function SignInPage() {
             </Button>
           </form>
 
-          {env.NODE_ENV !== 'production' && (
+          {process.env.NODE_ENV !== 'production' && (
             <div className="mt-8 p-4 border-2 border-yellow-500 rounded-lg bg-yellow-50">
               <h3 className="text-sm font-semibold text-yellow-800 mb-2">
                 🚧 DEV ONLY - Quick Login
