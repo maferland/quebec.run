@@ -3,7 +3,6 @@ import userEvent from '@testing-library/user-event'
 import { signIn } from 'next-auth/react'
 import { describe, it, expect, vi, beforeEach } from 'vitest'
 import SignInPage from './page'
-import { env } from '@/lib/env'
 
 vi.mock('next-auth/react', () => ({
   signIn: vi.fn(),
@@ -122,20 +121,26 @@ describe('SignInPage', () => {
   })
 
   it('shows dev quick login in development', () => {
-    vi.spyOn(env, 'NODE_ENV', 'get').mockReturnValue('development')
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'development'
 
     render(<SignInPage />)
 
     expect(screen.getByText(/DEV ONLY/i)).toBeInTheDocument()
     expect(screen.getByText(/Quick Login/i)).toBeInTheDocument()
+
+    process.env.NODE_ENV = originalEnv
   })
 
   it('hides dev quick login in production', () => {
-    vi.spyOn(env, 'NODE_ENV', 'get').mockReturnValue('production')
+    const originalEnv = process.env.NODE_ENV
+    process.env.NODE_ENV = 'production'
 
     render(<SignInPage />)
 
     expect(screen.queryByText(/DEV ONLY/i)).not.toBeInTheDocument()
     expect(screen.queryByText(/Quick Login/i)).not.toBeInTheDocument()
+
+    process.env.NODE_ENV = originalEnv
   })
 })
