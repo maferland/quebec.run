@@ -1,5 +1,6 @@
 // src/app/api/admin/clubs/[id]/sync-strava/route.test.ts
 import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
 import { POST } from './route'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
@@ -21,7 +22,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       expires: '2025-01-01',
     })
 
-    const request = new Request('http://localhost', { method: 'POST' })
+    const request = new NextRequest('http://localhost', { method: 'POST' })
     const response = await POST(request, { params: { id: 'club1' } })
 
     expect(response.status).toBe(401)
@@ -54,7 +55,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       fieldsUpdated: ['description'],
     })
 
-    const request = new Request('http://localhost', { method: 'POST' })
+    const request = new NextRequest('http://localhost', { method: 'POST' })
     const response = await POST(request, { params: { id: club.id } })
 
     expect(response.status).toBe(200)
@@ -92,7 +93,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       new Error('Network timeout')
     )
 
-    const request = new Request('http://localhost', { method: 'POST' })
+    const request = new NextRequest('http://localhost', { method: 'POST' })
     const response = await POST(request, { params: { id: club.id } })
 
     expect(response.status).toBe(500)

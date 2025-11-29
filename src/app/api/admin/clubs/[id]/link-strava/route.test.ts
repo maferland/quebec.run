@@ -1,5 +1,6 @@
 // src/app/api/admin/clubs/[id]/link-strava/route.test.ts
 import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
 import { POST } from './route'
 import { getServerSession } from 'next-auth'
 import { prisma } from '@/lib/prisma'
@@ -21,7 +22,7 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
       expires: '2025-01-01',
     })
 
-    const request = new Request('http://localhost', {
+    const request = new NextRequest('http://localhost', {
       method: 'POST',
       body: JSON.stringify({ stravaSlug: 'test-123' }),
     })
@@ -55,7 +56,7 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
       fieldsUpdated: ['name', 'description'],
     })
 
-    const request = new Request('http://localhost', {
+    const request = new NextRequest('http://localhost', {
       method: 'POST',
       body: JSON.stringify({
         stravaSlug: 'test-club-123456',
@@ -93,7 +94,7 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
       },
     })
 
-    const request = new Request('http://localhost', {
+    const request = new NextRequest('http://localhost', {
       method: 'POST',
       body: JSON.stringify({
         stravaSlug: 'invalid-slug',
