@@ -67,6 +67,13 @@
       "noResults": "No clubs found matching \"{search}\"",
       "noClubs": "No clubs available"
     },
+    "events": {
+      "title": "Upcoming Events",
+      "count": "events",
+      "viewAll": "View All Events",
+      "noResults": "No events found matching \"{search}\"",
+      "noEvents": "Check back soon for upcoming events"
+    },
     "quickActions": {
       "events": {
         "title": "Browse Events",
