@@ -56,12 +56,12 @@
     },
     "search": {
       "title": "Trouvez votre prochaine course",
-      "placeholder": "Où voulez-vous courir?",
+      "placeholder": "Rechercher des événements ou des clubs...",
       "searchButton": "Rechercher des événements",
       "browseAll": "Parcourir tous les événements"
     },
     "clubs": {
-      "title": "Clubs de course en vedette",
+      "title": "Clubs de course",
       "viewAll": "Voir tous les clubs",
       "count": "clubs",
       "noResults": "Aucun club trouvé correspondant à \"{search}\"",

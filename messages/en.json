@@ -56,12 +56,12 @@
     },
     "search": {
       "title": "Find Your Next Run",
-      "placeholder": "Where do you want to run?",
+      "placeholder": "Search for events or clubs...",
       "searchButton": "Search Events",
       "browseAll": "Browse All Events"
     },
     "clubs": {
-      "title": "Featured Running Clubs",
+      "title": "Running Clubs",
       "viewAll": "View All Clubs",
       "count": "clubs",
       "noResults": "No clubs found matching \"{search}\"",
