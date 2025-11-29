@@ -163,6 +163,10 @@ model Event {
   club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
 
+  @@index([date])
+  @@index([clubId])
+  @@index([title])
+  @@index([clubId, date])
   @@map("events")
 }
 

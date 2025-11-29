@@ -76,8 +76,15 @@ export const eventCreateSchema = z.object({
   clubId: z.string().min(1, 'Club ID is required'),
 })
 
-export const eventsQuerySchema = paginationQuerySchema.extend({
-  clubId: z.string().optional(),
+export const eventsQuerySchema = z.object({
+  search: z.string().optional(),
+  clubId: z.string().cuid().optional(),
+  dateFrom: z.string().datetime().optional(),
+  dateTo: z.string().datetime().optional(),
+  sortBy: z.enum(['date', 'title']).optional().default('date'),
+  sortOrder: z.enum(['asc', 'desc']).optional().default('asc'),
+  limit: z.coerce.number().min(1).max(100).optional().default(50),
+  offset: z.coerce.number().min(0).optional().default(0),
 })
 
 export const eventUpdateSchema = eventCreateSchema.partial().extend({
@@ -150,7 +157,7 @@ export type EventUpdate = z.infer<typeof eventUpdateSchema>
 export type EventWithClub = z.infer<typeof eventWithClubSchema>
 
 export type ClubsQuery = z.infer<typeof clubsQuerySchema>
-export type EventsQuery = z.infer<typeof eventsQuerySchema>
+export type EventsQuery = z.input<typeof eventsQuerySchema>
 
 export type UserId = z.infer<typeof userIdSchema>
 export type ToggleUserAdmin = z.infer<typeof toggleUserAdminSchema>
