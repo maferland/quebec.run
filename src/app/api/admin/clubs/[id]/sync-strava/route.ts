@@ -6,8 +6,9 @@ import { syncStravaClub } from '@/lib/services/strava-sync'
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   // Check admin
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
@@ -18,7 +19,7 @@ export async function POST(
   }
 
   try {
-    const summary = await syncStravaClub(params.id)
+    const summary = await syncStravaClub(id)
 
     return NextResponse.json({
       success: true,

@@ -2,7 +2,7 @@
 import { test, expect } from '@playwright/test'
 
 test.describe('Strava Integration', () => {
-  test.beforeEach(async ({ page }) => {
+  test.beforeEach(async () => {
     // TODO: Setup admin user and login
     // This will be implemented when auth E2E helpers exist
     // See: src/lib/test-e2e-helpers.ts for pattern

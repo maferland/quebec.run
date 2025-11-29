@@ -23,9 +23,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
     })
 
     const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: 'club1' }),
-    })
+    const response = await POST(request, { params: Promise.resolve({ id: 'club1' }) })
 
     expect(response.status).toBe(401)
   })
@@ -58,9 +56,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
     })
 
     const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: club.id }),
-    })
+    const response = await POST(request, { params: { id: club.id } })
 
     expect(response.status).toBe(200)
     const json = await response.json()
@@ -98,9 +94,7 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
     )
 
     const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: club.id }),
-    })
+    const response = await POST(request, { params: { id: club.id } })
 
     expect(response.status).toBe(500)
     const json = await response.json()

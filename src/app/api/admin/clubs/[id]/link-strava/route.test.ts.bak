@@ -1,4 +1,4 @@
-// src/app/api/admin/clubs/[id]/sync-strava/route.test.ts
+// src/app/api/admin/clubs/[id]/link-strava/route.test.ts
 import { describe, test, expect, vi, beforeEach } from 'vitest'
 import { NextRequest } from 'next/server'
 import { POST } from './route'
@@ -10,7 +10,7 @@ import * as stravaSync from '@/lib/services/strava-sync'
 vi.mock('next-auth')
 vi.mock('@/lib/services/strava-sync')
 
-describe('POST /api/admin/clubs/[id]/sync-strava', () => {
+describe('POST /api/admin/clubs/[id]/link-strava', () => {
   beforeEach(async () => {
     vi.clearAllMocks()
     await cleanDatabase()
@@ -22,15 +22,16 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       expires: '2025-01-01',
     })
 
-    const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: 'club1' }),
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ stravaSlug: 'test-123' }),
     })
+    const response = await POST(request, { params: Promise.resolve({ id: 'club1' }) })
 
     expect(response.status).toBe(401)
   })
 
-  test('syncs club successfully', async () => {
+  test('links club and imports events', async () => {
     const user = await prisma.user.create({
       data: { email: 'admin@test.com', isAdmin: true },
     })
@@ -44,36 +45,38 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       data: {
         name: 'Test Club',
         slug: 'test-club',
-        stravaSlug: 'test-123',
-        stravaClubId: '123',
         ownerId: user.id,
       },
     })
 
     vi.mocked(stravaSync.syncStravaClub).mockResolvedValue({
-      eventsAdded: 2,
-      eventsUpdated: 1,
+      eventsAdded: 3,
+      eventsUpdated: 0,
       eventsDeleted: 0,
-      fieldsUpdated: ['description'],
+      fieldsUpdated: ['name', 'description'],
     })
 
-    const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: club.id }),
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({
+        stravaSlug: 'test-club-123456',
+        importEvents: true,
+      }),
     })
+    const response = await POST(request, { params: { id: club.id } })
 
     expect(response.status).toBe(200)
     const json = await response.json()
-    expect(json.success).toBe(true)
-    expect(json.summary).toEqual({
-      eventsAdded: 2,
-      eventsUpdated: 1,
-      eventsDeleted: 0,
-      fieldsUpdated: ['description'],
-    })
+    expect(json.summary.eventsImported).toBe(3)
+
+    // Verify club updated
+    const updated = await prisma.club.findUnique({ where: { id: club.id } })
+    expect(updated?.stravaSlug).toBe('test-club-123456')
+    expect(updated?.stravaClubId).toBe('123456')
+    expect(updated?.isManual).toBe(false)
   })
 
-  test('returns error on sync failure', async () => {
+  test('returns 400 for invalid slug format', async () => {
     const user = await prisma.user.create({
       data: { email: 'admin@test.com', isAdmin: true },
     })
@@ -87,24 +90,21 @@ describe('POST /api/admin/clubs/[id]/sync-strava', () => {
       data: {
         name: 'Test Club',
         slug: 'test-club',
-        stravaSlug: 'test-123',
-        stravaClubId: '123',
         ownerId: user.id,
       },
     })
 
-    vi.mocked(stravaSync.syncStravaClub).mockRejectedValue(
-      new Error('Network timeout')
-    )
-
-    const request = new NextRequest('http://localhost', { method: 'POST' })
-    const response = await POST(request, {
-      params: Promise.resolve({ id: club.id }),
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({
+        stravaSlug: 'invalid-slug',
+        importEvents: true,
+      }),
     })
+    const response = await POST(request, { params: { id: club.id } })
 
-    expect(response.status).toBe(500)
+    expect(response.status).toBe(400)
     const json = await response.json()
-    expect(json.success).toBe(false)
-    expect(json.error).toContain('Network timeout')
+    expect(json.error).toContain('Invalid slug format')
   })
 })

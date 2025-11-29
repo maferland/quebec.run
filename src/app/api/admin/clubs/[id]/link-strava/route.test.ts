@@ -26,7 +26,9 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
       method: 'POST',
       body: JSON.stringify({ stravaSlug: 'test-123' }),
     })
-    const response = await POST(request, { params: { id: 'club1' } })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: 'club1' }),
+    })
 
     expect(response.status).toBe(401)
   })
@@ -63,7 +65,9 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
         importEvents: true,
       }),
     })
-    const response = await POST(request, { params: { id: club.id } })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: club.id }),
+    })
 
     expect(response.status).toBe(200)
     const json = await response.json()
@@ -101,7 +105,9 @@ describe('POST /api/admin/clubs/[id]/link-strava', () => {
         importEvents: true,
       }),
     })
-    const response = await POST(request, { params: { id: club.id } })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: club.id }),
+    })
 
     expect(response.status).toBe(400)
     const json = await response.json()

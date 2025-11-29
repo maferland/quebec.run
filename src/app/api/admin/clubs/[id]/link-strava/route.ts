@@ -13,8 +13,9 @@ const linkSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   // Check admin
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
@@ -41,7 +42,7 @@ export async function POST(
 
     // Update club with Strava slug
     await prisma.club.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         stravaSlug,
         stravaClubId,
@@ -56,7 +57,7 @@ export async function POST(
     }
 
     if (importEvents) {
-      const syncResult = await syncStravaClub(params.id)
+      const syncResult = await syncStravaClub(id)
       summary = {
         eventsImported: syncResult.eventsAdded,
         fieldsUpdated: syncResult.fieldsUpdated,
@@ -65,7 +66,7 @@ export async function POST(
 
     // Fetch updated club
     const club = await prisma.club.findUnique({
-      where: { id: params.id },
+      where: { id },
     })
 
     return NextResponse.json({

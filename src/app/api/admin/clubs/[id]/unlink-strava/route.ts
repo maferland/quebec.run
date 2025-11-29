@@ -11,8 +11,9 @@ const unlinkSchema = z.object({
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
+  const { id } = await params
   // Check admin
   const session = await getServerSession(authOptions)
   if (!session?.user?.isAdmin) {
@@ -32,7 +33,7 @@ export async function POST(
       // Delete Strava-sourced events
       const deleted = await prisma.event.deleteMany({
         where: {
-          clubId: params.id,
+          clubId: id,
           stravaEventId: { not: null },
         },
       })
@@ -41,7 +42,7 @@ export async function POST(
       // Convert to manual events
       await prisma.event.updateMany({
         where: {
-          clubId: params.id,
+          clubId: id,
           stravaEventId: { not: null },
         },
         data: {
@@ -52,7 +53,7 @@ export async function POST(
 
     // Unlink club
     const club = await prisma.club.update({
-      where: { id: params.id },
+      where: { id },
       data: {
         stravaSlug: null,
         stravaClubId: null,
