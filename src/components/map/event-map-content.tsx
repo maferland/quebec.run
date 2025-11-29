@@ -3,10 +3,13 @@
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
 import MarkerClusterGroup from 'react-leaflet-markercluster'
 import { Icon } from 'leaflet'
-import { format } from 'date-fns'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
+import { Tag } from '@/components/ui/tag'
+import { LocationInline } from '@/components/ui/location'
+import { formatDateTime } from '@/lib/utils/date-formatting'
+import { Clock } from 'lucide-react'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
@@ -59,41 +62,25 @@ export default function EventMapContent({
           >
             <Popup>
               <div className="min-w-[260px] p-2">
-                <h3 className="font-heading font-bold text-blue-700 text-lg mb-1 leading-tight">
+                <h3 className="font-heading font-bold text-primary text-lg mb-1 leading-tight">
                   {event.title}
                 </h3>
-                <p className="text-gray-600 text-sm mb-3">{event.club.name}</p>
+                <p className="text-accent text-sm mb-3">{event.club.name}</p>
 
-                <div className="flex items-center gap-2 mb-4 text-xs">
-                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
-                    {format(event.date, 'MMM d')} • {event.time}
-                  </span>
+                <div className="mb-4">
+                  <Tag variant="datetime" icon={Clock} size="xs">
+                    {formatDateTime(event.date, event.time)}
+                  </Tag>
                 </div>
 
                 {event.address && (
-                  <div className="flex items-start gap-2 mb-4">
-                    <svg
-                      className="w-4 h-4 text-pink-600 mt-0.5 flex-shrink-0"
-                      fill="currentColor"
-                      viewBox="0 0 20 20"
-                    >
-                      <path
-                        fillRule="evenodd"
-                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
-                        clipRule="evenodd"
-                      />
-                    </svg>
-                    <span className="text-gray-700 text-sm leading-relaxed">
-                      {event.address}
-                    </span>
+                  <div className="mb-4">
+                    <LocationInline address={event.address} />
                   </div>
                 )}
 
                 <Link href={`/events/${event.id}`}>
-                  <Button
-                    size="sm"
-                    className="w-full bg-blue-700 hover:bg-blue-800 text-white"
-                  >
+                  <Button size="sm" variant="primary" className="w-full">
                     {t('viewDetails')}
                   </Button>
                 </Link>
