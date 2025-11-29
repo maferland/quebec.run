@@ -1,0 +1,103 @@
+// src/app/api/admin/clubs/[id]/sync-strava/route.test.ts
+import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { POST } from './route'
+import { getServerSession } from 'next-auth'
+import { prisma } from '@/lib/prisma'
+import { cleanDatabase } from '@/lib/test-seed'
+import * as stravaSync from '@/lib/services/strava-sync'
+
+vi.mock('next-auth')
+vi.mock('@/lib/services/strava-sync')
+
+describe('POST /api/admin/clubs/[id]/sync-strava', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    await cleanDatabase()
+  })
+
+  test('returns 401 when not admin', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', email: 'user@test.com', isAdmin: false },
+      expires: '2025-01-01',
+    })
+
+    const request = new Request('http://localhost', { method: 'POST' })
+    const response = await POST(request, { params: { id: 'club1' } })
+
+    expect(response.status).toBe(401)
+  })
+
+  test('syncs club successfully', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'admin@test.com', isAdmin: true },
+    })
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: user.id, email: user.email, isAdmin: true },
+      expires: '2025-01-01',
+    })
+
+    const club = await prisma.club.create({
+      data: {
+        name: 'Test Club',
+        slug: 'test-club',
+        stravaSlug: 'test-123',
+        stravaClubId: '123',
+        ownerId: user.id,
+      },
+    })
+
+    vi.mocked(stravaSync.syncStravaClub).mockResolvedValue({
+      eventsAdded: 2,
+      eventsUpdated: 1,
+      eventsDeleted: 0,
+      fieldsUpdated: ['description'],
+    })
+
+    const request = new Request('http://localhost', { method: 'POST' })
+    const response = await POST(request, { params: { id: club.id } })
+
+    expect(response.status).toBe(200)
+    const json = await response.json()
+    expect(json.success).toBe(true)
+    expect(json.summary).toEqual({
+      eventsAdded: 2,
+      eventsUpdated: 1,
+      eventsDeleted: 0,
+      fieldsUpdated: ['description'],
+    })
+  })
+
+  test('returns error on sync failure', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'admin@test.com', isAdmin: true },
+    })
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: user.id, email: user.email, isAdmin: true },
+      expires: '2025-01-01',
+    })
+
+    const club = await prisma.club.create({
+      data: {
+        name: 'Test Club',
+        slug: 'test-club',
+        stravaSlug: 'test-123',
+        stravaClubId: '123',
+        ownerId: user.id,
+      },
+    })
+
+    vi.mocked(stravaSync.syncStravaClub).mockRejectedValue(
+      new Error('Network timeout')
+    )
+
+    const request = new Request('http://localhost', { method: 'POST' })
+    const response = await POST(request, { params: { id: club.id } })
+
+    expect(response.status).toBe(500)
+    const json = await response.json()
+    expect(json.success).toBe(false)
+    expect(json.error).toContain('Network timeout')
+  })
+})
