@@ -58,53 +58,41 @@ export default function EventMapContent({
             icon={markerIcon}
           >
             <Popup>
-              <div className="min-w-[220px] p-1">
-                <h3 className="font-heading font-bold text-gray-900 text-base mb-3 leading-tight">
+              <div className="min-w-[260px] p-2">
+                <h3 className="font-heading font-bold text-blue-700 text-lg mb-1 leading-tight">
                   {event.title}
                 </h3>
-                <div className="space-y-2 text-sm mb-4">
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide min-w-[40px]">
-                      {t('date')}
-                    </span>
-                    <span className="text-gray-900 font-medium">
-                      {format(event.date, 'PPP')}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide min-w-[40px]">
-                      {t('time')}
-                    </span>
-                    <span className="text-gray-900 font-medium">
-                      {event.time}
-                    </span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-gray-500 text-xs uppercase tracking-wide min-w-[40px]">
-                      {t('club')}
-                    </span>
-                    <Link
-                      href={`/clubs/${event.club.slug}`}
-                      className="text-pink-600 hover:text-pink-700 font-medium hover:underline"
-                    >
-                      {event.club.name}
-                    </Link>
-                  </div>
-                  {event.address && (
-                    <div className="flex items-start gap-2 pt-1">
-                      <span className="text-gray-500 text-xs uppercase tracking-wide min-w-[40px] pt-0.5">
-                        {t('address')}
-                      </span>
-                      <span className="text-gray-700 text-xs leading-relaxed">
-                        {event.address}
-                      </span>
-                    </div>
-                  )}
+                <p className="text-gray-600 text-sm mb-3">{event.club.name}</p>
+
+                <div className="flex items-center gap-2 mb-4 text-xs">
+                  <span className="inline-flex items-center px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                    {format(event.date, 'MMM d')} • {event.time}
+                  </span>
                 </div>
+
+                {event.address && (
+                  <div className="flex items-start gap-2 mb-4">
+                    <svg
+                      className="w-4 h-4 text-pink-600 mt-0.5 flex-shrink-0"
+                      fill="currentColor"
+                      viewBox="0 0 20 20"
+                    >
+                      <path
+                        fillRule="evenodd"
+                        d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z"
+                        clipRule="evenodd"
+                      />
+                    </svg>
+                    <span className="text-gray-700 text-sm leading-relaxed">
+                      {event.address}
+                    </span>
+                  </div>
+                )}
+
                 <Link href={`/events/${event.id}`}>
                   <Button
                     size="sm"
-                    className="w-full bg-pink-600 hover:bg-pink-700 text-white"
+                    className="w-full bg-blue-700 hover:bg-blue-800 text-white"
                   >
                     {t('viewDetails')}
                   </Button>
