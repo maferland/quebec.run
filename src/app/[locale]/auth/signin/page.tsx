@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormControl } from '@/components/ui/form-control'
 import { PageContainer } from '@/components/ui/page-container'
+import { env } from '@/lib/env'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
@@ -18,6 +19,8 @@ export default function SignInPage() {
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [error, setError] = useState('')
+  const [devEmail, setDevEmail] = useState('')
+  const [devLoading, setDevLoading] = useState(false)
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -52,6 +55,23 @@ export default function SignInPage() {
       setError(t('invalidEmail'))
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const handleDevLogin = async (e: React.FormEvent) => {
+    e.preventDefault()
+    if (!devEmail) return
+
+    setDevLoading(true)
+    try {
+      await signIn('dev-bypass', {
+        email: devEmail,
+        callbackUrl,
+        redirect: true,
+      })
+    } catch (error) {
+      console.error('Dev login error:', error)
+      setDevLoading(false)
     }
   }
 
@@ -125,6 +145,45 @@ export default function SignInPage() {
               {isLoading ? t('sendingLink') : t('sendMagicLink')}
             </Button>
           </form>
+
+          {env.NODE_ENV !== 'production' && (
+            <div className="mt-8 p-4 border-2 border-yellow-500 rounded-lg bg-yellow-50">
+              <h3 className="text-sm font-semibold text-yellow-800 mb-2">
+                🚧 DEV ONLY - Quick Login
+              </h3>
+              <form onSubmit={handleDevLogin} className="space-y-2">
+                <select
+                  value={devEmail}
+                  onChange={(e) => setDevEmail(e.target.value)}
+                  className="w-full p-2 border rounded mb-2 text-sm"
+                  disabled={devLoading}
+                >
+                  <option value="">Select test account...</option>
+                  <option value="maferland@quebec.run">
+                    Marc-Antoine Ferland (Staff)
+                  </option>
+                  <option value="owner1@example.com">
+                    Alice Tremblay (Club Owner)
+                  </option>
+                  <option value="owner2@example.com">
+                    Bob Gagnon (Club Owner)
+                  </option>
+                </select>
+                <button
+                  type="submit"
+                  disabled={!devEmail || devLoading}
+                  className="w-full bg-yellow-600 text-white py-2 rounded hover:bg-yellow-700 text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {devLoading
+                    ? 'Signing in...'
+                    : 'Sign in instantly (no email)'}
+                </button>
+              </form>
+              <p className="text-xs text-yellow-700 mt-2">
+                This bypass only works in development mode
+              </p>
+            </div>
+          )}
         </Card>
       </div>
     </PageContainer>
