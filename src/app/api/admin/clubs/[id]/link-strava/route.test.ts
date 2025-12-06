@@ -1,0 +1,116 @@
+// src/app/api/admin/clubs/[id]/link-strava/route.test.ts
+import { describe, test, expect, vi, beforeEach } from 'vitest'
+import { NextRequest } from 'next/server'
+import { POST } from './route'
+import { getServerSession } from 'next-auth'
+import { prisma } from '@/lib/prisma'
+import { cleanDatabase } from '@/lib/test-seed'
+import * as stravaSync from '@/lib/services/strava-sync'
+
+vi.mock('next-auth')
+vi.mock('@/lib/services/strava-sync')
+
+describe('POST /api/admin/clubs/[id]/link-strava', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks()
+    await cleanDatabase()
+  })
+
+  test('returns 401 when not admin', async () => {
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: '1', email: 'user@test.com', isAdmin: false },
+      expires: '2025-01-01',
+    })
+
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({ stravaSlug: 'test-123' }),
+    })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: 'club1' }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test('links club and imports events', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'admin@test.com', isAdmin: true },
+    })
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: user.id, email: user.email, isAdmin: true },
+      expires: '2025-01-01',
+    })
+
+    const club = await prisma.club.create({
+      data: {
+        name: 'Test Club',
+        slug: 'test-club',
+        ownerId: user.id,
+      },
+    })
+
+    vi.mocked(stravaSync.syncStravaClub).mockResolvedValue({
+      eventsAdded: 3,
+      eventsUpdated: 0,
+      eventsDeleted: 0,
+      fieldsUpdated: ['name', 'description'],
+    })
+
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({
+        stravaSlug: 'test-club-123456',
+        importEvents: true,
+      }),
+    })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: club.id }),
+    })
+
+    expect(response.status).toBe(200)
+    const json = await response.json()
+    expect(json.summary.eventsImported).toBe(3)
+
+    // Verify club updated
+    const updated = await prisma.club.findUnique({ where: { id: club.id } })
+    expect(updated?.stravaSlug).toBe('test-club-123456')
+    expect(updated?.stravaClubId).toBe('123456')
+    expect(updated?.isManual).toBe(false)
+  })
+
+  test('returns 400 for invalid slug format', async () => {
+    const user = await prisma.user.create({
+      data: { email: 'admin@test.com', isAdmin: true },
+    })
+
+    vi.mocked(getServerSession).mockResolvedValue({
+      user: { id: user.id, email: user.email, isAdmin: true },
+      expires: '2025-01-01',
+    })
+
+    const club = await prisma.club.create({
+      data: {
+        name: 'Test Club',
+        slug: 'test-club',
+        ownerId: user.id,
+      },
+    })
+
+    const request = new NextRequest('http://localhost', {
+      method: 'POST',
+      body: JSON.stringify({
+        stravaSlug: 'invalid-slug',
+        importEvents: true,
+      }),
+    })
+    const response = await POST(request, {
+      params: Promise.resolve({ id: club.id }),
+    })
+
+    expect(response.status).toBe(400)
+    const json = await response.json()
+    expect(json.error).toContain('Invalid slug format')
+  })
+})

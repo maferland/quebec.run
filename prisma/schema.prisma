@@ -71,94 +71,105 @@ model VerificationToken {
 }
 
 model Club {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  description  String?
-  website      String?
-  instagram    String?
-  facebook     String?
-  language     String?  // 'fr', 'en', or 'both'
-  
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  website     String?
+  instagram   String?
+  facebook    String?
+  language    String? // 'fr', 'en', or 'both'
+
   // Strava integration
-  stravaClubId String?  @unique
+  stravaClubId String?   @unique
   stravaSlug   String?
-  isManual     Boolean  @default(true)
+  isManual     Boolean   @default(true)
   lastSynced   DateTime?
-  
+
+  // NEW: Track manual field overrides
+  manualOverrides String[] @default([])
+
+  // NEW: Sync status tracking
+  lastSyncStatus  String? // 'success' | 'failed' | 'in_progress'
+  lastSyncError   String? // Error message if failed
+  lastSyncAttempt DateTime? // When sync was attempted
+
   // Metadata
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  ownerId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownerId   String
+
   // Relations
   owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
   events          Event[]
   recurringEvents RecurringEvent[]
-  
+
   @@map("clubs")
 }
 
 model RecurringEvent {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  
+
   // Location
-  address     String?
-  latitude    Float?
-  longitude   Float?
-  
+  address   String?
+  latitude  Float?
+  longitude Float?
+
   // Event details
-  distance    String?
-  pace        String?
-  
+  distance String?
+  pace     String?
+
   // Schedule
   schedulePattern String
-  timezone        String  @default("America/Toronto")
-  
+  timezone        String @default("America/Toronto")
+
   // Generation control
-  isActive        Boolean   @default(true)
-  generateUntil   DateTime?
-  
+  isActive      Boolean   @default(true)
+  generateUntil DateTime?
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  clubId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clubId    String
+
   // Relations
   club            Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   generatedEvents Event[]
-  
+
   @@map("recurring_events")
 }
 
 model Event {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  
+
   // Location
-  address     String?
-  latitude    Float?
-  longitude   Float?
-  
+  address   String?
+  latitude  Float?
+  longitude Float?
+
   // Event timing
-  date        DateTime
-  time        String
-  
+  date DateTime
+  time String
+
   // Event details
-  distance    String?
-  pace        String?
-  
+  distance String?
+  pace     String?
+
+  // NEW: Track Strava source
+  stravaEventId String? @unique
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  clubId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clubId    String
+
   // Recurring event link
   recurringEventId String?
-  
+
   // Relations
   club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
   recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
@@ -167,10 +178,10 @@ model Event {
 }
 
 model UserConsent {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  acceptedAt  DateTime @default(now())
-  ipAddress   String?
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  acceptedAt DateTime @default(now())
+  ipAddress  String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 

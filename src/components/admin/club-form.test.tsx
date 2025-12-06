@@ -59,6 +59,9 @@ const mockClub: ClubWithEvents = {
   stravaSlug: null,
   isManual: true,
   lastSynced: null,
+  lastSyncStatus: null,
+  lastSyncError: null,
+  lastSyncAttempt: null,
   createdAt: new Date(),
   updatedAt: new Date(),
   ownerId: 'user-1',
@@ -328,6 +331,177 @@ describe('ClubForm', () => {
 
       await user.tab()
       expect(screen.getByLabelText(/description/i)).toHaveFocus()
+    })
+  })
+
+  describe('Strava Integration', () => {
+    it('shows Strava section in edit mode with linked club', () => {
+      const linkedClub: ClubWithEvents = {
+        ...mockClub,
+        stravaSlug: 'test-club-123',
+        stravaClubId: '123',
+        lastSyncStatus: 'success',
+        lastSynced: new Date('2025-11-28T10:00:00Z'),
+      }
+
+      render(<ClubForm mode="edit" initialData={linkedClub} />)
+
+      expect(screen.getByText(/strava integration/i)).toBeInTheDocument()
+      expect(screen.getByText(/test-club-123/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /sync now/i })
+      ).toBeInTheDocument()
+      expect(screen.getByText(/last synced/i)).toBeInTheDocument()
+    })
+
+    it('shows unlinked state when no Strava slug in edit mode', () => {
+      render(<ClubForm mode="edit" initialData={mockClub} />)
+
+      expect(screen.getByText(/strava integration/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/strava club slug/i)).toBeInTheDocument()
+      expect(
+        screen.getByRole('button', { name: /preview club data/i })
+      ).toBeInTheDocument()
+    })
+
+    it('does not show Strava section in create mode', () => {
+      render(<ClubForm mode="create" />)
+
+      expect(screen.queryByText(/strava integration/i)).not.toBeInTheDocument()
+    })
+
+    it('shows sync error when last sync failed', () => {
+      const failedClub: ClubWithEvents = {
+        ...mockClub,
+        stravaSlug: 'test-club-123',
+        stravaClubId: '123',
+        lastSyncStatus: 'failed',
+        lastSyncError: 'Network error',
+      }
+
+      render(<ClubForm mode="edit" initialData={failedClub} />)
+
+      expect(screen.getByText(/last sync failed/i)).toBeInTheDocument()
+      expect(screen.getByText(/network error/i)).toBeInTheDocument()
+    })
+
+    it('handles preview button click', async () => {
+      const user = userEvent.setup()
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ name: 'Test Club' }),
+        } as Response)
+      )
+
+      render(<ClubForm mode="edit" initialData={mockClub} />)
+
+      const slugInput = screen.getByLabelText(/strava club slug/i)
+      await user.type(slugInput, 'test-club-123')
+
+      const previewButton = screen.getByRole('button', {
+        name: /preview club data/i,
+      })
+      await user.click(previewButton)
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/admin/strava/preview?slug=test-club-123'
+        )
+      })
+    })
+
+    it('handles sync button click', async () => {
+      const user = userEvent.setup()
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () =>
+            Promise.resolve({
+              summary: { eventsAdded: 5, eventsUpdated: 2 },
+            }),
+        } as Response)
+      )
+      global.alert = vi.fn()
+      const reloadMock = vi.fn()
+      Object.defineProperty(window, 'location', {
+        value: { reload: reloadMock },
+        writable: true,
+      })
+
+      const linkedClub: ClubWithEvents = {
+        ...mockClub,
+        stravaSlug: 'test-club-123',
+        stravaClubId: '123',
+      }
+
+      render(<ClubForm mode="edit" initialData={linkedClub} />)
+
+      const syncButton = screen.getByRole('button', { name: /sync now/i })
+      await user.click(syncButton)
+
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/admin/clubs/club-1/sync-strava',
+          { method: 'POST' }
+        )
+      })
+    })
+
+    it('handles unlink button click with confirmation', async () => {
+      const user = userEvent.setup()
+      global.confirm = vi.fn(() => true)
+      global.fetch = vi.fn(() =>
+        Promise.resolve({
+          ok: true,
+          json: () => Promise.resolve({ success: true }),
+        } as Response)
+      )
+      global.alert = vi.fn()
+      const reloadMock = vi.fn()
+      Object.defineProperty(window, 'location', {
+        value: { reload: reloadMock },
+        writable: true,
+      })
+
+      const linkedClub: ClubWithEvents = {
+        ...mockClub,
+        stravaSlug: 'test-club-123',
+        stravaClubId: '123',
+      }
+
+      render(<ClubForm mode="edit" initialData={linkedClub} />)
+
+      const unlinkButton = screen.getByRole('button', { name: /unlink/i })
+      await user.click(unlinkButton)
+
+      expect(global.confirm).toHaveBeenCalled()
+      await waitFor(() => {
+        expect(global.fetch).toHaveBeenCalledWith(
+          '/api/admin/clubs/club-1/unlink-strava',
+          expect.objectContaining({ method: 'POST' })
+        )
+      })
+    })
+
+    it('does not unlink when user cancels confirmation', async () => {
+      const user = userEvent.setup()
+      global.confirm = vi.fn(() => false)
+      global.fetch = vi.fn()
+
+      const linkedClub: ClubWithEvents = {
+        ...mockClub,
+        stravaSlug: 'test-club-123',
+        stravaClubId: '123',
+      }
+
+      render(<ClubForm mode="edit" initialData={linkedClub} />)
+
+      const unlinkButton = screen.getByRole('button', { name: /unlink/i })
+      await user.click(unlinkButton)
+
+      expect(global.confirm).toHaveBeenCalled()
+      expect(global.fetch).not.toHaveBeenCalled()
     })
   })
 })
