@@ -71,7 +71,7 @@
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
-    "@playwright/test": "^1.54.2",
+    "@playwright/test": "^1.57.0",
     "@storybook/addon-docs": "^9.1.2",
     "@storybook/addon-onboarding": "^9.1.2",
     "@storybook/nextjs": "^9.1.2",
