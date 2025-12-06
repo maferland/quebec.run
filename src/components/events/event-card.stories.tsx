@@ -1,5 +1,6 @@
 import type { Meta, StoryObj } from '@storybook/nextjs'
 import { EventCard } from './event-card'
+import type { GetAllEventsReturn } from '@/lib/services/events'
 
 const meta = {
   title: 'Events/EventCard',
@@ -13,7 +14,7 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-const mockEvent = {
+const mockEvent: GetAllEventsReturn = {
   id: 'event-1',
   title: '6AM Club Limoilou',
   address: '250 3e Rue, Québec, QC G1L 2B3',
