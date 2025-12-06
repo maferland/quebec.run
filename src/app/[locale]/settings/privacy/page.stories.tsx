@@ -8,7 +8,7 @@ const mockSession = {
     id: '1',
     email: 'user@example.com',
     name: 'Test User',
-    isAdmin: false,
+    isStaff: false,
   },
   expires: '2024-12-31',
 }

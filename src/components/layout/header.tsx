@@ -49,7 +49,7 @@ export function Header() {
                 <Calendar size={18} />
                 <span className="hidden md:inline">{t('events')}</span>
               </NavLink>
-              {session?.user?.isAdmin && (
+              {session?.user?.isStaff && (
                 <NavLink href="/admin">
                   <span>{t('admin')}</span>
                 </NavLink>

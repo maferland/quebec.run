@@ -7,20 +7,41 @@ config()
 const prisma = new PrismaClient()
 
 async function main() {
-  // Create admin user
-  const adminUser = await prisma.user.upsert({
+  // Create platform staff (you)
+  const staffUser = await prisma.user.upsert({
     where: { email: 'maferland@quebec.run' },
     update: {
-      isAdmin: true,
+      isStaff: true,
     },
     create: {
       email: 'maferland@quebec.run',
-      name: 'Marc-André Ferland',
-      isAdmin: true,
+      name: 'Marc-Antoine Ferland',
+      isStaff: true,
     },
   })
 
-  // Create the 6AM Club
+  // Create test club owners (regular users, not staff)
+  const clubOwner1 = await prisma.user.upsert({
+    where: { email: 'alice.tremblay@quebec.run' },
+    update: {},
+    create: {
+      email: 'alice.tremblay@quebec.run',
+      name: 'Alice Tremblay',
+      isStaff: false,
+    },
+  })
+
+  const clubOwner2 = await prisma.user.upsert({
+    where: { email: 'bob.gagnon@quebec.run' },
+    update: {},
+    create: {
+      email: 'bob.gagnon@quebec.run',
+      name: 'Bob Gagnon',
+      isStaff: false,
+    },
+  })
+
+  // Create the 6AM Club (owned by staff for testing)
   const sixAmClub = await prisma.club.create({
     data: {
       name: '6AM Club',
@@ -28,7 +49,28 @@ async function main() {
       description:
         'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
       language: 'fr',
-      ownerId: adminUser.id,
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Create clubs for test owners
+  await prisma.club.create({
+    data: {
+      name: 'Club Courir Limoilou',
+      slug: createSlug('Club Courir Limoilou'),
+      description: 'Club de course dans Limoilou',
+      language: 'fr',
+      ownerId: clubOwner1.id,
+    },
+  })
+
+  await prisma.club.create({
+    data: {
+      name: 'Vélo-Course Sainte-Foy',
+      slug: createSlug('Vélo-Course Sainte-Foy'),
+      description: 'Club mixte vélo et course à Sainte-Foy',
+      language: 'fr',
+      ownerId: clubOwner2.id,
     },
   })
 

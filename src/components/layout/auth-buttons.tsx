@@ -35,7 +35,7 @@ export function AuthButtons({ variant, onAction }: AuthButtonsProps) {
             : 'space-y-3'
         }
       >
-        {variant === 'desktop' && session.user?.isAdmin && (
+        {variant === 'desktop' && session.user?.isStaff && (
           <NavLink href="/admin">
             <span>{t('admin')}</span>
           </NavLink>

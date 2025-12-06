@@ -32,7 +32,7 @@ export const WithAdminUser: Story = {
   parameters: {
     nextauth: {
       session: {
-        user: { isAdmin: true, name: 'Admin User' },
+        user: { isStaff: true, name: 'Admin User' },
         expires: '2024-01-01',
       },
     },
@@ -43,7 +43,7 @@ export const WithRegularUser: Story = {
   parameters: {
     nextauth: {
       session: {
-        user: { isAdmin: false, name: 'Regular User' },
+        user: { isStaff: false, name: 'Regular User' },
         expires: '2024-01-01',
       },
     },
