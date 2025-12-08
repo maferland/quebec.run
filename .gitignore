@@ -60,6 +60,7 @@ logs
 *.log
 
 /src/generated/prisma
+/prisma/generated
 
 *storybook.log
 storybook-static
