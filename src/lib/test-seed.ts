@@ -1,7 +1,15 @@
-import { PrismaClient } from '@prisma/client'
+import { PrismaClient } from '../../prisma/generated/client/client'
+import { PrismaPg } from '@prisma/adapter-pg'
+import { Pool } from 'pg'
 import { env } from './env'
 import { execSync } from 'child_process'
 import { createSlug } from './utils/slug'
+
+const pool = new Pool({
+  connectionString: env.TEST_DATABASE_URL,
+})
+
+const adapter = new PrismaPg(pool)
 
 const globalForPrisma = globalThis as unknown as {
   prisma: PrismaClient | undefined
@@ -10,7 +18,7 @@ const globalForPrisma = globalThis as unknown as {
 export const testPrisma =
   globalForPrisma.prisma ??
   new PrismaClient({
-    datasourceUrl: env.TEST_DATABASE_URL,
+    adapter,
   })
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = testPrisma

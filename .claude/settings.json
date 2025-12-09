@@ -1,0 +1,96 @@
+{
+  "permissions": {
+    "allow": [
+      // File access to worktrees
+      "Read(.worktrees/**)",
+      "Edit(.worktrees/**)",
+      "Write(.worktrees/**)",
+
+      // File access to main project areas
+      "Read(scripts/**)",
+      "Edit(scripts/**)",
+      "Write(scripts/**)",
+      "Read(src/**)",
+      "Edit(src/**)",
+      "Write(src/**)",
+      "Read(prisma/**)",
+      "Edit(prisma/**)",
+      "Read(app/**)",
+      "Edit(app/**)",
+
+      // Common npm commands
+      "Bash(npm run:*)",
+      "Bash(npm install:*)",
+      "Bash(npm test:*)",
+      "Bash(npm run test:*)",
+      "Bash(npm run lint:*)",
+      "Bash(npm run typecheck:*)",
+      "Bash(npm run build:*)",
+      "Bash(npm run dev:*)",
+      "Bash(npm run storybook:*)",
+      "Bash(npm run worktree:*)",
+      "Bash(npm run remove-worktree:*)",
+      "Bash(npm run db:*)",
+
+      // npx commands
+      "Bash(npx tsx:*)",
+      "Bash(npx tsc:*)",
+      "Bash(npx prettier:*)",
+      "Bash(npx eslint:*)",
+      "Bash(npx prisma:*)",
+      "Bash(npx playwright:*)",
+
+      // Git commands
+      "Bash(git status:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git push:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git worktree:*)",
+      "Bash(git branch:*)",
+      "Bash(git checkout:*)",
+      "Bash(git stash:*)",
+      "Bash(git fetch:*)",
+      "Bash(git rev-parse:*)",
+      "Bash(git show:*)",
+      "Bash(git mv:*)",
+      "Bash(git rm:*)",
+      "Bash(git restore:*)",
+      "Bash(git cat-file:*)",
+      "Bash(git rev-list:*)",
+
+      // GitHub CLI
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)",
+
+      // Database commands
+      "Bash(psql:*)",
+
+      // Common utilities
+      "Bash(cat:*)",
+      "Bash(find:*)",
+      "Bash(echo:*)",
+      "Bash(ls:*)",
+      "Bash(mkdir:*)",
+      "Bash(lsof:*)",
+      "Bash(curl:*)",
+      "Bash(node:*)",
+      "Bash(timeout:*)",
+      "Bash(xargs:*)",
+
+      // Database env var patterns
+      "Bash(DATABASE_URL:*)",
+      "Bash(export DATABASE_URL:*)",
+      "Bash(unset:*)",
+
+      // Skills
+      "Skill(superpowers:writing-plans)",
+      "Skill(superpowers:brainstorming)",
+      "Skill(superpowers:using-git-worktrees)",
+      "Skill(superpowers:systematic-debugging)",
+      "Skill(superpowers:finishing-a-development-branch)",
+      "Skill(superpowers:subagent-driven-development)"
+    ]
+  }
+}

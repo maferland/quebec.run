@@ -66,7 +66,8 @@ const createEmailProvider = () => {
 }
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   providers: [createEmailProvider()],
   pages: {
     // Use path without locale prefix - middleware will add locale automatically
