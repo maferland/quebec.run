@@ -7,8 +7,9 @@
   - [3) Testing Strategy](#3-testing-strategy)
   - [4) Workflow & Quality Gates](#4-workflow--quality-gates)
   - [5) Code Style & Patterns](#5-code-style--patterns)
-  - [6) Boy Scout Rule](#6-boy-scout-rule)
-  - [Appendix: Quick “Always/Never” Cheatsheet](#appendix-quick-alwaysnever-cheatsheet)
+  - [6) Worktree Workflow](#6-worktree-workflow)
+  - [7) Boy Scout Rule](#7-boy-scout-rule)
+  - [Appendix: Quick "Always/Never" Cheatsheet](#appendix-quick-alwaysnever-cheatsheet)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -109,12 +110,61 @@ Cover the right layer(s); don’t duplicate assertions across layers.
 
 ## 5) Code Style & Patterns
 
+- **TypeScript preference:** Always use `.ts` over `.js` for scripts and utilities.
 - **Components:** opinionated defaults; design for the 80%; consistent props (`variant`, `as`, `className`).
 - **Parameters:** prefer object params for extensibility (esp. 3+ args); for hooks, use a single `opts` object.
 - **Queries:** review every Prisma call for N+1 and over-fetching.
 - **Accessibility:** never trade readability/contrast for aesthetics; verify hover/focus/active/disabled states.
 
-## 6) Boy Scout Rule
+## 6) Worktree Workflow
+
+**Creating worktrees:** Always use `npm run worktree <branch-name>` instead of `git worktree add` directly.
+
+The script automatically:
+
+- Creates worktree at `.worktrees/<branch-name>`
+- Creates branch `maferland/<branch-name>`
+- Copies `.env` from main to worktree
+- Creates isolated database `quebec.run_<branch-name>`
+- Runs Prisma migrations on new database
+- Appends unique config to `.env`:
+  - `PORT` for dev server (60XX)
+  - `STORYBOOK_PORT` for Storybook (61XX)
+  - `EMAIL_SERVER_PORT` for Mailhog SMTP (62XX)
+  - `DATABASE_URL` for isolated PostgreSQL database
+  - `TEST_DATABASE_URL` for test database
+  - All ports share the same random XX suffix (01-99)
+- Runs `npm install`
+
+Example:
+
+```bash
+npm run worktree my-feature
+# ✨ Worktree setup complete!
+# Branch: maferland/my-feature
+# Path: /path/to/.worktrees/my-feature
+# Database: quebec.run_my_feature
+# Dev server: http://localhost:6042
+# Storybook: http://localhost:6142
+# Mailhog: http://localhost:6242
+```
+
+**Removing worktrees:** Use `npm run remove-worktree <branch-name>` to clean up.
+
+The cleanup script:
+
+- Removes git worktree
+- Drops the isolated database
+- Deletes the branch
+
+Example:
+
+```bash
+npm run remove-worktree my-feature
+# ✨ Worktree cleanup complete!
+```
+
+## 7) Boy Scout Rule
 
 Always leave the code better: small opportunistic fixes, note debt, and track improvements in **`RENOVATE.md`**.
 
