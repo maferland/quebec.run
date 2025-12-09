@@ -1,6 +1,9 @@
-import { describe, it, expect, beforeEach, afterEach, assert } from 'vitest'
+import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from './events'
+import { geocodeAddress } from './geocoding'
+
+vi.mock('./geocoding')
 
 describe('Events Service Integration Tests', () => {
   let testUserId: string
@@ -307,6 +310,127 @@ describe('Events Service Integration Tests', () => {
           data: { id: event.id },
         })
       ).rejects.toThrow('Unauthorized')
+    })
+  })
+
+  describe('createEvent with geocoding', () => {
+    it('geocodes address on event create', async () => {
+      vi.mocked(geocodeAddress).mockResolvedValueOnce({
+        lat: 46.8139,
+        lng: -71.208,
+      })
+
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await createEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: {
+          title: 'Test Event',
+          date: '2025-12-01',
+          time: '18:00',
+          address: '123 Rue Principale, Quebec City, QC',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(geocodeAddress).toHaveBeenCalledWith(
+        '123 Rue Principale, Quebec City, QC'
+      )
+      expect(event.latitude).toBe(46.8139)
+      expect(event.longitude).toBe(-71.208)
+      expect(event.geocodedAt).toBeInstanceOf(Date)
+    })
+
+    it('saves event without coords if geocoding fails', async () => {
+      vi.mocked(geocodeAddress).mockResolvedValueOnce(null)
+
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await createEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: {
+          title: 'Test Event',
+          date: '2025-12-01',
+          time: '18:00',
+          address: 'Invalid Address',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(event.latitude).toBeNull()
+      expect(event.longitude).toBeNull()
+      expect(event.geocodedAt).toBeNull()
+    })
+  })
+
+  describe('updateEvent with geocoding', () => {
+    it('re-geocodes when address changes', async () => {
+      vi.mocked(geocodeAddress).mockResolvedValueOnce({
+        lat: 45.5017,
+        lng: -73.5673,
+      })
+
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Test Event',
+          date: new Date('2025-12-01'),
+          time: '18:00',
+          address: 'Old Address',
+          latitude: 46.8139,
+          longitude: -71.208,
+          geocodedAt: new Date(),
+          clubId: testClub.id,
+        },
+      })
+
+      const updated = await updateEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: {
+          id: event.id,
+          address: 'New Address, Montreal',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(geocodeAddress).toHaveBeenCalledWith('New Address, Montreal')
+      expect(updated.latitude).toBe(45.5017)
+      expect(updated.longitude).toBe(-73.5673)
+    })
+
+    it('does not re-geocode if address unchanged', async () => {
+      vi.mocked(geocodeAddress).mockClear()
+
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Test Event',
+          date: new Date('2025-12-01'),
+          time: '18:00',
+          address: 'Same Address',
+          latitude: 46.8139,
+          longitude: -71.208,
+          geocodedAt: new Date(),
+          clubId: testClub.id,
+        },
+      })
+
+      await updateEvent({
+        user: { id: testUserId, isAdmin: false },
+        data: {
+          id: event.id,
+          title: 'Updated Title',
+          clubId: testClub.id,
+        },
+      })
+
+      expect(geocodeAddress).not.toHaveBeenCalled()
     })
   })
 })
