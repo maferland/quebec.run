@@ -56,7 +56,7 @@
     "date-fns": "^4.1.0",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.539.0",
-    "next": "^15.4.8",
+    "next": "^15.5.9",
     "next-auth": "^4.24.11",
     "next-intl": "^4.3.5",
     "nodemailer": "^7.0.11",
