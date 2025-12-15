@@ -15,8 +15,9 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
-      TEST_DATABASE_URL: ${{ secrets.TEST_DATABASE_URL }}
+      # Use local postgres service - not secrets (so dependabot can run CI)
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
       NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
       NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
       EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
@@ -82,7 +83,8 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+      # Dummy URL for prisma generate (doesn't connect, just needs valid format)
+      DATABASE_URL: postgresql://localhost:5432/dummy
 
     steps:
       - name: Checkout code
