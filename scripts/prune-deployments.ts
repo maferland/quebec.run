@@ -8,7 +8,9 @@ interface Deployment {
   created_at: string
 }
 
-async function prunePreviewDeployments() {
+const KEEP_PRODUCTION_COUNT = 5
+
+async function pruneDeployments() {
   console.log('Fetching all deployments...')
 
   // Get all deployments (paginated returns multiple arrays, flatten them)
@@ -27,23 +29,33 @@ async function prunePreviewDeployments() {
   const previewDeployments = deployments.filter(
     (d) => d.environment === 'Preview'
   )
-  const productionDeployments = deployments.filter(
-    (d) => d.environment === 'Production'
-  )
+  const productionDeployments = deployments
+    .filter((d) => d.environment === 'Production')
+    .sort(
+      (a, b) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    )
+
+  const productionToKeep = productionDeployments.slice(0, KEEP_PRODUCTION_COUNT)
+  const productionToDelete = productionDeployments.slice(KEEP_PRODUCTION_COUNT)
 
   console.log(`\nFound ${deployments.length} total deployments:`)
-  console.log(`  - Production: ${productionDeployments.length} (keeping)`)
-  console.log(`  - Preview: ${previewDeployments.length} (deleting)\n`)
+  console.log(
+    `  - Production: ${productionDeployments.length} (keeping ${productionToKeep.length}, deleting ${productionToDelete.length})`
+  )
+  console.log(`  - Preview: ${previewDeployments.length} (deleting all)\n`)
 
-  if (previewDeployments.length === 0) {
-    console.log('No Preview deployments to delete.')
+  const deploymentsToDelete = [...previewDeployments, ...productionToDelete]
+
+  if (deploymentsToDelete.length === 0) {
+    console.log('No deployments to delete.')
     return
   }
 
   console.log('Starting deletion...')
   let deleted = 0
 
-  for (const deployment of previewDeployments) {
+  for (const deployment of deploymentsToDelete) {
     try {
       // Set deployment to inactive state first
       execSync(
@@ -59,15 +71,15 @@ async function prunePreviewDeployments() {
 
       deleted++
       if (deleted % 10 === 0) {
-        console.log(`Deleted ${deleted}/${previewDeployments.length}...`)
+        console.log(`Deleted ${deleted}/${deploymentsToDelete.length}...`)
       }
     } catch (error) {
       console.error(`Failed to delete deployment ${deployment.id}:`, error)
     }
   }
 
-  console.log(`\n✅ Deleted ${deleted} Preview deployments`)
-  console.log(`✅ Kept ${productionDeployments.length} Production deployments`)
+  console.log(`\n✅ Deleted ${deleted} deployments`)
+  console.log(`✅ Kept ${productionToKeep.length} Production deployments`)
 }
 
-prunePreviewDeployments().catch(console.error)
+pruneDeployments().catch(console.error)
