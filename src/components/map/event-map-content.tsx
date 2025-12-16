@@ -1,7 +1,6 @@
 'use client'
 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
-import MarkerClusterGroup from 'react-leaflet-markercluster'
 import { Icon } from 'leaflet'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
@@ -10,8 +9,6 @@ import { Tag } from '@/components/ui/tag'
 import { LocationInline } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
 import { Clock } from 'lucide-react'
-import 'leaflet.markercluster/dist/MarkerCluster.css'
-import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
 
 // Custom blue-indigo marker icon
 const markerIcon = new Icon({
@@ -53,45 +50,43 @@ export default function EventMapContent({
       className="h-full w-full"
     >
       <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
-      <MarkerClusterGroup>
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            position={[event.latitude, event.longitude]}
-            icon={markerIcon}
-          >
-            <Popup>
-              <div className="min-w-[240px]">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-heading font-bold text-primary mb-2 line-clamp-2 leading-tight">
-                      {event.title}
-                    </h3>
-                    <p className="text-xs text-accent font-body">
-                      {event.club.name}
-                    </p>
-                  </div>
-                  <Tag variant="datetime" icon={Clock} size="xs">
-                    {formatDateTime(event.date, event.time)}
-                  </Tag>
+      {events.map((event) => (
+        <Marker
+          key={event.id}
+          position={[event.latitude, event.longitude]}
+          icon={markerIcon}
+        >
+          <Popup>
+            <div className="min-w-[240px]">
+              <div className="flex items-start gap-3 mb-3">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-lg font-heading font-bold text-primary mb-2 line-clamp-2 leading-tight">
+                    {event.title}
+                  </h3>
+                  <p className="text-xs text-accent font-body">
+                    {event.club.name}
+                  </p>
                 </div>
-
-                {event.address && (
-                  <div className="mb-3">
-                    <LocationInline address={event.address} />
-                  </div>
-                )}
-
-                <Link href={`/events/${event.id}`}>
-                  <Button size="sm" variant="primary" className="w-full">
-                    {t('viewDetails')}
-                  </Button>
-                </Link>
+                <Tag variant="datetime" icon={Clock} size="xs">
+                  {formatDateTime(event.date, event.time)}
+                </Tag>
               </div>
-            </Popup>
-          </Marker>
-        ))}
-      </MarkerClusterGroup>
+
+              {event.address && (
+                <div className="mb-3">
+                  <LocationInline address={event.address} />
+                </div>
+              )}
+
+              <Link href={`/events/${event.id}`}>
+                <Button size="sm" variant="primary" className="w-full">
+                  {t('viewDetails')}
+                </Button>
+              </Link>
+            </div>
+          </Popup>
+        </Marker>
+      ))}
     </MapContainer>
   )
 }

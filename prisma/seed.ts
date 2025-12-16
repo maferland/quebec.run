@@ -191,29 +191,27 @@ async function main() {
 
     const dayCode = dayMap[byDayMatch[1] as keyof typeof dayMap]
 
-    // Create events for next 3 weeks
-    for (let week = 0; week < 3; week++) {
-      const baseDate = new Date()
-      const daysUntilTarget = (dayCode - baseDate.getDay() + 7) % 7
-      const eventDate = new Date(
-        baseDate.getTime() + (daysUntilTarget + week * 7) * 24 * 60 * 60 * 1000
-      )
-      eventDate.setHours(6, 0, 0, 0)
+    // Create next upcoming event
+    const baseDate = new Date()
+    const daysUntilTarget = (dayCode - baseDate.getDay() + 7) % 7
+    const eventDate = new Date(
+      baseDate.getTime() + daysUntilTarget * 24 * 60 * 60 * 1000
+    )
+    eventDate.setHours(6, 0, 0, 0)
 
-      instantiatedEvents.push({
-        title: recurringEvent.title,
-        description: recurringEvent.description,
-        date: eventDate,
-        time: '06:00',
-        address: recurringEvent.address,
-        latitude: recurringEvent.latitude,
-        longitude: recurringEvent.longitude,
-        distance: '5-8 km',
-        pace: 'Rythme modéré',
-        clubId: sixAmClub.id,
-        recurringEventId: recurringEvent.id,
-      })
-    }
+    instantiatedEvents.push({
+      title: recurringEvent.title,
+      description: recurringEvent.description,
+      date: eventDate,
+      time: '06:00',
+      address: recurringEvent.address,
+      latitude: recurringEvent.latitude,
+      longitude: recurringEvent.longitude,
+      distance: '5-8 km',
+      pace: 'Rythme modéré',
+      clubId: sixAmClub.id,
+      recurringEventId: recurringEvent.id,
+    })
   }
 
   await prisma.event.createMany({
