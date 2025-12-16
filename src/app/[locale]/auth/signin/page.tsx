@@ -7,12 +7,11 @@ import { PageContainer } from '@/components/ui/page-container'
 import { useAuthGuard } from '@/lib/hooks/use-auth-guard'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { useRouter, useSearchParams } from 'next/navigation'
+import { useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 export default function SignInPage() {
   const t = useTranslations('auth')
-  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 

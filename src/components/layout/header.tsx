@@ -1,10 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { NavLink } from '@/components/ui/nav-link'
 import { UserDropdown } from '@/components/ui/user-dropdown'
 import { Calendar, MapPin, Users } from 'lucide-react'
-import { signIn, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 
@@ -25,7 +24,7 @@ const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
 )
 
 export function Header() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const t = useTranslations('navigation')
 
   return (

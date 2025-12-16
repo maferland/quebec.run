@@ -1,6 +1,7 @@
 import { env } from '@/lib/env'
 import { prisma } from '@/lib/prisma'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
+import type { Adapter } from 'next-auth/adapters'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import EmailProvider from 'next-auth/providers/email'
@@ -99,7 +100,7 @@ const createDevBypassProvider = () => {
 const devProvider = createDevBypassProvider()
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: PrismaAdapter(prisma) as Adapter,
   session: {
     strategy: 'jwt', // Required for CredentialsProvider
   },
