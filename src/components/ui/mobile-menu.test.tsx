@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { vi, type MockedFunction } from 'vitest'
 import { MobileMenu } from './mobile-menu'
 
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 describe('MobileMenu', () => {

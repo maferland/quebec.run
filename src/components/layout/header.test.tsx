@@ -3,8 +3,6 @@ import { useSession } from 'next-auth/react'
 import { vi, type MockedFunction } from 'vitest'
 import { Header } from './header'
 
-// Mock next-auth
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 // Mock Next.js Link

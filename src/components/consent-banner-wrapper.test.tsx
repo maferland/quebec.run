@@ -5,8 +5,6 @@ import { useSession } from 'next-auth/react'
 import { ConsentBannerWrapper } from './consent-banner-wrapper'
 import type { MockedFunction } from 'vitest'
 
-// Mock next-auth
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 // Mock ConsentBanner component
