@@ -94,8 +94,14 @@ async function main() {
   }
 
   // Create clubs for test owners
-  await prisma.club.create({
-    data: {
+  await prisma.club.upsert({
+    where: { slug: createSlug('Club Courir Limoilou') },
+    update: {
+      description: 'Club de course dans Limoilou',
+      language: 'fr',
+      ownerId: clubOwner1.id,
+    },
+    create: {
       name: 'Club Courir Limoilou',
       slug: createSlug('Club Courir Limoilou'),
       description: 'Club de course dans Limoilou',
@@ -104,8 +110,14 @@ async function main() {
     },
   })
 
-  await prisma.club.create({
-    data: {
+  await prisma.club.upsert({
+    where: { slug: createSlug('Vélo-Course Sainte-Foy') },
+    update: {
+      description: 'Club mixte vélo et course à Sainte-Foy',
+      language: 'fr',
+      ownerId: clubOwner2.id,
+    },
+    create: {
       name: 'Vélo-Course Sainte-Foy',
       slug: createSlug('Vélo-Course Sainte-Foy'),
       description: 'Club mixte vélo et course à Sainte-Foy',
