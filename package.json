@@ -14,7 +14,7 @@
     "build:ci": "next build && prisma migrate deploy && npm run db:seed",
     "postinstall": "prisma generate",
     "start": "next start",
-    "lint": "next lint",
+    "lint": "eslint .",
     "test": "vitest run --mode test",
     "test:unit": "vitest run --mode test --exclude '**/services/**/*.test.ts'",
     "test:integration": "vitest run --mode test 'src/lib/services/**/*.test.ts'",
@@ -79,7 +79,6 @@
     "zod": "^4.0.17"
   },
   "devDependencies": {
-    "@eslint/eslintrc": "^3",
     "@playwright/test": "^1.54.2",
     "@storybook/addon-docs": "^9.1.2",
     "@storybook/addon-onboarding": "^9.1.2",
