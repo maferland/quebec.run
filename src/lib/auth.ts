@@ -1,7 +1,6 @@
 import { env } from '@/lib/env'
 import { prisma } from '@/lib/prisma'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
-import type { Adapter } from 'next-auth/adapters'
 import { NextAuthOptions } from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
 import EmailProvider from 'next-auth/providers/email'
@@ -100,7 +99,9 @@ const createDevBypassProvider = () => {
 const devProvider = createDevBypassProvider()
 
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as Adapter,
+  // Prisma v5 removed $use method, but adapter expects it in type definition
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  adapter: PrismaAdapter(prisma as any),
   session: {
     strategy: 'jwt', // Required for CredentialsProvider
   },
