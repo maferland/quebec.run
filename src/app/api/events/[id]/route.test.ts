@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest'
 import { PUT, DELETE } from './route'
 import { prisma } from '@/lib/prisma'
 import { cleanDatabase } from '@/lib/test-seed'
+import { setupMSW } from '@/lib/test-msw-setup'
 
 // Mock next-auth
 vi.mock('next-auth', () => ({
@@ -11,6 +12,9 @@ vi.mock('next-auth', () => ({
 
 import { getServerSession } from 'next-auth'
 const mockGetServerSession = getServerSession as ReturnType<typeof vi.fn>
+
+// Setup MSW for geocoding API
+setupMSW()
 
 describe('PUT /api/events/[id]', () => {
   beforeEach(async () => {
