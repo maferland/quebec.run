@@ -20,11 +20,22 @@ vi.mock('next-intl', () => ({
     children,
 }))
 
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: (key: string) => (key === 'callbackUrl' ? '/admin' : null),
-  }),
-}))
+vi.mock('next/navigation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/navigation')>()
+  return {
+    ...actual,
+    useRouter: () => ({
+      push: vi.fn(),
+      replace: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+    }),
+    useSearchParams: () => ({
+      get: (key: string) => (key === 'callbackUrl' ? '/admin' : null),
+    }),
+  }
+})
 
 describe('SignInPage', () => {
   beforeEach(() => {
