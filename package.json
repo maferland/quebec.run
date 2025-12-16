@@ -11,7 +11,7 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f mailhog",
     "build": "next build",
-    "build:ci": "next build && prisma migrate deploy",
+    "build:ci": "next build && prisma migrate deploy && npm run db:seed",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "next lint",
