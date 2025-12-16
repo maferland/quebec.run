@@ -324,7 +324,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const event = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           title: 'Test Event',
           date: '2025-12-01',
@@ -349,7 +349,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const event = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           title: 'Test Event',
           date: '2025-12-01',
@@ -389,7 +389,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       const updated = await updateEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           id: event.id,
           address: 'New Address, Montreal',
@@ -422,7 +422,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       await updateEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           id: event.id,
           title: 'Updated Title',
