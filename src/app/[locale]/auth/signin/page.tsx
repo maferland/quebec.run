@@ -70,7 +70,7 @@ export default function SignInPage() {
       })
 
       if (result?.ok) {
-        router.push(callbackUrl)
+        window.location.href = callbackUrl
       } else {
         console.error('Dev login failed:', result?.error)
         setDevLoading(false)
