@@ -14,6 +14,18 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
+    env:
+      # Use local postgres service - not secrets (so dependabot can run CI)
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      USE_RESEND: ${{ secrets.USE_RESEND }}
+      EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST }}
+      EMAIL_SERVER_PORT: ${{ secrets.EMAIL_SERVER_PORT }}
+      NODE_ENV: ${{ secrets.NODE_ENV }}
+
     services:
       postgres:
         image: postgres:15
@@ -43,46 +55,20 @@ jobs:
         run: npm ci
 
       - name: Setup test database
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
         run: |
           npx prisma migrate deploy
           npx prisma generate
 
       - name: Run unit tests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          NEXTAUTH_SECRET: test-secret-for-ci-only-not-secure
-          NEXTAUTH_URL: http://localhost:3000
-          EMAIL_FROM: test@example.com
-          USE_RESEND: false
-          EMAIL_SERVER_HOST: localhost
-          EMAIL_SERVER_PORT: 1025
-          NODE_ENV: test
         run: npm run test
 
       - name: Install Playwright browsers
         run: npx playwright install --with-deps
 
       - name: Seed test database
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
         run: npm run db:seed
 
       - name: Run E2E tests
-        env:
-          DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test?schema=public
-          NEXTAUTH_SECRET: test-secret-for-ci-only-not-secure
-          NEXTAUTH_URL: http://localhost:3000
-          EMAIL_FROM: test@example.com
-          USE_RESEND: false
-          EMAIL_SERVER_HOST: localhost
-          EMAIL_SERVER_PORT: 1025
-          NODE_ENV: test
         run: npm run test:e2e
 
       - name: Upload Playwright report
@@ -95,6 +81,10 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
+
+    env:
+      # Dummy URL for prisma generate (doesn't connect, just needs valid format)
+      DATABASE_URL: postgresql://localhost:5432/dummy
 
     steps:
       - name: Checkout code

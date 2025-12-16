@@ -66,43 +66,44 @@ const createEmailProvider = () => {
   }
 }
 
+// Dev-only: credentials provider to bypass email verification
+const createDevBypassProvider = () => {
+  if (env.NODE_ENV === 'production') return null
+
+  return CredentialsProvider({
+    id: 'dev-bypass',
+    name: 'Dev Bypass',
+    credentials: {
+      email: { label: 'Email', type: 'text' },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email) return null
+
+      const user = await prisma.user.findUnique({
+        where: { email: credentials.email },
+        select: { id: true, email: true, name: true, isStaff: true },
+      })
+
+      if (!user) return null
+
+      return {
+        id: user.id,
+        email: user.email!,
+        name: user.name,
+        isStaff: user.isStaff,
+      }
+    },
+  })
+}
+
+const devProvider = createDevBypassProvider()
+
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
   session: {
     strategy: 'jwt', // Required for CredentialsProvider
   },
-  providers: [
-    createEmailProvider(),
-    // Dev-only: bypass email verification
-    ...(env.NODE_ENV !== 'production'
-      ? [
-          CredentialsProvider({
-            id: 'dev-bypass',
-            name: 'Dev Bypass',
-            credentials: {
-              email: { label: 'Email', type: 'text' },
-            },
-            async authorize(credentials) {
-              if (!credentials?.email) return null
-
-              const user = await prisma.user.findUnique({
-                where: { email: credentials.email },
-                select: { id: true, email: true, name: true, isStaff: true },
-              })
-
-              if (!user) return null
-
-              return {
-                id: user.id,
-                email: user.email!,
-                name: user.name,
-                isStaff: user.isStaff,
-              }
-            },
-          }),
-        ]
-      : []),
-  ],
+  providers: [createEmailProvider(), ...(devProvider ? [devProvider] : [])],
   pages: {
     // Use path without locale prefix - middleware will add locale automatically
     // Signin page is in [locale]/auth/signin and inherits i18n context from [locale]/layout.tsx

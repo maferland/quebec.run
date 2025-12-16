@@ -8,6 +8,7 @@ import type {
   AuthPayload,
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import { geocodeAddress } from './geocoding'
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -38,9 +39,13 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
       distance: true,
       pace: true,
       address: true,
+      latitude: true,
+      longitude: true,
       club: {
         select: {
+          id: true,
           name: true,
+          slug: true,
         },
       },
     },
@@ -74,10 +79,27 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
 }
 
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
+  // Geocode address if provided
+  let latitude: number | null = null
+  let longitude: number | null = null
+  let geocodedAt: Date | null = null
+
+  if (data.address) {
+    const coords = await geocodeAddress(data.address)
+    if (coords) {
+      latitude = coords.lat
+      longitude = coords.lng
+      geocodedAt = new Date()
+    }
+  }
+
   const event = await prisma.event.create({
     data: {
       ...data,
       date: new Date(data.date),
+      latitude,
+      longitude,
+      geocodedAt,
     },
     include: {
       club: {
@@ -100,6 +122,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     where: { id },
     select: {
       id: true,
+      address: true,
       club: {
         select: { ownerId: true },
       },
@@ -114,10 +137,35 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     throw new UnauthorizedError('Unauthorized')
   }
 
+  // Re-geocode if address changed
+  let geocodeUpdate: {
+    latitude?: number | null
+    longitude?: number | null
+    geocodedAt?: Date | null
+  } = {}
+
+  if (updateData.address && updateData.address !== event.address) {
+    const coords = await geocodeAddress(updateData.address)
+    if (coords) {
+      geocodeUpdate = {
+        latitude: coords.lat,
+        longitude: coords.lng,
+        geocodedAt: new Date(),
+      }
+    } else {
+      geocodeUpdate = {
+        latitude: null,
+        longitude: null,
+        geocodedAt: null,
+      }
+    }
+  }
+
   return await prisma.event.update({
     where: { id },
     data: {
       ...updateData,
+      ...geocodeUpdate,
       date: updateData.date ? new Date(updateData.date) : undefined,
     },
     include: {

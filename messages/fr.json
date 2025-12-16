@@ -75,6 +75,17 @@
         "description": "Découvrez des parcours de course pittoresques à travers Québec, du Vieux-Québec aux plaines d'Abraham.",
         "button": "Voir le calendrier"
       }
+    },
+    "map": {
+      "title": "Événements près de chez vous",
+      "emptyState": "Les événements apparaîtront sur la carte une fois les adresses géocodées",
+      "popup": {
+        "date": "Date :",
+        "time": "Heure :",
+        "club": "Club :",
+        "address": "Adresse :",
+        "viewDetails": "Voir les détails"
+      }
     }
   },
   "calendar": {
@@ -109,6 +120,12 @@
   "events": {
     "title": "Événements de course",
     "backToEvents": "Retour à tous les événements",
+    "map": {
+      "title": "Événements près de chez vous"
+    },
+    "list": {
+      "title": "Tous les événements"
+    },
     "empty": {
       "title": "Aucun événement à venir trouvé",
       "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
