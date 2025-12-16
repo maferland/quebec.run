@@ -117,13 +117,16 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
 export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
   const { id, ...updateData } = data
 
-  // Check permissions: must be admin OR own the event's club
+  // Check permissions: must be admin OR own the event's club/org
   const event = await prisma.event.findUnique({
     where: { id },
     select: {
       id: true,
       address: true,
       club: {
+        select: { ownerId: true },
+      },
+      organization: {
         select: { ownerId: true },
       },
     },
@@ -133,7 +136,8 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     throw new NotFoundError('Event not found')
   }
 
-  if (!user.isAdmin && event.club.ownerId !== user.id) {
+  const ownerId = event.club?.ownerId ?? event.organization?.ownerId
+  if (!user.isAdmin && ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 
@@ -182,12 +186,15 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
 export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
   const { id } = data
 
-  // Check permissions: must be admin OR own the event's club
+  // Check permissions: must be admin OR own the event's club/org
   const event = await prisma.event.findUnique({
     where: { id },
     select: {
       id: true,
       club: {
+        select: { ownerId: true },
+      },
+      organization: {
         select: { ownerId: true },
       },
     },
@@ -197,7 +204,8 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
     throw new NotFoundError('Event not found')
   }
 
-  if (!user.isAdmin && event.club.ownerId !== user.id) {
+  const ownerId = event.club?.ownerId ?? event.organization?.ownerId
+  if (!user.isAdmin && ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 

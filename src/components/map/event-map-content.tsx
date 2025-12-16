@@ -28,7 +28,7 @@ interface EventMapContentProps {
     address: string | null
     latitude: number
     longitude: number
-    club: { id: string; name: string; slug: string }
+    club: { id: string; name: string; slug: string } | null
   }>
   initialCenter: [number, number]
   initialZoom: number
@@ -63,9 +63,11 @@ export default function EventMapContent({
                   <h3 className="text-lg font-heading font-bold text-primary mb-2 line-clamp-2 leading-tight">
                     {event.title}
                   </h3>
-                  <p className="text-xs text-accent font-body">
-                    {event.club.name}
-                  </p>
+                  {event.club && (
+                    <p className="text-xs text-accent font-body">
+                      {event.club.name}
+                    </p>
+                  )}
                 </div>
                 <Tag variant="datetime" icon={Clock} size="xs">
                   {formatDateTime(event.date, event.time)}

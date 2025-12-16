@@ -16,6 +16,8 @@
     "start": "next start",
     "lint": "next lint",
     "test": "vitest run --mode test",
+    "test:unit": "vitest run --mode test --exclude '**/services/**/*.test.ts'",
+    "test:integration": "vitest run --mode test 'src/lib/services/**/*.test.ts'",
     "test:watch": "vitest --mode test",
     "test:coverage": "vitest run --mode test --coverage",
     "test:e2e": "playwright test",
