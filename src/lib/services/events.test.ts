@@ -41,7 +41,8 @@ describe('Events Service Integration Tests', () => {
       expect(result).toBeDefined()
       expect(Array.isArray(result)).toBe(true)
       result.forEach((run) => {
-        expect(run.club.name).toBe(testClub.name)
+        expect(run.club).not.toBeNull()
+        expect(run.club!.name).toBe(testClub.name)
       })
     })
 
@@ -97,8 +98,8 @@ describe('Events Service Integration Tests', () => {
       expect(result.pace).toBe(runData.pace)
       expect(result.clubId).toBe(runData.clubId)
       expect(result.id).toBeDefined()
-      expect(result.club).toBeDefined()
-      expect(result.club.name).toBe(testClub.name)
+      expect(result.club).not.toBeNull()
+      expect(result.club!.name).toBe(testClub.name)
 
       // Verify it was actually created in database
       const dbEvent = await testPrisma.event.findUnique({
@@ -107,7 +108,8 @@ describe('Events Service Integration Tests', () => {
       })
       assert(dbEvent)
       expect(dbEvent.title).toBe(runData.title)
-      expect(dbEvent.club.id).toBe(testClub.id)
+      expect(dbEvent.club).not.toBeNull()
+      expect(dbEvent.club!.id).toBe(testClub.id)
     })
 
     it('includes club information in response', async () => {
@@ -127,9 +129,9 @@ describe('Events Service Integration Tests', () => {
         data: runData,
       })
 
-      expect(result.club).toBeDefined()
-      expect(result.club.id).toBe(testClub.id)
-      expect(result.club.name).toBe(testClub.name)
+      expect(result.club).not.toBeNull()
+      expect(result.club!.id).toBe(testClub.id)
+      expect(result.club!.name).toBe(testClub.name)
     })
   })
 

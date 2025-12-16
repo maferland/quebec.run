@@ -97,7 +97,7 @@ export default async function AdminEventsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-text-primary">
-                        {event.club.name}
+                        {event.club?.name ?? 'Organization Event'}
                       </div>
                     </td>
                     <td className="px-6 py-4">

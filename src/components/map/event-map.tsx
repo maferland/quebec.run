@@ -22,7 +22,7 @@ interface EventMapProps {
     address: string | null
     latitude: number | null
     longitude: number | null
-    club: { id: string; name: string; slug: string }
+    club: { id: string; name: string; slug: string } | null
   }>
   initialCenter?: [number, number]
   initialZoom?: number
