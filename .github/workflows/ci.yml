@@ -83,8 +83,13 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Dummy URL for prisma generate (doesn't connect, just needs valid format)
+      # Dummy values for prisma generate (doesn't connect, just needs valid format for Zod validation)
       DATABASE_URL: postgresql://localhost:5432/dummy
+      NEXTAUTH_SECRET: dummy-secret-at-least-32-characters-long-for-validation
+      EMAIL_FROM: dummy@example.com
+      USE_RESEND: 'false'
+      EMAIL_SERVER_HOST: localhost
+      EMAIL_SERVER_PORT: '1025'
 
     steps:
       - name: Checkout code
