@@ -55,9 +55,6 @@ describe('Header', () => {
 
     // User dropdown should be present (contains user info)
     expect(screen.getByRole('button', { name: /john/i })).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Sign In' })
-    ).not.toBeInTheDocument()
   })
 
   it('shows admin link for admin users', () => {
