@@ -2,16 +2,19 @@
 
 import { useTranslations } from 'next-intl'
 import { useClubs } from '@/lib/hooks/use-clubs'
+import { useUpcomingEvents } from '@/lib/hooks/use-events'
 import { ClubCard } from '@/components/clubs/club-card'
 import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
 import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
+import { EventMap } from '@/components/map/event-map'
 import { MapPin, Search, Filter, Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 export default function Home() {
   const t = useTranslations('home')
   const { data: clubs, isLoading: clubsLoading } = useClubs()
+  const { data: events, isLoading: eventsLoading } = useUpcomingEvents()
 
   return (
     <div className="min-h-screen bg-gray-50">
@@ -40,17 +43,11 @@ export default function Home() {
               </div>
             </div>
             <div className="relative">
-              <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl p-8 flex items-center justify-center">
-                <div className="text-center">
-                  <MapPin size={64} className="text-primary mx-auto mb-4" />
-                  <h3 className="text-2xl font-heading font-semibold text-primary mb-2">
-                    {t('hero.mapTitle')}
-                  </h3>
-                  <p className="text-accent font-body">
-                    {t('hero.mapDescription')}
-                  </p>
-                </div>
-              </div>
+              {eventsLoading ? (
+                <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl animate-pulse" />
+              ) : (
+                <EventMap events={events || []} />
+              )}
             </div>
           </div>
         </div>

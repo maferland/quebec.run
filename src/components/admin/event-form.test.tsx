@@ -75,6 +75,8 @@ describe('EventForm', () => {
       date: new Date('2025-12-01'),
       time: '10:00',
       address: '123 Main St',
+      latitude: null,
+      longitude: null,
       distance: '5km',
       pace: '5:00/km',
       clubId: '1',
