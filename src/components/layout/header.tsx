@@ -56,26 +56,12 @@ export function Header() {
               )}
             </nav>
 
-            <div className="flex items-center space-x-3">
-              {status === 'loading' ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 h-9 bg-surface-secondary rounded-md animate-pulse" />
-                </div>
-              ) : session ? (
-                <UserDropdown
-                  userName={session.user?.name || t('user')}
-                  userEmail={session.user?.email || undefined}
-                />
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => signIn()}
-                  variant="outline-primary"
-                >
-                  {t('signIn')}
-                </Button>
-              )}
-            </div>
+            {session && (
+              <UserDropdown
+                userName={session.user?.name || t('user')}
+                userEmail={session.user?.email || undefined}
+              />
+            )}
           </div>
         </div>
       </div>
