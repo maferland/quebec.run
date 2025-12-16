@@ -20,11 +20,12 @@ import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
 import { z } from 'zod'
 
-type EventFormData = Event & {
+type EventFormData = Omit<Event, 'clubId'> & {
+  clubId: string | null
   club: {
     id: string
     name: string
-  }
+  } | null
 }
 
 type EventFormInput = z.infer<typeof eventCreateSchema>
