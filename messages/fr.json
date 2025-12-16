@@ -221,9 +221,7 @@
   },
   "consent": {
     "banner": {
-      "message": "En utilisant quebec.run, vous acceptez nos {termsLink} et notre {privacyLink}.",
-      "terms": "conditions d'utilisation",
-      "privacy": "politique de confidentialité",
+      "message": "En utilisant quebec.run, vous acceptez nos <termsLink>conditions d'utilisation</termsLink> et notre <privacyLink>politique de confidentialité</privacyLink>.",
       "accept": "Accepter et continuer"
     }
   },

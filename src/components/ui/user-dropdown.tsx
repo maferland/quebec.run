@@ -77,7 +77,7 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
             </Link>
             <button
               onClick={handleSignOut}
-              className="w-full flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors"
+              className="w-full flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors cursor-pointer"
             >
               <LogOut size={16} className="mr-3 text-text-secondary" />
               {t('signOut')}

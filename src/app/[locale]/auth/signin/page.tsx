@@ -6,11 +6,12 @@ import { FormControl } from '@/components/ui/form-control'
 import { PageContainer } from '@/components/ui/page-container'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { useState } from 'react'
 
 export default function SignInPage() {
   const t = useTranslations('auth')
+  const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
@@ -63,11 +64,17 @@ export default function SignInPage() {
 
     setDevLoading(true)
     try {
-      await signIn('dev-bypass', {
+      const result = await signIn('dev-bypass', {
         email: devEmail,
-        callbackUrl,
-        redirect: true,
+        redirect: false,
       })
+
+      if (result?.ok) {
+        router.push(callbackUrl)
+      } else {
+        console.error('Dev login failed:', result?.error)
+        setDevLoading(false)
+      }
     } catch (error) {
       console.error('Dev login error:', error)
       setDevLoading(false)
