@@ -85,30 +85,55 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
   // Generate unique slug from club name
   const baseSlug = createSlug(data.name)
 
-  // Get all existing slugs to ensure uniqueness
-  const existingSlugs = await prisma.club
-    .findMany({
-      select: { slug: true },
-    })
-    .then((clubs) => clubs.map((c) => c.slug))
+  // Get all existing slugs to ensure uniqueness (both clubs and orgs)
+  const [existingClubSlugs, existingOrgSlugs] = await Promise.all([
+    prisma.club
+      .findMany({ select: { slug: true } })
+      .then((clubs) => clubs.map((c) => c.slug)),
+    prisma.organization
+      .findMany({ select: { slug: true } })
+      .then((orgs) => orgs.map((o) => o.slug)),
+  ])
+  const existingSlugs = [...existingClubSlugs, ...existingOrgSlugs]
 
   const uniqueSlug = createUniqueSlug(baseSlug, existingSlugs)
 
-  return await prisma.club.create({
-    data: {
-      ...data,
-      slug: uniqueSlug,
-      ownerId: user.id,
-    },
-    include: {
-      events: {
-        where: {
-          date: { gte: new Date() },
-        },
-        orderBy: { date: 'asc' },
-        take: 5,
+  // Create Organization and Club in a transaction
+  // Every Club gets a hidden Organization (isVisible=false)
+  return await prisma.$transaction(async (tx) => {
+    // Create hidden organization for this club
+    const org = await tx.organization.create({
+      data: {
+        name: data.name,
+        slug: `${uniqueSlug}-org`,
+        description: data.description,
+        website: data.website,
+        instagram: data.instagram,
+        facebook: data.facebook,
+        isVisible: false, // Hidden for simple clubs
+        ownerId: user.id,
       },
-    },
+    })
+
+    // Create club linked to organization
+    return await tx.club.create({
+      data: {
+        ...data,
+        slug: uniqueSlug,
+        ownerId: user.id,
+        organizationId: org.id,
+      },
+      include: {
+        organization: true,
+        events: {
+          where: {
+            date: { gte: new Date() },
+          },
+          orderBy: { date: 'asc' },
+          take: 5,
+        },
+      },
+    })
   })
 }
 
@@ -127,7 +152,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   const { id } = data
   const club = await prisma.club.findUnique({
     where: { id },
-    select: { ownerId: true },
+    select: { ownerId: true, organizationId: true },
   })
 
   if (!club) return null
@@ -136,8 +161,27 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
     throw new Error('Unauthorized to delete this club')
   }
 
-  return await prisma.club.delete({
-    where: { id },
+  // Delete club and potentially orphaned organization in transaction
+  return await prisma.$transaction(async (tx) => {
+    const deletedClub = await tx.club.delete({
+      where: { id },
+    })
+
+    // If club had an org, check if org has other clubs
+    if (club.organizationId) {
+      const remainingClubs = await tx.club.count({
+        where: { organizationId: club.organizationId },
+      })
+
+      // If no clubs left, delete the organization too
+      if (remainingClubs === 0) {
+        await tx.organization.delete({
+          where: { id: club.organizationId },
+        })
+      }
+    }
+
+    return deletedClub
   })
 }
 
