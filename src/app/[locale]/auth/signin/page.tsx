@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { FormControl } from '@/components/ui/form-control'
 import { PageContainer } from '@/components/ui/page-container'
+import { useAuthGuard } from '@/lib/hooks/use-auth-guard'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { useRouter, useSearchParams } from 'next/navigation'
@@ -14,6 +15,8 @@ export default function SignInPage() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
+
+  useAuthGuard(callbackUrl)
 
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
