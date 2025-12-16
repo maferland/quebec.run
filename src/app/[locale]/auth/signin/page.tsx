@@ -75,7 +75,7 @@ export default function SignInPage() {
       })
 
       if (result?.ok) {
-        window.location.href = callbackUrl
+        window.location.replace(callbackUrl)
       } else {
         console.error('Dev login failed:', result?.error)
         setDevLoading(false)
