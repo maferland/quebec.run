@@ -16,14 +16,15 @@ export default function SignInPage() {
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'
 
-  useAuthGuard(callbackUrl)
-
   const [email, setEmail] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [emailSent, setEmailSent] = useState(false)
   const [error, setError] = useState('')
   const [devEmail, setDevEmail] = useState('')
   const [devLoading, setDevLoading] = useState(false)
+  const [isAuthenticating, setIsAuthenticating] = useState(false)
+
+  useAuthGuard(callbackUrl, { skip: isAuthenticating })
 
   const validateEmail = (email: string) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
@@ -66,6 +67,7 @@ export default function SignInPage() {
     if (!devEmail) return
 
     setDevLoading(true)
+    setIsAuthenticating(true)
     try {
       const result = await signIn('dev-bypass', {
         email: devEmail,
@@ -77,10 +79,12 @@ export default function SignInPage() {
       } else {
         console.error('Dev login failed:', result?.error)
         setDevLoading(false)
+        setIsAuthenticating(false)
       }
     } catch (error) {
       console.error('Dev login error:', error)
       setDevLoading(false)
+      setIsAuthenticating(false)
     }
   }
 

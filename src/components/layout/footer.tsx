@@ -9,6 +9,7 @@ export function Footer() {
   const currentLocale = useLocale()
   const year = new Date().getFullYear()
   const t = useTranslations('footer')
+  const tNav = useTranslations('navigation')
   const { data: session } = useSession()
 
   return (
@@ -49,6 +50,17 @@ export function Footer() {
               >
                 {t('calendar')}
               </Link>
+              {!session && (
+                <>
+                  <span className="text-text-secondary">•</span>
+                  <Link
+                    href="/auth/signin"
+                    className="text-text-secondary hover:text-primary transition-colors"
+                  >
+                    {tNav('signIn')}
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Language Toggle */}
@@ -91,17 +103,6 @@ export function Footer() {
             >
               {t('privacy')}
             </Link>
-            {!session && (
-              <>
-                <span className="mx-2">•</span>
-                <Link
-                  href="/auth/signin"
-                  className="hover:text-primary transition-colors"
-                >
-                  Sign In
-                </Link>
-              </>
-            )}
           </p>
         </div>
       </div>
