@@ -68,6 +68,9 @@ const createEmailProvider = () => {
 
 export const authOptions: NextAuthOptions = {
   adapter: PrismaAdapter(prisma),
+  session: {
+    strategy: 'jwt', // Required for CredentialsProvider
+  },
   providers: [
     createEmailProvider(),
     // Dev-only: bypass email verification
@@ -91,7 +94,7 @@ export const authOptions: NextAuthOptions = {
 
               return {
                 id: user.id,
-                email: user.email,
+                email: user.email!,
                 name: user.name,
                 isStaff: user.isStaff,
               }
@@ -107,18 +110,17 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: '/auth/signin',
   },
   callbacks: {
-    session: async ({ session, user, token }) => {
-      if (session?.user) {
-        // For credentials provider, user ID comes from token
-        const userId = user?.id || token?.sub
-        if (!userId) return session
-
-        session.user.id = userId
-        const dbUser = await prisma.user.findUnique({
-          where: { id: userId },
-          select: { isStaff: true },
-        })
-        session.user.isStaff = dbUser?.isStaff ?? false
+    jwt: async ({ token, user }) => {
+      // On sign-in, store user data in token
+      if (user) {
+        token.isStaff = user.isStaff
+      }
+      return token
+    },
+    session: async ({ session, token }) => {
+      if (session?.user && token?.sub) {
+        session.user.id = token.sub
+        session.user.isStaff = token.isStaff as boolean
       }
       return session
     },

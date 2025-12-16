@@ -10,7 +10,8 @@ const envSchema = z
     NEXTAUTH_SECRET: z
       .string()
       .min(32, 'NextAuth secret must be at least 32 characters'),
-    NEXTAUTH_URL: z.string().url('Invalid NextAuth URL'),
+    NEXTAUTH_URL: z.string().url('Invalid NextAuth URL').optional(),
+    PORT: z.coerce.number().optional(),
 
     // Email configuration
     EMAIL_FROM: z.string().email('Invalid email address'),
@@ -47,6 +48,10 @@ const envSchema = z
       path: ['email_config'],
     }
   )
+  .transform((data) => ({
+    ...data,
+    NEXTAUTH_URL: data.NEXTAUTH_URL || `http://localhost:${data.PORT || 3000}`,
+  }))
 
 export type Env = z.infer<typeof envSchema>
 
