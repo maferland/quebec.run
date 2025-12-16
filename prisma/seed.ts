@@ -28,24 +28,49 @@ async function main() {
     },
   })
 
-  // Create the 6AM Club
-  const sixAmClub = await prisma.club.upsert({
-    where: { slug: createSlug('6AM Club') },
-    update: {
-      description:
-        'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
-      language: 'fr',
-      ownerId: adminUser.id,
-    },
-    create: {
-      name: '6AM Club',
-      slug: createSlug('6AM Club'),
-      description:
-        'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
-      language: 'fr',
-      ownerId: adminUser.id,
-    },
+  // Create the 6AM Club with its Organization
+  const clubSlug = createSlug('6AM Club')
+  const clubDescription =
+    'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!'
+
+  // Check if club exists
+  let sixAmClub = await prisma.club.findUnique({
+    where: { slug: clubSlug },
   })
+
+  if (sixAmClub) {
+    // Update existing club
+    sixAmClub = await prisma.club.update({
+      where: { slug: clubSlug },
+      data: {
+        description: clubDescription,
+        language: 'fr',
+        ownerId: adminUser.id,
+      },
+    })
+  } else {
+    // Create org and club together
+    const org = await prisma.organization.create({
+      data: {
+        name: '6AM Club',
+        slug: `${clubSlug}-org`,
+        description: clubDescription,
+        isVisible: true, // 6AM Club is a franchise with multiple locations
+        ownerId: adminUser.id,
+      },
+    })
+
+    sixAmClub = await prisma.club.create({
+      data: {
+        name: '6AM Club',
+        slug: clubSlug,
+        description: clubDescription,
+        language: 'fr',
+        ownerId: adminUser.id,
+        organizationId: org.id,
+      },
+    })
+  }
 
   // Create recurring events for each neighborhood with correct schedule
   const recurringEvents = [

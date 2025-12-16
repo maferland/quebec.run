@@ -23,10 +23,11 @@ model User {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
-  accounts Account[]
-  sessions Session[]
-  clubs    Club[]
-  consents UserConsent[]
+  accounts      Account[]
+  sessions      Session[]
+  clubs         Club[]
+  organizations Organization[]
+  consents      UserConsent[]
 
   @@map("users")
 }
@@ -71,109 +72,208 @@ model VerificationToken {
 }
 
 model Club {
-  id           String   @id @default(cuid())
-  name         String
-  slug         String   @unique
-  description  String?
-  website      String?
-  instagram    String?
-  facebook     String?
-  language     String?  // 'fr', 'en', or 'both'
-  
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  website     String?
+  instagram   String?
+  facebook    String?
+  language    String? // 'fr', 'en', or 'both'
+
   // Strava integration
-  stravaClubId String?  @unique
+  stravaClubId String?   @unique
   stravaSlug   String?
-  isManual     Boolean  @default(true)
+  isManual     Boolean   @default(true)
   lastSynced   DateTime?
-  
+
+  // Display settings
+  isActive    Boolean @default(true) // paused = false
+  welcomeInfo String? // first-timer override
+
+  // Categorization (for filters)
+  type             ClubType?
+  vibe             ClubVibe?
+  paceMin          String? // e.g., "5:00" min/km
+  paceMax          String? // e.g., "7:00" min/km
+  beginnerFriendly Boolean   @default(false)
+
   // Metadata
-  createdAt    DateTime @default(now())
-  updatedAt    DateTime @updatedAt
-  ownerId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownerId   String
+
+  // Organization (optional during migration, will become required)
+  organizationId String?
+
   // Relations
   owner           User             @relation(fields: [ownerId], references: [id], onDelete: Cascade)
-  events          Event[]
+  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  events          Event[]          @relation("ClubEvents")
   recurringEvents RecurringEvent[]
-  
+  addresses       Address[]        @relation("ClubAddresses")
+
   @@map("clubs")
 }
 
 model RecurringEvent {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
-  
+
   // Location
-  address     String?
-  latitude    Float?
-  longitude   Float?
-  
+  address   String?
+  latitude  Float?
+  longitude Float?
+
   // Event details
-  distance    String?
-  pace        String?
-  
+  distance String?
+  pace     String?
+
   // Schedule
   schedulePattern String
-  timezone        String  @default("America/Toronto")
-  
+  timezone        String @default("America/Toronto")
+
   // Generation control
-  isActive        Boolean   @default(true)
-  generateUntil   DateTime?
-  
+  isActive      Boolean   @default(true)
+  generateUntil DateTime?
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  clubId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  clubId    String
+
   // Relations
   club            Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   generatedEvents Event[]
-  
+
   @@map("recurring_events")
 }
 
 model Event {
-  id          String   @id @default(cuid())
+  id          String  @id @default(cuid())
   title       String
   description String?
 
   // Location
-  address     String?
-  latitude    Float?
-  longitude   Float?
-  geocodedAt  DateTime?
+  address    String?
+  latitude   Float?
+  longitude  Float?
+  geocodedAt DateTime?
 
   // Event timing
-  date        DateTime
-  time        String
-  
+  date DateTime
+  time String
+
   // Event details
-  distance    String?
-  pace        String?
-  
+  distance String?
+  pace     String?
+
+  // Status (for cancellations)
+  status EventStatus @default(SCHEDULED)
+
   // Metadata
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
-  clubId      String
-  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Club or Organization (event belongs to one or the other)
+  clubId         String?
+  organizationId String?
+
   // Recurring event link
   recurringEventId String?
-  
+
   // Relations
-  club           Club            @relation(fields: [clubId], references: [id], onDelete: Cascade)
+  club           Club?           @relation("ClubEvents", fields: [clubId], references: [id], onDelete: Cascade)
+  organization   Organization?   @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
   recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
 
   @@map("events")
 }
 
 model UserConsent {
-  id          String   @id @default(cuid())
-  userId      String   @unique
-  acceptedAt  DateTime @default(now())
-  ipAddress   String?
+  id         String   @id @default(cuid())
+  userId     String   @unique
+  acceptedAt DateTime @default(now())
+  ipAddress  String?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@map("user_consents")
+}
+
+// =============================================================================
+// Organization / Club Hierarchy
+// =============================================================================
+
+model Organization {
+  id          String  @id @default(cuid())
+  name        String
+  slug        String  @unique
+  description String?
+  website     String?
+  instagram   String?
+  facebook    String?
+
+  // Strava integration (for event-only orgs that are Strava clubs)
+  stravaClubId String? @unique
+  stravaSlug   String?
+
+  // Display settings
+  isVisible Boolean @default(false) // false for simple clubs (hidden org)
+
+  // Metadata
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  ownerId   String
+
+  // Relations
+  owner     User      @relation(fields: [ownerId], references: [id], onDelete: Cascade)
+  clubs     Club[]
+  events    Event[]   @relation("OrganizationEvents")
+  addresses Address[] @relation("OrganizationAddresses")
+
+  @@map("organizations")
+}
+
+model Address {
+  id        String @id @default(cuid())
+  label     String // "Main spot", "Alternate", etc.
+  address   String
+  latitude  Float?
+  longitude Float?
+
+  // Belongs to either club or org (not both)
+  clubId         String?
+  organizationId String?
+
+  createdAt DateTime @default(now())
+
+  // Relations
+  club         Club?         @relation("ClubAddresses", fields: [clubId], references: [id], onDelete: Cascade)
+  organization Organization? @relation("OrganizationAddresses", fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@map("addresses")
+}
+
+// =============================================================================
+// Enums
+// =============================================================================
+
+enum ClubType {
+  TRAIL
+  ROAD
+  TRACK
+  MIXED
+}
+
+enum ClubVibe {
+  SOCIAL
+  TRAINING
+  COMPETITIVE
+}
+
+enum EventStatus {
+  SCHEDULED
+  CANCELLED
 }

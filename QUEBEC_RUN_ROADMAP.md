@@ -1,3 +1,5 @@
+> **SUPERSEDED:** This roadmap is outdated. See [docs/plans/2025-12-15-domain-model-redesign.md](docs/plans/2025-12-15-domain-model-redesign.md) for the current roadmap and architectural decisions.
+
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 

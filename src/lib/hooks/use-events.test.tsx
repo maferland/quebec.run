@@ -93,7 +93,9 @@ describe('useEvents hooks', () => {
         })
       })
 
-      expect(result.current.isSuccess).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
     })
 
     it('handles creation errors', async () => {
@@ -125,8 +127,10 @@ describe('useEvents hooks', () => {
         }
       })
 
-      expect(result.current.isError).toBe(true)
-      expect(result.current.error).toBeDefined()
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+        expect(result.current.error).toBeDefined()
+      })
     })
   })
 
@@ -148,7 +152,9 @@ describe('useEvents hooks', () => {
         })
       })
 
-      expect(result.current.isSuccess).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
     })
 
     it('handles update errors', async () => {
@@ -184,8 +190,10 @@ describe('useEvents hooks', () => {
         }
       })
 
-      expect(result.current.isError).toBe(true)
-      expect(result.current.error).toBeDefined()
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+        expect(result.current.error).toBeDefined()
+      })
     })
   })
 
@@ -197,7 +205,9 @@ describe('useEvents hooks', () => {
         await result.current.mutateAsync('event-1')
       })
 
-      expect(result.current.isSuccess).toBe(true)
+      await waitFor(() => {
+        expect(result.current.isSuccess).toBe(true)
+      })
     })
 
     it('handles deletion errors', async () => {
@@ -220,8 +230,10 @@ describe('useEvents hooks', () => {
         }
       })
 
-      expect(result.current.isError).toBe(true)
-      expect(result.current.error).toBeDefined()
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+        expect(result.current.error).toBeDefined()
+      })
     })
   })
 })

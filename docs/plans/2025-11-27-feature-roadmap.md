@@ -1,6 +1,8 @@
 # Feature Roadmap - Next Priorities
 
-**Status:** Planning
+> **SUPERSEDED:** This roadmap is outdated. See [2025-12-15-domain-model-redesign.md](2025-12-15-domain-model-redesign.md) for the current roadmap and architectural decisions.
+
+**Status:** ~~Planning~~ Superseded
 **Created:** 2025-11-27
 
 ## Overview
