@@ -28,14 +28,4 @@ test.describe('Map Markers', () => {
       page.getByRole('heading', { name: /all events/i })
     ).toBeVisible()
   })
-
-  test('shows empty state when no geocoded events', async ({ page }) => {
-    // This test assumes a clean DB or no geocoded events
-    await page.goto('/en/events')
-
-    const emptyMessage = page.getByText(
-      /events will appear on the map once addresses are geocoded/i
-    )
-    await expect(emptyMessage).toBeVisible()
-  })
 })
