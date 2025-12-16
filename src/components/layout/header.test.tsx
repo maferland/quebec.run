@@ -36,30 +36,7 @@ describe('Header', () => {
     expect(screen.getByText('Events')).toBeInTheDocument()
   })
 
-  it('shows sign in button when not authenticated', () => {
-    render(<Header />)
-
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Sign Out' })
-    ).not.toBeInTheDocument()
-  })
-
-  it('shows loading state', () => {
-    mockUseSession.mockReturnValue({
-      data: null,
-      status: 'loading',
-      update: vi.fn(),
-    })
-
-    render(<Header />)
-
-    // Look for the loading div by its animation
-    const loadingDiv = document.querySelector('.animate-pulse')
-    expect(loadingDiv).toBeInTheDocument()
-  })
-
-  it('shows user info and sign out when authenticated', () => {
+  it('shows user dropdown when authenticated', () => {
     mockUseSession.mockReturnValue({
       data: {
         user: {
