@@ -23,6 +23,7 @@
     "test:e2e:ui": "playwright test --ui",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "npx prisma migrate reset --force && npm run db:seed",
+    "geocode": "tsx scripts/geocode-addresses.ts",
     "storybook": "storybook dev -p ${STORYBOOK_PORT:-6006}",
     "worktree": "npx tsx scripts/create-worktree.ts",
     "remove-worktree": "npx tsx scripts/remove-worktree.ts",
