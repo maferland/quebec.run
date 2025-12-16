@@ -12,8 +12,12 @@ const mockEventWithClub: GetAllEventsReturn = {
   time: '06:00',
   distance: '5K',
   pace: '5:30 /km',
+  latitude: 46.8139,
+  longitude: -71.208,
   club: {
+    id: 'club-1',
     name: 'Quebec Running Club',
+    slug: 'quebec-running-club',
   },
 }
 
@@ -364,8 +368,12 @@ describe('EventCard Component', () => {
         time: '06:00',
         distance: null,
         pace: null,
+        latitude: null,
+        longitude: null,
         club: {
+          id: 'club-1',
           name: 'Test Club',
+          slug: 'test-club',
         },
       }
 

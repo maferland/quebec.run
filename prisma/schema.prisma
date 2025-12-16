@@ -156,9 +156,10 @@ model Event {
   description String?
 
   // Location
-  address   String?
-  latitude  Float?
-  longitude Float?
+  address    String?
+  latitude   Float?
+  longitude  Float?
+  geocodedAt DateTime?
 
   // Event timing
   date DateTime
