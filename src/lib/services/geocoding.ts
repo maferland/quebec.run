@@ -28,7 +28,6 @@ async function rateLimitedFetch(
  * @remarks
  * - Rate limited to 1 request per second per Nominatim usage policy
  * - Searches limited to Canadian addresses only (countrycodes=ca)
- * - 5 second timeout per request
  * - Returns null on network errors, HTTP errors, or no results
  */
 export async function geocodeAddress(
@@ -45,7 +44,6 @@ export async function geocodeAddress(
       headers: {
         'User-Agent': 'quebec.run (https://quebec.run)',
       },
-      signal: AbortSignal.timeout(5000),
     })
 
     if (!response.ok) {

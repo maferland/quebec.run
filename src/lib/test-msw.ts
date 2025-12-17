@@ -220,6 +220,17 @@ export const handlers = [
     const updatedUser = createMockResponse(user, updates)
     return HttpResponse.json(updatedUser)
   }),
+
+  // Nominatim Geocoding API
+  http.get('https://nominatim.openstreetmap.org/search', () => {
+    return HttpResponse.json([
+      {
+        lat: '45.5017',
+        lon: '-73.5673',
+        display_name: 'Montreal, Quebec, Canada',
+      },
+    ])
+  }),
 ]
 
 // Create MSW server
