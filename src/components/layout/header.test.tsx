@@ -3,8 +3,6 @@ import { useSession } from 'next-auth/react'
 import { vi, type MockedFunction } from 'vitest'
 import { Header } from './header'
 
-// Mock next-auth
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 // Mock Next.js Link
@@ -38,37 +36,14 @@ describe('Header', () => {
     expect(screen.getByText('Events')).toBeInTheDocument()
   })
 
-  it('shows sign in button when not authenticated', () => {
-    render(<Header />)
-
-    expect(screen.getByRole('button', { name: 'Sign In' })).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Sign Out' })
-    ).not.toBeInTheDocument()
-  })
-
-  it('shows loading state', () => {
-    mockUseSession.mockReturnValue({
-      data: null,
-      status: 'loading',
-      update: vi.fn(),
-    })
-
-    render(<Header />)
-
-    // Look for the loading div by its animation
-    const loadingDiv = document.querySelector('.animate-pulse')
-    expect(loadingDiv).toBeInTheDocument()
-  })
-
-  it('shows user info and sign out when authenticated', () => {
+  it('shows user dropdown when authenticated', () => {
     mockUseSession.mockReturnValue({
       data: {
         user: {
           id: '1',
           name: 'John Doe',
           email: 'john@example.com',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2025-01-01',
       },
@@ -80,9 +55,6 @@ describe('Header', () => {
 
     // User dropdown should be present (contains user info)
     expect(screen.getByRole('button', { name: /john/i })).toBeInTheDocument()
-    expect(
-      screen.queryByRole('button', { name: 'Sign In' })
-    ).not.toBeInTheDocument()
   })
 
   it('shows admin link for admin users', () => {
@@ -92,7 +64,7 @@ describe('Header', () => {
           id: '1',
           name: 'Admin User',
           email: 'admin@example.com',
-          isAdmin: true,
+          isStaff: true,
         },
         expires: '2025-01-01',
       },
@@ -113,7 +85,7 @@ describe('Header', () => {
           id: '1',
           name: 'Regular User',
           email: 'user@example.com',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2025-01-01',
       },

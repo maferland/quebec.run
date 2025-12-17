@@ -27,7 +27,7 @@ describe('PUT /api/events/[id]', () => {
 
   it('updates event with valid data', async () => {
     const user = await prisma.user.create({
-      data: { email: 'admin@test.com', isAdmin: true },
+      data: { email: 'admin@test.com', isStaff: true },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: user.id },
@@ -44,7 +44,7 @@ describe('PUT /api/events/[id]', () => {
 
     // Mock session
     mockGetServerSession.mockResolvedValue({
-      user: { id: user.id, isAdmin: true },
+      user: { id: user.id, isStaff: true },
       expires: '2025-01-01',
     })
 
@@ -71,7 +71,7 @@ describe('PUT /api/events/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const user = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: user.id },
@@ -112,10 +112,10 @@ describe('PUT /api/events/[id]', () => {
 
   it('returns 403 when user does not own club and is not admin', async () => {
     const owner = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const otherUser = await prisma.user.create({
-      data: { email: 'other@test.com', isAdmin: false },
+      data: { email: 'other@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: owner.id },
@@ -132,7 +132,7 @@ describe('PUT /api/events/[id]', () => {
 
     // Mock session as other user (not owner, not admin)
     mockGetServerSession.mockResolvedValue({
-      user: { id: otherUser.id, isAdmin: false },
+      user: { id: otherUser.id, isStaff: false },
       expires: '2025-01-01',
     })
 
@@ -159,7 +159,7 @@ describe('PUT /api/events/[id]', () => {
 
   it('allows club owner to update their event', async () => {
     const owner = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: owner.id },
@@ -176,7 +176,7 @@ describe('PUT /api/events/[id]', () => {
 
     // Mock session as club owner
     mockGetServerSession.mockResolvedValue({
-      user: { id: owner.id, isAdmin: false },
+      user: { id: owner.id, isStaff: false },
       expires: '2025-01-01',
     })
 
@@ -203,7 +203,7 @@ describe('PUT /api/events/[id]', () => {
 
   it('returns 404 when event not found', async () => {
     const user = await prisma.user.create({
-      data: { email: 'admin@test.com', isAdmin: true },
+      data: { email: 'admin@test.com', isStaff: true },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: user.id },
@@ -211,7 +211,7 @@ describe('PUT /api/events/[id]', () => {
 
     // Mock session
     mockGetServerSession.mockResolvedValue({
-      user: { id: user.id, isAdmin: true },
+      user: { id: user.id, isStaff: true },
       expires: '2025-01-01',
     })
 
@@ -249,7 +249,7 @@ describe('DELETE /api/events/[id]', () => {
 
   it('deletes event when authorized', async () => {
     const user = await prisma.user.create({
-      data: { email: 'admin2@test.com', isAdmin: true },
+      data: { email: 'admin2@test.com', isStaff: true },
     })
     const club = await prisma.club.create({
       data: { name: 'Club2', slug: 'club2', ownerId: user.id },
@@ -266,7 +266,7 @@ describe('DELETE /api/events/[id]', () => {
 
     // Mock session
     mockGetServerSession.mockResolvedValue({
-      user: { id: user.id, isAdmin: true },
+      user: { id: user.id, isStaff: true },
       expires: '2025-01-01',
     })
 
@@ -288,7 +288,7 @@ describe('DELETE /api/events/[id]', () => {
 
   it('returns 401 when unauthenticated', async () => {
     const user = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: user.id },
@@ -327,10 +327,10 @@ describe('DELETE /api/events/[id]', () => {
 
   it('returns 403 when user does not own club and is not admin', async () => {
     const owner = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const otherUser = await prisma.user.create({
-      data: { email: 'other@test.com', isAdmin: false },
+      data: { email: 'other@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: owner.id },
@@ -347,7 +347,7 @@ describe('DELETE /api/events/[id]', () => {
 
     // Mock session as other user (not owner, not admin)
     mockGetServerSession.mockResolvedValue({
-      user: { id: otherUser.id, isAdmin: false },
+      user: { id: otherUser.id, isStaff: false },
       expires: '2025-01-01',
     })
 
@@ -372,7 +372,7 @@ describe('DELETE /api/events/[id]', () => {
 
   it('allows club owner to delete their event', async () => {
     const owner = await prisma.user.create({
-      data: { email: 'owner@test.com', isAdmin: false },
+      data: { email: 'owner@test.com', isStaff: false },
     })
     const club = await prisma.club.create({
       data: { name: 'Club', slug: 'club', ownerId: owner.id },
@@ -389,7 +389,7 @@ describe('DELETE /api/events/[id]', () => {
 
     // Mock session as club owner
     mockGetServerSession.mockResolvedValue({
-      user: { id: owner.id, isAdmin: false },
+      user: { id: owner.id, isStaff: false },
       expires: '2025-01-01',
     })
 
@@ -412,12 +412,12 @@ describe('DELETE /api/events/[id]', () => {
 
   it('returns 404 when event not found', async () => {
     const user = await prisma.user.create({
-      data: { email: 'admin@test.com', isAdmin: true },
+      data: { email: 'admin@test.com', isStaff: true },
     })
 
     // Mock session
     mockGetServerSession.mockResolvedValue({
-      user: { id: user.id, isAdmin: true },
+      user: { id: user.id, isStaff: true },
       expires: '2025-01-01',
     })
 

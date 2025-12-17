@@ -9,7 +9,6 @@ import {
   readFileSync,
 } from 'fs'
 import { resolve } from 'path'
-import { findFreePort } from './find-free-port'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')

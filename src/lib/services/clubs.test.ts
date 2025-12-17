@@ -131,7 +131,7 @@ describe('Clubs Service Integration Tests', () => {
         website: 'https://integration-test.com',
       }
 
-      const mockUser = { id: testUserId, isAdmin: false }
+      const mockUser = { id: testUserId, isStaff: false }
       const result = await createClub({ user: mockUser, data: clubData })
 
       expect(result).toBeDefined()
@@ -182,7 +182,7 @@ describe('Clubs Service Integration Tests', () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
-      const mockUser = { id: testClub.ownerId, isAdmin: false }
+      const mockUser = { id: testClub.ownerId, isStaff: false }
       const result = await deleteClub({
         user: mockUser,
         data: { id: testClub.id },
@@ -202,7 +202,7 @@ describe('Clubs Service Integration Tests', () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
-      const mockUser = { id: 'different-user', isAdmin: false }
+      const mockUser = { id: 'different-user', isStaff: false }
 
       await expect(
         deleteClub({ user: mockUser, data: { id: testClub.id } })
@@ -213,7 +213,7 @@ describe('Clubs Service Integration Tests', () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
-      const mockAdmin = { id: 'admin-user', isAdmin: true }
+      const mockAdmin = { id: 'admin-user', isStaff: true }
       const result = await deleteClub({
         user: mockAdmin,
         data: { id: testClub.id },

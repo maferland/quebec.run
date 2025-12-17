@@ -2,12 +2,15 @@
 
 import { Link, usePathname } from '@/i18n/navigation'
 import { useLocale, useTranslations } from 'next-intl'
+import { useSession } from 'next-auth/react'
 
 export function Footer() {
   const pathname = usePathname()
   const currentLocale = useLocale()
   const year = new Date().getFullYear()
   const t = useTranslations('footer')
+  const tNav = useTranslations('navigation')
+  const { data: session } = useSession()
 
   return (
     <footer className="bg-surface border-t border-border mt-auto">
@@ -47,6 +50,17 @@ export function Footer() {
               >
                 {t('calendar')}
               </Link>
+              {!session && (
+                <>
+                  <span className="text-text-secondary">•</span>
+                  <Link
+                    href="/auth/signin"
+                    className="text-text-secondary hover:text-primary transition-colors"
+                  >
+                    {tNav('signIn')}
+                  </Link>
+                </>
+              )}
             </div>
 
             {/* Language Toggle */}

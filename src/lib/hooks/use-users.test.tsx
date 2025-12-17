@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { renderHook, waitFor } from '@/lib/test-utils'
 import { setupMSW } from '@/lib/test-msw-setup'
 import { act } from 'react'
-import { useAllUsers, useToggleUserAdmin } from './use-users'
+import { useAllUsers, useToggleUserStaff } from './use-users'
 
 // Setup MSW
 setupMSW()
@@ -21,7 +21,7 @@ describe('useUsers hooks', () => {
       expect(result.current.data!.length).toBeGreaterThan(0)
       expect(result.current.data![0]).toHaveProperty('id')
       expect(result.current.data![0]).toHaveProperty('email')
-      expect(result.current.data![0]).toHaveProperty('isAdmin')
+      expect(result.current.data![0]).toHaveProperty('isStaff')
     })
 
     it('handles query parameters', async () => {
@@ -38,8 +38,8 @@ describe('useUsers hooks', () => {
       expect(Array.isArray(result.current.data)).toBe(true)
     })
 
-    it('filters by isAdmin', async () => {
-      const { result } = renderHook(() => useAllUsers({ isAdmin: 'true' }), {})
+    it('filters by isStaff', async () => {
+      const { result } = renderHook(() => useAllUsers({ isStaff: 'true' }), {})
 
       await waitFor(() => {
         expect(result.current.isSuccess).toBe(true)
@@ -69,14 +69,14 @@ describe('useUsers hooks', () => {
     })
   })
 
-  describe('useToggleUserAdmin', () => {
+  describe('useToggleUserStaff', () => {
     it('toggles user admin status and invalidates cache', async () => {
-      const { result } = renderHook(() => useToggleUserAdmin(), {})
+      const { result } = renderHook(() => useToggleUserStaff(), {})
 
       await act(async () => {
         await result.current.mutateAsync({
           id: 'user-1',
-          isAdmin: true,
+          isStaff: true,
         })
       })
 
@@ -98,13 +98,13 @@ describe('useUsers hooks', () => {
         })
       )
 
-      const { result } = renderHook(() => useToggleUserAdmin(), {})
+      const { result } = renderHook(() => useToggleUserStaff(), {})
 
       await act(async () => {
         try {
           await result.current.mutateAsync({
             id: 'user-1',
-            isAdmin: true,
+            isStaff: true,
           })
         } catch {
           // Expected to throw

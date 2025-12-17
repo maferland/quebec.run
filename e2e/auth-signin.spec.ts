@@ -9,13 +9,10 @@ test.describe('Auth Sign In', () => {
     await expect(page.getByRole('button', { name: /send link/i })).toBeVisible()
   })
 
-  test('clicking sign in button redirects to custom page', async ({ page }) => {
+  test('clicking sign in link redirects to custom page', async ({ page }) => {
     await page.goto('/en')
 
-    await page
-      .getByRole('button', { name: /sign in/i })
-      .first()
-      .click()
+    await page.getByRole('link', { name: /sign in/i }).click()
 
     await expect(page).toHaveURL(/\/en\/auth\/signin/)
   })

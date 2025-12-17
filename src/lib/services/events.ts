@@ -137,7 +137,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
   }
 
   const ownerId = event.club?.ownerId ?? event.organization?.ownerId
-  if (!user.isAdmin && ownerId !== user.id) {
+  if (!user.isStaff && ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 
@@ -205,7 +205,7 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
   }
 
   const ownerId = event.club?.ownerId ?? event.organization?.ownerId
-  if (!user.isAdmin && ownerId !== user.id) {
+  if (!user.isStaff && ownerId !== user.id) {
     throw new UnauthorizedError('Unauthorized')
   }
 

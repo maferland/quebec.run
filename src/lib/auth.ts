@@ -2,6 +2,7 @@ import { env } from '@/lib/env'
 import { prisma } from '@/lib/prisma'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
+import CredentialsProvider from 'next-auth/providers/credentials'
 import EmailProvider from 'next-auth/providers/email'
 import { Resend } from 'resend'
 
@@ -65,10 +66,46 @@ const createEmailProvider = () => {
   }
 }
 
+// Dev-only: credentials provider to bypass email verification
+const createDevBypassProvider = () => {
+  if (env.NODE_ENV === 'production') return null
+
+  return CredentialsProvider({
+    id: 'dev-bypass',
+    name: 'Dev Bypass',
+    credentials: {
+      email: { label: 'Email', type: 'text' },
+    },
+    async authorize(credentials) {
+      if (!credentials?.email) return null
+
+      const user = await prisma.user.findUnique({
+        where: { email: credentials.email },
+        select: { id: true, email: true, name: true, isStaff: true },
+      })
+
+      if (!user) return null
+
+      return {
+        id: user.id,
+        email: user.email!,
+        name: user.name,
+        isStaff: user.isStaff,
+      }
+    },
+  })
+}
+
+const devProvider = createDevBypassProvider()
+
 export const authOptions: NextAuthOptions = {
+  // Prisma v5 removed $use method, but adapter expects it in type definition
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   adapter: PrismaAdapter(prisma as any),
-  providers: [createEmailProvider()],
+  session: {
+    strategy: 'jwt', // Required for CredentialsProvider
+  },
+  providers: [createEmailProvider(), ...(devProvider ? [devProvider] : [])],
   pages: {
     // Use path without locale prefix - middleware will add locale automatically
     // Signin page is in [locale]/auth/signin and inherits i18n context from [locale]/layout.tsx
@@ -76,15 +113,17 @@ export const authOptions: NextAuthOptions = {
     verifyRequest: '/auth/signin',
   },
   callbacks: {
-    session: async ({ session, user }) => {
-      if (session?.user) {
-        session.user.id = user.id
-        // Check if user is admin
-        const dbUser = await prisma.user.findUnique({
-          where: { id: user.id },
-          select: { isAdmin: true },
-        })
-        session.user.isAdmin = dbUser?.isAdmin ?? false
+    jwt: async ({ token, user }) => {
+      // On sign-in, store user data in token
+      if (user) {
+        token.isStaff = user.isStaff
+      }
+      return token
+    },
+    session: async ({ session, token }) => {
+      if (session?.user && token?.sub) {
+        session.user.id = token.sub
+        session.user.isStaff = token.isStaff as boolean
       }
       return session
     },

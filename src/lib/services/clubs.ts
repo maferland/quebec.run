@@ -157,7 +157,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
 
   if (!club) return null
 
-  if (club.ownerId !== user.id && !user.isAdmin) {
+  if (club.ownerId !== user.id && !user.isStaff) {
     throw new Error('Unauthorized to delete this club')
   }
 
@@ -239,7 +239,7 @@ export const updateClubById = async ({
     throw new Error('Club not found')
   }
 
-  if (club.ownerId !== user.id && !user.isAdmin) {
+  if (club.ownerId !== user.id && !user.isStaff) {
     throw new Error('Unauthorized to update this club')
   }
 

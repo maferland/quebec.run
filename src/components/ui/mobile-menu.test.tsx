@@ -4,7 +4,6 @@ import { useSession } from 'next-auth/react'
 import { vi, type MockedFunction } from 'vitest'
 import { MobileMenu } from './mobile-menu'
 
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 describe('MobileMenu', () => {
@@ -84,7 +83,7 @@ describe('MobileMenu', () => {
           id: '1',
           email: 'admin@example.com',
           name: 'Admin User',
-          isAdmin: true,
+          isStaff: true,
         },
         expires: '2024-01-01',
       },
@@ -108,7 +107,7 @@ describe('MobileMenu', () => {
           id: '1',
           email: 'user@example.com',
           name: 'Regular User',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2024-01-01',
       },
