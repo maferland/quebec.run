@@ -15,16 +15,16 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-      # Use local services - not secrets (so dependabot can run CI)
+      # Use local postgres service - not secrets (so dependabot can run CI)
       DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
       TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
-      NEXTAUTH_SECRET: test-secret-at-least-32-characters-long-for-ci
-      NEXTAUTH_URL: http://localhost:3000
-      EMAIL_FROM: test@example.com
-      USE_RESEND: 'false'
-      EMAIL_SERVER_HOST: localhost
-      EMAIL_SERVER_PORT: '1025'
-      NODE_ENV: test
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      USE_RESEND: ${{ secrets.USE_RESEND }}
+      EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST }}
+      EMAIL_SERVER_PORT: ${{ secrets.EMAIL_SERVER_PORT }}
+      NODE_ENV: ${{ secrets.NODE_ENV }}
 
     services:
       postgres:
@@ -40,12 +40,6 @@ jobs:
           --health-retries 5
         ports:
           - 5432:5432
-
-      mailhog:
-        image: mailhog/mailhog:latest
-        ports:
-          - 1025:1025
-          - 8025:8025
 
     steps:
       - name: Checkout code
