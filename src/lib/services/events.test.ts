@@ -85,7 +85,7 @@ describe('Events Service Integration Tests', () => {
       }
 
       const result = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: runData,
       })
 
@@ -125,7 +125,7 @@ describe('Events Service Integration Tests', () => {
       }
 
       const result = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: runData,
       })
 
@@ -141,7 +141,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const adminUser = await testPrisma.user.create({
-        data: { email: 'admin@test.com', isAdmin: true },
+        data: { email: 'admin@test.com', isStaff: true },
       })
 
       const event = await testPrisma.event.create({
@@ -155,7 +155,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       const result = await updateEvent({
-        user: { id: adminUser.id, isAdmin: true },
+        user: { id: adminUser.id, isStaff: true },
         data: {
           id: event.id,
           title: 'New Title',
@@ -185,7 +185,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       const result = await updateEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           id: event.id,
           title: 'New Title',
@@ -204,7 +204,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const otherUser = await testPrisma.user.create({
-        data: { email: 'other@test.com', isAdmin: false },
+        data: { email: 'other@test.com', isStaff: false },
       })
 
       const event = await testPrisma.event.create({
@@ -219,7 +219,7 @@ describe('Events Service Integration Tests', () => {
 
       await expect(
         updateEvent({
-          user: { id: otherUser.id, isAdmin: false },
+          user: { id: otherUser.id, isStaff: false },
           data: {
             id: event.id,
             title: 'New Title',
@@ -239,7 +239,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const adminUser = await testPrisma.user.create({
-        data: { email: 'admin2@test.com', isAdmin: true },
+        data: { email: 'admin2@test.com', isStaff: true },
       })
 
       const event = await testPrisma.event.create({
@@ -253,7 +253,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       await deleteEvent({
-        user: { id: adminUser.id, isAdmin: true },
+        user: { id: adminUser.id, isStaff: true },
         data: { id: event.id },
       })
 
@@ -278,7 +278,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       await deleteEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: { id: event.id },
       })
 
@@ -293,7 +293,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const otherUser = await testPrisma.user.create({
-        data: { email: 'other2@test.com', isAdmin: false },
+        data: { email: 'other2@test.com', isStaff: false },
       })
 
       const event = await testPrisma.event.create({
@@ -308,7 +308,7 @@ describe('Events Service Integration Tests', () => {
 
       await expect(
         deleteEvent({
-          user: { id: otherUser.id, isAdmin: false },
+          user: { id: otherUser.id, isStaff: false },
           data: { id: event.id },
         })
       ).rejects.toThrow('Unauthorized')
@@ -326,7 +326,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const event = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           title: 'Test Event',
           date: '2025-12-01',
@@ -351,7 +351,7 @@ describe('Events Service Integration Tests', () => {
       const testClub = clubs[0]
 
       const event = await createEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           title: 'Test Event',
           date: '2025-12-01',
@@ -391,7 +391,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       const updated = await updateEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           id: event.id,
           address: 'New Address, Montreal',
@@ -424,7 +424,7 @@ describe('Events Service Integration Tests', () => {
       })
 
       await updateEvent({
-        user: { id: testUserId, isAdmin: false },
+        user: { id: testUserId, isStaff: false },
         data: {
           id: event.id,
           title: 'Updated Title',

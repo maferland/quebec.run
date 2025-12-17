@@ -1,4 +1,4 @@
-import { requireAdmin } from '@/lib/admin-middleware'
+import { requireStaff } from '@/lib/staff-middleware'
 import { AdminSidebar } from '@/components/admin/sidebar'
 import { redirect } from 'next/navigation'
 
@@ -8,7 +8,7 @@ export default async function AdminLayout({
   children: React.ReactNode
 }) {
   try {
-    await requireAdmin()
+    await requireStaff()
   } catch {
     redirect('/api/auth/signin')
   }

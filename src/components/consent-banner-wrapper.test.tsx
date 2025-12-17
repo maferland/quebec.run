@@ -5,8 +5,6 @@ import { useSession } from 'next-auth/react'
 import { ConsentBannerWrapper } from './consent-banner-wrapper'
 import type { MockedFunction } from 'vitest'
 
-// Mock next-auth
-vi.mock('next-auth/react')
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
 // Mock ConsentBanner component
@@ -43,7 +41,7 @@ describe('ConsentBannerWrapper', () => {
           id: '1',
           name: 'Test User',
           email: 'test@example.com',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2025-01-01',
       },
@@ -75,7 +73,7 @@ describe('ConsentBannerWrapper', () => {
           id: '1',
           name: 'Test User',
           email: 'test@example.com',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2025-01-01',
       },
@@ -102,7 +100,7 @@ describe('ConsentBannerWrapper', () => {
           id: '1',
           name: 'Test User',
           email: 'test@example.com',
-          isAdmin: false,
+          isStaff: false,
         },
         expires: '2025-01-01',
       },

@@ -6,7 +6,6 @@ import type { MockedFunction } from 'vitest'
 import type { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime'
 import PrivacySettingsPage from './page'
 
-vi.mock('next-auth/react')
 vi.mock('next/navigation')
 
 const mockUseSession = useSession as MockedFunction<typeof useSession>
@@ -70,7 +69,7 @@ describe('PrivacySettingsPage', () => {
             id: '1',
             email: 'user@example.com',
             name: 'Test User',
-            isAdmin: false,
+            isStaff: false,
           },
           expires: '2024-01-01',
         },
@@ -96,7 +95,7 @@ describe('PrivacySettingsPage', () => {
             id: '1',
             email: 'user@example.com',
             name: 'Test User',
-            isAdmin: false,
+            isStaff: false,
           },
           expires: '2024-01-01',
         },
@@ -135,7 +134,7 @@ describe('PrivacySettingsPage', () => {
             id: '1',
             email: 'user@example.com',
             name: 'Test User',
-            isAdmin: false,
+            isStaff: false,
           },
           expires: '2024-01-01',
         },

@@ -1,12 +1,18 @@
 import { render, screen, waitFor } from '@testing-library/react'
 import userEvent from '@testing-library/user-event'
 import { signIn } from 'next-auth/react'
-import { describe, it, expect, vi, beforeEach } from 'vitest'
+import {
+  describe,
+  it,
+  expect,
+  vi,
+  beforeEach,
+  type MockedFunction,
+} from 'vitest'
 import SignInPage from './page'
 
-vi.mock('next-auth/react', () => ({
-  signIn: vi.fn(),
-}))
+// Global mock from test-setup.ts includes signIn
+const mockSignIn = signIn as MockedFunction<typeof signIn>
 
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
@@ -14,15 +20,26 @@ vi.mock('next-intl', () => ({
     children,
 }))
 
-vi.mock('next/navigation', () => ({
-  useSearchParams: () => ({
-    get: (key: string) => (key === 'callbackUrl' ? '/admin' : null),
-  }),
-}))
+vi.mock('next/navigation', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('next/navigation')>()
+  return {
+    ...actual,
+    useRouter: () => ({
+      push: vi.fn(),
+      replace: vi.fn(),
+      back: vi.fn(),
+      forward: vi.fn(),
+      refresh: vi.fn(),
+    }),
+    useSearchParams: () => ({
+      get: (key: string) => (key === 'callbackUrl' ? '/admin' : null),
+    }),
+  }
+})
 
 describe('SignInPage', () => {
   beforeEach(() => {
-    vi.clearAllMocks()
+    mockSignIn.mockClear()
   })
 
   it('renders sign-in form with email input', () => {
@@ -48,12 +65,12 @@ describe('SignInPage', () => {
     await user.click(submitButton)
 
     expect(await screen.findByText('invalidEmail')).toBeInTheDocument()
-    expect(signIn).not.toHaveBeenCalled()
+    expect(mockSignIn).not.toHaveBeenCalled()
   })
 
   it('submits valid email and shows success state', async () => {
     const user = userEvent.setup()
-    vi.mocked(signIn).mockResolvedValue({
+    mockSignIn.mockResolvedValue({
       ok: true,
       error: null,
       status: 200,
@@ -69,7 +86,7 @@ describe('SignInPage', () => {
     await user.click(submitButton)
 
     await waitFor(() => {
-      expect(signIn).toHaveBeenCalledWith('email', {
+      expect(mockSignIn).toHaveBeenCalledWith('email', {
         email: 'test@example.com',
         callbackUrl: '/admin',
         redirect: false,
@@ -82,7 +99,7 @@ describe('SignInPage', () => {
 
   it('shows loading state during submission', async () => {
     const user = userEvent.setup()
-    vi.mocked(signIn).mockImplementation(() => new Promise(() => {}))
+    mockSignIn.mockImplementation(() => new Promise(() => {}))
 
     render(<SignInPage />)
 
@@ -98,7 +115,7 @@ describe('SignInPage', () => {
 
   it('includes callbackUrl from query params', async () => {
     const user = userEvent.setup()
-    vi.mocked(signIn).mockResolvedValue({
+    mockSignIn.mockResolvedValue({
       ok: true,
       error: null,
       status: 200,
@@ -112,11 +129,22 @@ describe('SignInPage', () => {
     await user.click(screen.getByRole('button', { name: 'sendMagicLink' }))
 
     await waitFor(() => {
-      expect(signIn).toHaveBeenCalledWith('email', {
+      expect(mockSignIn).toHaveBeenCalledWith('email', {
         email: 'test@example.com',
         callbackUrl: '/admin',
         redirect: false,
       })
     })
+  })
+
+  it('hides dev quick login in production', () => {
+    vi.stubEnv('NODE_ENV', 'production')
+
+    render(<SignInPage />)
+
+    expect(screen.queryByText(/DEV ONLY/i)).not.toBeInTheDocument()
+    expect(screen.queryByText(/Quick Login/i)).not.toBeInTheDocument()
+
+    vi.unstubAllEnvs()
   })
 })

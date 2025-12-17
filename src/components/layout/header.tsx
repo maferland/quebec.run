@@ -1,10 +1,9 @@
 'use client'
 
-import { Button } from '@/components/ui/button'
 import { NavLink } from '@/components/ui/nav-link'
 import { UserDropdown } from '@/components/ui/user-dropdown'
 import { Calendar, MapPin, Users } from 'lucide-react'
-import { signIn, useSession } from 'next-auth/react'
+import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 
@@ -25,7 +24,7 @@ const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
 )
 
 export function Header() {
-  const { data: session, status } = useSession()
+  const { data: session } = useSession()
   const t = useTranslations('navigation')
 
   return (
@@ -49,33 +48,19 @@ export function Header() {
                 <Calendar size={18} />
                 <span className="hidden md:inline">{t('events')}</span>
               </NavLink>
-              {session?.user?.isAdmin && (
+              {session?.user?.isStaff && (
                 <NavLink href="/admin">
                   <span>{t('admin')}</span>
                 </NavLink>
               )}
             </nav>
 
-            <div className="flex items-center space-x-3">
-              {status === 'loading' ? (
-                <div className="flex items-center space-x-2">
-                  <div className="w-20 h-9 bg-surface-secondary rounded-md animate-pulse" />
-                </div>
-              ) : session ? (
-                <UserDropdown
-                  userName={session.user?.name || t('user')}
-                  userEmail={session.user?.email || undefined}
-                />
-              ) : (
-                <Button
-                  size="sm"
-                  onClick={() => signIn()}
-                  variant="outline-primary"
-                >
-                  {t('signIn')}
-                </Button>
-              )}
-            </div>
+            {session && (
+              <UserDropdown
+                userName={session.user?.name || t('user')}
+                userEmail={session.user?.email || undefined}
+              />
+            )}
           </div>
         </div>
       </div>

@@ -15,16 +15,37 @@ const adapter = new PrismaPg(pool)
 const prisma = new PrismaClient({ adapter })
 
 async function main() {
-  // Create admin user
-  const adminUser = await prisma.user.upsert({
+  // Create platform staff (you)
+  const staffUser = await prisma.user.upsert({
     where: { email: 'maferland@quebec.run' },
     update: {
-      isAdmin: true,
+      isStaff: true,
     },
     create: {
       email: 'maferland@quebec.run',
-      name: 'Marc-André Ferland',
-      isAdmin: true,
+      name: 'Marc-Antoine Ferland',
+      isStaff: true,
+    },
+  })
+
+  // Create test club owners (regular users, not staff)
+  const clubOwner1 = await prisma.user.upsert({
+    where: { email: 'alice.tremblay@quebec.run' },
+    update: {},
+    create: {
+      email: 'alice.tremblay@quebec.run',
+      name: 'Alice Tremblay',
+      isStaff: false,
+    },
+  })
+
+  const clubOwner2 = await prisma.user.upsert({
+    where: { email: 'bob.gagnon@quebec.run' },
+    update: {},
+    create: {
+      email: 'bob.gagnon@quebec.run',
+      name: 'Bob Gagnon',
+      isStaff: false,
     },
   })
 
@@ -45,7 +66,7 @@ async function main() {
       data: {
         description: clubDescription,
         language: 'fr',
-        ownerId: adminUser.id,
+        ownerId: staffUser.id,
       },
     })
   } else {
@@ -56,7 +77,7 @@ async function main() {
         slug: `${clubSlug}-org`,
         description: clubDescription,
         isVisible: true, // 6AM Club is a franchise with multiple locations
-        ownerId: adminUser.id,
+        ownerId: staffUser.id,
       },
     })
 
@@ -66,11 +87,44 @@ async function main() {
         slug: clubSlug,
         description: clubDescription,
         language: 'fr',
-        ownerId: adminUser.id,
+        ownerId: staffUser.id,
         organizationId: org.id,
       },
     })
   }
+
+  // Create clubs for test owners
+  await prisma.club.upsert({
+    where: { slug: createSlug('Club Courir Limoilou') },
+    update: {
+      description: 'Club de course dans Limoilou',
+      language: 'fr',
+      ownerId: clubOwner1.id,
+    },
+    create: {
+      name: 'Club Courir Limoilou',
+      slug: createSlug('Club Courir Limoilou'),
+      description: 'Club de course dans Limoilou',
+      language: 'fr',
+      ownerId: clubOwner1.id,
+    },
+  })
+
+  await prisma.club.upsert({
+    where: { slug: createSlug('Vélo-Course Sainte-Foy') },
+    update: {
+      description: 'Club mixte vélo et course à Sainte-Foy',
+      language: 'fr',
+      ownerId: clubOwner2.id,
+    },
+    create: {
+      name: 'Vélo-Course Sainte-Foy',
+      slug: createSlug('Vélo-Course Sainte-Foy'),
+      description: 'Club mixte vélo et course à Sainte-Foy',
+      language: 'fr',
+      ownerId: clubOwner2.id,
+    },
+  })
 
   // Create recurring events for each neighborhood with correct schedule
   const recurringEvents = [

@@ -1,12 +1,12 @@
 import { withAuth } from '@/lib/api-middleware'
-import { toggleUserAdminSchema } from '@/lib/schemas'
-import { toggleUserAdmin } from '@/lib/services/users'
+import { toggleUserStaffSchema } from '@/lib/schemas'
+import { toggleUserStaff } from '@/lib/services/users'
 
-export const PATCH = withAuth(toggleUserAdminSchema)(async ({ user, data }) => {
-  if (!user.isAdmin) {
+export const PATCH = withAuth(toggleUserStaffSchema)(async ({ user, data }) => {
+  if (!user.isStaff) {
     return Response.json({ error: 'Unauthorized' }, { status: 403 })
   }
 
-  const updatedUser = await toggleUserAdmin({ user, data })
+  const updatedUser = await toggleUserStaff({ user, data })
   return Response.json(updatedUser)
 })
