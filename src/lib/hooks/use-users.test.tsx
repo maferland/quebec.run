@@ -111,8 +111,10 @@ describe('useUsers hooks', () => {
         }
       })
 
-      expect(result.current.isError).toBe(true)
-      expect(result.current.error).toBeDefined()
+      await waitFor(() => {
+        expect(result.current.isError).toBe(true)
+        expect(result.current.error).toBeDefined()
+      })
     })
   })
 })

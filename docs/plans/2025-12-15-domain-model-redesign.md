@@ -264,42 +264,54 @@ Active: Road · Wed, Fri · Morning · Easy pace · < 10km
 
 ### Track B: Schema Redesign (this design)
 
-**Phase 1: Organization/Club Hierarchy**
+**Phase 1: Organization/Club Hierarchy** ✅ _Complete (PR #24)_
 
-- Add Organization model
-- Add Address model
-- Migrate existing Clubs (create matching Orgs with `isVisible=false`)
-- Update all Club queries to include Organization
-- Update Strava sync to work with new model
+- [x] Add Organization model
+- [x] Add Address model
+- [x] Add Club filter fields (type, vibe, paceMin/Max, beginnerFriendly)
+- [x] Add Event.status enum (SCHEDULED/CANCELLED)
+- [x] Make Event.clubId nullable (events can belong to org instead)
+- [x] Migrate existing Clubs (create matching Orgs with `isVisible=false`)
+- [x] Update createClub to create Org + Club in transaction
+- [x] Update deleteClub to clean up orphaned Orgs
+- [x] Update event permission checks for club OR org ownership
+- [ ] Update Strava sync to work with new model (deferred)
 
-**Phase 2: Saved Addresses**
+**Phase 2: Saved Addresses** ⬜ _Next up_
 
-- CRUD for addresses (club or org level)
-- Address picker in event creation form
-- Auto-geocode on save
+Starting point: `src/lib/services/addresses.ts` (new file)
 
-**Phase 3: Hybrid Recurring Events**
+- [ ] Create `src/lib/services/addresses.ts` with CRUD operations
+- [ ] Add API routes: `src/app/api/addresses/route.ts`
+- [ ] Add address picker component to event creation form
+- [ ] Auto-geocode addresses on save (reuse existing geocoding service)
+- [ ] UI for managing saved addresses in club/org settings
 
-- Remove cron job pre-generation
-- Implement RRULE expansion at query time
-- Add materialization triggers (edit, cancel, RSVP)
-- Add Event.status for cancellations
-- Add RecurringEvent.isActive for pause
-- Update all event queries for hybrid model
+**Phase 3: Hybrid Recurring Events** ⬜
 
-**Phase 4: Enhanced Filters**
+Starting point: `src/lib/services/events.ts` - refactor `getAllEvents`
 
-- Add Club.type, Club.vibe, Club.paceMin/Max, Club.beginnerFriendly
-- Add distance ranges to Event
-- Implement filter UI (dropdown chips)
-- Add geolocation "Near me" filter
-- Backfill existing clubs with categorization
+- [ ] Add RRULE expansion utility (use `rrule` npm package)
+- [ ] Implement `getEventsInRange()` with hybrid logic (see Section 2)
+- [ ] Add weekly cron job for event materialization
+- [ ] Add materialization triggers (edit, cancel, RSVP)
+- [ ] Update all event queries for hybrid model
 
-**Phase 5: Polish**
+**Phase 4: Enhanced Filters** ⬜
 
-- First-timer onboarding (platform default + club override)
-- Shareable widgets for social media
-- UI for paused clubs ("Usually meets Tuesdays — currently paused")
+Starting point: `src/components/events/EventFilters.tsx` (new)
+
+- [ ] Create filter UI component (dropdown chips pattern)
+- [ ] Add filter state to events page
+- [ ] Update `getAllEvents` to accept filter params
+- [ ] Add geolocation "Near me" filter
+- [ ] Backfill existing clubs with type/vibe categorization
+
+**Phase 5: Polish** ⬜
+
+- [ ] First-timer onboarding (platform default + club override)
+- [ ] Shareable widgets for social media
+- [ ] UI for paused clubs ("Usually meets Tuesdays — currently paused")
 
 ---
 
