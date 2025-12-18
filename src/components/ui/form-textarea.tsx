@@ -2,8 +2,9 @@ import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
 import { cn } from '@/lib/utils'
 
-export interface FormTextareaProps<T extends FieldValues = FieldValues>
-  extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
+export interface FormTextareaProps<
+  T extends FieldValues = FieldValues,
+> extends Omit<React.TextareaHTMLAttributes<HTMLTextAreaElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
   label: string

@@ -2,8 +2,9 @@ import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
 import { cn } from '@/lib/utils'
 
-export interface FormSelectProps<T extends FieldValues = FieldValues>
-  extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
+export interface FormSelectProps<
+  T extends FieldValues = FieldValues,
+> extends Omit<React.SelectHTMLAttributes<HTMLSelectElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
   label: string

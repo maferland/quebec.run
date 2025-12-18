@@ -50,17 +50,6 @@ export function AuthButtons({ variant, onAction }: AuthButtonsProps) {
           </div>
         )}
 
-        {variant === 'mobile' && (
-          <div className="px-3 py-2 bg-surface-variant rounded-lg">
-            <div className="flex items-center space-x-2">
-              <User size={16} className="text-text-secondary" />
-              <span className="text-sm text-text-secondary font-body">
-                {session.user?.name || t('user')}
-              </span>
-            </div>
-          </div>
-        )}
-
         <Button
           variant="outline"
           size="sm"

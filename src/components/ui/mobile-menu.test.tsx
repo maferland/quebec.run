@@ -1,4 +1,4 @@
-import { render, screen } from '@/lib/test-utils'
+import { render, screen, waitFor } from '@/lib/test-utils'
 import userEvent from '@testing-library/user-event'
 import { useSession } from 'next-auth/react'
 import { vi, type MockedFunction } from 'vitest'
@@ -51,12 +51,17 @@ describe('MobileMenu', () => {
     const closeButton = screen.getByRole('button', { name: /close menu/i })
     await user.click(closeButton)
 
-    expect(
-      screen.queryByRole('link', { name: /clubs/i })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('link', { name: /events/i })
-    ).not.toBeInTheDocument()
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('link', { name: /clubs/i })
+        ).not.toBeInTheDocument()
+        expect(
+          screen.queryByRole('link', { name: /events/i })
+        ).not.toBeInTheDocument()
+      },
+      { timeout: 500 }
+    )
   })
 
   it('closes menu when backdrop is clicked', async () => {
@@ -70,9 +75,14 @@ describe('MobileMenu', () => {
     const backdrop = document.querySelector('.fixed.inset-0') as HTMLElement
     await user.click(backdrop)
 
-    expect(
-      screen.queryByRole('link', { name: /clubs/i })
-    ).not.toBeInTheDocument()
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('link', { name: /clubs/i })
+        ).not.toBeInTheDocument()
+      },
+      { timeout: 500 }
+    )
   })
 
   it('shows admin link for admin users', async () => {

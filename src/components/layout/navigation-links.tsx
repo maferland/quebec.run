@@ -1,6 +1,6 @@
 import { NavLink } from '@/components/ui/nav-link'
 import { Icon } from '@/components/ui/icon'
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, Users, Settings } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 
@@ -38,6 +38,11 @@ export function NavigationLinks({
             <span className="hidden md:inline">{label}</span>
           </NavLink>
         ))}
+        {session?.user?.isStaff && (
+          <NavLink href="/admin">
+            <span>{t('admin')}</span>
+          </NavLink>
+        )}
       </nav>
     )
   }
@@ -55,6 +60,7 @@ export function NavigationLinks({
       {session?.user?.isStaff && (
         <div onClick={onLinkClick}>
           <NavLink href="/admin">
+            <Icon icon={Settings} size="sm" />
             <span>{t('admin')}</span>
           </NavLink>
         </div>
