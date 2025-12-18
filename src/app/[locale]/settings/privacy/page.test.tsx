@@ -13,7 +13,7 @@ const mockUseRouter = useRouter as MockedFunction<typeof useRouter>
 const mockPush = vi.fn()
 const mockFetch = vi.fn()
 
-global.fetch = mockFetch
+global.fetch = mockFetch as unknown as typeof fetch
 
 describe('PrivacySettingsPage', () => {
   beforeEach(() => {
