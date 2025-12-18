@@ -131,7 +131,6 @@ async function main() {
     )
     const devPort = parseInt(`60${randomSuffix}`, 10)
     const storybookPort = parseInt(`61${randomSuffix}`, 10)
-    const mailhogPort = parseInt(`62${randomSuffix}`, 10)
 
     // Setup database
     console.log('Setting up database...')
@@ -186,7 +185,6 @@ async function main() {
 # Worktree-specific overrides
 PORT=${devPort}
 STORYBOOK_PORT=${storybookPort}
-EMAIL_SERVER_PORT=${mailhogPort}
 DATABASE_URL="${databaseUrl}"
 TEST_DATABASE_URL="${testDatabaseUrl}"
 `
@@ -211,6 +209,19 @@ TEST_DATABASE_URL="${testDatabaseUrl}"
       )
     }
 
+    // Seed database
+    console.log('Seeding database...')
+    try {
+      exec('bun run db:seed', worktreePath)
+      console.log(`✓ Database seeded`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.warn(`⚠️  Warning: Seeding failed: ${message}`)
+      console.warn(
+        `   Run seed manually: cd ${worktreePath} && bun run db:seed`
+      )
+    }
+
     // Success message
     console.log('\n✨ Worktree setup complete!\n')
     console.log(`Branch: maferland/${branchName}`)
@@ -218,7 +229,7 @@ TEST_DATABASE_URL="${testDatabaseUrl}"
     console.log(`Database: ${dbName}`)
     console.log(`Dev server: http://localhost:${devPort}`)
     console.log(`Storybook: http://localhost:${storybookPort}`)
-    console.log(`Mailhog: http://localhost:${mailhogPort}`)
+    console.log(`Mailhog: http://localhost:8025 (shared)`)
     console.log(`\nTo start working:`)
     console.log(`  cd ${worktreePath}`)
     console.log(`  bun run dev\n`)
