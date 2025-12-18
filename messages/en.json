@@ -165,7 +165,9 @@
       "club": "Club",
       "address": "Meeting Location",
       "distance": "Distance",
-      "pace": "Pace"
+      "pace": "Pace",
+      "useSavedAddress": "Use saved address",
+      "newAddress": "New address"
     },
     "admin": {
       "events": {
@@ -224,6 +226,18 @@
       "removalWarning": "This user will lose all platform administrative privileges.",
       "typeToConfirm": "Type \"{phrase}\" to confirm:",
       "cannotRemoveSelf": "Cannot remove your own staff access"
+    },
+    "addresses": {
+      "title": "Saved Addresses",
+      "addNew": "Add Address",
+      "label": "Address Label",
+      "address": "Full Address",
+      "geocoded": "Geocoded",
+      "loading": "Loading...",
+      "empty": "No saved addresses",
+      "emptyHint": "Add addresses to reuse them when creating events",
+      "confirmDelete": "Delete address \"{label}\"?",
+      "geocodingNote": "The address will be automatically geocoded after saving"
     }
   },
   "legal": {

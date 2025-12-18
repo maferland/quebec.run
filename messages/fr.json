@@ -165,7 +165,9 @@
       "club": "Club",
       "address": "Lieu de rencontre",
       "distance": "Distance",
-      "pace": "Allure"
+      "pace": "Allure",
+      "useSavedAddress": "Utiliser une adresse enregistrée",
+      "newAddress": "Nouvelle adresse"
     },
     "admin": {
       "events": {
@@ -224,6 +226,18 @@
       "removalWarning": "Cet utilisateur perdra tous les privilèges administratifs de la plateforme.",
       "typeToConfirm": "Tapez \"{phrase}\" pour confirmer:",
       "cannotRemoveSelf": "Impossible de retirer votre propre accès staff"
+    },
+    "addresses": {
+      "title": "Adresses enregistrées",
+      "addNew": "Ajouter une adresse",
+      "label": "Nom de l'adresse",
+      "address": "Adresse complète",
+      "geocoded": "Géocodée",
+      "loading": "Chargement...",
+      "empty": "Aucune adresse enregistrée",
+      "emptyHint": "Ajoutez des adresses pour les réutiliser lors de la création d'événements",
+      "confirmDelete": "Supprimer l'adresse \"{label}\"?",
+      "geocodingNote": "L'adresse sera géocodée automatiquement après l'enregistrement"
     }
   },
   "legal": {
