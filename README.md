@@ -66,7 +66,7 @@ Built with Next.js 14, TypeScript, and Tailwind CSS.
 
 ## 📋 Prerequisites
 
-- Node.js 18+
+- [Bun](https://bun.sh/) 1.0+
 - PostgreSQL database
 - Resend API key (for production email)
 - Mailhog (for development email testing)
@@ -83,7 +83,7 @@ Built with Next.js 14, TypeScript, and Tailwind CSS.
 2. **Install dependencies**
 
    ```bash
-   npm install
+   bun install
    ```
 
 3. **Set up environment variables**
@@ -117,14 +117,14 @@ Built with Next.js 14, TypeScript, and Tailwind CSS.
 4. **Set up the database**
 
    ```bash
-   npx prisma migrate dev
-   npx prisma db seed  # Optional: seed with sample data
+   bun prisma migrate dev
+   bun run db:seed  # Optional: seed with sample data
    ```
 
 5. **Start development servers**
 
    ```bash
-   npm run dev
+   bun run dev
    ```
 
    This runs both the Next.js app and Mailhog concurrently:

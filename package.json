@@ -11,7 +11,7 @@
     "docker:down": "docker-compose down",
     "docker:logs": "docker-compose logs -f mailhog",
     "build": "next build",
-    "build:ci": "next build && prisma migrate deploy && npm run db:seed",
+    "build:ci": "next build && prisma migrate deploy && bun run db:seed",
     "postinstall": "prisma generate",
     "start": "next start",
     "lint": "eslint .",
@@ -23,16 +23,16 @@
     "test:e2e": "playwright test",
     "test:e2e:headed": "playwright test --headed",
     "test:e2e:ui": "playwright test --ui",
-    "db:seed": "tsx prisma/seed.ts",
-    "db:reset": "npx prisma migrate reset --force && npm run db:seed",
-    "db:backfill-geocoding": "tsx prisma/scripts/backfill-geocoding.ts",
-    "geocode": "tsx scripts/geocode-addresses.ts",
+    "db:seed": "bun run prisma/seed.ts",
+    "db:reset": "bun prisma migrate reset --force && bun run db:seed",
+    "db:backfill-geocoding": "bun run prisma/scripts/backfill-geocoding.ts",
+    "geocode": "bun run scripts/geocode-addresses.ts",
     "storybook": "storybook dev -p ${STORYBOOK_PORT:-6006}",
-    "worktree": "npx tsx scripts/create-worktree.ts",
-    "remove-worktree": "npx tsx scripts/remove-worktree.ts",
+    "worktree": "bun run scripts/create-worktree.ts",
+    "remove-worktree": "bun run scripts/remove-worktree.ts",
     "build-storybook": "storybook build",
     "prepare": "husky",
-    "typecheck": "npx tsc --noEmit"
+    "typecheck": "bun tsc --noEmit"
   },
   "lint-staged": {
     "*.{js,jsx,ts,tsx}": [
