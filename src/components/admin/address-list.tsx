@@ -80,14 +80,14 @@ export function AddressList({
               </div>
               <div className="flex gap-2 ml-4">
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => onEditAddress(address)}
                 >
                   <Edit2 className="w-4 h-4" />
                 </Button>
                 <Button
-                  variant="ghost"
+                  variant="outline"
                   size="sm"
                   onClick={() => handleDelete(address.id, address.label)}
                   disabled={deleteMutation.isPending}

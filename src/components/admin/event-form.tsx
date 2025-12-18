@@ -53,7 +53,7 @@ export function EventForm({
   const updateMutation = useUpdateEvent()
   const deleteMutation = useDeleteEvent()
 
-  const form = useFormWithSchema({
+  const form = useFormWithSchema<EventFormInput>({
     schema: eventCreateSchema,
     defaultValues: {
       title: initialData?.title || '',
@@ -66,6 +66,7 @@ export function EventForm({
       distance: initialData?.distance || '',
       pace: initialData?.pace || '',
       clubId: initialData?.clubId || clubs[0]?.id || '',
+      savedAddress: '',
     },
   })
 
@@ -186,7 +187,8 @@ export function EventForm({
             <AddressPicker
               clubId={selectedClubId}
               onAddressSelect={(address) => setValue('address', address)}
-              register={register('savedAddress')}
+              register={register}
+              error={errors.savedAddress}
             />
           )}
 

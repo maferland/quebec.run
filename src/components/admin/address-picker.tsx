@@ -3,21 +3,29 @@
 import { useAddresses } from '@/lib/hooks/use-addresses'
 import { FormSelect } from '@/components/ui/form-select'
 import { useTranslations } from 'next-intl'
-import type { UseFormRegisterReturn } from 'react-hook-form'
+import type {
+  UseFormRegister,
+  FieldError,
+  FieldValues,
+  Path,
+} from 'react-hook-form'
 
-interface AddressPickerProps {
+interface AddressPickerProps<
+  T extends FieldValues & { savedAddress?: string } = FieldValues & {
+    savedAddress?: string
+  },
+> {
   clubId: string
   onAddressSelect: (address: string) => void
-  register: UseFormRegisterReturn
-  error?: { message?: string }
+  register: UseFormRegister<T>
+  error?: FieldError
 }
 
-export function AddressPicker({
-  clubId,
-  onAddressSelect,
-  register,
-  error,
-}: AddressPickerProps) {
+export function AddressPicker<
+  T extends FieldValues & { savedAddress?: string } = FieldValues & {
+    savedAddress?: string
+  },
+>({ clubId, onAddressSelect, register, error }: AddressPickerProps<T>) {
   const t = useTranslations('forms.event')
   const { data: addresses, isLoading } = useAddresses({ clubId })
 
@@ -43,7 +51,7 @@ export function AddressPicker({
   return (
     <FormSelect
       register={register}
-      name="savedAddress"
+      name={'savedAddress' as Path<T>}
       label={t('useSavedAddress')}
       error={error}
       options={options}

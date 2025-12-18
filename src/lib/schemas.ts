@@ -76,6 +76,7 @@ export const eventCreateSchema = z.object({
   distance: z.string().optional(),
   pace: z.string().optional(),
   clubId: z.string().min(1, 'Club ID is required'),
+  savedAddress: z.string().optional(),
 })
 
 export const eventsQuerySchema = paginationQuerySchema.extend({

@@ -30,6 +30,17 @@ export type AddressUpdate = z.infer<typeof addressUpdateSchema>
 export type AddressDelete = z.infer<typeof addressDeleteSchema>
 export type AddressesQuery = z.infer<typeof addressesQuerySchema>
 
+export type Address = {
+  id: string
+  label: string
+  address: string
+  latitude: number | null
+  longitude: number | null
+  clubId: string | null
+  organizationId: string | null
+  createdAt: Date
+}
+
 /**
  * Get all addresses for a club or organization
  */
