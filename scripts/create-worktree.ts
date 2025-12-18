@@ -97,8 +97,23 @@ async function main() {
       mkdirSync(WORKTREES_DIR, { recursive: true })
     }
 
-    // Create git worktree
-    exec(`git worktree add ${worktreePath} -b maferland/${branchName}`)
+    // Check if branch already exists
+    const fullBranchName = `maferland/${branchName}`
+    let branchExists = false
+    try {
+      exec(`git rev-parse --verify ${fullBranchName}`)
+      branchExists = true
+      console.log(`✓ Branch ${fullBranchName} already exists, checking it out`)
+    } catch {
+      console.log(`✓ Creating new branch ${fullBranchName}`)
+    }
+
+    // Create git worktree (with or without -b depending on branch existence)
+    if (branchExists) {
+      exec(`git worktree add ${worktreePath} ${fullBranchName}`)
+    } else {
+      exec(`git worktree add ${worktreePath} -b ${fullBranchName}`)
+    }
     console.log(`✓ Worktree created at ${worktreePath}`)
 
     // Copy .env if exists
@@ -132,8 +147,36 @@ async function main() {
       const message = error instanceof Error ? error.message : String(error)
       if (message.includes('already exists')) {
         console.log(`✓ Database already exists: ${dbName}`)
+      } else if (
+        message.includes('No such file or directory') ||
+        message.includes('connection to server')
+      ) {
+        console.log(`⚠️  PostgreSQL not running, attempting to start...`)
+        try {
+          exec('brew services restart postgresql@16')
+          console.log(`✓ PostgreSQL restarted`)
+          // Retry database creation
+          exec(
+            `psql -U marc-antoine.ferland -d postgres -c "CREATE DATABASE \\"${dbName}\\";"`
+          )
+          console.log(`✓ Created database: ${dbName}`)
+        } catch (retryError: unknown) {
+          const retryMessage =
+            retryError instanceof Error
+              ? retryError.message
+              : String(retryError)
+          if (retryMessage.includes('already exists')) {
+            console.log(`✓ Database already exists: ${dbName}`)
+          } else {
+            console.warn(`⚠️  Warning: Database creation failed after restart`)
+            console.warn(
+              `   You may need to create database manually: ${dbName}`
+            )
+          }
+        }
       } else {
-        throw error
+        console.warn(`⚠️  Warning: Database creation failed: ${message}`)
+        console.warn(`   You may need to create database manually: ${dbName}`)
       }
     }
 
@@ -150,15 +193,23 @@ TEST_DATABASE_URL="${testDatabaseUrl}"
     appendFileSync(worktreeEnvFile, envContent)
     console.log(`✓ Updated .env with ports and database`)
 
-    // Run npm install
-    console.log('Running npm install...')
-    exec('npm install', worktreePath)
-    console.log(`✓ npm install complete`)
+    // Run bun install
+    console.log('Running bun install...')
+    exec('bun install', worktreePath)
+    console.log(`✓ bun install complete`)
 
     // Run migrations
     console.log('Running database migrations...')
-    exec('npx prisma migrate deploy', worktreePath)
-    console.log(`✓ Migrations complete`)
+    try {
+      exec('bun prisma migrate deploy', worktreePath)
+      console.log(`✓ Migrations complete`)
+    } catch (error: unknown) {
+      const message = error instanceof Error ? error.message : String(error)
+      console.warn(`⚠️  Warning: Migration failed: ${message}`)
+      console.warn(
+        `   Run migrations manually: cd ${worktreePath} && bun prisma migrate deploy`
+      )
+    }
 
     // Success message
     console.log('\n✨ Worktree setup complete!\n')
@@ -170,7 +221,7 @@ TEST_DATABASE_URL="${testDatabaseUrl}"
     console.log(`Mailhog: http://localhost:${mailhogPort}`)
     console.log(`\nTo start working:`)
     console.log(`  cd ${worktreePath}`)
-    console.log(`  npm run dev\n`)
+    console.log(`  bun run dev\n`)
 
     process.exit(0)
   } catch (error: unknown) {
