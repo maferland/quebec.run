@@ -1,36 +1,24 @@
-import { describe, test, expect, vi, beforeEach, type Mock } from 'vitest'
+import { describe, test, expect } from 'vitest'
+import { http, HttpResponse } from 'msw'
+import { setupMSW } from '../test-msw-setup'
+import { server } from '../test-msw'
 import { geocodeAddress } from './geocoding'
 
 describe('geocodeAddress', () => {
-  let mockFetch: Mock
-
-  beforeEach(() => {
-    vi.clearAllMocks()
-    mockFetch = vi.fn()
-    global.fetch = mockFetch
-  })
+  setupMSW()
 
   test('returns lat/lng for valid address', async () => {
-    const mockResponse = [{ lat: '46.8139', lon: '-71.2080' }]
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => mockResponse,
-    })
-
     const result = await geocodeAddress('123 Rue Principale, Quebec City, QC')
 
-    expect(result).toEqual({ lat: 46.8139, lng: -71.208 })
-    expect(global.fetch).toHaveBeenCalledWith(
-      expect.stringContaining('nominatim.openstreetmap.org/search'),
-      expect.any(Object)
-    )
+    expect(result).toEqual({ lat: 45.5017, lng: -73.5673 })
   })
 
   test('returns null for failed geocoding', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => [],
-    })
+    server.use(
+      http.get('https://nominatim.openstreetmap.org/search', () => {
+        return HttpResponse.json([])
+      })
+    )
 
     const result = await geocodeAddress('Invalid Address')
 
@@ -38,7 +26,11 @@ describe('geocodeAddress', () => {
   })
 
   test('returns null on network error', async () => {
-    mockFetch.mockRejectedValueOnce(new Error('Network error'))
+    server.use(
+      http.get('https://nominatim.openstreetmap.org/search', () => {
+        return HttpResponse.error()
+      })
+    )
 
     const result = await geocodeAddress('123 Rue Principale')
 
@@ -46,11 +38,11 @@ describe('geocodeAddress', () => {
   })
 
   test('returns null on HTTP error response', async () => {
-    mockFetch.mockResolvedValueOnce({
-      ok: false,
-      status: 500,
-      json: async () => ({}),
-    })
+    server.use(
+      http.get('https://nominatim.openstreetmap.org/search', () => {
+        return HttpResponse.json({}, { status: 500 })
+      })
+    )
 
     const result = await geocodeAddress('123 Rue Principale')
 
@@ -58,12 +50,6 @@ describe('geocodeAddress', () => {
   })
 
   test('enforces rate limit of 1 req/sec', async () => {
-    const mockResponse = [{ lat: '46.8139', lon: '-71.2080' }]
-    mockFetch.mockResolvedValue({
-      ok: true,
-      json: async () => mockResponse,
-    })
-
     const startTime = Date.now()
 
     await geocodeAddress('Address 1')
@@ -73,6 +59,5 @@ describe('geocodeAddress', () => {
 
     // Should take at least 1000ms due to rate limiting
     expect(elapsed).toBeGreaterThanOrEqual(1000)
-    expect(mockFetch).toHaveBeenCalledTimes(2)
   })
 })
