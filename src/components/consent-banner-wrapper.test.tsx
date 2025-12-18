@@ -2,12 +2,14 @@ import { describe, it, expect, vi, beforeEach } from 'vitest'
 import { render, screen, waitFor } from '@/lib/test-utils'
 import { userEvent } from '@testing-library/user-event'
 import { useSession } from 'next-auth/react'
+import { http, HttpResponse } from 'msw'
+import { setupMSW } from '@/lib/test-msw-setup'
+import { server } from '@/lib/test-msw'
 import { ConsentBannerWrapper } from './consent-banner-wrapper'
 import type { MockedFunction } from 'vitest'
 
 const mockUseSession = useSession as MockedFunction<typeof useSession>
 
-// Mock ConsentBanner component
 vi.mock('./consent-banner', () => ({
   ConsentBanner: ({ onAccept }: { onAccept: () => void }) => (
     <div data-testid="consent-banner">
@@ -17,9 +19,10 @@ vi.mock('./consent-banner', () => ({
 }))
 
 describe('ConsentBannerWrapper', () => {
+  setupMSW()
+
   beforeEach(() => {
     vi.clearAllMocks()
-    global.fetch = vi.fn()
   })
 
   it('renders nothing when not authenticated', () => {
@@ -35,6 +38,12 @@ describe('ConsentBannerWrapper', () => {
   })
 
   it('renders nothing when consent exists', async () => {
+    server.use(
+      http.get('/api/user/consent', () => {
+        return HttpResponse.json({ hasConsent: true })
+      })
+    )
+
     mockUseSession.mockReturnValue({
       data: {
         user: {
@@ -48,25 +57,21 @@ describe('ConsentBannerWrapper', () => {
       status: 'authenticated',
       update: vi.fn(),
     })
-    ;(global.fetch as MockedFunction<typeof fetch>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ hasConsent: true }),
-    } as Response)
 
     render(<ConsentBannerWrapper />)
 
-    // Wait for the API call to complete
-    await waitFor(() => {
-      expect(global.fetch).toHaveBeenCalledWith('/api/user/consent')
-    })
-
-    // Wait for banner to not be in document after data loads
     await waitFor(() => {
       expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument()
     })
   })
 
   it('renders banner when authenticated and no consent', async () => {
+    server.use(
+      http.get('/api/user/consent', () => {
+        return HttpResponse.json({ hasConsent: false })
+      })
+    )
+
     mockUseSession.mockReturnValue({
       data: {
         user: {
@@ -80,10 +85,6 @@ describe('ConsentBannerWrapper', () => {
       status: 'authenticated',
       update: vi.fn(),
     })
-    ;(global.fetch as MockedFunction<typeof fetch>).mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ hasConsent: false }),
-    } as Response)
 
     render(<ConsentBannerWrapper />)
 
@@ -93,6 +94,18 @@ describe('ConsentBannerWrapper', () => {
   })
 
   it('calls mutation on accept', async () => {
+    let hasConsent = false
+
+    server.use(
+      http.get('/api/user/consent', () => {
+        return HttpResponse.json({ hasConsent })
+      }),
+      http.post('/api/user/consent', () => {
+        hasConsent = true
+        return HttpResponse.json({ success: true, consentId: 'test-id' })
+      })
+    )
+
     const user = userEvent.setup()
     mockUseSession.mockReturnValue({
       data: {
@@ -108,43 +121,14 @@ describe('ConsentBannerWrapper', () => {
       update: vi.fn(),
     })
 
-    const mockFetch = global.fetch as MockedFunction<typeof fetch>
-    // First call: GET consent (no consent)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ hasConsent: false }),
-    } as Response)
-
-    // Second call: POST consent
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ success: true, consentId: 'test-id' }),
-    } as Response)
-
-    // Third call: GET consent after mutation (has consent now)
-    mockFetch.mockResolvedValueOnce({
-      ok: true,
-      json: async () => ({ hasConsent: true }),
-    } as Response)
-
     render(<ConsentBannerWrapper />)
 
-    // Wait for banner to appear
     await waitFor(() => {
       expect(screen.getByTestId('consent-banner')).toBeInTheDocument()
     })
 
-    // Click accept button
     await user.click(screen.getByRole('button', { name: /accept/i }))
 
-    // Verify POST was called
-    await waitFor(() => {
-      expect(mockFetch).toHaveBeenCalledWith('/api/user/consent', {
-        method: 'POST',
-      })
-    })
-
-    // Banner should eventually disappear after refetch
     await waitFor(() => {
       expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument()
     })
@@ -159,7 +143,6 @@ describe('ConsentBannerWrapper', () => {
 
     render(<ConsentBannerWrapper />)
 
-    expect(global.fetch).not.toHaveBeenCalled()
     expect(screen.queryByTestId('consent-banner')).not.toBeInTheDocument()
   })
 })
