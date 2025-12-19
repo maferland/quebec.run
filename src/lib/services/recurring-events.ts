@@ -168,3 +168,57 @@ export function createVirtualEvent(
     },
   }
 }
+
+/**
+ * Get events in date range using hybrid approach
+ * @param startDate - Start of range
+ * @param endDate - End of range
+ * @returns Array of concrete + virtual events, sorted by date
+ */
+export async function getEventsInRange(startDate: Date, endDate: Date) {
+  // 1. Fetch concrete Events in range (exclude cancelled)
+  const concreteEvents = await prisma.event.findMany({
+    where: {
+      date: { gte: startDate, lte: endDate },
+      status: 'SCHEDULED',
+    },
+    include: {
+      club: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    orderBy: { date: 'asc' },
+  })
+
+  // 2. Fetch active RecurringEvents with club relation
+  const recurringEvents = await prisma.recurringEvent.findMany({
+    where: { isActive: true },
+    include: {
+      club: true,
+    },
+  })
+
+  // 3. Expand patterns, excluding materialized dates
+  const expandedEvents = recurringEvents.flatMap((re) => {
+    const occurrences = expandRRuleDates(re.schedulePattern, startDate, endDate)
+
+    // Get materialized dates for this pattern
+    const materializedDates = concreteEvents
+      .filter((e) => e.recurringEventId === re.id)
+      .map((e) => format(e.date, 'yyyy-MM-dd'))
+
+    // Only expand dates that aren't materialized
+    return occurrences
+      .filter((date) => !materializedDates.includes(format(date, 'yyyy-MM-dd')))
+      .map((date) => createVirtualEvent(re, date))
+  })
+
+  // 4. Merge and sort
+  return [...concreteEvents, ...expandedEvents].sort(
+    (a, b) => a.date.getTime() - b.date.getTime()
+  )
+}
