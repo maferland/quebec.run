@@ -99,7 +99,7 @@ export function MobileMenu() {
         onClick={toggleMenu}
         aria-label={isOpen ? t('closeMenu') : t('openMenu')}
         aria-expanded={isOpen}
-        className="relative z-[1002] p-3 rounded-lg hover:bg-surface-variant transition-colors"
+        className="relative z-[1100] p-3 rounded-lg hover:bg-surface-variant transition-colors"
       >
         <div className="relative w-6 h-6 flex items-center justify-center">
           <span className="sr-only">
@@ -130,7 +130,7 @@ export function MobileMenu() {
         <>
           {/* Backdrop */}
           <div
-            className={`fixed inset-0 bg-black/20 z-[1000] transition-opacity duration-200 ${
+            className={`fixed inset-0 bg-black/20 z-[1050] transition-opacity duration-200 ${
               isAnimating ? 'opacity-100' : 'opacity-0'
             }`}
             onClick={closeMenu}
@@ -140,7 +140,7 @@ export function MobileMenu() {
           {/* Menu Content */}
           <div
             ref={menuRef}
-            className={`fixed top-20 right-4 left-4 bg-surface border border-border rounded-lg shadow-lg z-[1001] p-4 transition-all duration-200 ${
+            className={`fixed top-20 right-4 left-4 bg-surface border border-border rounded-lg shadow-lg z-[1060] p-4 transition-all duration-200 ${
               isAnimating
                 ? 'opacity-100 translate-y-0'
                 : 'opacity-0 -translate-y-4'
