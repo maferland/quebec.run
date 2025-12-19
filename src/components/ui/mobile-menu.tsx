@@ -138,8 +138,10 @@ export function MobileMenu() {
           />
 
           {/* Menu Content */}
-          <div
+          <nav
             ref={menuRef}
+            role="navigation"
+            aria-label="Mobile menu"
             className={`fixed top-20 right-4 left-4 bg-surface border border-border rounded-lg shadow-lg z-[1060] p-4 transition-all duration-200 ${
               isAnimating
                 ? 'opacity-100 translate-y-0'
@@ -153,7 +155,7 @@ export function MobileMenu() {
 
               <AuthButtons variant="mobile" onAction={closeMenu} />
             </div>
-          </div>
+          </nav>
         </>
       )}
     </div>

@@ -18,7 +18,7 @@ test.describe('Mobile Navigation', () => {
     const menuButton = page.getByRole('button', { name: /open menu/i })
     await menuButton.click()
 
-    const mobileMenu = page.locator('.fixed.top-20.right-4.left-4')
+    const mobileMenu = page.getByRole('navigation', { name: /mobile menu/i })
     await expect(mobileMenu.getByRole('link', { name: /clubs/i })).toBeVisible()
     await expect(
       mobileMenu.getByRole('link', { name: /events/i })
