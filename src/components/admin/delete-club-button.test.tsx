@@ -73,11 +73,11 @@ describe('DeleteClubButton', () => {
 
     // Mock a slow API call
     const { server } = await import('@/lib/test-msw')
-    const { http, HttpResponse } = await import('msw')
+    const { http, HttpResponse, delay } = await import('msw')
 
     server.use(
       http.delete('/api/clubs/:id', async () => {
-        await new Promise((resolve) => setTimeout(resolve, 100))
+        await delay(100)
         return HttpResponse.json({ success: true })
       })
     )

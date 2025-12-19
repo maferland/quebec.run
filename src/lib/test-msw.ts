@@ -1,4 +1,4 @@
-import { http, HttpResponse } from 'msw'
+import { http, HttpResponse, delay } from 'msw'
 
 // Helper to safely parse request body
 async function parseRequestBody(
@@ -216,7 +216,7 @@ export const handlers = [
       return HttpResponse.json({ error: 'User not found' }, { status: 404 })
     }
     // Add small delay to simulate network request
-    await new Promise((resolve) => setTimeout(resolve, 100))
+    await delay(100)
     const updatedUser = createMockResponse(user, updates)
     return HttpResponse.json(updatedUser)
   }),
