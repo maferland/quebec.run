@@ -184,7 +184,8 @@
       "creating": "Creating...",
       "updating": "Updating...",
       "deleting": "Deleting...",
-      "deleteEvent": "Delete"
+      "deleteEvent": "Delete",
+      "deleteClub": "Delete"
     }
   },
   "admin": {

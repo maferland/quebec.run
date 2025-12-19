@@ -22,10 +22,10 @@ describe('DeleteClubButton', () => {
     global.alert = vi.fn()
   })
 
-  it('renders delete button with icon', () => {
+  it('renders delete button with text and icon', () => {
     render(<DeleteClubButton clubId="club-1" clubName="Test Club" />)
 
-    const button = screen.getByRole('button', { name: 'Delete Test Club' })
+    const button = screen.getByRole('button', { name: /delete/i })
     expect(button).toBeInTheDocument()
   })
 
@@ -150,9 +150,8 @@ describe('DeleteClubButton', () => {
     it('has accessible label with club name', () => {
       render(<DeleteClubButton clubId="club-1" clubName="My Running Club" />)
 
-      expect(
-        screen.getByLabelText('Delete My Running Club')
-      ).toBeInTheDocument()
+      const button = screen.getByRole('button', { name: /delete/i })
+      expect(button).toHaveAttribute('aria-label', 'Delete My Running Club')
     })
 
     it('supports keyboard interaction', async () => {
@@ -170,14 +169,28 @@ describe('DeleteClubButton', () => {
       expect(global.confirm).toHaveBeenCalled()
     })
 
-    it('shows disabled state visually', () => {
+    it('is disabled when in deleting state', async () => {
+      const user = userEvent.setup()
+      global.confirm = vi.fn(() => true)
+
+      const { server } = await import('@/lib/test-msw')
+      const { http, HttpResponse, delay } = await import('msw')
+
+      server.use(
+        http.delete('/api/clubs/:id', async () => {
+          await delay(100)
+          return HttpResponse.json({ success: true })
+        })
+      )
+
       render(<DeleteClubButton clubId="club-1" clubName="Test Club" />)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass(
-        'disabled:opacity-50',
-        'disabled:cursor-not-allowed'
-      )
+      await user.click(button)
+
+      await waitFor(() => {
+        expect(button).toBeDisabled()
+      })
     })
   })
 })

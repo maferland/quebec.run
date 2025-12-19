@@ -184,7 +184,8 @@
       "creating": "Création...",
       "updating": "Mise à jour...",
       "deleting": "Suppression...",
-      "deleteEvent": "Supprimer"
+      "deleteEvent": "Supprimer",
+      "deleteClub": "Supprimer"
     }
   },
   "admin": {
