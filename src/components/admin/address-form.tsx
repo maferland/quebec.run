@@ -1,12 +1,18 @@
 'use client'
 
+import { useState } from 'react'
 import { useFormWithSchema } from '@/lib/form/use-form-with-schema'
-import { addressCreateSchema, type Address } from '@/lib/services/addresses'
-import { useCreateAddress, useUpdateAddress } from '@/lib/hooks/use-addresses'
+import { addressCreateSchema } from '@/lib/schemas/addresses'
+import {
+  useCreateAddress,
+  useUpdateAddress,
+  type Address,
+} from '@/lib/hooks/use-addresses'
 import { FormInput } from '@/components/ui/form-input'
 import { Button } from '@/components/ui/button'
+import { AddressMapPreview } from '@/components/admin/address-map-preview'
 import { useTranslations } from 'next-intl'
-import { Save, X } from 'lucide-react'
+import { Save, X, MapPin } from 'lucide-react'
 
 interface AddressFormProps {
   clubId?: string
@@ -27,6 +33,9 @@ export function AddressForm({
   const tActions = useTranslations('forms.actions')
   const createMutation = useCreateAddress()
   const updateMutation = useUpdateAddress()
+  const [savedAddress, setSavedAddress] = useState<Address | null>(
+    initialData || null
+  )
 
   const form = useFormWithSchema({
     schema: addressCreateSchema,
@@ -49,15 +58,16 @@ export function AddressForm({
 
   const handleFormSubmit = handleSubmit(async (data) => {
     try {
+      let result: Address
       if (initialData) {
-        await updateMutation.mutateAsync({
+        result = await updateMutation.mutateAsync({
           id: initialData.id,
           data: { ...data, id: initialData.id },
         })
       } else {
-        await createMutation.mutateAsync(data)
+        result = await createMutation.mutateAsync(data)
       }
-      onSuccess?.()
+      setSavedAddress(result)
     } catch (error) {
       console.error('Form submission error:', error)
     }
@@ -88,31 +98,50 @@ export function AddressForm({
           placeholder="e.g. 123 Rue Saint-Jean, Quebec City, QC"
         />
 
-        {!initialData && (
-          <p className="text-sm text-text-secondary">{t('geocodingNote')}</p>
+        {!savedAddress && (
+          <p className="text-sm text-text-secondary">
+            <MapPin className="w-4 h-4 inline mr-1" />
+            {t('geocodingNote')}
+          </p>
+        )}
+
+        {savedAddress?.latitude && savedAddress?.longitude && (
+          <AddressMapPreview
+            latitude={savedAddress.latitude}
+            longitude={savedAddress.longitude}
+            label={savedAddress.label}
+          />
         )}
       </div>
 
       <div className="flex justify-end gap-3 mt-6 pt-4 border-t border-border">
-        <Button
-          type="button"
-          variant="outline"
-          onClick={onCancel}
-          disabled={isLoading}
-        >
-          <X className="w-4 h-4 mr-2" />
-          {tActions('cancel')}
-        </Button>
-        <Button type="submit" disabled={isLoading}>
-          <Save className="w-4 h-4 mr-2" />
-          {isLoading
-            ? initialData
-              ? tActions('updating')
-              : tActions('creating')
-            : initialData
-              ? tActions('update')
-              : tActions('create')}
-        </Button>
+        {savedAddress ? (
+          <Button type="button" onClick={onSuccess}>
+            Done
+          </Button>
+        ) : (
+          <>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={onCancel}
+              disabled={isLoading}
+            >
+              <X className="w-4 h-4 mr-2" />
+              {tActions('cancel')}
+            </Button>
+            <Button type="submit" disabled={isLoading}>
+              <Save className="w-4 h-4 mr-2" />
+              {isLoading
+                ? initialData
+                  ? tActions('updating')
+                  : tActions('creating')
+                : initialData
+                  ? tActions('update')
+                  : tActions('create')}
+            </Button>
+          </>
+        )}
       </div>
     </form>
   )
