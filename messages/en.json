@@ -240,6 +240,12 @@
       "emptyHint": "Add addresses to reuse them when creating events",
       "confirmDelete": "Delete address \"{label}\"?",
       "geocodingNote": "The address will be automatically geocoded after saving"
+    },
+    "confirmDeleteDialog": {
+      "title": "Delete {entityType}",
+      "description": "This will permanently delete {entityName}. This action cannot be undone.",
+      "cancel": "Cancel",
+      "delete": "Delete"
     }
   },
   "legal": {

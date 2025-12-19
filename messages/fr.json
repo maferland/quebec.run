@@ -240,6 +240,12 @@
       "emptyHint": "Ajoutez des adresses pour les réutiliser lors de la création d'événements",
       "confirmDelete": "Supprimer l'adresse \"{label}\"?",
       "geocodingNote": "L'adresse sera géocodée automatiquement après l'enregistrement"
+    },
+    "confirmDeleteDialog": {
+      "title": "Supprimer {entityType}",
+      "description": "Ceci supprimera définitivement {entityName}. Cette action est irréversible.",
+      "cancel": "Annuler",
+      "delete": "Supprimer"
     }
   },
   "legal": {
