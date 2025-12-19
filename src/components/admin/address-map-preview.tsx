@@ -40,10 +40,13 @@ export function AddressMapPreview({
         attributionControl: false,
       })
 
-      // Add tile layer
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        maxZoom: 19,
-      }).addTo(map)
+      // Add tile layer (CartoDB light style for consistency with event maps)
+      L.tileLayer(
+        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+        {
+          maxZoom: 19,
+        }
+      ).addTo(map)
 
       // Add marker
       L.marker([latitude, longitude]).addTo(map).bindPopup(label)
@@ -62,8 +65,8 @@ export function AddressMapPreview({
   return (
     <div
       ref={containerRef}
-      className="w-full h-48 rounded-lg border border-border"
-      style={{ height: '192px', width: '100%' }}
+      className="w-full h-[300px] rounded-lg border border-border"
+      style={{ height: '300px', width: '100%' }}
     />
   )
 }
