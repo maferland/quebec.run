@@ -2,6 +2,7 @@
 
 import { useEffect, useRef } from 'react'
 import type { Map as LeafletMap } from 'leaflet'
+import 'leaflet/dist/leaflet.css'
 
 interface AddressMapPreviewProps {
   latitude: number
@@ -62,6 +63,7 @@ export function AddressMapPreview({
     <div
       ref={containerRef}
       className="w-full h-48 rounded-lg border border-border"
+      style={{ height: '192px', width: '100%' }}
     />
   )
 }
