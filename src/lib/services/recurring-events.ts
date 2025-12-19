@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { RRule } from 'rrule'
 import { addDays, min, format } from 'date-fns'
-import type { RecurringEvent, Club } from '@prisma/client'
+import type { RecurringEvent, Club, Prisma } from '@prisma/client'
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -221,4 +221,109 @@ export async function getEventsInRange(startDate: Date, endDate: Date) {
   return [...concreteEvents, ...expandedEvents].sort(
     (a, b) => a.date.getTime() - b.date.getTime()
   )
+}
+
+/**
+ * Create recurring event
+ */
+export async function createRecurringEvent(
+  data: Prisma.RecurringEventUncheckedCreateInput
+) {
+  return await prisma.recurringEvent.create({
+    data: {
+      ...data,
+      timezone: data.timezone || 'America/Toronto',
+      isActive: data.isActive ?? true,
+    },
+  })
+}
+
+/**
+ * Update recurring event
+ */
+export async function updateRecurringEvent(
+  id: string,
+  data: Partial<Prisma.RecurringEventUncheckedUpdateInput>
+) {
+  return await prisma.recurringEvent.update({
+    where: { id },
+    data,
+  })
+}
+
+/**
+ * Soft delete recurring event (set isActive = false)
+ */
+export async function deleteRecurringEvent(id: string) {
+  return await prisma.recurringEvent.update({
+    where: { id },
+    data: { isActive: false },
+  })
+}
+
+/**
+ * Get recurring event by ID with club relation
+ */
+export async function getRecurringEventById(id: string) {
+  return await prisma.recurringEvent.findUnique({
+    where: { id },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      distance: true,
+      pace: true,
+      schedulePattern: true,
+      timezone: true,
+      generateUntil: true,
+      isActive: true,
+      clubId: true,
+      createdAt: true,
+      updatedAt: true,
+      club: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+  })
+}
+
+/**
+ * Get recurring events by club ID
+ */
+export async function getRecurringEventsByClub(clubId: string) {
+  return await prisma.recurringEvent.findMany({
+    where: { clubId },
+    select: {
+      id: true,
+      title: true,
+      description: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      distance: true,
+      pace: true,
+      schedulePattern: true,
+      timezone: true,
+      generateUntil: true,
+      isActive: true,
+      clubId: true,
+      createdAt: true,
+      updatedAt: true,
+      club: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+        },
+      },
+    },
+    orderBy: { createdAt: 'desc' },
+  })
 }

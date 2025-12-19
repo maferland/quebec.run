@@ -6,6 +6,11 @@ import {
   expandRRuleDates,
   createVirtualEvent,
   getEventsInRange,
+  createRecurringEvent,
+  updateRecurringEvent,
+  deleteRecurringEvent,
+  getRecurringEventById,
+  getRecurringEventsByClub,
 } from './recurring-events'
 import { addDays } from 'date-fns'
 
@@ -514,5 +519,199 @@ describe('getEventsInRange', () => {
     const events = await getEventsInRange(start, end)
 
     expect(events).toHaveLength(0)
+  })
+})
+
+describe('CRUD operations', () => {
+  beforeEach(async () => {
+    await prisma.event.deleteMany()
+    await prisma.recurringEvent.deleteMany()
+    await prisma.club.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  describe('createRecurringEvent', () => {
+    it('creates recurring event', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      const data = {
+        title: 'Tuesday Run',
+        address: '123 Main St',
+        clubId: club.id,
+        schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+      }
+
+      const result = await createRecurringEvent(data)
+
+      expect(result.id).toBeDefined()
+      expect(result.title).toBe('Tuesday Run')
+      expect(result.isActive).toBe(true)
+      expect(result.timezone).toBe('America/Toronto')
+    })
+  })
+
+  describe('updateRecurringEvent', () => {
+    it('updates recurring event', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      const recurring = await prisma.recurringEvent.create({
+        data: {
+          title: 'Old Title',
+          address: '123 Main St',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+      })
+
+      const updated = await updateRecurringEvent(recurring.id, {
+        title: 'New Title',
+        address: '456 Oak Ave',
+      })
+
+      expect(updated.title).toBe('New Title')
+      expect(updated.address).toBe('456 Oak Ave')
+    })
+  })
+
+  describe('deleteRecurringEvent', () => {
+    it('soft deletes recurring event', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      const recurring = await prisma.recurringEvent.create({
+        data: {
+          title: 'Tuesday Run',
+          address: '123 Main St',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+      })
+
+      await deleteRecurringEvent(recurring.id)
+
+      const deleted = await prisma.recurringEvent.findUnique({
+        where: { id: recurring.id },
+      })
+      expect(deleted?.isActive).toBe(false)
+    })
+  })
+
+  describe('getRecurringEventById', () => {
+    it('returns recurring event with club relation', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      const recurring = await prisma.recurringEvent.create({
+        data: {
+          title: 'Tuesday Run',
+          address: '123 Main St',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+      })
+
+      const result = await getRecurringEventById(recurring.id)
+
+      expect(result?.id).toBe(recurring.id)
+      expect(result?.club.name).toBe('Test Club')
+    })
+
+    it('returns null if not found', async () => {
+      const result = await getRecurringEventById('nonexistent')
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('getRecurringEventsByClub', () => {
+    it('returns recurring events for club', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      await prisma.recurringEvent.create({
+        data: {
+          title: 'Tuesday Run',
+          address: '123 Main St',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+      })
+
+      await prisma.recurringEvent.create({
+        data: {
+          title: 'Saturday Run',
+          address: '456 Oak Ave',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=8;BYMINUTE=0',
+        },
+      })
+
+      const results = await getRecurringEventsByClub(club.id)
+
+      expect(results).toHaveLength(2)
+      expect(results[0].club.name).toBe('Test Club')
+    })
   })
 })
