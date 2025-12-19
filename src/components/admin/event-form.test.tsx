@@ -65,6 +65,23 @@ describe('EventForm', () => {
         expect(screen.getAllByText(/required/i).length).toBeGreaterThan(0)
       })
     })
+
+    it('redirects to /admin/events when onSuccess not provided', async () => {
+      const user = userEvent.setup()
+
+      render(<EventForm mode="create" clubs={[{ id: '1', name: 'Club 1' }]} />)
+
+      await user.type(screen.getByLabelText(/title/i), 'Morning Run')
+      await user.type(screen.getByLabelText(/date/i), '2025-12-01')
+      await user.type(screen.getByLabelText(/time/i), '10:00')
+      await user.type(screen.getByLabelText(/meeting location/i), '123 Main St')
+
+      await user.click(screen.getByRole('button', { name: /create/i }))
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/admin/events')
+      })
+    })
   })
 
   describe('Edit Mode', () => {
@@ -143,6 +160,27 @@ describe('EventForm', () => {
       )
 
       await user.click(screen.getByRole('button', { name: /delete/i }))
+
+      await waitFor(() => {
+        expect(mockPush).toHaveBeenCalledWith('/admin/events')
+      })
+    })
+
+    it('redirects to /admin/events after update when onSuccess not provided', async () => {
+      const user = userEvent.setup()
+
+      render(
+        <EventForm
+          mode="edit"
+          initialData={mockEvent}
+          clubs={[{ id: '1', name: 'Club 1' }]}
+        />
+      )
+
+      await user.clear(screen.getByLabelText(/title/i))
+      await user.type(screen.getByLabelText(/title/i), 'Updated Event')
+
+      await user.click(screen.getByRole('button', { name: /save/i }))
 
       await waitFor(() => {
         expect(mockPush).toHaveBeenCalledWith('/admin/events')

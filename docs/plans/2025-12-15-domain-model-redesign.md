@@ -277,15 +277,15 @@ Active: Road · Wed, Fri · Morning · Easy pace · < 10km
 - [x] Update event permission checks for club OR org ownership
 - [ ] Update Strava sync to work with new model (deferred)
 
-**Phase 2: Saved Addresses** ⬜ _Next up_
+**Phase 2: Saved Addresses** ✅ _Complete_
 
 Starting point: `src/lib/services/addresses.ts` (new file)
 
-- [ ] Create `src/lib/services/addresses.ts` with CRUD operations
-- [ ] Add API routes: `src/app/api/addresses/route.ts`
-- [ ] Add address picker component to event creation form
-- [ ] Auto-geocode addresses on save (reuse existing geocoding service)
-- [ ] UI for managing saved addresses in club/org settings
+- [x] Create `src/lib/services/addresses.ts` with CRUD operations
+- [x] Add API routes: `src/app/api/addresses/route.ts`
+- [x] Add address picker component to event creation form
+- [x] Auto-geocode addresses on save (reuse existing geocoding service)
+- [x] UI for managing saved addresses in club/org settings
 
 **Phase 3: Hybrid Recurring Events** ⬜
 

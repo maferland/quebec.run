@@ -15,6 +15,7 @@ import { FormInput } from '@/components/ui/form-input'
 import { FormTextarea } from '@/components/ui/form-textarea'
 import { FormSelect } from '@/components/ui/form-select'
 import { Button } from '@/components/ui/button'
+import { AddressPicker } from '@/components/admin/address-picker'
 import { useTranslations } from 'next-intl'
 import { useRouter } from 'next/navigation'
 import { Save, Trash2 } from 'lucide-react'
@@ -52,7 +53,7 @@ export function EventForm({
   const updateMutation = useUpdateEvent()
   const deleteMutation = useDeleteEvent()
 
-  const form = useFormWithSchema({
+  const form = useFormWithSchema<EventFormInput>({
     schema: eventCreateSchema,
     defaultValues: {
       title: initialData?.title || '',
@@ -65,6 +66,7 @@ export function EventForm({
       distance: initialData?.distance || '',
       pace: initialData?.pace || '',
       clubId: initialData?.clubId || clubs[0]?.id || '',
+      savedAddress: '',
     },
   })
 
@@ -72,19 +74,31 @@ export function EventForm({
     register,
     handleSubmit,
     formState: { errors, isSubmitting },
+    setValue,
+    watch,
   } = form
+
+  const selectedClubId = watch('clubId')
 
   const handleFormSubmit = handleSubmit(async (data: EventFormInput) => {
     try {
       if (mode === 'create') {
         const newEvent = await createMutation.mutateAsync(data)
-        onSuccess?.(newEvent)
+        if (onSuccess) {
+          onSuccess(newEvent)
+        } else {
+          router.push('/admin/events')
+        }
       } else if (mode === 'edit' && initialData) {
         const updatedEvent = await updateMutation.mutateAsync({
           id: initialData.id,
           data: { ...data, id: initialData.id },
         })
-        onSuccess?.(updatedEvent)
+        if (onSuccess) {
+          onSuccess(updatedEvent)
+        } else {
+          router.push('/admin/events')
+        }
       }
     } catch (error) {
       console.error('Form submission error:', error)
@@ -168,6 +182,15 @@ export function EventForm({
             options={clubOptions}
             required
           />
+
+          {selectedClubId && (
+            <AddressPicker
+              clubId={selectedClubId}
+              onAddressSelect={(address) => setValue('address', address)}
+              register={register}
+              error={errors.savedAddress}
+            />
+          )}
 
           <FormInput
             register={register}
