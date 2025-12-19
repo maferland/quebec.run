@@ -18,8 +18,11 @@ test.describe('Mobile Navigation', () => {
     const menuButton = page.getByRole('button', { name: /open menu/i })
     await menuButton.click()
 
-    await expect(page.getByRole('link', { name: /clubs/i })).toBeVisible()
-    await expect(page.getByRole('link', { name: /events/i })).toBeVisible()
+    const mobileMenu = page.locator('.fixed.top-20.right-4.left-4')
+    await expect(mobileMenu.getByRole('link', { name: /clubs/i })).toBeVisible()
+    await expect(
+      mobileMenu.getByRole('link', { name: /events/i })
+    ).toBeVisible()
 
     await expect(page).toHaveScreenshot('mobile-menu-open.png')
   })
