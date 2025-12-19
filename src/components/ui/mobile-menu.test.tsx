@@ -71,7 +71,6 @@ describe('MobileMenu', () => {
     const menuButton = screen.getByRole('button', { name: /open menu/i })
     await user.click(menuButton)
 
-    // Click backdrop
     const backdrop = document.querySelector('.fixed.inset-0') as HTMLElement
     await user.click(backdrop)
 
