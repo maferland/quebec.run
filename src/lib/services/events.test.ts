@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import { getAllEvents, createEvent, updateEvent, deleteEvent } from './events'
 import { geocodeAddress } from './geocoding'
+import { addDays } from 'date-fns'
 
 vi.mock('./geocoding')
 
@@ -433,6 +434,95 @@ describe('Events Service Integration Tests', () => {
       })
 
       expect(geocodeAddress).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getAllEvents with hybrid query', () => {
+    it('returns hybrid events (concrete + virtual from recurring patterns)', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      // Count existing events before adding recurring pattern
+      const existingEventsCount = await testPrisma.event.count()
+
+      // Create recurring pattern (weekly on Tuesdays)
+      const recurring = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Weekly Run',
+          address: '123 Main St',
+          clubId: testClub.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      // Create one concrete event from the pattern
+      const concreteDate = addDays(new Date(), 2)
+      await testPrisma.event.create({
+        data: {
+          title: 'Weekly Run',
+          date: concreteDate,
+          time: '18:00',
+          address: '123 Main St',
+          clubId: testClub.id,
+          recurringEventId: recurring.id,
+        },
+      })
+
+      const result = await getAllEvents({ data: { limit: 50, offset: 0 } })
+
+      // Should have more events than just concrete ones (virtual events expanded)
+      // At minimum: existing events + 1 concrete + at least 1 virtual occurrence
+      expect(result.length).toBeGreaterThan(existingEventsCount + 1)
+
+      // Virtual events should have composite IDs (format: "recurringId:date")
+      const virtualEvents = result.filter((e) => e.id.includes(':'))
+      expect(virtualEvents.length).toBeGreaterThan(0)
+    })
+
+    it('filters hybrid events by clubId at DB level', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+      const otherClub =
+        clubs[1] ||
+        (await testPrisma.club.create({
+          data: {
+            name: 'Other Club',
+            slug: 'other-club',
+            ownerId: await testPrisma.user.findFirst().then((u) => u!.id),
+          },
+        }))
+
+      // Create recurring patterns for both clubs
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Club 1 Weekly Run',
+          address: '123 Main St',
+          clubId: testClub.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Club 2 Weekly Run',
+          address: '456 Other St',
+          clubId: otherClub.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      // Get events filtered by testClub
+      const result = await getAllEvents({ data: { clubId: testClub.id } })
+
+      // All returned events should belong to testClub
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((event) => {
+        expect(event.clubId).toBe(testClub.id)
+        expect(event.club?.id).toBe(testClub.id)
+      })
     })
   })
 })

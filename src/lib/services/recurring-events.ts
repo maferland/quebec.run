@@ -173,16 +173,34 @@ export function createVirtualEvent(
  * Get events in date range using hybrid approach
  * @param startDate - Start of range
  * @param endDate - End of range
+ * @param clubId - Optional club filter
  * @returns Array of concrete + virtual events, sorted by date
  */
-export async function getEventsInRange(startDate: Date, endDate: Date) {
+export async function getEventsInRange(
+  startDate: Date,
+  endDate: Date,
+  clubId?: string
+) {
   // 1. Fetch concrete Events in range (exclude cancelled)
   const concreteEvents = await prisma.event.findMany({
     where: {
       date: { gte: startDate, lte: endDate },
       status: 'SCHEDULED',
+      ...(clubId && { clubId }),
     },
-    include: {
+    select: {
+      id: true,
+      title: true,
+      date: true,
+      time: true,
+      distance: true,
+      pace: true,
+      address: true,
+      latitude: true,
+      longitude: true,
+      clubId: true,
+      recurringEventId: true,
+      status: true,
       club: {
         select: {
           id: true,
@@ -196,7 +214,10 @@ export async function getEventsInRange(startDate: Date, endDate: Date) {
 
   // 2. Fetch active RecurringEvents with club relation
   const recurringEvents = await prisma.recurringEvent.findMany({
-    where: { isActive: true },
+    where: {
+      isActive: true,
+      ...(clubId && { clubId }),
+    },
     include: {
       club: true,
     },

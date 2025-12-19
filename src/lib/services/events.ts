@@ -9,49 +9,26 @@ import type {
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 import { geocodeAddress } from './geocoding'
+import { getEventsInRange } from './recurring-events'
+import { addDays } from 'date-fns'
 
 // Pure business logic functions - let TypeScript infer return types
 
 export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   const { limit = 50, offset = 0, clubId } = data
 
-  // Get today's date at midnight to include today's events but exclude past days
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
+  // Calculate date range (today + next 60 days for good coverage)
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  const endDate = addDays(startDate, 60)
 
-  const where = {
-    date: {
-      gte: today, // Include events from today (00:00) forward, excluding yesterday and earlier
-    },
-    ...(clubId && { clubId }),
-  }
+  // Use hybrid query to get concrete + virtual events
+  const events = await getEventsInRange(startDate, endDate, clubId)
 
-  const events = await prisma.event.findMany({
-    where,
-    orderBy: { date: 'asc' },
-    take: limit,
-    skip: offset,
-    select: {
-      id: true,
-      title: true,
-      date: true,
-      time: true,
-      distance: true,
-      pace: true,
-      address: true,
-      latitude: true,
-      longitude: true,
-      club: {
-        select: {
-          id: true,
-          name: true,
-          slug: true,
-        },
-      },
-    },
-  })
+  // Apply pagination
+  const paginatedEvents = events.slice(offset, offset + limit)
 
-  return events
+  return paginatedEvents
 }
 
 export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]

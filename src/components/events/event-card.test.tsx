@@ -7,6 +7,7 @@ import type { GetAllEventsReturn } from '@/lib/services/events'
 const mockEventWithClub: GetAllEventsReturn = {
   id: 'event-1',
   title: 'Morning 5K Run',
+  description: null,
   address: '250 3e Rue, Québec, QC G1L 2B3',
   date: new Date('2025-09-04T06:00:00-04:00'),
   time: '06:00',
@@ -14,6 +15,13 @@ const mockEventWithClub: GetAllEventsReturn = {
   pace: '5:30 /km',
   latitude: 46.8139,
   longitude: -71.208,
+  status: 'SCHEDULED' as const,
+  clubId: 'club-1',
+  organizationId: null,
+  recurringEventId: null,
+  createdAt: new Date(),
+  updatedAt: new Date(),
+  geocodedAt: null,
   club: {
     id: 'club-1',
     name: 'Quebec Running Club',
@@ -363,6 +371,7 @@ describe('EventCard Component', () => {
       const minimalEvent: GetAllEventsReturn = {
         id: 'minimal-event',
         title: 'Minimal Event',
+        description: null,
         address: null,
         date: new Date('2025-09-04T06:00:00'),
         time: '06:00',
@@ -370,6 +379,13 @@ describe('EventCard Component', () => {
         pace: null,
         latitude: null,
         longitude: null,
+        status: 'SCHEDULED' as const,
+        clubId: 'club-1',
+        organizationId: null,
+        recurringEventId: null,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        geocodedAt: null,
         club: {
           id: 'club-1',
           name: 'Test Club',
