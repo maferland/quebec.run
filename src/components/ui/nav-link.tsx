@@ -12,7 +12,7 @@ export function NavLink({ href, children, isActive = false }: NavLinkProps) {
     <Link
       href={href}
       className={cn(
-        'flex items-center space-x-1 px-3 py-2 rounded-lg font-body transition-all duration-200',
+        'flex items-center space-x-1 px-3 py-3 rounded-lg font-body transition-all duration-200 min-h-[44px]',
         'hover:bg-primary/5 hover:text-primary hover:shadow-sm hover:scale-105',
         isActive ? 'text-primary bg-primary/10 shadow-sm' : 'text-accent'
       )}

@@ -134,4 +134,54 @@ describe('MobileMenu', () => {
       screen.queryByRole('link', { name: /admin/i })
     ).not.toBeInTheDocument()
   })
+
+  it('closes menu when ESC key is pressed', async () => {
+    const user = userEvent.setup()
+    render(<MobileMenu />)
+
+    const menuButton = screen.getByRole('button', { name: /open menu/i })
+    await user.click(menuButton)
+
+    expect(screen.getByRole('link', { name: /clubs/i })).toBeInTheDocument()
+
+    await user.keyboard('{Escape}')
+
+    await waitFor(
+      () => {
+        expect(
+          screen.queryByRole('link', { name: /clubs/i })
+        ).not.toBeInTheDocument()
+      },
+      { timeout: 500 }
+    )
+  })
+
+  it('focuses first element when menu opens', async () => {
+    const user = userEvent.setup()
+    render(<MobileMenu />)
+
+    const menuButton = screen.getByRole('button', { name: /open menu/i })
+    await user.click(menuButton)
+
+    const clubsLink = screen.getByRole('link', { name: /clubs/i })
+    expect(clubsLink).toHaveFocus()
+  })
+
+  it('returns focus to button when menu closes', async () => {
+    const user = userEvent.setup()
+    render(<MobileMenu />)
+
+    const menuButton = screen.getByRole('button', { name: /open menu/i })
+    await user.click(menuButton)
+
+    const closeButton = screen.getByRole('button', { name: /close menu/i })
+    await user.click(closeButton)
+
+    await waitFor(
+      () => {
+        expect(menuButton).toHaveFocus()
+      },
+      { timeout: 500 }
+    )
+  })
 })

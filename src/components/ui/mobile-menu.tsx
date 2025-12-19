@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { NavigationLinks } from '@/components/layout/navigation-links'
 import { AuthButtons } from '@/components/layout/auth-buttons'
 import { useTranslations } from 'next-intl'
@@ -9,6 +9,8 @@ export function MobileMenu() {
   const [isOpen, setIsOpen] = useState(false)
   const [isAnimating, setIsAnimating] = useState(false)
   const t = useTranslations('navigation')
+  const menuRef = useRef<HTMLDivElement>(null)
+  const buttonRef = useRef<HTMLButtonElement>(null)
 
   const toggleMenu = () => {
     if (!isOpen) {
@@ -21,9 +23,13 @@ export function MobileMenu() {
 
   const closeMenu = () => {
     setIsAnimating(false)
-    setTimeout(() => setIsOpen(false), 200)
+    setTimeout(() => {
+      setIsOpen(false)
+      buttonRef.current?.focus()
+    }, 200)
   }
 
+  // Body scroll lock
   useEffect(() => {
     if (isOpen) {
       document.body.style.overflow = 'hidden'
@@ -35,14 +41,65 @@ export function MobileMenu() {
     }
   }, [isOpen])
 
+  // ESC key handler
+  useEffect(() => {
+    if (!isOpen) return
+
+    const handleEscape = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        closeMenu()
+      }
+    }
+
+    document.addEventListener('keydown', handleEscape)
+    return () => document.removeEventListener('keydown', handleEscape)
+  }, [isOpen])
+
+  // Focus trap
+  useEffect(() => {
+    if (!isOpen || !menuRef.current) return
+
+    const focusableElements = menuRef.current.querySelectorAll<HTMLElement>(
+      'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+    )
+
+    if (focusableElements.length === 0) return
+
+    const firstElement = focusableElements[0]
+    const lastElement = focusableElements[focusableElements.length - 1]
+
+    // Focus first element when menu opens
+    firstElement?.focus()
+
+    const handleTab = (e: KeyboardEvent) => {
+      if (e.key !== 'Tab') return
+
+      if (e.shiftKey) {
+        if (document.activeElement === firstElement) {
+          e.preventDefault()
+          lastElement?.focus()
+        }
+      } else {
+        if (document.activeElement === lastElement) {
+          e.preventDefault()
+          firstElement?.focus()
+        }
+      }
+    }
+
+    document.addEventListener('keydown', handleTab)
+    return () => document.removeEventListener('keydown', handleTab)
+  }, [isOpen, isAnimating])
+
   return (
     <div className="sm:hidden">
       {/* Hamburger Menu Button */}
       <button
+        ref={buttonRef}
         onClick={toggleMenu}
         aria-label={isOpen ? t('closeMenu') : t('openMenu')}
         aria-expanded={isOpen}
-        className="relative z-[1002] p-2 rounded-lg hover:bg-surface-variant transition-colors"
+        className="relative z-[1002] p-3 rounded-lg hover:bg-surface-variant transition-colors"
       >
         <div className="relative w-6 h-6 flex items-center justify-center">
           <span className="sr-only">
@@ -82,6 +139,7 @@ export function MobileMenu() {
 
           {/* Menu Content */}
           <div
+            ref={menuRef}
             className={`fixed top-20 right-4 left-4 bg-surface border border-border rounded-lg shadow-lg z-[1001] p-4 transition-all duration-200 ${
               isAnimating
                 ? 'opacity-100 translate-y-0'
