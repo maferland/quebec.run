@@ -73,3 +73,37 @@ export async function generateEventsFromRecurring(
 
   return events.length
 }
+
+/**
+ * Generate events for all active recurring events
+ * Called by cron job
+ * @param daysAhead - How many days ahead to generate (default: 7)
+ * @returns Summary with processed count, created count, and errors
+ */
+export async function generateAllRecurringEvents(
+  daysAhead: number = 7
+): Promise<{ processed: number; created: number; errors: string[] }> {
+  const recurringEvents = await prisma.recurringEvent.findMany({
+    where: { isActive: true },
+  })
+
+  let totalCreated = 0
+  const errors: string[] = []
+
+  for (const re of recurringEvents) {
+    try {
+      const created = await generateEventsFromRecurring(re, daysAhead)
+      totalCreated += created
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error)
+      errors.push(`Failed for ${re.id}: ${message}`)
+      console.error(`Generation failed for ${re.id}:`, error)
+    }
+  }
+
+  return {
+    processed: recurringEvents.length,
+    created: totalCreated,
+    errors,
+  }
+}
