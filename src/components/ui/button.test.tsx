@@ -135,21 +135,21 @@ describe('Button Component', () => {
       render(<Button>Medium Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-4', 'py-2', 'text-sm')
+      expect(button).toHaveClass('px-4', 'py-3', 'text-sm', 'min-h-[44px]')
     })
 
     it('applies small size when specified', () => {
       render(<Button size="sm">Small Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-3', 'py-1.5', 'text-sm')
+      expect(button).toHaveClass('px-3', 'py-2.5', 'text-sm', 'min-h-[44px]')
     })
 
     it('applies large size when specified', () => {
       render(<Button size="lg">Large Button</Button>)
 
       const button = screen.getByRole('button')
-      expect(button).toHaveClass('px-6', 'py-3', 'text-base')
+      expect(button).toHaveClass('px-6', 'py-3', 'text-base', 'min-h-[48px]')
     })
   })
 
@@ -183,8 +183,9 @@ describe('Button Component', () => {
         'border-border',
         'bg-surface',
         'px-3',
-        'py-1.5',
-        'text-sm'
+        'py-2.5',
+        'text-sm',
+        'min-h-[44px]'
       )
     })
   })
@@ -221,7 +222,7 @@ describe('Button Component', () => {
         'items-center',
         'justify-center'
       )
-      expect(button).toHaveClass('bg-primary', 'px-4', 'py-2')
+      expect(button).toHaveClass('bg-primary', 'px-4', 'py-3', 'min-h-[44px]')
       // Should have custom class
       expect(button).toHaveClass('custom-class')
     })
