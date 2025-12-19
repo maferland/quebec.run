@@ -44,7 +44,12 @@ export function AddressPicker<
     }
   }
 
-  if (isLoading || !addresses || addresses.length === 0) {
+  if (isLoading) {
+    return null
+  }
+
+  // Don't show if there are no saved addresses
+  if (!addresses || addresses.length === 0) {
     return null
   }
 

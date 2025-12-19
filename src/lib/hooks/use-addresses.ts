@@ -3,7 +3,7 @@ import type {
   AddressCreate,
   AddressUpdate,
   AddressesQuery,
-} from '@/lib/services/addresses'
+} from '@/lib/schemas/addresses'
 
 export type Address = {
   id: string
