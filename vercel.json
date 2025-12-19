@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/materialize-events",
+      "schedule": "0 2 * * 0"
+    }
+  ]
+}
