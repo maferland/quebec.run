@@ -1,5 +1,9 @@
 import { describe, it, expect } from 'vitest'
-import { buildRRuleString, parseRRuleToForm } from './rrule-builder'
+import {
+  buildRRuleString,
+  parseRRuleToForm,
+  validateRRulePattern,
+} from './rrule-builder'
 
 describe('buildRRuleString', () => {
   it('builds weekly pattern with single day', () => {
@@ -103,5 +107,33 @@ describe('parseRRuleToForm', () => {
     expect(form.time).toBe('18:00')
     expect(form.until).toBeInstanceOf(Date)
     expect(form.until?.getFullYear()).toBe(2025)
+  })
+})
+
+describe('validateRRulePattern', () => {
+  it('accepts valid weekly pattern', () => {
+    expect(() => {
+      validateRRulePattern('FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0')
+    }).not.toThrow()
+  })
+
+  it('throws on invalid RRule syntax', () => {
+    expect(() => {
+      validateRRulePattern('INVALID_PATTERN')
+    }).toThrow('Invalid recurrence pattern')
+  })
+
+  it('throws on pattern generating too many events', () => {
+    expect(() => {
+      validateRRulePattern('FREQ=DAILY;BYHOUR=18;BYMINUTE=0')
+    }).toThrow('generates too many events')
+  })
+
+  it('accepts biweekly pattern under limit', () => {
+    expect(() => {
+      validateRRulePattern(
+        'FREQ=WEEKLY;INTERVAL=2;BYDAY=SA;BYHOUR=8;BYMINUTE=0'
+      )
+    }).not.toThrow()
   })
 })

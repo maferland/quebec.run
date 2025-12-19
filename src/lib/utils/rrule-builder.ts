@@ -1,4 +1,5 @@
 import { RRule } from 'rrule'
+import { addYears } from 'date-fns'
 
 export type RecurrenceFormState = {
   frequency: 'weekly' | 'biweekly' | 'monthly'
@@ -89,5 +90,35 @@ export function parseRRuleToForm(rruleString: string): RecurrenceFormState {
     byweekday,
     time,
     until: opts.until || null,
+  }
+}
+
+/**
+ * Validate RRule pattern is parseable and safe
+ * @param pattern - RRule string to validate
+ * @throws Error if invalid or generates too many events
+ */
+export function validateRRulePattern(pattern: string): void {
+  try {
+    const rule = RRule.fromString(pattern)
+
+    // Safety check: prevent patterns generating >=365 events/year
+    const now = new Date()
+    const oneYear = addYears(now, 1)
+    const count = rule.between(now, oneYear, true).length
+
+    if (count >= 365) {
+      throw new Error(
+        `Pattern generates too many events (${count}/year, max 365/year)`
+      )
+    }
+  } catch (error) {
+    if (
+      error instanceof Error &&
+      error.message.includes('generates too many')
+    ) {
+      throw error
+    }
+    throw new Error(`Invalid recurrence pattern: ${error}`)
   }
 }
