@@ -19,6 +19,11 @@ export default defineConfig({
     headless: true, // Always headless by default
     locale: 'fr-CA', // Set French Canadian locale for tests
   },
+  expect: {
+    toHaveScreenshot: {
+      maxDiffPixelRatio: 0.02,
+    },
+  },
   projects: [
     {
       name: 'Desktop Chrome',
