@@ -183,7 +183,8 @@
       "saving": "Enregistrement...",
       "creating": "Création...",
       "updating": "Mise à jour...",
-      "deleting": "Suppression..."
+      "deleting": "Suppression...",
+      "deleteEvent": "Supprimer"
     }
   },
   "admin": {

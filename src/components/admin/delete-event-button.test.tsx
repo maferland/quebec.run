@@ -37,10 +37,10 @@ describe('DeleteEventButton', () => {
     mockConfirm.mockReturnValue(true)
   })
 
-  it('renders delete button with trash icon', () => {
+  it('renders delete button with text and icon', () => {
     render(<DeleteEventButton eventId="event-123" />)
 
-    const button = screen.getByRole('button')
+    const button = screen.getByRole('button', { name: /delete/i })
     expect(button).toBeInTheDocument()
     expect(button).toHaveAttribute('type', 'button')
   })

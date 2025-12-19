@@ -183,7 +183,8 @@
       "saving": "Saving...",
       "creating": "Creating...",
       "updating": "Updating...",
-      "deleting": "Deleting..."
+      "deleting": "Deleting...",
+      "deleteEvent": "Delete"
     }
   },
   "admin": {
