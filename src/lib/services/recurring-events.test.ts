@@ -3,6 +3,8 @@ import { prisma } from '@/lib/prisma'
 import {
   generateEventsFromRecurring,
   generateAllRecurringEvents,
+  expandRRuleDates,
+  createVirtualEvent,
 } from './recurring-events'
 import { addDays } from 'date-fns'
 
@@ -259,5 +261,87 @@ describe('generateAllRecurringEvents', () => {
       where: { title: 'Valid Run' },
     })
     expect(validEvents.length).toBeGreaterThan(0)
+  })
+})
+
+describe('Hybrid query helpers', () => {
+  beforeEach(async () => {
+    await prisma.event.deleteMany()
+    await prisma.recurringEvent.deleteMany()
+    await prisma.club.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  describe('expandRRuleDates', () => {
+    it('expands weekly pattern for date range', () => {
+      const pattern = 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0'
+      const start = new Date('2025-12-01')
+      const end = new Date('2025-12-31')
+
+      const dates = expandRRuleDates(pattern, start, end)
+
+      expect(dates.length).toBeGreaterThanOrEqual(2)
+      dates.forEach((d) => expect(d.getDay()).toBe(2)) // Tuesday
+    })
+
+    it('returns empty array for dates outside pattern range', () => {
+      const pattern = 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0;UNTIL=20251220'
+      const start = new Date('2025-12-25')
+      const end = new Date('2025-12-31')
+
+      const dates = expandRRuleDates(pattern, start, end)
+
+      expect(dates).toHaveLength(0)
+    })
+  })
+
+  describe('createVirtualEvent', () => {
+    it('creates virtual event from recurring pattern', async () => {
+      const user = await prisma.user.create({
+        data: { email: 'test@example.com' },
+      })
+      const org = await prisma.organization.create({
+        data: { name: 'Test Org', slug: 'test-org', ownerId: user.id },
+      })
+      const club = await prisma.club.create({
+        data: {
+          name: 'Test Club',
+          slug: 'test-club',
+          ownerId: user.id,
+          organizationId: org.id,
+        },
+      })
+
+      const recurring = await prisma.recurringEvent.create({
+        data: {
+          title: 'Tuesday Run',
+          description: 'Weekly run',
+          address: '123 Main St',
+          distance: '5km',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+        include: { club: true },
+      })
+
+      const date = new Date('2025-12-24T18:00:00')
+      const virtual = createVirtualEvent(recurring, date)
+
+      expect(virtual.id).toContain(recurring.id)
+      expect(virtual.id).toContain('2025-12-24')
+      expect(virtual.title).toBe('Tuesday Run')
+      expect(virtual.description).toBe('Weekly run')
+      expect(virtual.address).toBe('123 Main St')
+      expect(virtual.distance).toBe('5km')
+      expect(virtual.date).toEqual(date)
+      expect(virtual.time).toBe('18:00')
+      expect(virtual.recurringEventId).toBe(recurring.id)
+      expect(virtual.club).toEqual({
+        id: club.id,
+        name: club.name,
+        slug: club.slug,
+      })
+    })
   })
 })

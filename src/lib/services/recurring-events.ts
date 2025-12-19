@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { RRule } from 'rrule'
-import { addDays, min } from 'date-fns'
-import type { RecurringEvent } from '@prisma/client'
+import { addDays, min, format } from 'date-fns'
+import type { RecurringEvent, Club } from '@prisma/client'
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -105,5 +105,66 @@ export async function generateAllRecurringEvents(
     processed: recurringEvents.length,
     created: totalCreated,
     errors,
+  }
+}
+
+/**
+ * Expand RRule pattern to concrete dates within range
+ * @param pattern - RRule string
+ * @param startDate - Start of range
+ * @param endDate - End of range
+ * @returns Array of dates
+ */
+export function expandRRuleDates(
+  pattern: string,
+  startDate: Date,
+  endDate: Date
+): Date[] {
+  const rule = RRule.fromString(pattern)
+  return rule.between(startDate, endDate, true)
+}
+
+/**
+ * Create virtual event object from RecurringEvent + date
+ * @param recurringEvent - RecurringEvent with club relation
+ * @param date - Specific occurrence date
+ * @returns Virtual event object
+ */
+export function createVirtualEvent(
+  recurringEvent: RecurringEvent & { club: Club },
+  date: Date
+) {
+  const rule = RRule.fromString(recurringEvent.schedulePattern)
+  const opts = rule.options
+
+  const hour = String(opts.byhour?.[0] ?? 0).padStart(2, '0')
+  const minute = String(opts.byminute?.[0] ?? 0).padStart(2, '0')
+  const eventTime = `${hour}:${minute}`
+
+  const dateKey = format(date, 'yyyy-MM-dd')
+
+  return {
+    id: `${recurringEvent.id}:${dateKey}`,
+    title: recurringEvent.title,
+    description: recurringEvent.description,
+    date,
+    time: eventTime,
+    address: recurringEvent.address,
+    latitude: recurringEvent.latitude,
+    longitude: recurringEvent.longitude,
+    distance: recurringEvent.distance,
+    pace: recurringEvent.pace,
+    status: 'SCHEDULED' as const,
+    clubId: recurringEvent.clubId,
+    organizationId: null,
+    recurringEventId: recurringEvent.id,
+    createdAt: recurringEvent.createdAt,
+    updatedAt: recurringEvent.updatedAt,
+    geocodedAt: null,
+    club: {
+      id: recurringEvent.club.id,
+      name: recurringEvent.club.name,
+      slug: recurringEvent.club.slug,
+    },
   }
 }
