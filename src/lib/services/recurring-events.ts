@@ -1,0 +1,75 @@
+import { prisma } from '@/lib/prisma'
+import { RRule } from 'rrule'
+import { addDays, min } from 'date-fns'
+import type { RecurringEvent } from '@prisma/client'
+
+/**
+ * Generate Event records from RecurringEvent pattern
+ * @param recurringEvent - RecurringEvent record from DB
+ * @param daysAhead - How many days ahead to generate (default: 7)
+ * @returns Number of events created
+ */
+export async function generateEventsFromRecurring(
+  recurringEvent: RecurringEvent,
+  daysAhead: number = 7
+): Promise<number> {
+  // 1. Parse RRule
+  const rule = RRule.fromString(recurringEvent.schedulePattern)
+  const opts = rule.options
+
+  // Extract time from RRule options
+  const hour = String(opts.byhour?.[0] ?? 0).padStart(2, '0')
+  const minute = String(opts.byminute?.[0] ?? 0).padStart(2, '0')
+  const eventTime = `${hour}:${minute}`
+
+  // 2. Calculate date range
+  const now = new Date()
+  const horizon = addDays(now, daysAhead)
+  const until = recurringEvent.generateUntil
+    ? min([horizon, recurringEvent.generateUntil])
+    : horizon
+
+  // 3. Generate dates within range
+  const dates = rule.between(now, until, true)
+
+  if (dates.length === 0) {
+    return 0
+  }
+
+  // 4. Check existing events (idempotency)
+  const existing = await prisma.event.findMany({
+    where: {
+      recurringEventId: recurringEvent.id,
+      date: { in: dates },
+    },
+    select: { date: true },
+  })
+
+  const existingDates = new Set(existing.map((e) => e.date.toISOString()))
+
+  // 5. Filter to only new dates
+  const newDates = dates.filter((d) => !existingDates.has(d.toISOString()))
+
+  if (newDates.length === 0) {
+    return 0
+  }
+
+  // 6. Create Event records
+  const events = newDates.map((date) => ({
+    title: recurringEvent.title,
+    description: recurringEvent.description,
+    date,
+    time: eventTime,
+    address: recurringEvent.address,
+    latitude: recurringEvent.latitude,
+    longitude: recurringEvent.longitude,
+    distance: recurringEvent.distance,
+    pace: recurringEvent.pace,
+    clubId: recurringEvent.clubId,
+    recurringEventId: recurringEvent.id,
+  }))
+
+  await prisma.event.createMany({ data: events })
+
+  return events.length
+}
