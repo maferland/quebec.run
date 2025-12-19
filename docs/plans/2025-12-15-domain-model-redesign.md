@@ -313,6 +313,33 @@ Starting point: `src/components/events/EventFilters.tsx` (new)
 - [ ] Shareable widgets for social media
 - [ ] UI for paused clubs ("Usually meets Tuesdays — currently paused")
 
+**Phase 6: Club Owner Dashboard & Permissions** ⬜ **[NEEDS BRAINSTORMING]**
+
+Starting point: Consider separate routes (`/dashboard/[club-slug]`) vs reusing `/admin`
+
+- [ ] **Club owner access**: Define permissions model - should club owners access `/admin` or separate dashboard?
+  - Current: `/admin` requires `isStaff` (platform staff only)
+  - Question: Separate routes or role-based admin sections?
+- [ ] **Org/Club-centric navigation**: Restructure admin from flat list to hierarchical
+  - Navigation: Org → Clubs → Events/Addresses
+  - No club picker in event dropdown - context from current club view
+  - Switch between clubs via sidebar/dropdown
+  - Each club view shows: Overview (edit info) → Saved Addresses → Events (list + create) → Settings
+- [ ] **Prefilled address locking**: Decide if savedAddress selection should lock event address field
+  - Option A: Lock field (readonly) when savedAddress selected - enforces data integrity
+  - Option B: Copy on select, keep editable - more flexible if address changes
+  - Question: What happens if saved address changes after events use it?
+- [ ] **Account deletion safeguards**: Prevent data loss when club owner deletes account
+  - Current: `onDelete: Cascade` - deleting user deletes all clubs
+  - Recommendation: Require ownership transfer before deletion
+  - Consider: Orphan clubs with soft delete? Special "deleted-user" account?
+- [ ] **URL state management**: Persist UI state in URL for shareability and refresh
+  - Active tab (e.g., `/admin/clubs/[slug]/edit?tab=addresses`)
+  - Expanded sections/toggles
+  - Filter selections on list pages
+  - Enables: direct links to specific tabs, browser back/forward, page refresh without state loss
+  - Implementation: Next.js `useSearchParams` + `router.push` with shallow routing
+
 ---
 
 ## 6. Key Files to Modify
