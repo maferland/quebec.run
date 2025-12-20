@@ -19,6 +19,7 @@ const mockClub: GetAllClubsReturn = {
   slug: '6am-club',
   description:
     'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
+  stravaSlug: null,
   events: [
     {
       id: 'event-1',

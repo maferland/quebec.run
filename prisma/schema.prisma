@@ -83,7 +83,7 @@ model Club {
 
   // Strava integration
   stravaClubId String?   @unique
-  stravaSlug   String?
+  stravaSlug   String?   @unique
   isManual     Boolean   @default(true)
   lastSynced   DateTime?
 

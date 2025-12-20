@@ -4,6 +4,7 @@ import type {
   ClubCreate,
   ClubUpdate,
   ClubWithEvents,
+  StravaSyncResponse,
 } from '@/lib/schemas'
 
 // API functions
@@ -40,7 +41,10 @@ async function createClub(data: ClubCreate): Promise<ClubWithEvents> {
   })
 
   if (!response.ok) {
-    throw new Error('Failed to create club')
+    const error = await response
+      .json()
+      .catch(() => ({ error: 'Failed to create club' }))
+    throw new Error(error.error || 'Failed to create club')
   }
 
   return response.json()
@@ -60,7 +64,10 @@ async function updateClub({
   })
 
   if (!response.ok) {
-    throw new Error('Failed to update club')
+    const error = await response
+      .json()
+      .catch(() => ({ error: 'Failed to update club' }))
+    throw new Error(error.error || 'Failed to update club')
   }
 
   return response.json()
@@ -73,6 +80,17 @@ async function deleteClub(id: string): Promise<{ success: boolean }> {
 
   if (!response.ok) {
     throw new Error('Failed to delete club')
+  }
+
+  return response.json()
+}
+
+async function fetchStravaClub(clubId: string): Promise<StravaSyncResponse> {
+  const response = await fetch(`/api/strava/clubs/${clubId}`)
+
+  if (!response.ok) {
+    const error = await response.json()
+    throw new Error(error.error || 'Failed to fetch Strava club')
   }
 
   return response.json()
@@ -125,5 +143,12 @@ export function useDeleteClub() {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clubs'] })
     },
+  })
+}
+
+export function useStravaSync() {
+  return useMutation({
+    mutationFn: fetchStravaClub,
+    // No cache invalidation needed - this doesn't modify our DB
   })
 }
