@@ -7,7 +7,7 @@ export default defineConfig({
   testDir: './e2e',
   testMatch: '**/*.spec.ts',
   snapshotPathTemplate:
-    '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}{ext}',
+    '{testDir}/{testFileDir}/{testFileName}-snapshots/{arg}-{projectName}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
