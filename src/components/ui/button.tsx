@@ -1,7 +1,6 @@
 import { cn } from '@/lib/utils'
 
-export interface ButtonProps
-  extends React.ButtonHTMLAttributes<HTMLButtonElement> {
+export interface ButtonProps extends React.ButtonHTMLAttributes<HTMLButtonElement> {
   variant?:
     | 'primary'
     | 'secondary'
@@ -34,7 +33,7 @@ export function Button({
     'outline-accent':
       'border border-accent bg-surface text-accent hover:bg-accent/5 hover:border-accent/80 focus:ring-focus',
     destructive:
-      'border border-red-200 bg-surface text-red-600 hover:bg-red-50 hover:border-red-300 focus:ring-red-500',
+      'bg-red-600 text-white border border-red-600 hover:bg-red-700 hover:border-red-700 focus:ring-red-500',
   }
 
   const sizes = {
