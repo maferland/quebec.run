@@ -448,5 +448,14 @@ describe('EventCard Component', () => {
       expect(link).toBeVisible()
       expect(link).not.toHaveAttribute('tabindex', '-1')
     })
+
+    it('renders title with hover underline affordance', () => {
+      render(<EventCard event={mockEventWithClub} />)
+
+      const title = screen.getByRole('heading', {
+        name: mockEventWithClub.title,
+      })
+      expect(title).toHaveClass('hover:underline')
+    })
   })
 })

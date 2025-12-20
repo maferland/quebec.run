@@ -19,7 +19,7 @@ export function EventCard({ event, showClubName = false }: EventCardProps) {
         <div className="h-16 mb-3">
           <div className="flex items-start gap-3 h-full">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-heading font-bold text-primary mb-2 line-clamp-2 leading-tight">
+              <h3 className="text-lg font-heading font-bold text-primary hover:underline mb-2 line-clamp-2 leading-tight">
                 {event.title}
               </h3>
               {showClubName && event.club && (
