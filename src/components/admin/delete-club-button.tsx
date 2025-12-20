@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Trash2 } from 'lucide-react'
 import { useDeleteClub } from '@/lib/hooks/use-clubs'
 import { useRouter } from '@/i18n/navigation'
@@ -21,6 +21,13 @@ export const DeleteClubButton = ({
   const [isDeleting, setIsDeleting] = useState(false)
   const deleteClub = useDeleteClub()
   const router = useRouter()
+  const isMounted = useRef(true)
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false
+    }
+  }, [])
   const t = useTranslations('forms.actions')
 
   const handleDelete = async () => {
@@ -33,7 +40,9 @@ export const DeleteClubButton = ({
       console.error('Failed to delete club:', error)
       alert('Failed to delete club. Please try again.')
     } finally {
-      setIsDeleting(false)
+      if (isMounted.current) {
+        setIsDeleting(false)
+      }
     }
   }
 
