@@ -246,6 +246,22 @@
       "description": "Ceci supprimera définitivement {entityName}. Cette action est irréversible.",
       "cancel": "Annuler",
       "delete": "Supprimer"
+    },
+    "recurringEvents": {
+      "title": "Événements récurrents",
+      "create": "Créer un modèle",
+      "edit": "Modifier le modèle",
+      "confirmDelete": "Supprimer cet événement récurrent? Toutes les occurrences futures seront supprimées.",
+      "paused": "En pause",
+      "frequency": "Fréquence",
+      "weekly": "Hebdomadaire",
+      "biweekly": "Aux deux semaines",
+      "monthly": "Mensuel",
+      "days": "Jours",
+      "time": "Heure",
+      "nextOccurrences": "Prochaines occurrences:",
+      "noUpcoming": "Aucune occurrence à venir",
+      "invalidPattern": "Modèle de récurrence invalide"
     }
   },
   "legal": {
