@@ -27,7 +27,8 @@ describe('schemas', () => {
 
       expect(() => clubCreateSchema.parse(validData)).not.toThrow()
       const parsed = clubCreateSchema.parse(validData)
-      expect(parsed).toEqual(validData)
+      expect(parsed).toMatchObject(validData)
+      expect(parsed.lastSynced).toBeNull()
     })
 
     it('requires name field', () => {
