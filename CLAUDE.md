@@ -1,192 +1,66 @@
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+# Project Guidelines
 
-- [CLAUDE.md — Concise Development Guidelines](#claudemd--concise-development-guidelines)
-  - [1) Principles](#1-principles)
-  - [2) Tech Stack Rules](#2-tech-stack-rules)
-  - [3) Testing Strategy](#3-testing-strategy)
-  - [4) Workflow & Quality Gates](#4-workflow--quality-gates)
-  - [5) Code Style & Patterns](#5-code-style--patterns)
-  - [6) Worktree Workflow](#6-worktree-workflow)
-  - [7) Boy Scout Rule](#7-boy-scout-rule)
-  - [Appendix: Quick "Always/Never" Cheatsheet](#appendix-quick-alwaysnever-cheatsheet)
-
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
-
-# CLAUDE.md — Concise Development Guidelines
-
-We build fast, safe, and user-centered software. This page distills the non-negotiables.
-
-## 1) Principles
-
-**Efficiency (batch work):** Plan first, then batch tool calls and file ops to respect usage limits. Prefer one comprehensive command over many small ones.
-
-**Quality gates are sacred:** We never bypass pre-commit/CI gates. If a gate fails, we fix the root cause.
-
-**YAGNI:** Ship what’s needed now. Avoid speculative props, hooks, and abstractions. Design with awareness of likely near-term changes (schemas, APIs) without over-engineering.
-
-**UI/UX & Accessibility:** WCAG AA minimum (AAA when practical). Use semantic HTML, clear hierarchy, responsive layouts, and keyboard-first interactions. Keep contrast strong in all interactive states.
-
-**Performance & Security:** Optimize assets and queries; handle secrets safely; validate inputs at boundaries.
-
-## 2) Tech Stack Rules
-
-**Next.js App Router (13+):**
-
-- Use `app/` file-based routing. Prefer Server Components; add `'use client'` only when necessary.
-- Use the Metadata API for SEO; use `loading.tsx`, `error.tsx`, `not-found.tsx` for states.
-- Implement APIs with route handlers in `app/api/` and keep them thin (delegate to services).
-
-**REST + React Query:**
-
-- Keep route handlers minimal; call pure service functions (no business logic in handlers).
-- Use Zod at the edge (request/response) for type-safe APIs.
-
-**Prisma + PostgreSQL:**
-
-- Use `prisma migrate dev` (never `db push`); CUIDs for IDs; enforce FKs/constraints.
-- **Avoid N+1:** fetch relations in one query via `include` or precomputed queries; never loop and query.
-- **Least data:** prefer `select` with only required fields; avoid `include: true` unless justified.
-- Write small, reviewed migrations; seeds are deterministic (factories).
-
-**Zod Validation:**
-
-- Keep schemas near usage or in dedicated modules; infer TS types from Zod. Validate inputs, forms, APIs, and env vars.
-
-**NextAuth:**
-
-- Use Prisma adapter; type sessions via module augmentation; protect APIs with `withAuth`.
-
-**TypeScript:**
-
-- `"strict": true`. Prefer `type` over `interface` for simple shapes, `export type` for type-only exports. Avoid `any`; use `unknown` or specific types. Use `as const` for literals.
-
-**Tailwind:**
-
-- Mobile-first. Use `cn` for conditional classes. Keep class order semantic (layout → style → behavior).
-
-## 3) Testing Strategy
-
-Cover the right layer(s); don’t duplicate assertions across layers.
-
-**Unit (components, pure functions):**
-
-- Test behavior like a user (roles, labels, names). Prefer `@testing-library/user-event`. Avoid CSS selectors/test IDs unless no a11y handle exists.
-
-**Integration (services + DB):**
-
-- Use a real test DB with explicit `TEST_DATABASE_URL`. Clean/seed per test. Let Prisma generate IDs.
-
-**API (route handlers):**
-
-- Exercise HTTP boundaries: validation, auth, error shapes.
-
-**E2E (Playwright):**
-
-- Validate critical journeys (desktop + mobile). Headless in CI; headed only for debugging.
-
-**Visual docs/regression (Storybook + Chromatic):**
-
-- Every component has stories for key states; review diffs like code.
-
-**Coverage:** 95% threshold; focus on meaningful paths. Keep tests fast and deterministic.
-
-## 4) Workflow & Quality Gates
-
-**Before we mark a task done:**
+## Quality Gates (Run Before Commit)
 
 1. `npm run lint`
-2. `tsc --noEmit`
+2. `bun tsc --noEmit`
 3. `npm run test -- --coverage` (≥95%)
 4. `npx prettier --write .`
 
-**Where gates apply:** new/changed components, schemas (Prisma/Zod/API), services, routes, hooks/utils, multi-file refactors, bug fixes, and features.
+**Apply to:** components, schemas (Prisma/Zod/API), services, routes, hooks/utils, bug fixes, features
+**Lightweight lane:** docs/config/copy → lint + tsc + prettier only
 
-**Lightweight lane (non-functional):** docs/comments/config/copy/visual-only tweaks → lint + tsc + prettier are enough.
+## Testing Strategy
 
-**Renaming/refactors:** search & replace thoroughly (code, tests, stories, docs); update filenames; verify imports.
+**Coverage:** Maintain ≥95% threshold; focus on meaningful paths
 
-**File organization:** colocate tests/stories with code; prefer named exports; default only when framework requires.
+- **Unit (components, functions):** Test via roles/labels/names (not CSS selectors), use `@testing-library/user-event`
+- **Integration (services + DB):** Use real test DB with `TEST_DATABASE_URL`, clean/seed per test, let Prisma generate IDs
+- **API (route handlers):** Validate auth + boundaries (input validation, error shapes)
+- **E2E (Playwright):** Cover critical journeys (desktop + mobile)
+- **Visual (Storybook):** Create stories for all components, review Chromatic diffs like code
 
-## 5) Code Style & Patterns
+## Code Style
 
-- **TypeScript preference:** Always use `.ts` over `.js` for scripts and utilities.
-- **Components:** opinionated defaults; design for the 80%; consistent props (`variant`, `as`, `className`).
-- **Parameters:** prefer object params for extensibility (esp. 3+ args); for hooks, use a single `opts` object.
-- **Queries:** review every Prisma call for N+1 and over-fetching.
-- **Accessibility:** never trade readability/contrast for aesthetics; verify hover/focus/active/disabled states.
+- **TypeScript:** Use `.ts` for all scripts (not `.js`)
+- **Components:** Provide opinionated defaults, use consistent props (`variant`, `as`, `className`)
+- **Parameters:** Use object params for 3+ args; hooks take single `opts` object
+- **Queries:** Use `select` for minimal fields, `include` only for required relations (not `include: true`)
+- **Accessibility:** Meet WCAG AA minimum, verify all interactive states (hover/focus/active/disabled)
 
-## 6) Worktree Workflow
+## Worktree Workflow
 
-**Creating worktrees:** Always use `npm run worktree <branch-name>` instead of `git worktree add` directly.
+**Creating:** Use `npm run worktree <branch-name>` (not `git worktree add` directly)
 
-The script automatically:
+Auto-generates:
 
-- Creates worktree at `.worktrees/<branch-name>`
-- Creates branch `maferland/<branch-name>`
-- Copies `.env` from main to worktree
-- Creates isolated database `quebec.run_<branch-name>`
-- Runs Prisma migrations on new database
-- Appends unique config to `.env`:
-  - `PORT` for dev server (60XX)
-  - `STORYBOOK_PORT` for Storybook (61XX)
-  - `EMAIL_SERVER_PORT` for Mailhog SMTP (62XX)
-  - `DATABASE_URL` for isolated PostgreSQL database
-  - `TEST_DATABASE_URL` for test database
-  - All ports share the same random XX suffix (01-99)
-- Runs `npm install`
+- Worktree at `.worktrees/<branch-name>`
+- Branch `maferland/<branch-name>`
+- Isolated DB `quebec.run_<branch-name>`
+- Ports: `60XX` (dev), `61XX` (Storybook), `62XX` (Mailhog)
+- Copies `.env` and runs migrations
 
-Example:
+**Removing:** Use `npm run remove-worktree <branch-name>` (drops DB, deletes branch)
 
-```bash
-npm run worktree my-feature
-# ✨ Worktree setup complete!
-# Branch: maferland/my-feature
-# Path: /path/to/.worktrees/my-feature
-# Database: quebec.run_my_feature
-# Dev server: http://localhost:6042
-# Storybook: http://localhost:6142
-# Mailhog: http://localhost:6242
-```
+## Critical Rules
 
-**Removing worktrees:** Use `npm run remove-worktree <branch-name>` to clean up.
+- Run all quality gates before commit (never use `--no-verify`)
+- Use `prisma migrate dev` (not `db push`)
+- Prefix branches with `maferland/`
+- Fetch relations in one query with `include`/`select` (not N+1 loops)
+- Ship only what's needed now (YAGNI)
+- Batch commands and file ops (respect usage limits)
+- Keep handlers thin, put logic in services
+- Validate at boundaries with Zod
 
-The cleanup script:
+## Bun Commands
 
-- Removes git worktree
-- Drops the isolated database
-- Deletes the branch
+- Scripts: `bun run scripts/*.ts` (TypeScript)
+- Seed: `bun run prisma/seed.ts`
+- Dev: `bun run scripts/dev.ts`
+- Geocode: `bun run scripts/geocode-addresses.ts`
+- Pre-commit: `npx lint-staged` (auto via Husky)
 
-Example:
+## Tech Stack
 
-```bash
-npm run remove-worktree my-feature
-# ✨ Worktree cleanup complete!
-```
-
-## 7) Boy Scout Rule
-
-Always leave the code better: small opportunistic fixes, note debt, and track improvements in **`RENOVATE.md`**.
-
----
-
-## Appendix: Quick “Always/Never” Cheatsheet
-
-**Always**
-
-- Batch commands and file ops.
-- Validate at boundaries with Zod.
-- Keep handlers thin; put logic in services.
-- Use `select` for minimal fields; `include` only for required relations.
-- Run lint → typecheck → tests (≥95%) → prettier before merging.
-- Write a story for each component; review Chromatic diffs.
-
-**Never**
-
-- Bypass gates (`--no-verify`) or commit on red CI.
-- Use `prisma db push` in this repo.
-- Introduce N+1 loops or `include: true` by default.
-- Over-engineer future-maybe features (violating YAGNI).
-- Rely on CSS selectors/test IDs where an accessible handle exists.
-- Test presence or absence of classNames
-- Manually set Prisma IDs in tests.
+Next.js 15 (App Router) • Prisma + PostgreSQL • Vitest + Playwright • Storybook + Chromatic • NextAuth • Zod • Tailwind • React Query

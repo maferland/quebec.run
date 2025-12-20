@@ -126,6 +126,34 @@ async function main() {
     },
   })
 
+  // Faux Mouvement - synced from Strava
+  await prisma.club.upsert({
+    where: { slug: 'fauxmouvement' },
+    update: {
+      name: 'Faux Mouvement',
+      description:
+        "Café de Course\nPoint de départ ou d'arrivée, lieu de rencontre, on y trouve d'autres membres de la tribu de celles et ceux qui défie l'apesanteur avec style, peu importe leur niveau athlétique. Nos collections de vêtements exclusives sont choisies avec soin, afin que les membres de notre communauté, soucieux de signifier leur appartenance, puissent se reconnaître dans la rue comme en forêt. Toutes et tous ne partagent pas le même temps au kilomètre, mais leur passion pour la course, qu'ils expriment à travers nous, les unit malgré leurs écarts.",
+      stravaClubId: '951639',
+      stravaSlug: 'fauxmouvement',
+      isManual: false,
+      lastSynced: new Date(),
+      language: 'fr',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Faux Mouvement',
+      slug: 'fauxmouvement',
+      description:
+        "Café de Course\nPoint de départ ou d'arrivée, lieu de rencontre, on y trouve d'autres membres de la tribu de celles et ceux qui défie l'apesanteur avec style, peu importe leur niveau athlétique. Nos collections de vêtements exclusives sont choisies avec soin, afin que les membres de notre communauté, soucieux de signifier leur appartenance, puissent se reconnaître dans la rue comme en forêt. Toutes et tous ne partagent pas le même temps au kilomètre, mais leur passion pour la course, qu'ils expriment à travers nous, les unit malgré leurs écarts.",
+      stravaClubId: '951639',
+      stravaSlug: 'fauxmouvement',
+      isManual: false,
+      lastSynced: new Date(),
+      language: 'fr',
+      ownerId: staffUser.id,
+    },
+  })
+
   // Create recurring events for each neighborhood with correct schedule
   const recurringEvents = [
     {
