@@ -120,6 +120,14 @@ describe('Button Component', () => {
         'focus:ring-focus'
       )
     })
+
+    it('applies solid red background for destructive variant', () => {
+      render(<Button variant="destructive">Delete</Button>)
+
+      const button = screen.getByRole('button', { name: 'Delete' })
+      expect(button).toHaveClass('bg-red-600')
+      expect(button).toHaveClass('text-white')
+    })
   })
 
   describe('Size Styling', () => {

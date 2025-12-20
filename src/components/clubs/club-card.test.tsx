@@ -342,7 +342,7 @@ describe('ClubCard Component', () => {
         'font-heading',
         'font-bold',
         'text-primary',
-        'group-hover:text-primary/80',
+        'hover:underline',
         'transition-colors'
       )
     })
@@ -511,6 +511,17 @@ describe('ClubCard Component', () => {
 
       const eventTitle = screen.getByText(/Very Long Event Title/)
       expect(eventTitle).toHaveClass('line-clamp-2')
+    })
+  })
+
+  describe('Visual Affordances', () => {
+    it('renders title with hover underline affordance', () => {
+      render(<ClubCard club={mockClubWithEvents} />)
+
+      const title = screen.getByRole('heading', {
+        name: mockClubWithEvents.name,
+      })
+      expect(title).toHaveClass('hover:underline')
     })
   })
 

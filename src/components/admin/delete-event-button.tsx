@@ -12,6 +12,7 @@ export type DeleteEventButtonProps = {
 
 export function DeleteEventButton({ eventId }: DeleteEventButtonProps) {
   const t = useTranslations('admin.events')
+  const tActions = useTranslations('forms.actions')
   const router = useRouter()
   const deleteMutation = useDeleteEvent()
 
@@ -35,7 +36,8 @@ export function DeleteEventButton({ eventId }: DeleteEventButtonProps) {
       onClick={handleDelete}
       disabled={deleteMutation.isPending}
     >
-      <Trash2 className="w-4 h-4" />
+      {tActions('deleteEvent')}
+      <Trash2 className="w-4 h-4 ml-1" />
     </Button>
   )
 }

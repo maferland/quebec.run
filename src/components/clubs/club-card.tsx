@@ -40,7 +40,7 @@ export function ClubCard({ club }: ClubCardProps) {
               <Users className="h-5 w-5 text-primary" />
             </div>
             <div>
-              <h2 className="text-xl font-heading font-bold text-primary group-hover:text-primary/80 transition-colors">
+              <h2 className="text-xl font-heading font-bold text-primary hover:underline transition-colors">
                 {club.name}
               </h2>
               <div className="mt-1">

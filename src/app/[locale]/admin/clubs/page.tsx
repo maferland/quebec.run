@@ -1,8 +1,9 @@
 import { getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
-import { Plus, Edit, Trash2, ExternalLink } from 'lucide-react'
+import { Plus, Edit, ExternalLink } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
+import { DeleteClubButton } from '@/components/admin/delete-club-button'
 
 async function getAllClubsForAdmin() {
   return await prisma.club.findMany({
@@ -111,17 +112,20 @@ export default async function AdminClubsPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <Link href={`/clubs/${club.slug}`}>
                           <Button variant="outline" size="sm">
-                            <ExternalLink className="w-3 h-3" />
+                            View
+                            <ExternalLink className="w-3 h-3 ml-1" />
                           </Button>
                         </Link>
                         <Link href={`/admin/clubs/${club.slug}/edit`}>
                           <Button variant="outline" size="sm">
-                            <Edit className="w-3 h-3" />
+                            Edit
+                            <Edit className="w-3 h-3 ml-1" />
                           </Button>
                         </Link>
-                        <button className="inline-flex items-center justify-center px-2 py-1 border border-border rounded-md text-xs font-medium text-red-600 bg-surface hover:bg-red-50 hover:text-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors">
-                          <Trash2 className="w-3 h-3" />
-                        </button>
+                        <DeleteClubButton
+                          clubId={club.id}
+                          clubName={club.name}
+                        />
                       </div>
                     </td>
                   </tr>

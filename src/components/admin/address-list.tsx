@@ -102,15 +102,17 @@ export function AddressList({
                       size="sm"
                       onClick={() => onEditAddress(address)}
                     >
-                      <Edit2 className="w-4 h-4" />
+                      Edit
+                      <Edit2 className="w-4 h-4 ml-1" />
                     </Button>
                     <Button
-                      variant="outline"
+                      variant="destructive"
                       size="sm"
                       onClick={() => handleDelete(address.id, address.label)}
                       disabled={deleteMutation.isPending}
                     >
-                      <Trash2 className="w-4 h-4" />
+                      Delete
+                      <Trash2 className="w-4 h-4 ml-1" />
                     </Button>
                   </div>
                 </div>
