@@ -32,6 +32,7 @@ export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
       name: true,
       slug: true,
       description: true,
+      stravaSlug: true,
       events: {
         where: {
           date: {
@@ -82,6 +83,18 @@ export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
 }
 
 export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
+  // Validate unique stravaSlug if provided
+  if (data.stravaSlug) {
+    const existingClub = await prisma.club.findUnique({
+      where: { stravaSlug: data.stravaSlug },
+    })
+    if (existingClub) {
+      throw new Error(
+        'A club with this Strava slug already exists. Please use a different slug or unlink the existing club.'
+      )
+    }
+  }
+
   // Generate unique slug from club name
   const baseSlug = createSlug(data.name)
 
@@ -139,6 +152,18 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
 
 export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
   const { id, ...updateData } = data
+
+  // Validate unique stravaSlug if being updated to a non-null value
+  if (updateData.stravaSlug) {
+    const existingClub = await prisma.club.findUnique({
+      where: { stravaSlug: updateData.stravaSlug },
+    })
+    if (existingClub && existingClub.id !== id) {
+      throw new Error(
+        'A club with this Strava slug already exists. Please use a different slug or unlink the existing club.'
+      )
+    }
+  }
 
   const club = await prisma.club.update({
     where: { id },

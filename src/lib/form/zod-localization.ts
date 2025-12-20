@@ -33,7 +33,7 @@ export function setupZodLocalization(t: ValidationTranslate) {
         return { message: issue.message ?? t('invalid_format') }
 
       default:
-        return { message: ctx.defaultError }
+        return { message: ctx.defaultError ?? t('invalid_format') }
     }
   }
 

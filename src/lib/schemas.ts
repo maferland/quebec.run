@@ -40,10 +40,36 @@ export const clubCreateSchema = z.object({
   instagram: z.string().optional(),
   facebook: z.string().optional(),
   language: z.string().optional(),
+  stravaClubId: z.string().nullable().optional(),
+  stravaSlug: z.string().nullable().optional(),
+  isManual: z.boolean().optional(),
+  lastSynced: z
+    .union([z.string(), z.date(), z.null(), z.undefined()])
+    .transform((val) => {
+      if (!val || val === null || val === undefined) return null
+      if (val instanceof Date) return val
+      return new Date(val)
+    })
+    .nullable()
+    .optional(),
 })
 
 export const clubUpdateSchema = clubCreateSchema.partial().extend({
   id: z.string().min(1, 'ID is required'),
+})
+
+// Strava schemas
+export const stravaClubIdSchema = z.object({
+  clubId: z.string().min(1, 'Club ID is required'),
+})
+
+export const stravaSyncResponseSchema = z.object({
+  id: z.number(),
+  name: z.string(),
+  description: z.string().nullable(),
+  url: z.string(),
+  memberCount: z.number(),
+  location: z.string(),
 })
 
 // Event schemas
@@ -158,6 +184,10 @@ export type EventsQuery = z.infer<typeof eventsQuerySchema>
 export type UserId = z.infer<typeof userIdSchema>
 export type ToggleUserStaff = z.infer<typeof toggleUserStaffSchema>
 export type UsersQuery = z.infer<typeof usersQuerySchema>
+
+// Strava types
+export type StravaClubId = z.infer<typeof stravaClubIdSchema>
+export type StravaSyncResponse = z.infer<typeof stravaSyncResponseSchema>
 
 // Legal schemas
 export const consentCreateSchema = z.object({})

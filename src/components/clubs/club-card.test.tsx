@@ -10,6 +10,7 @@ const mockClubWithEvents: GetAllClubsReturn = {
   slug: 'quebec-running-club',
   description:
     'Premier running club in Quebec City for runners of all levels. Join us for weekly runs and training sessions.',
+  stravaSlug: null,
   events: [
     {
       id: 'event-1',

@@ -33,6 +33,11 @@ const envSchema = z
     EMAIL_SERVER_PORT: z.coerce.number().optional(),
     EMAIL_SERVER_USER: z.string().optional(),
     EMAIL_SERVER_PASSWORD: z.string().optional(),
+
+    // Strava API
+    STRAVA_CLIENT_ID: z.string().min(1, 'Strava client ID required'),
+    STRAVA_CLIENT_SECRET: z.string().min(1, 'Strava client secret required'),
+    STRAVA_REFRESH_TOKEN: z.string().min(1, 'Strava refresh token required'),
   })
   .refine(
     (data) => {
