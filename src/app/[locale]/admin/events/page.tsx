@@ -117,12 +117,14 @@ export default async function AdminEventsPage() {
                       <div className="flex items-center justify-end space-x-2">
                         <Link href={`/events/${event.id}`}>
                           <Button variant="outline" size="sm">
-                            <ExternalLink className="w-3 h-3" />
+                            View
+                            <ExternalLink className="w-3 h-3 ml-1" />
                           </Button>
                         </Link>
                         <Link href={`/admin/events/${event.id}/edit`}>
                           <Button variant="outline" size="sm">
-                            <Edit className="w-3 h-3" />
+                            Edit
+                            <Edit className="w-3 h-3 ml-1" />
                           </Button>
                         </Link>
                         <DeleteEventButton eventId={event.id} />
