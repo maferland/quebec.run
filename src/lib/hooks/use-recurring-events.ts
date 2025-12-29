@@ -1,5 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import type { RecurringEvent, Club } from '@prisma/client'
+import type { RecurringEvent, Club } from '@client'
 import type {
   RecurringEventCreateInput,
   RecurringEventUpdateInput,

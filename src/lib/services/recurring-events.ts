@@ -1,7 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import { RRule } from 'rrule'
 import { addDays, min, format } from 'date-fns'
-import type { RecurringEvent, Club, Prisma } from '@prisma/client'
+import type { RecurringEvent, Club, Prisma } from '@client'
 
 /**
  * Generate Event records from RecurringEvent pattern

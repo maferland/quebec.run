@@ -18,7 +18,7 @@ import { OccurrencePreview } from './occurrence-preview'
 import { FormInput } from '@/components/ui/form-input'
 import { FormTextarea } from '@/components/ui/form-textarea'
 import { Button } from '@/components/ui/button'
-import type { RecurringEvent } from '@prisma/client'
+import type { RecurringEvent } from '@client'
 
 // Partial schema for form fields only (excludes schedulePattern, clubId, timezone, isActive)
 const formFieldsSchema = recurringEventCreateSchema.pick({
