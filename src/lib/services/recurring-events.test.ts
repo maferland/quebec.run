@@ -281,7 +281,8 @@ describe('Hybrid query helpers', () => {
 
   describe('expandRRuleDates', () => {
     it('expands weekly pattern for date range', () => {
-      const pattern = 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0'
+      const pattern =
+        'DTSTART:20251201T180000Z\nRRULE:FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0'
       const start = new Date('2025-12-01')
       const end = new Date('2025-12-31')
 
