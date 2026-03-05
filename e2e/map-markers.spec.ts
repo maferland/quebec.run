@@ -4,10 +4,11 @@ test.describe('Map Markers', () => {
   test('displays event map on homepage', async ({ page }) => {
     await page.goto('/en')
 
+    // Homepage loads events client-side — wait for loading to finish
     const map = page.getByRole('application', {
       name: /interactive event map/i,
     })
-    await expect(map).toBeVisible()
+    await expect(map).toBeVisible({ timeout: 15000 })
 
     await expect(page).toHaveScreenshot('homepage.png', { fullPage: true })
   })
