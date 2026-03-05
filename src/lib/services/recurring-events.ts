@@ -120,7 +120,13 @@ export function expandRRuleDates(
   startDate: Date,
   endDate: Date
 ): Date[] {
-  const rule = RRule.fromString(pattern)
+  // If pattern has no DTSTART, anchor it to the query start so
+  // rrule generates occurrences within the requested range
+  const hasStart = pattern.toUpperCase().includes('DTSTART')
+  const fullPattern = hasStart
+    ? pattern
+    : `DTSTART:${startDate.toISOString().replace(/[-:]/g, '').split('.')[0]}Z\n${pattern}`
+  const rule = RRule.fromString(fullPattern)
   return rule.between(startDate, endDate, true)
 }
 
