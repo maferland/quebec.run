@@ -258,6 +258,23 @@ async function main() {
     },
   ]
 
+  // Add an evening run for Club Courir Limoilou (different club, different time)
+  const courirLimoilou = await prisma.club.findUnique({
+    where: { slug: createSlug('Club Courir Limoilou') },
+  })
+  if (courirLimoilou) {
+    recurringEvents.push({
+      title: 'Course du mercredi soir',
+      description: 'Sortie hebdomadaire dans le quartier Limoilou',
+      address: '300 8e Avenue, Québec, QC G1L 2P8',
+      latitude: 46.8268,
+      longitude: -71.2305,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: courirLimoilou.id,
+    })
+  }
+
   // Upsert recurring events (update existing or create new)
   for (const event of recurringEvents) {
     const existing = await prisma.recurringEvent.findFirst({
@@ -279,52 +296,8 @@ async function main() {
     }
   }
 
-  // Create instantiated events from recurring events for the next few weeks
-  const recurringEventRecords = await prisma.recurringEvent.findMany({
-    where: { clubId: sixAmClub.id },
-  })
-
-  const instantiatedEvents = []
-  for (const recurringEvent of recurringEventRecords) {
-    // Parse BYDAY from schedule pattern (e.g., "FREQ=WEEKLY;BYDAY=MO")
-    const dayMap = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 } as const
-    const byDayMatch = recurringEvent.schedulePattern.match(/BYDAY=([A-Z]{2})/)
-
-    if (!byDayMatch) {
-      throw new Error(
-        `Invalid schedule pattern: ${recurringEvent.schedulePattern}`
-      )
-    }
-
-    const dayCode = dayMap[byDayMatch[1] as keyof typeof dayMap]
-
-    // Create next upcoming event
-    const baseDate = new Date()
-    const daysUntilTarget = (dayCode - baseDate.getDay() + 7) % 7
-    const eventDate = new Date(
-      baseDate.getTime() + daysUntilTarget * 24 * 60 * 60 * 1000
-    )
-    eventDate.setHours(6, 0, 0, 0)
-
-    instantiatedEvents.push({
-      title: recurringEvent.title,
-      description: recurringEvent.description,
-      date: eventDate,
-      time: '06:00',
-      address: recurringEvent.address,
-      latitude: recurringEvent.latitude,
-      longitude: recurringEvent.longitude,
-      distance: '5-8 km',
-      pace: 'Rythme modéré',
-      clubId: sixAmClub.id,
-      recurringEventId: recurringEvent.id,
-    })
-  }
-
-  await prisma.event.createMany({
-    data: instantiatedEvents,
-    skipDuplicates: true,
-  })
+  // No concrete events pre-created — the hybrid system generates
+  // virtual events on-the-fly from recurring patterns
 
   console.log('Database seeded successfully!')
 }
