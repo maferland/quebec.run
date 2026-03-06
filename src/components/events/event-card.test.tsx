@@ -14,6 +14,9 @@ const mockEventWithClub: GetAllEventsReturn = {
   pace: '5:30 /km',
   latitude: 46.8139,
   longitude: -71.208,
+  status: 'SCHEDULED' as const,
+  clubId: 'club-1',
+  recurringEventId: null,
   club: {
     id: 'club-1',
     name: 'Quebec Running Club',
@@ -370,6 +373,9 @@ describe('EventCard Component', () => {
         pace: null,
         latitude: null,
         longitude: null,
+        status: 'SCHEDULED' as const,
+        clubId: 'club-1',
+        recurringEventId: null,
         club: {
           id: 'club-1',
           name: 'Test Club',

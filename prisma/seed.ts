@@ -162,7 +162,7 @@ async function main() {
       address: '504 Rue Saint-Vallier O, Québec, QC G1N 0C2',
       latitude: 46.8111749,
       longitude: -71.2414915,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -172,7 +172,7 @@ async function main() {
       address: '2012 Chem. Saint-Louis, Québec, QC G1T 1P1',
       latitude: 46.7705783,
       longitude: -71.2599946,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -182,7 +182,7 @@ async function main() {
       address: '2539f Bd Sainte-Anne, Québec, QC G1J 1Y4',
       latitude: 46.8445096,
       longitude: -71.2156864,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -192,7 +192,7 @@ async function main() {
       address: '1015 Av. Belvédère, Québec, QC G1S 1S7',
       latitude: 46.7968136,
       longitude: -71.2388083,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -202,7 +202,7 @@ async function main() {
       address: "200 Rue D'Aiguillon, Québec, QC G1R 2Y6",
       latitude: 46.8084437,
       longitude: -71.2252003,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -212,7 +212,7 @@ async function main() {
       address: '7685 1re Av., Québec, QC G1H 2Y1',
       latitude: 46.8588977,
       longitude: -71.2686599,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -222,7 +222,7 @@ async function main() {
       address: '201 Av. 3e, Québec, QC G1L 2T2',
       latitude: 46.821222,
       longitude: -71.2251616,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -232,7 +232,7 @@ async function main() {
       address: "4141 Bd de l'Auvergne, Québec, QC G2C 2B6",
       latitude: 46.8292239,
       longitude: -71.3477112,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -242,7 +242,7 @@ async function main() {
       address: '1020 Bd du Lac, Lac-Beauport, QC G3B 0W8',
       latitude: 46.936372,
       longitude: -71.308562,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
@@ -252,11 +252,28 @@ async function main() {
       address: '2530 Boul. Louis-XIV, Québec, QC G1C 1B5',
       latitude: 46.8572877,
       longitude: -71.1876652,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: sixAmClub.id,
     },
   ]
+
+  // Add an evening run for Club Courir Limoilou (different club, different time)
+  const courirLimoilou = await prisma.club.findUnique({
+    where: { slug: createSlug('Club Courir Limoilou') },
+  })
+  if (courirLimoilou) {
+    recurringEvents.push({
+      title: 'Course du mercredi soir',
+      description: 'Sortie hebdomadaire dans le quartier Limoilou',
+      address: '300 8e Avenue, Québec, QC G1L 2P8',
+      latitude: 46.8268,
+      longitude: -71.2305,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: courirLimoilou.id,
+    })
+  }
 
   // Upsert recurring events (update existing or create new)
   for (const event of recurringEvents) {
@@ -279,52 +296,8 @@ async function main() {
     }
   }
 
-  // Create instantiated events from recurring events for the next few weeks
-  const recurringEventRecords = await prisma.recurringEvent.findMany({
-    where: { clubId: sixAmClub.id },
-  })
-
-  const instantiatedEvents = []
-  for (const recurringEvent of recurringEventRecords) {
-    // Parse BYDAY from schedule pattern (e.g., "FREQ=WEEKLY;BYDAY=MO")
-    const dayMap = { MO: 1, TU: 2, WE: 3, TH: 4, FR: 5, SA: 6, SU: 0 } as const
-    const byDayMatch = recurringEvent.schedulePattern.match(/BYDAY=([A-Z]{2})/)
-
-    if (!byDayMatch) {
-      throw new Error(
-        `Invalid schedule pattern: ${recurringEvent.schedulePattern}`
-      )
-    }
-
-    const dayCode = dayMap[byDayMatch[1] as keyof typeof dayMap]
-
-    // Create next upcoming event
-    const baseDate = new Date()
-    const daysUntilTarget = (dayCode - baseDate.getDay() + 7) % 7
-    const eventDate = new Date(
-      baseDate.getTime() + daysUntilTarget * 24 * 60 * 60 * 1000
-    )
-    eventDate.setHours(6, 0, 0, 0)
-
-    instantiatedEvents.push({
-      title: recurringEvent.title,
-      description: recurringEvent.description,
-      date: eventDate,
-      time: '06:00',
-      address: recurringEvent.address,
-      latitude: recurringEvent.latitude,
-      longitude: recurringEvent.longitude,
-      distance: '5-8 km',
-      pace: 'Rythme modéré',
-      clubId: sixAmClub.id,
-      recurringEventId: recurringEvent.id,
-    })
-  }
-
-  await prisma.event.createMany({
-    data: instantiatedEvents,
-    skipDuplicates: true,
-  })
+  // No concrete events pre-created — the hybrid system generates
+  // virtual events on-the-fly from recurring patterns
 
   console.log('Database seeded successfully!')
 }

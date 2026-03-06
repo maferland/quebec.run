@@ -40,10 +40,18 @@ const createEmailProvider = () => {
     })
   } else {
     // Use Mailhog for development ONLY
+    // Note: Don't throw at build time - Next.js evaluates this during static analysis
+    // The error will surface at runtime if someone tries to sign in without Resend configured
     if (env.NODE_ENV === 'production') {
-      throw new Error(
-        'Mailhog cannot be used in production. Set USE_RESEND=true or provide RESEND_API_KEY.'
-      )
+      // Return a provider that will fail at runtime
+      return EmailProvider({
+        from: env.EMAIL_FROM,
+        sendVerificationRequest: async () => {
+          throw new Error(
+            'Mailhog cannot be used in production. Set USE_RESEND=true or provide RESEND_API_KEY.'
+          )
+        },
+      })
     }
 
     console.log('📧 Using Mailhog (development only):', {

@@ -193,6 +193,7 @@
       "dashboard": "Dashboard",
       "clubs": "Clubs",
       "events": "Events",
+      "recurringEvents": "Recurring Events",
       "users": "Users"
     },
     "dashboard": {
@@ -246,6 +247,22 @@
       "description": "This will permanently delete {entityName}. This action cannot be undone.",
       "cancel": "Cancel",
       "delete": "Delete"
+    },
+    "recurringEvents": {
+      "title": "Recurring Events",
+      "create": "Create Pattern",
+      "edit": "Edit Pattern",
+      "confirmDelete": "Delete this recurring event? All future occurrences will be removed.",
+      "paused": "Paused",
+      "frequency": "Frequency",
+      "weekly": "Weekly",
+      "biweekly": "Biweekly (every 2 weeks)",
+      "monthly": "Monthly",
+      "days": "Days",
+      "time": "Time",
+      "nextOccurrences": "Next occurrences:",
+      "noUpcoming": "No upcoming occurrences",
+      "invalidPattern": "Invalid recurrence pattern"
     }
   },
   "legal": {
