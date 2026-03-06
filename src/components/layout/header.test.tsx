@@ -34,9 +34,24 @@ describe('Header', () => {
 
     expect(screen.getByText('Clubs')).toBeInTheDocument()
     expect(screen.getByText('Events')).toBeInTheDocument()
+    expect(screen.getByText('Calendar')).toBeInTheDocument()
   })
 
-  it('shows user dropdown when authenticated', () => {
+  it('shows sign in button when unauthenticated', () => {
+    render(<Header />)
+
+    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+  })
+
+  it('shows mobile menu hamburger button', () => {
+    render(<Header />)
+
+    expect(
+      screen.getByRole('button', { name: /open menu/i })
+    ).toBeInTheDocument()
+  })
+
+  it('shows user name when authenticated', () => {
     mockUseSession.mockReturnValue({
       data: {
         user: {
@@ -53,8 +68,7 @@ describe('Header', () => {
 
     render(<Header />)
 
-    // User dropdown should be present (contains user info)
-    expect(screen.getByRole('button', { name: /john/i })).toBeInTheDocument()
+    expect(screen.getByText('John')).toBeInTheDocument()
   })
 
   it('shows admin link for admin users', () => {
@@ -74,7 +88,6 @@ describe('Header', () => {
 
     render(<Header />)
 
-    // Check for admin link in navigation
     expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
   })
 

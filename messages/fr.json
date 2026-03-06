@@ -2,6 +2,7 @@
   "navigation": {
     "clubs": "Clubs",
     "events": "Événements",
+    "calendar": "Calendrier",
     "admin": "Admin",
     "user": "Utilisateur",
     "signIn": "Connexion",
@@ -71,8 +72,8 @@
         "button": "Parcourir les événements"
       },
       "routes": {
-        "title": "Explorez les parcours",
-        "description": "Découvrez des parcours de course pittoresques à travers Québec, du Vieux-Québec aux plaines d'Abraham.",
+        "title": "Voir le calendrier",
+        "description": "Consultez toutes les courses de groupe à venir d'un coup d'œil. Planifiez votre semaine avec notre calendrier communautaire.",
         "button": "Voir le calendrier"
       }
     },
