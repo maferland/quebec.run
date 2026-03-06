@@ -193,6 +193,7 @@
       "dashboard": "Dashboard",
       "clubs": "Clubs",
       "events": "Events",
+      "recurringEvents": "Recurring Events",
       "users": "Users"
     },
     "dashboard": {

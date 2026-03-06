@@ -193,6 +193,7 @@
       "dashboard": "Tableau de bord",
       "clubs": "Clubs",
       "events": "Événements",
+      "recurringEvents": "Événements récurrents",
       "users": "Utilisateurs"
     },
     "dashboard": {

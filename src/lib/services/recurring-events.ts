@@ -14,12 +14,17 @@ export async function generateEventsFromRecurring(
   daysAhead: number = 7
 ): Promise<number> {
   // 1. Parse RRule
+  const pattern = recurringEvent.schedulePattern.toUpperCase()
+  const hasByhour = pattern.includes('BYHOUR')
   const rule = RRule.fromString(recurringEvent.schedulePattern)
   const opts = rule.options
 
-  // Extract time from RRule options
-  const hour = String(opts.byhour?.[0] ?? 0).padStart(2, '0')
-  const minute = String(opts.byminute?.[0] ?? 0).padStart(2, '0')
+  // Extract time from RRule options (only if explicitly set)
+  const hour = String(hasByhour ? (opts.byhour?.[0] ?? 0) : 0).padStart(2, '0')
+  const minute = String(hasByhour ? (opts.byminute?.[0] ?? 0) : 0).padStart(
+    2,
+    '0'
+  )
   const eventTime = `${hour}:${minute}`
 
   // 2. Calculate date range
@@ -29,26 +34,36 @@ export async function generateEventsFromRecurring(
     ? min([horizon, recurringEvent.generateUntil])
     : horizon
 
-  // 3. Generate dates within range
-  const dates = rule.between(now, until, true)
+  // 3. Generate dates within range and normalize to clean timestamps
+  const dates = rule.between(now, until, true).map((d) => {
+    d.setSeconds(0, 0)
+    return d
+  })
 
   if (dates.length === 0) {
     return 0
   }
 
-  // 4. Check existing events (idempotency)
+  // 4. Check existing events by date string (idempotency)
   const existing = await prisma.event.findMany({
     where: {
       recurringEventId: recurringEvent.id,
-      date: { in: dates },
+      date: {
+        gte: dates[0],
+        lte: addDays(dates[dates.length - 1], 1),
+      },
     },
     select: { date: true },
   })
 
-  const existingDates = new Set(existing.map((e) => e.date.toISOString()))
+  const existingKeys = new Set(
+    existing.map((e) => format(e.date, 'yyyy-MM-dd'))
+  )
 
   // 5. Filter to only new dates
-  const newDates = dates.filter((d) => !existingDates.has(d.toISOString()))
+  const newDates = dates.filter(
+    (d) => !existingKeys.has(format(d, 'yyyy-MM-dd'))
+  )
 
   if (newDates.length === 0) {
     return 0
@@ -140,11 +155,17 @@ export function createVirtualEvent(
   recurringEvent: RecurringEvent & { club: Club },
   date: Date
 ) {
+  const pattern = recurringEvent.schedulePattern.toUpperCase()
+  const hasByhour = pattern.includes('BYHOUR')
+
   const rule = RRule.fromString(recurringEvent.schedulePattern)
   const opts = rule.options
 
-  const hour = String(opts.byhour?.[0] ?? 0).padStart(2, '0')
-  const minute = String(opts.byminute?.[0] ?? 0).padStart(2, '0')
+  const hour = String(hasByhour ? (opts.byhour?.[0] ?? 0) : 0).padStart(2, '0')
+  const minute = String(hasByhour ? (opts.byminute?.[0] ?? 0) : 0).padStart(
+    2,
+    '0'
+  )
   const eventTime = `${hour}:${minute}`
 
   const dateKey = format(date, 'yyyy-MM-dd')

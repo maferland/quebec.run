@@ -91,7 +91,7 @@ export default function CalendarPage() {
                       decorative
                     />
                     <h2 className="text-2xl font-heading font-bold text-primary">
-                      {dateUtils.formatHumanFriendlyDate(new Date(date))}
+                      {date}
                     </h2>
                   </div>
 
