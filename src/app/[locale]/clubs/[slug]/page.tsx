@@ -16,7 +16,6 @@ import {
   Instagram,
   Facebook,
   Users,
-  MapPin,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
@@ -57,17 +56,6 @@ export default async function ClubPage({ params }: ClubPageProps) {
                   <h1 className="text-4xl font-heading font-bold text-primary mb-2">
                     {club.name}
                   </h1>
-                  <div className="flex items-center gap-2">
-                    <Icon
-                      icon={MapPin}
-                      size="sm"
-                      color="text-secondary"
-                      decorative
-                    />
-                    <span className="text-text-secondary font-body">
-                      Quebec City
-                    </span>
-                  </div>
                 </div>
               </div>
 

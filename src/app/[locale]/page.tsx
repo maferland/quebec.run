@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
 import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
 import { EventMap } from '@/components/map/event-map'
-import { MapPin, Search, Filter, Calendar } from 'lucide-react'
+import { Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 
 export default function Home() {
@@ -48,41 +48,6 @@ export default function Home() {
               ) : (
                 <EventMap events={events || []} />
               )}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Search Section */}
-      <section className="py-12 bg-white border-b">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-heading font-bold text-primary text-center mb-8">
-              {t('search.title')}
-            </h2>
-            <div className="bg-gray-50 rounded-2xl p-6">
-              <div className="flex flex-col md:flex-row gap-4">
-                <div className="flex-1 relative">
-                  <Search
-                    className="absolute left-3 top-1/2 transform -translate-y-1/2 text-accent"
-                    size={20}
-                  />
-                  <input
-                    type="text"
-                    placeholder={t('search.placeholder')}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-primary focus:border-primary font-body"
-                  />
-                </div>
-                <div className="flex gap-3">
-                  <Button variant="outline-accent">
-                    <Filter size={18} className="mr-2" />
-                    {t('search.filters')}
-                  </Button>
-                  <Button variant="secondary">
-                    {t('search.searchButton')}
-                  </Button>
-                </div>
-              </div>
             </div>
           </div>
         </div>
@@ -135,10 +100,10 @@ export default function Home() {
               </Link>
             </div>
 
-            <div className="bg-gradient-to-br from-secondary/5 to-secondary/10 rounded-2xl p-8">
+            <div className="bg-gradient-to-br from-primary/5 to-primary/10 rounded-2xl p-8">
               <div className="flex items-center mb-4">
-                <MapPin className="text-secondary mr-3" size={32} />
-                <h3 className="text-2xl font-heading font-bold text-secondary">
+                <Calendar className="text-primary mr-3" size={32} />
+                <h3 className="text-2xl font-heading font-bold text-primary">
                   {t('quickActions.routes.title')}
                 </h3>
               </div>
@@ -146,7 +111,7 @@ export default function Home() {
                 {t('quickActions.routes.description')}
               </p>
               <Link href="/calendar">
-                <Button variant="secondary">
+                <Button variant="primary">
                   {t('quickActions.routes.button')}
                 </Button>
               </Link>

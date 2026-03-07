@@ -14,7 +14,7 @@ export default defineConfig(({ mode }) => {
       globals: true,
       // Run database tests sequentially to prevent deadlocks
       fileParallelism: false,
-      exclude: ['node_modules', 'e2e/**', '**/*.spec.ts'],
+      exclude: ['node_modules', 'e2e/**', '**/*.spec.ts', '.worktrees/**'],
       env,
       coverage: {
         reporter: ['text', 'json', 'html'],
@@ -28,6 +28,7 @@ export default defineConfig(({ mode }) => {
           'src/lib/auth.ts',
           'prisma/**',
           '.next/',
+          '.worktrees/',
           'coverage/',
           '**/*.config.{js,ts,mjs}',
           // Exclude only API route files - these are integration tested

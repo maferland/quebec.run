@@ -2,6 +2,7 @@
   "navigation": {
     "clubs": "Clubs",
     "events": "Events",
+    "calendar": "Calendar",
     "admin": "Admin",
     "user": "User",
     "signIn": "Sign In",
@@ -71,8 +72,8 @@
         "button": "Browse Events"
       },
       "routes": {
-        "title": "Explore Routes",
-        "description": "Discover scenic running routes throughout Quebec City, from Old Quebec to the Plains of Abraham.",
+        "title": "View Calendar",
+        "description": "See all upcoming group runs at a glance. Plan your week with our community calendar.",
         "button": "View Calendar"
       }
     },

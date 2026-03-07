@@ -1,9 +1,8 @@
 'use client'
 
-import { NavLink } from '@/components/ui/nav-link'
-import { UserDropdown } from '@/components/ui/user-dropdown'
-import { Calendar, MapPin, Users } from 'lucide-react'
-import { useSession } from 'next-auth/react'
+import { DesktopNavigation } from '@/components/layout/desktop-navigation'
+import { MobileMenu } from '@/components/ui/mobile-menu'
+import { MapPin } from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 
@@ -24,7 +23,6 @@ const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
 )
 
 export function Header() {
-  const { data: session } = useSession()
   const t = useTranslations('navigation')
 
   return (
@@ -38,29 +36,9 @@ export function Header() {
             <QuebecRunLogo t={t} />
           </Link>
 
-          <div className="flex items-center space-x-6 md:space-x-8">
-            <nav className="hidden sm:flex items-center space-x-4 md:space-x-6">
-              <NavLink href="/clubs">
-                <Users size={18} />
-                <span className="hidden md:inline">{t('clubs')}</span>
-              </NavLink>
-              <NavLink href="/events">
-                <Calendar size={18} />
-                <span className="hidden md:inline">{t('events')}</span>
-              </NavLink>
-              {session?.user?.isStaff && (
-                <NavLink href="/admin">
-                  <span>{t('admin')}</span>
-                </NavLink>
-              )}
-            </nav>
-
-            {session && (
-              <UserDropdown
-                userName={session.user?.name || t('user')}
-                userEmail={session.user?.email || undefined}
-              />
-            )}
+          <div className="flex items-center gap-4">
+            <DesktopNavigation />
+            <MobileMenu />
           </div>
         </div>
       </div>

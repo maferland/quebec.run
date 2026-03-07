@@ -1,6 +1,6 @@
 import { NavLink } from '@/components/ui/nav-link'
 import { Icon } from '@/components/ui/icon'
-import { Calendar, Users } from 'lucide-react'
+import { Calendar, CalendarDays, Users } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 
@@ -26,6 +26,11 @@ export function NavigationLinks({
       href: '/events',
       icon: Calendar,
       label: t('events'),
+    },
+    {
+      href: '/calendar',
+      icon: CalendarDays,
+      label: t('calendar'),
     },
   ]
 
