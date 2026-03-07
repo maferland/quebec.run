@@ -2,7 +2,14 @@
 
 import { Link } from '@/i18n/navigation'
 import { usePathname } from 'next/navigation'
-import { BarChart3, Users, Calendar, UserCheck, Home } from 'lucide-react'
+import {
+  BarChart3,
+  Users,
+  Calendar,
+  UserCheck,
+  Home,
+  Repeat,
+} from 'lucide-react'
 import { useTranslations } from 'next-intl'
 import { cn } from '@/lib/utils'
 
@@ -10,6 +17,7 @@ const navigation = [
   { name: 'dashboard', href: '/admin', icon: BarChart3 },
   { name: 'clubs', href: '/admin/clubs', icon: Users },
   { name: 'events', href: '/admin/events', icon: Calendar },
+  { name: 'recurringEvents', href: '/admin/recurring-events', icon: Repeat },
   { name: 'users', href: '/admin/users', icon: UserCheck },
 ]
 

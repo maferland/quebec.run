@@ -34,6 +34,7 @@ vi.mock('next-intl', () => ({
       dashboard: 'Dashboard',
       clubs: 'Clubs',
       events: 'Events',
+      recurringEvents: 'Recurring Events',
       users: 'Users',
     }
     return translations[key] || key
@@ -53,10 +54,15 @@ describe('AdminSidebar', () => {
   it('renders all navigation links', () => {
     render(<AdminSidebar />)
 
-    expect(screen.getByRole('link', { name: /dashboard/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /clubs/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /events/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /users/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /^dashboard$/i })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^clubs$/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^events$/i })).toBeInTheDocument()
+    expect(
+      screen.getByRole('link', { name: /recurring events/i })
+    ).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /^users$/i })).toBeInTheDocument()
   })
 
   it('renders back to site link', () => {
@@ -99,7 +105,7 @@ describe('AdminSidebar', () => {
 
     render(<AdminSidebar />)
 
-    const eventsLink = screen.getByRole('link', { name: /events/i })
+    const eventsLink = screen.getByRole('link', { name: /^events$/i })
     expect(eventsLink).toHaveClass('bg-primary', 'text-text-inverse')
   })
 
@@ -110,6 +116,28 @@ describe('AdminSidebar', () => {
 
     const usersLink = screen.getByRole('link', { name: /users/i })
     expect(usersLink).toHaveClass('bg-primary', 'text-text-inverse')
+  })
+
+  it('highlights active recurring events link', () => {
+    mockPathname.mockReturnValue('/admin/recurring-events')
+
+    render(<AdminSidebar />)
+
+    const recurringEventsLink = screen.getByRole('link', {
+      name: /recurring events/i,
+    })
+    expect(recurringEventsLink).toHaveClass('bg-primary', 'text-text-inverse')
+  })
+
+  it('highlights recurring events link when on recurring events sub-route', () => {
+    mockPathname.mockReturnValue('/admin/recurring-events/new')
+
+    render(<AdminSidebar />)
+
+    const recurringEventsLink = screen.getByRole('link', {
+      name: /recurring events/i,
+    })
+    expect(recurringEventsLink).toHaveClass('bg-primary', 'text-text-inverse')
   })
 
   it('does not highlight dashboard link on sub-routes', () => {
@@ -125,19 +153,22 @@ describe('AdminSidebar', () => {
   it('has correct href attributes', () => {
     render(<AdminSidebar />)
 
-    expect(screen.getByRole('link', { name: /dashboard/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^dashboard$/i })).toHaveAttribute(
       'href',
       '/admin'
     )
-    expect(screen.getByRole('link', { name: /clubs/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^clubs$/i })).toHaveAttribute(
       'href',
       '/admin/clubs'
     )
-    expect(screen.getByRole('link', { name: /events/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /^events$/i })).toHaveAttribute(
       'href',
       '/admin/events'
     )
-    expect(screen.getByRole('link', { name: /users/i })).toHaveAttribute(
+    expect(
+      screen.getByRole('link', { name: /recurring events/i })
+    ).toHaveAttribute('href', '/admin/recurring-events')
+    expect(screen.getByRole('link', { name: /^users$/i })).toHaveAttribute(
       'href',
       '/admin/users'
     )

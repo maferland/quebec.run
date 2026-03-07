@@ -289,13 +289,26 @@ Starting point: `src/lib/services/addresses.ts` (new file)
 
 **Phase 3: Hybrid Recurring Events** ⬜
 
+**Design:** [2025-12-18-hybrid-recurring-events-design.md](./2025-12-18-hybrid-recurring-events-design.md)
+
 Starting point: `src/lib/services/events.ts` - refactor `getAllEvents`
 
-- [ ] Add RRULE expansion utility (use `rrule` npm package)
-- [ ] Implement `getEventsInRange()` with hybrid logic (see Section 2)
-- [ ] Add weekly cron job for event materialization
-- [ ] Add materialization triggers (edit, cancel, RSVP)
-- [ ] Update all event queries for hybrid model
+- [ ] Add RRule utilities (`rrule-builder.ts`) with build/parse/validate
+- [ ] Add RecurringEvent CRUD service functions
+- [ ] Implement `getEventsInRange()` with hybrid logic (concrete + virtual)
+- [ ] Add materialization service (`generateEventsFromRecurring`, batch)
+- [ ] Add weekly Vercel Cron job for materialization (Sunday 2am UTC)
+- [ ] Add API routes for RecurringEvent CRUD + cron endpoint
+- [ ] Add admin UI (list/create/edit pages, RecurrenceBuilder component)
+- [ ] Update `getAllEvents` to use hybrid query
+- [ ] Show recurring badge on event detail if `recurringEventId` exists
+
+**Phase 3.5: Edit Individual Occurrences** ⬜ _Follow-up_
+
+- [ ] Occurrence list component (vertical, paginated 5 items)
+- [ ] "Edit this occurrence" button → materializes + updates
+- [ ] "Cancel this occurrence" button → materializes + sets CANCELLED
+- [ ] Pagination controls (← Previous 5 | Next 5 →)
 
 **Phase 4: Enhanced Filters** ⬜
 
