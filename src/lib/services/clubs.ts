@@ -216,8 +216,8 @@ export async function getClubByIdWithParams(id: string) {
 
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const nextWeek = addDays(now, 7)
-  const events = await getEventsInRange(now, nextWeek, club.id)
+  const endDate = addDays(now, 30)
+  const events = await getEventsInRange(now, endDate, club.id)
 
   return { ...club, events }
 }
@@ -241,8 +241,8 @@ export async function getClubBySlug({ slug }: ClubSlug) {
 
   const now = new Date()
   now.setHours(0, 0, 0, 0)
-  const nextWeek = addDays(now, 7)
-  const events = await getEventsInRange(now, nextWeek, club.id)
+  const endDate = addDays(now, 30)
+  const events = await getEventsInRange(now, endDate, club.id)
 
   return { ...club, events }
 }
