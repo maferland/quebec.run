@@ -460,10 +460,10 @@ describe('Events Service Integration Tests', () => {
 
       const result = await getEventById({ data: { id: event.id } })
 
-      expect(result.id).toBe(event.id)
-      expect(result.title).toBe('Concrete Event')
-      expect(result.club).not.toBeNull()
-      expect(result.club!.slug).toBe(testClub.slug)
+      expect(result!.id).toBe(event.id)
+      expect(result!.title).toBe('Concrete Event')
+      expect(result!.club).not.toBeNull()
+      expect(result!.club!.slug).toBe(testClub.slug)
     })
 
     it('returns a virtual event for slug-based ID (slug--date)', async () => {
