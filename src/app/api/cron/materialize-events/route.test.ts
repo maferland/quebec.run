@@ -27,6 +27,7 @@ describe('POST /api/cron/materialize-events', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -65,6 +66,7 @@ describe('POST /api/cron/materialize-events', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Invalid Run',
+        slug: 'invalid-run',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'INVALID_PATTERN',

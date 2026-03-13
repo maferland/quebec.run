@@ -46,6 +46,7 @@ describe('generateEventsFromRecurring', () => {
     const recurring = await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -90,6 +91,7 @@ describe('generateEventsFromRecurring', () => {
     const recurring = await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run-2',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -132,6 +134,7 @@ describe('generateEventsFromRecurring', () => {
     const recurring = await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run-3',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -182,6 +185,7 @@ describe('generateAllRecurringEvents', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run-4',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -192,6 +196,7 @@ describe('generateAllRecurringEvents', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Saturday Run',
+        slug: 'saturday-run',
         address: '456 Oak Ave',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=8;BYMINUTE=0',
@@ -202,6 +207,7 @@ describe('generateAllRecurringEvents', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Inactive Run',
+        slug: 'inactive-run',
         address: '789 Elm St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
@@ -240,6 +246,7 @@ describe('generateAllRecurringEvents', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Valid Run',
+        slug: 'valid-run',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -250,6 +257,7 @@ describe('generateAllRecurringEvents', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Invalid Run',
+        slug: 'invalid-run',
         address: '456 Oak Ave',
         clubId: club.id,
         schedulePattern: 'INVALID_PATTERN',
@@ -323,6 +331,7 @@ describe('Hybrid query helpers', () => {
       const recurring = await prisma.recurringEvent.create({
         data: {
           title: 'Tuesday Run',
+          slug: 'tuesday-run-5',
           description: 'Weekly run',
           address: '123 Main St',
           distance: '5km',
@@ -335,8 +344,7 @@ describe('Hybrid query helpers', () => {
       const date = new Date('2025-12-24T18:00:00')
       const virtual = createVirtualEvent(recurring, date)
 
-      expect(virtual.id).toContain(recurring.id)
-      expect(virtual.id).toContain('2025-12-24')
+      expect(virtual.id).toBe(`${recurring.slug}--2025-12-24`)
       expect(virtual.title).toBe('Tuesday Run')
       expect(virtual.description).toBe('Weekly run')
       expect(virtual.address).toBe('123 Main St')
@@ -416,6 +424,7 @@ describe('getEventsInRange', () => {
     const recurring = await prisma.recurringEvent.create({
       data: {
         title: 'Tuesday Run',
+        slug: 'tuesday-run-6',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -451,8 +460,8 @@ describe('getEventsInRange', () => {
 
     expect(dec23).toBeDefined()
     expect(dec30).toBeDefined()
-    expect(dec23?.id).not.toContain(':') // Concrete (DB ID)
-    expect(dec30?.id).toContain(':') // Virtual (composite ID)
+    expect(dec23?.id).not.toContain('--') // Concrete (DB ID)
+    expect(dec30?.id).toContain('--') // Virtual (slug--date ID)
   })
 
   it('excludes paused recurring patterns', async () => {
@@ -474,6 +483,7 @@ describe('getEventsInRange', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Paused Run',
+        slug: 'paused-run',
         address: '123 Main St',
         clubId: club.id,
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -585,6 +595,7 @@ describe('CRUD operations', () => {
       const recurring = await prisma.recurringEvent.create({
         data: {
           title: 'Old Title',
+          slug: 'old-title',
           address: '123 Main St',
           clubId: club.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -621,6 +632,7 @@ describe('CRUD operations', () => {
       const recurring = await prisma.recurringEvent.create({
         data: {
           title: 'Tuesday Run',
+          slug: 'tuesday-run-7',
           address: '123 Main St',
           clubId: club.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -656,6 +668,7 @@ describe('CRUD operations', () => {
       const recurring = await prisma.recurringEvent.create({
         data: {
           title: 'Tuesday Run',
+          slug: 'tuesday-run-8',
           address: '123 Main St',
           clubId: club.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -694,6 +707,7 @@ describe('CRUD operations', () => {
       await prisma.recurringEvent.create({
         data: {
           title: 'Tuesday Run',
+          slug: 'tuesday-run-9',
           address: '123 Main St',
           clubId: club.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -703,6 +717,7 @@ describe('CRUD operations', () => {
       await prisma.recurringEvent.create({
         data: {
           title: 'Saturday Run',
+          slug: 'saturday-run-2',
           address: '456 Oak Ave',
           clubId: club.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=8;BYMINUTE=0',

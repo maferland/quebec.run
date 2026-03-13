@@ -31,6 +31,7 @@ describe('GET /api/recurring-events', () => {
     await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,

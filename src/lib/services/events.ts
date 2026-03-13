@@ -36,23 +36,24 @@ export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
 
-  // Virtual event ID format: recurringEventId:YYYY-MM-DD
-  if (id.includes(':')) {
-    const [recurringEventId, dateKey] = id.split(':')
+  // Virtual event ID format: slug--YYYY-MM-DD
+  const virtualMatch = id.match(/^(.+)--(\d{4}-\d{2}-\d{2})$/)
+  if (virtualMatch) {
+    const [, slug, dateKey] = virtualMatch
     const recurringEvent = await prisma.recurringEvent.findUnique({
-      where: { id: recurringEventId },
+      where: { slug },
       include: { club: true },
     })
 
     if (!recurringEvent) {
-      throw new NotFoundError('Event not found')
+      return null
     }
 
     const date = new Date(`${dateKey}T00:00:00`)
     return createVirtualEvent(recurringEvent, date)
   }
 
-  const event = await prisma.event.findUnique({
+  return await prisma.event.findUnique({
     where: { id },
     include: {
       club: {
@@ -64,12 +65,6 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
       },
     },
   })
-
-  if (!event) {
-    throw new NotFoundError('Event not found')
-  }
-
-  return event
 }
 
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {

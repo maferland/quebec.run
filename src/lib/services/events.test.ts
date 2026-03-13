@@ -466,13 +466,14 @@ describe('Events Service Integration Tests', () => {
       expect(result.club!.slug).toBe(testClub.slug)
     })
 
-    it('returns a virtual event for composite ID (recurringEventId:date)', async () => {
+    it('returns a virtual event for slug-based ID (slug--date)', async () => {
       const clubs = await testPrisma.club.findMany()
       const testClub = clubs[0]
 
       const recurring = await testPrisma.recurringEvent.create({
         data: {
           title: 'Weekly Run',
+          slug: 'weekly-run',
           description: 'A recurring run',
           address: '456 Park Ave',
           distance: '10km',
@@ -484,31 +485,33 @@ describe('Events Service Integration Tests', () => {
       })
 
       const result = await getEventById({
-        data: { id: `${recurring.id}:2026-03-13` },
+        data: { id: `${recurring.slug}--2026-03-13` },
       })
 
-      expect(result.id).toBe(`${recurring.id}:2026-03-13`)
-      expect(result.title).toBe('Weekly Run')
-      expect(result.description).toBe('A recurring run')
-      expect(result.address).toBe('456 Park Ave')
-      expect(result.distance).toBe('10km')
-      expect(result.pace).toBe('5:30/km')
-      expect(result.time).toBe('18:00')
-      expect(result.club).not.toBeNull()
-      expect(result.club!.name).toBe(testClub.name)
-      expect(result.club!.slug).toBe(testClub.slug)
+      expect(result!.id).toBe('weekly-run--2026-03-13')
+      expect(result!.title).toBe('Weekly Run')
+      expect(result!.description).toBe('A recurring run')
+      expect(result!.address).toBe('456 Park Ave')
+      expect(result!.distance).toBe('10km')
+      expect(result!.pace).toBe('5:30/km')
+      expect(result!.time).toBe('18:00')
+      expect(result!.club).not.toBeNull()
+      expect(result!.club!.name).toBe(testClub.name)
+      expect(result!.club!.slug).toBe(testClub.slug)
     })
 
-    it('throws NotFoundError for non-existent virtual event', async () => {
-      await expect(
-        getEventById({ data: { id: 'non-existent-id:2026-03-13' } })
-      ).rejects.toThrow('Event not found')
+    it('returns null for non-existent virtual event', async () => {
+      const result = await getEventById({
+        data: { id: 'non-existent-slug--2026-03-13' },
+      })
+      expect(result).toBeNull()
     })
 
-    it('throws NotFoundError for non-existent concrete event', async () => {
-      await expect(
-        getEventById({ data: { id: 'non-existent-id' } })
-      ).rejects.toThrow('Event not found')
+    it('returns null for non-existent concrete event', async () => {
+      const result = await getEventById({
+        data: { id: 'non-existent-id' },
+      })
+      expect(result).toBeNull()
     })
   })
 
@@ -524,6 +527,7 @@ describe('Events Service Integration Tests', () => {
       const recurring = await testPrisma.recurringEvent.create({
         data: {
           title: 'Weekly Run',
+          slug: 'weekly-run',
           address: '123 Main St',
           clubId: testClub.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -550,8 +554,8 @@ describe('Events Service Integration Tests', () => {
       // At minimum: existing events + 1 concrete + at least 1 virtual occurrence
       expect(result.length).toBeGreaterThan(existingEventsCount + 1)
 
-      // Virtual events should have composite IDs (format: "recurringId:date")
-      const virtualEvents = result.filter((e) => e.id.includes(':'))
+      // Virtual events should have slug-based IDs (format: "slug--YYYY-MM-DD")
+      const virtualEvents = result.filter((e) => e.id.includes('--'))
       expect(virtualEvents.length).toBeGreaterThan(0)
     })
 
@@ -572,6 +576,7 @@ describe('Events Service Integration Tests', () => {
       await testPrisma.recurringEvent.create({
         data: {
           title: 'Club 1 Weekly Run',
+          slug: 'club-1-weekly-run',
           address: '123 Main St',
           clubId: testClub.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
@@ -582,6 +587,7 @@ describe('Events Service Integration Tests', () => {
       await testPrisma.recurringEvent.create({
         data: {
           title: 'Club 2 Weekly Run',
+          slug: 'club-2-weekly-run',
           address: '456 Other St',
           clubId: otherClub.id,
           schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
