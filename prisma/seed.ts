@@ -95,22 +95,6 @@ async function main() {
 
   // Create clubs for test owners
   await prisma.club.upsert({
-    where: { slug: createSlug('Club Courir Limoilou') },
-    update: {
-      description: 'Club de course dans Limoilou',
-      language: 'fr',
-      ownerId: clubOwner1.id,
-    },
-    create: {
-      name: 'Club Courir Limoilou',
-      slug: createSlug('Club Courir Limoilou'),
-      description: 'Club de course dans Limoilou',
-      language: 'fr',
-      ownerId: clubOwner1.id,
-    },
-  })
-
-  await prisma.club.upsert({
     where: { slug: createSlug('Vélo-Course Sainte-Foy') },
     update: {
       description: 'Club mixte vélo et course à Sainte-Foy',
@@ -257,23 +241,6 @@ async function main() {
       clubId: sixAmClub.id,
     },
   ]
-
-  // Add an evening run for Club Courir Limoilou (different club, different time)
-  const courirLimoilou = await prisma.club.findUnique({
-    where: { slug: createSlug('Club Courir Limoilou') },
-  })
-  if (courirLimoilou) {
-    recurringEvents.push({
-      title: 'Course du mercredi soir',
-      description: 'Sortie hebdomadaire dans le quartier Limoilou',
-      address: '300 8e Avenue, Québec, QC G1L 2P8',
-      latitude: 46.8268,
-      longitude: -71.2305,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=0',
-      timezone: 'America/Toronto',
-      clubId: courirLimoilou.id,
-    })
-  }
 
   // Upsert recurring events (update existing or create new)
   for (const event of recurringEvents) {

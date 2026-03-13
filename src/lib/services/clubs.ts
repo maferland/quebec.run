@@ -8,6 +8,8 @@ import type {
   PublicPayload,
 } from '@/lib/schemas'
 import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
+import { getEventsInRange } from './recurring-events'
+import { addDays } from 'date-fns'
 
 // We need the ClubId type for getClubById
 import { clubIdSchema, clubSlugSchema } from '@/lib/schemas'
@@ -20,9 +22,6 @@ type ClubSlug = z.infer<typeof clubSlugSchema>
 export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
   const { limit = 50, offset = 0 } = data
 
-  const nextWeek = new Date()
-  nextWeek.setDate(nextWeek.getDate() + 7)
-
   return await prisma.club.findMany({
     skip: offset,
     take: limit,
@@ -33,22 +32,9 @@ export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
       slug: true,
       description: true,
       stravaSlug: true,
-      events: {
-        where: {
-          date: {
-            gte: new Date(),
-            lte: nextWeek,
-          },
-        },
-        orderBy: { date: 'asc' },
-        take: 5,
+      _count: {
         select: {
-          id: true,
-          title: true,
-          date: true,
-          time: true,
-          distance: true,
-          pace: true,
+          recurringEvents: { where: { isActive: true } },
         },
       },
     },
@@ -212,43 +198,53 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
 
 // Helper functions that take ID/slug from route params
 export async function getClubByIdWithParams(id: string) {
-  const nextWeek = new Date()
-  nextWeek.setDate(nextWeek.getDate() + 7)
-
-  return await prisma.club.findUnique({
+  const club = await prisma.club.findUnique({
     where: { id },
-    include: {
-      events: {
-        where: {
-          date: {
-            gte: new Date(),
-            lte: nextWeek,
-          },
-        },
-        orderBy: { date: 'asc' },
-      },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      stravaSlug: true,
     },
   })
+
+  if (!club) return null
+
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const nextWeek = addDays(now, 7)
+  const events = await getEventsInRange(now, nextWeek, club.id)
+
+  return { ...club, events }
 }
 
 export async function getClubBySlug({ slug }: ClubSlug) {
-  const nextWeek = new Date()
-  nextWeek.setDate(nextWeek.getDate() + 7)
-
-  return await prisma.club.findUnique({
+  const club = await prisma.club.findUnique({
     where: { slug },
-    include: {
-      events: {
-        where: {
-          date: {
-            gte: new Date(),
-            lte: nextWeek,
-          },
-        },
-        orderBy: { date: 'asc' },
-      },
+    select: {
+      id: true,
+      name: true,
+      slug: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      stravaSlug: true,
     },
   })
+
+  if (!club) return null
+
+  const now = new Date()
+  now.setHours(0, 0, 0, 0)
+  const nextWeek = addDays(now, 7)
+  const events = await getEventsInRange(now, nextWeek, club.id)
+
+  return { ...club, events }
 }
 
 export const updateClubById = async ({

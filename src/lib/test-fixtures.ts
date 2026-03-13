@@ -7,24 +7,7 @@ export const mockClubsData: GetAllClubsReturn[] = [
     slug: '6am-club-test',
     description: 'Early morning running club for testing',
     stravaSlug: null,
-    events: [
-      {
-        id: 'event-test-1',
-        title: '6AM Club Limoilou Test Run',
-        date: new Date('2025-01-24T06:00:00.000Z'),
-        time: '06:00',
-        distance: '5-8 km',
-        pace: 'Rythme modéré',
-      },
-      {
-        id: 'event-test-2',
-        title: '6AM Club Saint-Jean Test Run',
-        date: new Date('2025-01-25T06:00:00.000Z'),
-        time: '06:00',
-        distance: '3-5 km',
-        pace: 'Rythme facile',
-      },
-    ],
+    _count: { recurringEvents: 2 },
   },
   {
     id: 'club-test-2',
@@ -32,16 +15,7 @@ export const mockClubsData: GetAllClubsReturn[] = [
     slug: 'quebec-runners-test',
     description: 'Running club for all levels - test version',
     stravaSlug: null,
-    events: [
-      {
-        id: 'event-test-3',
-        title: 'Evening Run Test',
-        date: new Date('2025-01-26T18:00:00.000Z'),
-        time: '18:00',
-        distance: '10 km',
-        pace: '4:30/km',
-      },
-    ],
+    _count: { recurringEvents: 1 },
   },
 ]
 

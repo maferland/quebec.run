@@ -2,8 +2,9 @@ import { UseFormRegister, FieldValues, Path, FieldError } from 'react-hook-form'
 import { FormControl } from './form-control'
 import { cn } from '@/lib/utils'
 
-export interface FormInputProps<T extends FieldValues = FieldValues>
-  extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
+export interface FormInputProps<
+  T extends FieldValues = FieldValues,
+> extends Omit<React.InputHTMLAttributes<HTMLInputElement>, 'id'> {
   register: UseFormRegister<T>
   name: Path<T>
   label: string

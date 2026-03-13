@@ -29,12 +29,11 @@ const expectValidEvent = (overrides = {}) =>
     ...overrides,
   })
 
-const expectValidClubWithEvents = (expectedEventCount = 0, overrides = {}) =>
+const expectValidClubWithCount = (overrides = {}) =>
   expectValidClub({
-    events:
-      expectedEventCount > 0
-        ? expect.arrayContaining([expectValidEvent()])
-        : expect.arrayContaining([]),
+    _count: expect.objectContaining({
+      recurringEvents: expect.any(Number),
+    }),
     ...overrides,
   })
 
@@ -70,7 +69,7 @@ describe('Clubs Service Integration Tests', () => {
 
       expect(result).toHaveLength(1)
       expect(result[0]).toEqual(
-        expectValidClubWithEvents(2, {
+        expectValidClubWithCount({
           name: 'Test Running Club',
           slug: 'test-running-club',
           description: 'A club for testing purposes',

@@ -9,7 +9,7 @@ import type {
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 import { geocodeAddress } from './geocoding'
-import { getEventsInRange } from './recurring-events'
+import { getEventsInRange, createVirtualEvent } from './recurring-events'
 import { addDays } from 'date-fns'
 
 // Pure business logic functions - let TypeScript infer return types
@@ -35,6 +35,23 @@ export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
+
+  // Virtual event ID format: recurringEventId:YYYY-MM-DD
+  if (id.includes(':')) {
+    const [recurringEventId, dateKey] = id.split(':')
+    const recurringEvent = await prisma.recurringEvent.findUnique({
+      where: { id: recurringEventId },
+      include: { club: true },
+    })
+
+    if (!recurringEvent) {
+      throw new NotFoundError('Event not found')
+    }
+
+    const date = new Date(`${dateKey}T00:00:00`)
+    return createVirtualEvent(recurringEvent, date)
+  }
+
   const event = await prisma.event.findUnique({
     where: { id },
     include: {

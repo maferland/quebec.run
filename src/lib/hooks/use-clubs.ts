@@ -6,9 +6,12 @@ import type {
   ClubWithEvents,
   StravaSyncResponse,
 } from '@/lib/schemas'
+import type { GetAllClubsReturn } from '@/lib/services/clubs'
 
 // API functions
-async function fetchClubs(query: ClubsQuery = {}): Promise<ClubWithEvents[]> {
+async function fetchClubs(
+  query: ClubsQuery = {}
+): Promise<GetAllClubsReturn[]> {
   const params = new URLSearchParams()
   if (query.limit) params.set('limit', query.limit.toString())
   if (query.offset) params.set('offset', query.offset.toString())

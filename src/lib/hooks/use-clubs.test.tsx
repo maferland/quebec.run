@@ -26,7 +26,7 @@ describe('useClubs hook', () => {
       expect(result.current.data!.length).toBeGreaterThan(0)
       expect(result.current.data![0]).toHaveProperty('id')
       expect(result.current.data![0]).toHaveProperty('name')
-      expect(result.current.data![0]).toHaveProperty('events')
+      expect(result.current.data![0]).toHaveProperty('_count')
     })
 
     it('handles query parameters', async () => {
