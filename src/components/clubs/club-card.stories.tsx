@@ -20,24 +20,7 @@ const mockClub: GetAllClubsReturn = {
   description:
     'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
   stravaSlug: null,
-  events: [
-    {
-      id: 'event-1',
-      title: '6AM Club Limoilou',
-      date: new Date('2025-01-24T06:00:00'),
-      time: '06:00',
-      distance: '5-8 km',
-      pace: 'Rythme modéré',
-    },
-    {
-      id: 'event-2',
-      title: '6AM Club Saint-Jean-Baptiste',
-      date: new Date('2025-01-22T06:00:00'),
-      time: '06:00',
-      distance: '5-8 km',
-      pace: 'Rythme modéré',
-    },
-  ],
+  _count: { recurringEvents: 2 },
 }
 
 export const Default: Story = {
@@ -55,20 +38,20 @@ export const WithoutDescription: Story = {
   },
 }
 
-export const SingleEvent: Story = {
+export const SingleRecurringEvent: Story = {
   args: {
     club: {
       ...mockClub,
-      events: [mockClub.events[0]],
+      _count: { recurringEvents: 1 },
     },
   },
 }
 
-export const NoEvents: Story = {
+export const NoRecurringEvents: Story = {
   args: {
     club: {
       ...mockClub,
-      events: [],
+      _count: { recurringEvents: 0 },
     },
   },
 }

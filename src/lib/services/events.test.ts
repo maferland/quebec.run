@@ -1,6 +1,12 @@
 import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
-import { getAllEvents, createEvent, updateEvent, deleteEvent } from './events'
+import {
+  getAllEvents,
+  getEventById,
+  createEvent,
+  updateEvent,
+  deleteEvent,
+} from './events'
 import { geocodeAddress } from './geocoding'
 import { addDays } from 'date-fns'
 
@@ -434,6 +440,75 @@ describe('Events Service Integration Tests', () => {
       })
 
       expect(geocodeAddress).not.toHaveBeenCalled()
+    })
+  })
+
+  describe('getEventById', () => {
+    it('returns a concrete event by ID', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Concrete Event',
+          date: new Date('2025-12-01'),
+          time: '18:00',
+          address: '123 Main St',
+          clubId: testClub.id,
+        },
+      })
+
+      const result = await getEventById({ data: { id: event.id } })
+
+      expect(result.id).toBe(event.id)
+      expect(result.title).toBe('Concrete Event')
+      expect(result.club).not.toBeNull()
+      expect(result.club!.slug).toBe(testClub.slug)
+    })
+
+    it('returns a virtual event for composite ID (recurringEventId:date)', async () => {
+      const clubs = await testPrisma.club.findMany()
+      const testClub = clubs[0]
+
+      const recurring = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Weekly Run',
+          description: 'A recurring run',
+          address: '456 Park Ave',
+          distance: '10km',
+          pace: '5:30/km',
+          clubId: testClub.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const result = await getEventById({
+        data: { id: `${recurring.id}:2026-03-13` },
+      })
+
+      expect(result.id).toBe(`${recurring.id}:2026-03-13`)
+      expect(result.title).toBe('Weekly Run')
+      expect(result.description).toBe('A recurring run')
+      expect(result.address).toBe('456 Park Ave')
+      expect(result.distance).toBe('10km')
+      expect(result.pace).toBe('5:30/km')
+      expect(result.time).toBe('18:00')
+      expect(result.club).not.toBeNull()
+      expect(result.club!.name).toBe(testClub.name)
+      expect(result.club!.slug).toBe(testClub.slug)
+    })
+
+    it('throws NotFoundError for non-existent virtual event', async () => {
+      await expect(
+        getEventById({ data: { id: 'non-existent-id:2026-03-13' } })
+      ).rejects.toThrow('Event not found')
+    })
+
+    it('throws NotFoundError for non-existent concrete event', async () => {
+      await expect(
+        getEventById({ data: { id: 'non-existent-id' } })
+      ).rejects.toThrow('Event not found')
     })
   })
 

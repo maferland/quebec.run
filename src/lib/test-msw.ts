@@ -35,38 +35,30 @@ export const mockClubs = [
     name: 'Morning Runners',
     slug: 'morning-runners',
     description: 'Early morning running group',
-    website: 'https://morningrunners.com',
-    instagram: null,
-    facebook: null,
-    language: null,
-    stravaClubId: null,
     stravaSlug: null,
-    isManual: true,
-    lastSynced: null,
-    createdAt: new Date('2024-01-01'),
-    updatedAt: new Date('2024-01-01'),
-    ownerId: 'user-1',
-    events: [],
+    _count: { recurringEvents: 0 },
   },
   {
     id: 'club-2',
     name: 'Evening Runners',
     slug: 'evening-runners',
     description: 'Evening running group',
-    website: null,
-    instagram: '@eveningrunners',
-    facebook: null,
-    language: null,
-    stravaClubId: null,
     stravaSlug: null,
-    isManual: true,
-    lastSynced: null,
-    createdAt: new Date('2024-01-02'),
-    updatedAt: new Date('2024-01-02'),
-    ownerId: 'user-2',
-    events: [],
+    _count: { recurringEvents: 0 },
   },
 ]
+
+export const mockClubDetail = {
+  id: 'club-1',
+  name: 'Morning Runners',
+  slug: 'morning-runners',
+  description: 'Early morning running group',
+  website: 'https://morningrunners.com',
+  instagram: null,
+  facebook: null,
+  stravaSlug: null,
+  events: [],
+}
 
 export const mockEvents = [
   {
@@ -141,11 +133,10 @@ export const handlers = [
   }),
 
   http.get('/api/clubs/:id', ({ params }) => {
-    const club = mockClubs.find((c) => c.id === params.id)
-    if (!club) {
-      return HttpResponse.json({ error: 'Club not found' }, { status: 404 })
+    if (params.id === mockClubDetail.id || params.id === mockClubDetail.slug) {
+      return HttpResponse.json(mockClubDetail)
     }
-    return HttpResponse.json(club)
+    return HttpResponse.json({ error: 'Club not found' }, { status: 404 })
   }),
 
   http.put('/api/clubs/:id', async ({ params, request }) => {
