@@ -36,14 +36,24 @@ export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
 
-  // Virtual event ID format: slug--YYYY-MM-DD
-  const virtualMatch = id.match(/^(.+)--(\d{4}-\d{2}-\d{2})$/)
+  // Virtual event ID formats:
+  // New: slug--YYYY-MM-DD (e.g., 6am-club-beauport--2026-03-18)
+  // Legacy: cuid:YYYY-MM-DD (e.g., cmj8zbj20000cpt9z:2026-03-18)
+  const slugMatch = id.match(/^(.+)--(\d{4}-\d{2}-\d{2})$/)
+  const legacyMatch = !slugMatch && id.match(/^(.+):(\d{4}-\d{2}-\d{2})$/)
+  const virtualMatch = slugMatch || legacyMatch
+
   if (virtualMatch) {
-    const [, slug, dateKey] = virtualMatch
-    const recurringEvent = await prisma.recurringEvent.findUnique({
-      where: { slug },
-      include: { club: true },
-    })
+    const [, identifier, dateKey] = virtualMatch
+    const recurringEvent = slugMatch
+      ? await prisma.recurringEvent.findUnique({
+          where: { slug: identifier },
+          include: { club: true },
+        })
+      : await prisma.recurringEvent.findUnique({
+          where: { id: identifier },
+          include: { club: true },
+        })
 
     if (!recurringEvent) {
       return null
