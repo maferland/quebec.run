@@ -337,7 +337,7 @@ async function main() {
     {
       title: '6AM Club Maizerets',
       description: 'Café Paleta — 2539F Boul. Sainte-Anne, Québec',
-      address: '2539F Boul. Sainte-Anne, Québec, QC G1J 1Y4',
+      address: '2539 Boulevard Sainte-Anne, Québec, QC',
       latitude: 46.8445096,
       longitude: -71.2156864,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
@@ -357,7 +357,7 @@ async function main() {
     {
       title: '6AM Club Saint-Sauveur',
       description: 'Le Philtre Café — 504 Rue Saint-Vallier O, Québec',
-      address: '504 Rue Saint-Vallier O, Québec, QC G1N 0C2',
+      address: '504 Rue Saint-Vallier Ouest, Québec, QC',
       latitude: 46.8111749,
       longitude: -71.2414915,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=6;BYMINUTE=0',
@@ -387,7 +387,7 @@ async function main() {
     {
       title: '6AM Club Lévis (Lauzon)',
       description: 'ES Café — 7520 Bd Guillaume-Couture #120, Lévis',
-      address: '7520 Bd Guillaume-Couture #120, Lévis, QC G6V 6S5',
+      address: '7520 Boulevard Guillaume-Couture, Lévis, QC',
       latitude: 46.8148,
       longitude: -71.1573,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
@@ -397,7 +397,7 @@ async function main() {
     {
       title: '6AM Club Sillery',
       description: 'Café Smith Sillery — 2012 Ch. Saint-Louis, Québec',
-      address: '2012 Ch. Saint-Louis, Québec, QC G1T 1P1',
+      address: '2012 Chemin Saint-Louis, Québec, QC',
       latitude: 46.7705783,
       longitude: -71.2599946,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=0',
@@ -458,8 +458,7 @@ async function main() {
       title: '6AM Club Saint-Augustin',
       description:
         "Café les Toques Gourmandes — 3695 Rue de l'Hêtrière #260, Saint-Augustin",
-      address:
-        "3695 Rue de l'Hêtrière #260, Saint-Augustin-de-Desmaures, QC G3A 2Z5",
+      address: "3695 Rue de l'Hêtrière, Saint-Augustin-de-Desmaures, QC",
       latitude: 46.7397,
       longitude: -71.3717,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=6;BYMINUTE=0',
@@ -480,7 +479,7 @@ async function main() {
       title: '6AM Club Pont-Rouge',
       description:
         'Bougeotte et Placotine — 10 Rue de la Fabrique #101, Pont-Rouge',
-      address: '10 Rue de la Fabrique #101, Pont-Rouge, QC G3H 1A1',
+      address: '10 Rue de la Fabrique, Pont-Rouge, QC',
       latitude: 46.7558,
       longitude: -71.6942,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=6;BYMINUTE=0',
@@ -549,7 +548,7 @@ async function main() {
     {
       title: 'Les Citrons Pressés — Lundi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
-      address: 'Base des Bambies, Québec, QC',
+      address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
       longitude: -71.2484,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=18;BYMINUTE=30',
@@ -559,7 +558,7 @@ async function main() {
     {
       title: 'Les Citrons Pressés — Mercredi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
-      address: 'Base des Bambies, Québec, QC',
+      address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
       longitude: -71.2484,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=30',
@@ -592,7 +591,7 @@ async function main() {
       title: 'Volt — Lundi',
       description:
         'Nov–Mar: Centre de glaces Intact Assurance / Avr–Oct: Stade TELUS, Université Laval',
-      address: 'Stade TELUS, Université Laval, Québec, QC',
+      address: '2300 Rue de la Terrasse, Québec, QC',
       latitude: 46.7808,
       longitude: -71.2747,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=19;BYMINUTE=0',
@@ -602,7 +601,7 @@ async function main() {
     {
       title: 'Volt — Mercredi',
       description: 'Intersection Grande-Allée & Bougainville',
-      address: 'Grande-Allée & Bougainville, Québec, QC',
+      address: '750 Grande Allée Ouest, Québec, QC',
       latitude: 46.7997,
       longitude: -71.2318,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
@@ -625,7 +624,7 @@ async function main() {
       title: 'Club La Foulée — Intervalles mardi',
       description:
         'Mai–Oct: Polyvalente les Compagnons-de-Cartier, Ste-Foy / Nov–Avr: PEPS',
-      address: 'Polyvalente les Compagnons-de-Cartier, Sainte-Foy, QC',
+      address: '2300 Rue de la Terrasse, Québec, QC',
       latitude: 46.7731,
       longitude: -71.2889,
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=30',
