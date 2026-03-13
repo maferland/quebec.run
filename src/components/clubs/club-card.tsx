@@ -50,7 +50,7 @@ export function ClubCard({ club }: ClubCardProps) {
 
         {/* Description - truncated */}
         {club.description && (
-          <p className="text-text-secondary font-body text-sm mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-text-secondary font-body text-sm mb-4 line-clamp-3 leading-relaxed">
             {club.description}
           </p>
         )}

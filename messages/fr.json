@@ -108,13 +108,13 @@
     },
     "noEvents": {
       "title": "Aucun événement à venir",
-      "description": "Ce club n'a aucun événement programmé pour les 7 prochains jours. Revenez bientôt pour de nouvelles activités!"
+      "description": "Ce club n'a aucun événement programmé pour les 30 prochains jours. Revenez bientôt pour de nouvelles activités!"
     },
     "card": {
       "location": "Québec",
       "moreEvents": "+{count} autres événements cette semaine",
       "upcomingEvents": "{count} événements à venir",
-      "recurringEvents": "{count} séries actives",
+      "recurringEvents": "{count, plural, one {# série active} other {# séries actives}}",
       "viewClub": "Voir le club →",
       "upcomingEventsTitle": "Événements à venir"
     }

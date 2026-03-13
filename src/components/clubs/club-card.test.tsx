@@ -290,7 +290,7 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={clubWithLongDescription} />)
 
       const description = screen.getByText(/This is a very long description/)
-      expect(description).toHaveClass('line-clamp-2')
+      expect(description).toHaveClass('line-clamp-3')
     })
 
     it('handles special characters in club data', () => {

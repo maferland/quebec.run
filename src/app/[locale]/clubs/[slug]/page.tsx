@@ -1,8 +1,7 @@
 import { getTranslations } from 'next-intl/server'
-import { EventCard } from '@/components/events/event-card'
+import { ClubEventsList } from '@/components/clubs/club-events-list'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
-import { ContentGrid } from '@/components/ui/content-grid'
 import { PageContainer } from '@/components/ui/page-container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
@@ -87,7 +86,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                 )}
                 {club.events && club.events.length > 0 && (
                   <Tag variant="primary" icon={Calendar}>
-                    {club.events.length} upcoming events
+                    {t('card.upcomingEvents', { count: club.events.length })}
                   </Tag>
                 )}
               </div>
@@ -106,11 +105,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             </div>
 
             {club.events && club.events.length > 0 ? (
-              <ContentGrid columns="2" gap="lg">
-                {club.events.map((event) => (
-                  <EventCard key={event.id} event={{ ...event, club }} />
-                ))}
-              </ContentGrid>
+              <ClubEventsList events={club.events} />
             ) : (
               <EmptyState
                 icon={Calendar}
