@@ -276,7 +276,9 @@ export async function getEventsInRange(
  * Create recurring event
  */
 export async function createRecurringEvent(
-  data: Prisma.RecurringEventUncheckedCreateInput
+  data: Omit<Prisma.RecurringEventUncheckedCreateInput, 'slug'> & {
+    slug?: string
+  }
 ) {
   return await prisma.recurringEvent.create({
     data: {
