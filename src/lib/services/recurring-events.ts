@@ -2,6 +2,7 @@ import { prisma } from '@/lib/prisma'
 import { RRule } from 'rrule'
 import { addDays, min, format } from 'date-fns'
 import type { RecurringEvent, Club, Prisma } from '@client'
+import { createSlug } from '@/lib/utils/slug'
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -171,7 +172,7 @@ export function createVirtualEvent(
   const dateKey = format(date, 'yyyy-MM-dd')
 
   return {
-    id: `${recurringEvent.id}:${dateKey}`,
+    id: `${recurringEvent.slug}--${dateKey}`,
     title: recurringEvent.title,
     description: recurringEvent.description,
     date,
@@ -280,6 +281,7 @@ export async function createRecurringEvent(
   return await prisma.recurringEvent.create({
     data: {
       ...data,
+      slug: data.slug || createSlug(data.title),
       timezone: data.timezone || 'America/Toronto',
       isActive: data.isActive ?? true,
     },
@@ -293,9 +295,13 @@ export async function updateRecurringEvent(
   id: string,
   data: Partial<Prisma.RecurringEventUncheckedUpdateInput>
 ) {
+  const updateData = { ...data }
+  if (typeof data.title === 'string') {
+    updateData.slug = createSlug(data.title)
+  }
   return await prisma.recurringEvent.update({
     where: { id },
-    data,
+    data: updateData,
   })
 }
 

@@ -101,7 +101,7 @@ async function main() {
   })
 
   // Faux Mouvement - synced from Strava
-  await prisma.club.upsert({
+  const fauxMouvement = await prisma.club.upsert({
     where: { slug: 'fauxmouvement' },
     update: {
       name: 'Faux Mouvement',
@@ -112,6 +112,8 @@ async function main() {
       isManual: false,
       lastSynced: new Date(),
       language: 'fr',
+      website: 'fauxmouvement.cc',
+      instagram: 'faux.mouvement',
       ownerId: staffUser.id,
     },
     create: {
@@ -124,6 +126,197 @@ async function main() {
       isManual: false,
       lastSynced: new Date(),
       language: 'fr',
+      website: 'fauxmouvement.cc',
+      instagram: 'faux.mouvement',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Les Citrons Pressés
+  const citronsPresses = await prisma.club.upsert({
+    where: { slug: createSlug('Les Citrons Pressés') },
+    update: {
+      description:
+        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi aux 2 semaines.',
+      language: 'fr',
+      instagram: 'citronspressesrunclub',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Les Citrons Pressés',
+      slug: createSlug('Les Citrons Pressés'),
+      description:
+        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi aux 2 semaines.',
+      language: 'fr',
+      instagram: 'citronspressesrunclub',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+  })
+
+  // La Panthère
+  const laPanthere = await prisma.club.upsert({
+    where: { slug: createSlug('La Panthère') },
+    update: {
+      description:
+        'Club de course — 5km ou 10km. Mercredi 17h30 et samedi 9h30.',
+      language: 'fr',
+      instagram: 'clublapanthere',
+      vibe: 'SOCIAL',
+      type: 'MIXED',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'La Panthère',
+      slug: createSlug('La Panthère'),
+      description:
+        'Club de course — 5km ou 10km. Mercredi 17h30 et samedi 9h30.',
+      language: 'fr',
+      instagram: 'clublapanthere',
+      vibe: 'SOCIAL',
+      type: 'MIXED',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Volt
+  const volt = await prisma.club.upsert({
+    where: { slug: createSlug('Volt') },
+    update: {
+      description:
+        'Club de course structuré — entraînements lundi et mercredi 19h. 260$/an ou 90$/trimestre.',
+      language: 'fr',
+      instagram: 'voltarunclub',
+      website: 'clubdecoursevolt.com',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Volt',
+      slug: createSlug('Volt'),
+      description:
+        'Club de course structuré — entraînements lundi et mercredi 19h. 260$/an ou 90$/trimestre.',
+      language: 'fr',
+      instagram: 'voltarunclub',
+      website: 'clubdecoursevolt.com',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Le Crew Run Club
+  const leCrew = await prisma.club.upsert({
+    where: { slug: createSlug('Le Crew Run Club') },
+    update: {
+      description:
+        'Club de course avec coaching, tapis roulant et musculation. Membership payant.',
+      language: 'fr',
+      instagram: 'lecrew_runclub',
+      website: 'lecrewrunclub.ca',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Le Crew Run Club',
+      slug: createSlug('Le Crew Run Club'),
+      description:
+        'Club de course avec coaching, tapis roulant et musculation. Membership payant.',
+      language: 'fr',
+      instagram: 'lecrew_runclub',
+      website: 'lecrewrunclub.ca',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Club La Foulée
+  const laFoulee = await prisma.club.upsert({
+    where: { slug: createSlug('Club La Foulée') },
+    update: {
+      description:
+        'Fondé en 1977, 200+ membres. Intervalles le mardi, longues sorties le dimanche (15-25km). 90$/an.',
+      language: 'fr',
+      website: 'lafoulee.com',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Club La Foulée',
+      slug: createSlug('Club La Foulée'),
+      description:
+        'Fondé en 1977, 200+ membres. Intervalles le mardi, longues sorties le dimanche (15-25km). 90$/an.',
+      language: 'fr',
+      website: 'lafoulee.com',
+      vibe: 'TRAINING',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Le Coureur Nordique
+  const coureurNordique = await prisma.club.upsert({
+    where: { slug: createSlug('Le Coureur Nordique') },
+    update: {
+      description:
+        "Course gratuite le mardi à 18h15, toute l'année (pause en décembre). Sans inscription.",
+      language: 'fr',
+      instagram: 'lecoureurnordique',
+      website: 'lecoureurnordique.ca',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Le Coureur Nordique',
+      slug: createSlug('Le Coureur Nordique'),
+      description:
+        "Course gratuite le mardi à 18h15, toute l'année (pause en décembre). Sans inscription.",
+      language: 'fr',
+      instagram: 'lecoureurnordique',
+      website: 'lecoureurnordique.ca',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Kogi (on pause)
+  await prisma.club.upsert({
+    where: { slug: createSlug('Kogi') },
+    update: {
+      description:
+        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      language: 'fr',
+      instagram: 'lekogicafe',
+      isActive: false,
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Kogi',
+      slug: createSlug('Kogi'),
+      description:
+        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      language: 'fr',
+      instagram: 'lekogicafe',
+      isActive: false,
+      vibe: 'SOCIAL',
+      type: 'ROAD',
       ownerId: staffUser.id,
     },
   })
@@ -298,6 +491,7 @@ async function main() {
 
   // Upsert recurring events (update existing or create new)
   for (const event of recurringEvents) {
+    const slug = createSlug(event.title)
     const existing = await prisma.recurringEvent.findFirst({
       where: {
         title: event.title,
@@ -308,11 +502,162 @@ async function main() {
     if (existing) {
       await prisma.recurringEvent.update({
         where: { id: existing.id },
-        data: event,
+        data: { ...event, slug },
       })
     } else {
       await prisma.recurringEvent.create({
-        data: event,
+        data: { ...event, slug },
+      })
+    }
+  }
+
+  // Recurring events for other clubs
+  // Source: run-clubs-quebec.md (March 2026)
+  const otherRecurringEvents = [
+    // Faux Mouvement — Tue 6PM, Thu 6PM, Sun 9AM
+    {
+      title: 'Faux Mouvement — Mardi',
+      description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
+      address: '70 Bd Champlain, Québec, QC',
+      latitude: 46.8112,
+      longitude: -71.2008,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: fauxMouvement.id,
+    },
+    {
+      title: 'Faux Mouvement — Jeudi',
+      description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
+      address: '70 Bd Champlain, Québec, QC',
+      latitude: 46.8112,
+      longitude: -71.2008,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: fauxMouvement.id,
+    },
+    {
+      title: 'Faux Mouvement — Dimanche',
+      description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
+      address: '70 Bd Champlain, Québec, QC',
+      latitude: 46.8112,
+      longitude: -71.2008,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=9;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: fauxMouvement.id,
+    },
+    // Les Citrons Pressés — Mon & Wed 6:30PM
+    {
+      title: 'Les Citrons Pressés — Lundi',
+      description: 'Base des Bambies (près du Centre Vidéotron)',
+      address: 'Base des Bambies, Québec, QC',
+      latitude: 46.8297,
+      longitude: -71.2484,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=18;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: citronsPresses.id,
+    },
+    {
+      title: 'Les Citrons Pressés — Mercredi',
+      description: 'Base des Bambies (près du Centre Vidéotron)',
+      address: 'Base des Bambies, Québec, QC',
+      latitude: 46.8297,
+      longitude: -71.2484,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: citronsPresses.id,
+    },
+    // La Panthère — Wed 5:30PM, Sat 9:30AM
+    {
+      title: 'La Panthère — Mercredi',
+      description: 'Parking de la Base de plein air de Sainte-Foy',
+      address: 'Base de plein air de Sainte-Foy, Québec, QC',
+      latitude: 46.7711,
+      longitude: -71.2875,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=17;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: laPanthere.id,
+    },
+    {
+      title: 'La Panthère — Samedi',
+      description: 'Parking de la Base de plein air de Sainte-Foy',
+      address: 'Base de plein air de Sainte-Foy, Québec, QC',
+      latitude: 46.7711,
+      longitude: -71.2875,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=9;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: laPanthere.id,
+    },
+    // Volt — Mon 7PM, Wed 7PM
+    {
+      title: 'Volt — Lundi',
+      description:
+        'Nov–Mar: Centre de glaces Intact Assurance / Avr–Oct: Stade TELUS, Université Laval',
+      address: 'Stade TELUS, Université Laval, Québec, QC',
+      latitude: 46.7808,
+      longitude: -71.2747,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=19;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: volt.id,
+    },
+    {
+      title: 'Volt — Mercredi',
+      description: 'Intersection Grande-Allée & Bougainville',
+      address: 'Grande-Allée & Bougainville, Québec, QC',
+      latitude: 46.7997,
+      longitude: -71.2318,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: volt.id,
+    },
+    // Le Coureur Nordique — Tue 6:15PM
+    {
+      title: 'Le Coureur Nordique — Mardi',
+      description: '141 Ch. Sainte-Foy, Québec',
+      address: '141 Ch. Sainte-Foy, Québec, QC G1R 1T1',
+      latitude: 46.8023,
+      longitude: -71.2243,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=15',
+      timezone: 'America/Toronto',
+      clubId: coureurNordique.id,
+    },
+    // Club La Foulée — Tue intervals, Sun long runs
+    {
+      title: 'Club La Foulée — Intervalles mardi',
+      description:
+        'Mai–Oct: Polyvalente les Compagnons-de-Cartier, Ste-Foy / Nov–Avr: PEPS',
+      address: 'Polyvalente les Compagnons-de-Cartier, Sainte-Foy, QC',
+      latitude: 46.7731,
+      longitude: -71.2889,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: laFoulee.id,
+    },
+    {
+      title: 'Club La Foulée — Longue sortie dimanche',
+      description: '15-25km, lieux variés',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: laFoulee.id,
+    },
+  ]
+
+  for (const event of otherRecurringEvents) {
+    const slug = createSlug(event.title)
+    const existing = await prisma.recurringEvent.findFirst({
+      where: {
+        title: event.title,
+        clubId: event.clubId,
+      },
+    })
+
+    if (existing) {
+      await prisma.recurringEvent.update({
+        where: { id: existing.id },
+        data: { ...event, slug },
+      })
+    } else {
+      await prisma.recurringEvent.create({
+        data: { ...event, slug },
       })
     }
   }

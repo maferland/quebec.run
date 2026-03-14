@@ -4,6 +4,9 @@ import { getEventById, updateEvent, deleteEvent } from '@/lib/services/events'
 
 export const GET = withPublic(eventIdSchema)(async (data) => {
   const event = await getEventById({ data })
+  if (!event) {
+    return Response.json({ error: 'Event not found' }, { status: 404 })
+  }
   return Response.json(event)
 })
 

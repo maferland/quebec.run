@@ -118,6 +118,7 @@ model Club {
 
 model RecurringEvent {
   id          String  @id @default(cuid())
+  slug        String  @unique
   title       String
   description String?
 

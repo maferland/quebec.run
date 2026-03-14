@@ -31,6 +31,7 @@ describe('GET /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
@@ -88,6 +89,7 @@ describe('PUT /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Old Title',
+        slug: 'old-title',
         address: 'Old Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
@@ -131,6 +133,7 @@ describe('PUT /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run-2',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
@@ -169,6 +172,7 @@ describe('PUT /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run-3',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
@@ -220,6 +224,7 @@ describe('DELETE /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run-4',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
@@ -260,6 +265,7 @@ describe('DELETE /api/recurring-events/[id]', () => {
     const recurringEvent = await prisma.recurringEvent.create({
       data: {
         title: 'Weekly Run',
+        slug: 'weekly-run-5',
         address: 'Test Address',
         schedulePattern: 'FREQ=WEEKLY;BYDAY=TU',
         clubId: club.id,
