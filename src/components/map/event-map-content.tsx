@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Tag } from '@/components/ui/tag'
 import { LocationInline } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
+import { eventUrl } from '@/lib/utils/event-url'
 import { markerIconConfig } from '@/lib/utils/map'
 import { Clock } from 'lucide-react'
 
@@ -75,7 +76,7 @@ export default function EventMapContent({
                 </div>
               )}
 
-              <Link href={`/events/${event.id}`}>
+              <Link href={eventUrl(event)}>
                 <Button size="sm" variant="primary" className="w-full">
                   {t('viewDetails')}
                 </Button>
