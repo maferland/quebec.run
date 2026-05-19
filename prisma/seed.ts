@@ -322,7 +322,7 @@ async function main() {
   })
 
   // Kogi
-  await prisma.club.upsert({
+  const kogi = await prisma.club.upsert({
     where: { slug: createSlug('Kogi') },
     update: {
       description: 'Club de course au Kogi Café, Limoilou.',
@@ -643,7 +643,7 @@ async function main() {
     },
     // Club La Foulée — Tue intervals, Sun long runs
     {
-      title: 'Club La Foulée — Intervalles',
+      title: 'Intervalles',
       slug: 'intervalles-mardi',
       description:
         'Mai–Oct: Polyvalente les Compagnons-de-Cartier, Ste-Foy / Nov–Avr: PEPS',
@@ -655,12 +655,24 @@ async function main() {
       clubId: laFoulee.id,
     },
     {
-      title: 'Club La Foulée — Longue sortie',
+      title: 'Longue sortie',
       slug: 'longue-sortie-dimanche',
       description: '15-25km, lieux variés',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: laFoulee.id,
+    },
+    // Kogi — Tue 18:15 at Kogi Café, Limoilou
+    {
+      title: 'Kogi',
+      slug: 'mardi',
+      description: 'Kogi Café — 1104 18e Rue, Limoilou',
+      address: '1104 18e Rue, Québec, QC G1J 1Z1',
+      latitude: 46.836,
+      longitude: -71.22,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=15',
+      timezone: 'America/Toronto',
+      clubId: kogi.id,
     },
     // Milaprès1000 — Tue 6:30AM at Café Mila, Limoilou
     {

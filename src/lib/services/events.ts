@@ -4,12 +4,18 @@ import type {
   EventCreate,
   EventUpdate,
   EventId,
+  EventByClubAndSlug,
+  EventByClubAndSlugBare,
   PublicPayload,
   AuthPayload,
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 import { geocodeAddress } from './geocoding'
-import { getEventsInRange, createVirtualEvent } from './recurring-events'
+import {
+  getEventsInRange,
+  createVirtualEvent,
+  expandRRuleDates,
+} from './recurring-events'
 import { addDays } from 'date-fns'
 
 // Pure business logic functions - let TypeScript infer return types
@@ -46,7 +52,7 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   if (virtualMatch) {
     const [, identifier, dateKey] = virtualMatch
     const recurringEvent = slugMatch
-      ? await prisma.recurringEvent.findUnique({
+      ? await prisma.recurringEvent.findFirst({
           where: { slug: identifier },
           include: { club: true },
         })
@@ -75,6 +81,70 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
       },
     },
   })
+}
+
+export const getEventByClubAndSlug = async ({
+  data,
+}: PublicPayload<EventByClubAndSlug>) => {
+  const { clubSlug, eventSlug, date } = data
+
+  const club = await prisma.club.findUnique({
+    where: { slug: clubSlug },
+    select: { id: true },
+  })
+  if (!club) return null
+
+  const recurringEvent = await prisma.recurringEvent.findUnique({
+    where: { clubId_slug: { clubId: club.id, slug: eventSlug } },
+    include: { club: true },
+  })
+  if (!recurringEvent) return null
+
+  const dayStart = new Date(`${date}T00:00:00`)
+  const dayEnd = new Date(`${date}T23:59:59`)
+
+  const concrete = await prisma.event.findFirst({
+    where: {
+      recurringEventId: recurringEvent.id,
+      date: { gte: dayStart, lte: dayEnd },
+    },
+    include: {
+      club: { select: { id: true, name: true, slug: true } },
+    },
+  })
+  if (concrete) return concrete
+
+  const occurrences = expandRRuleDates(
+    recurringEvent.schedulePattern,
+    dayStart,
+    dayEnd
+  )
+  if (occurrences.length === 0) return null
+
+  return createVirtualEvent(recurringEvent, new Date(`${date}T12:00:00`))
+}
+
+export const getNextOccurrenceDate = async ({
+  data,
+}: PublicPayload<EventByClubAndSlugBare>) => {
+  const { clubSlug, eventSlug } = data
+
+  const club = await prisma.club.findUnique({
+    where: { slug: clubSlug },
+    select: { id: true },
+  })
+  if (!club) return null
+
+  const recurringEvent = await prisma.recurringEvent.findUnique({
+    where: { clubId_slug: { clubId: club.id, slug: eventSlug } },
+    select: { schedulePattern: true },
+  })
+  if (!recurringEvent) return null
+
+  const now = new Date()
+  const upper = addDays(now, 365)
+  const [next] = expandRRuleDates(recurringEvent.schedulePattern, now, upper)
+  return next ?? null
 }
 
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {

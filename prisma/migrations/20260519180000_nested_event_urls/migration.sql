@@ -44,6 +44,7 @@ UPDATE "recurring_events" SET "slug" = 'mercredi' WHERE "slug" = 'volt-mercredi'
 -- Single-event clubs whose slug equalled the club slug
 UPDATE "recurring_events" SET "slug" = 'mardi' WHERE "slug" = 'le-coureur-nordique';
 UPDATE "recurring_events" SET "slug" = 'mardi' WHERE "slug" = 'milapres1000';
+UPDATE "recurring_events" SET "slug" = 'mardi' WHERE "slug" = 'kogi-mardi';
 
 -- Club La Foulée — keep workout-type qualifier (clearer than bare day)
 UPDATE "recurring_events" SET "slug" = 'intervalles-mardi' WHERE "slug" = 'club-la-foulee-intervalles';

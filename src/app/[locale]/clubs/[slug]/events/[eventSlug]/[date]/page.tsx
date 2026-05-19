@@ -1,0 +1,125 @@
+import { notFound } from 'next/navigation'
+import { getTranslations } from 'next-intl/server'
+import { getEventByClubAndSlug } from '@/lib/services/events'
+import { Link } from '@/components/ui/link'
+import { Card } from '@/components/ui/card'
+import { Tag } from '@/components/ui/tag'
+import { PageContainer } from '@/components/ui/page-container'
+import { Icon } from '@/components/ui/icon'
+import { formatEventDateFr } from '@/lib/utils/date-formatting'
+import type { PageProps } from '@/lib/types/next'
+import {
+  Calendar,
+  MapPin,
+  Clock,
+  Users,
+  ArrowLeft,
+  Route,
+  Gauge,
+} from 'lucide-react'
+
+export type ClubEventDatePageProps = PageProps<{
+  slug: string
+  eventSlug: string
+  date: string
+}>
+
+export default async function ClubEventDatePage({
+  params,
+}: ClubEventDatePageProps) {
+  const { slug, eventSlug, date } = await params
+  const t = await getTranslations('events')
+  const event = await getEventByClubAndSlug({
+    data: { clubSlug: slug, eventSlug, date },
+  })
+
+  if (!event) {
+    notFound()
+  }
+
+  return (
+    <div className="min-h-screen bg-surface-variant">
+      <PageContainer>
+        <div className="mb-8">
+          <Link
+            href={`/clubs/${slug}`}
+            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
+          >
+            <Icon icon={ArrowLeft} size="sm" decorative />
+            {event.club!.name}
+          </Link>
+        </div>
+
+        <Card className="mb-8 overflow-hidden">
+          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-5 md:p-8">
+            <div className="max-w-4xl">
+              <div className="flex items-start gap-4 mb-6">
+                <div className="p-3 bg-secondary/10 rounded-lg">
+                  <Icon
+                    icon={Calendar}
+                    size="xl"
+                    color="secondary"
+                    decorative
+                  />
+                </div>
+                <div className="flex-1">
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-secondary mb-3">
+                    {event.title}
+                  </h1>
+                  {event.club && (
+                    <Link href={`/clubs/${event.club.slug}`}>
+                      <Tag variant="outline" icon={Users}>
+                        {event.club.name}
+                      </Tag>
+                    </Link>
+                  )}
+                </div>
+              </div>
+
+              {event.description && (
+                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
+                  {event.description}
+                </p>
+              )}
+
+              <div className="flex items-center gap-3 flex-wrap mb-6">
+                <Tag variant="datetime" icon={Calendar}>
+                  {formatEventDateFr(event.date, 'full')}
+                </Tag>
+                <Tag variant="time" icon={Clock}>
+                  {event.time}
+                </Tag>
+                {event.distance && (
+                  <Tag variant="distance" icon={Route}>
+                    {event.distance}
+                  </Tag>
+                )}
+                {event.pace && (
+                  <Tag variant="pace" icon={Gauge}>
+                    {event.pace}
+                  </Tag>
+                )}
+              </div>
+
+              {event.address && (
+                <div className="bg-surface border border-border rounded-lg p-4">
+                  <div className="flex items-start gap-3">
+                    <Icon icon={MapPin} size="md" color="primary" decorative />
+                    <div>
+                      <h3 className="font-heading font-semibold text-text-primary mb-1">
+                        {t('details.meetingLocation')}
+                      </h3>
+                      <p className="text-text-secondary font-body">
+                        {event.address}
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      </PageContainer>
+    </div>
+  )
+}
