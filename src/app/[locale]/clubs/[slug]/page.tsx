@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
-import { ClubEventsList } from '@/components/clubs/club-events-list'
+import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
+import { ContentGrid } from '@/components/ui/content-grid'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { PageContainer } from '@/components/ui/page-container'
@@ -97,9 +98,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     </Tag>
                   </Link>
                 )}
-                {club.events && club.events.length > 0 && (
+                {club.patterns.length > 0 && (
                   <Tag variant="primary" icon={Calendar}>
-                    {t('card.upcomingEvents', { count: club.events.length })}
+                    {t('card.recurringEvents', {
+                      count: club.patterns.length,
+                    })}
                   </Tag>
                 )}
               </div>
@@ -117,8 +120,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
               </h2>
             </div>
 
-            {club.events && club.events.length > 0 ? (
-              <ClubEventsList events={club.events} />
+            {club.patterns.length > 0 ? (
+              <ContentGrid columns="2" gap="lg">
+                {club.patterns.map((pattern) => (
+                  <RecurringPatternCard
+                    key={pattern.id}
+                    pattern={pattern}
+                    clubSlug={club.slug}
+                    clubName={club.name}
+                  />
+                ))}
+              </ContentGrid>
             ) : (
               <EmptyState
                 icon={Calendar}
