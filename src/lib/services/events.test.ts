@@ -3,6 +3,8 @@ import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import {
   getAllEvents,
   getEventById,
+  getEventByClubAndSlug,
+  getNextOccurrenceDate,
   createEvent,
   updateEvent,
   deleteEvent,
@@ -488,7 +490,7 @@ describe('Events Service Integration Tests', () => {
         data: { id: `${recurring.slug}--2026-03-13` },
       })
 
-      expect(result!.id).toBe('weekly-run--2026-03-13')
+      expect(result!.id).toBe(`${testClub.slug}-weekly-run--2026-03-13`)
       expect(result!.title).toBe('Weekly Run')
       expect(result!.description).toBe('A recurring run')
       expect(result!.address).toBe('456 Park Ave')
@@ -510,6 +512,143 @@ describe('Events Service Integration Tests', () => {
     it('returns null for non-existent concrete event', async () => {
       const result = await getEventById({
         data: { id: 'non-existent-id' },
+      })
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('getEventByClubAndSlug', () => {
+    it('returns a virtual event for a valid (club, slug, date) on a rrule day', async () => {
+      const club = (await testPrisma.club.findMany())[0]
+      const recurring = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Mardi run',
+          slug: 'mardi',
+          description: 'Tuesday weekly',
+          clubId: club.id,
+          // Tuesday 18:00
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      // 2026-05-19 is a Tuesday
+      const result = await getEventByClubAndSlug({
+        data: { clubSlug: club.slug, eventSlug: 'mardi', date: '2026-05-19' },
+      })
+
+      expect(result).not.toBeNull()
+      expect(result!.title).toBe('Mardi run')
+      expect(result!.club!.slug).toBe(club.slug)
+      expect(result!.recurringEventId).toBe(recurring.id)
+    })
+
+    it('prefers a concrete override row over the virtual occurrence', async () => {
+      const club = (await testPrisma.club.findMany())[0]
+      const recurring = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Mardi run',
+          slug: 'mardi-override',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+      await testPrisma.event.create({
+        data: {
+          title: 'Special Mardi (overridden)',
+          date: new Date('2026-05-19T12:00:00'),
+          time: '19:00',
+          clubId: club.id,
+          recurringEventId: recurring.id,
+        },
+      })
+
+      const result = await getEventByClubAndSlug({
+        data: {
+          clubSlug: club.slug,
+          eventSlug: 'mardi-override',
+          date: '2026-05-19',
+        },
+      })
+
+      expect(result!.title).toBe('Special Mardi (overridden)')
+      expect(result!.time).toBe('19:00')
+    })
+
+    it('returns null when the date is not produced by the rrule', async () => {
+      const club = (await testPrisma.club.findMany())[0]
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Mardi only',
+          slug: 'mardi-only',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      // 2026-05-20 is a Wednesday — not produced by BYDAY=TU
+      const result = await getEventByClubAndSlug({
+        data: {
+          clubSlug: club.slug,
+          eventSlug: 'mardi-only',
+          date: '2026-05-20',
+        },
+      })
+
+      expect(result).toBeNull()
+    })
+
+    it('returns null when the club does not exist', async () => {
+      const result = await getEventByClubAndSlug({
+        data: {
+          clubSlug: 'no-such-club',
+          eventSlug: 'mardi',
+          date: '2026-05-19',
+        },
+      })
+      expect(result).toBeNull()
+    })
+
+    it('returns null when the event slug does not exist under that club', async () => {
+      const club = (await testPrisma.club.findMany())[0]
+      const result = await getEventByClubAndSlug({
+        data: {
+          clubSlug: club.slug,
+          eventSlug: 'no-such-slug',
+          date: '2026-05-19',
+        },
+      })
+      expect(result).toBeNull()
+    })
+  })
+
+  describe('getNextOccurrenceDate', () => {
+    it('returns the next future occurrence for a known club + slug', async () => {
+      const club = (await testPrisma.club.findMany())[0]
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Mardi run',
+          slug: 'mardi-next',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const next = await getNextOccurrenceDate({
+        data: { clubSlug: club.slug, eventSlug: 'mardi-next' },
+      })
+
+      expect(next).not.toBeNull()
+      expect(next!.getUTCDay()).toBe(2) // Tuesday
+      expect(next!.getTime()).toBeGreaterThan(Date.now())
+    })
+
+    it('returns null for unknown club/slug', async () => {
+      const result = await getNextOccurrenceDate({
+        data: { clubSlug: 'nope', eventSlug: 'nope' },
       })
       expect(result).toBeNull()
     })

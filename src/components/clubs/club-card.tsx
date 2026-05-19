@@ -15,12 +15,12 @@ export function ClubCard({ club }: ClubCardProps) {
   return (
     <Link
       href={`/clubs/${club.slug}`}
-      className="block no-underline hover:no-underline"
+      className="block h-full no-underline hover:no-underline"
     >
       <Card
         variant="interactive"
         data-testid="club-card"
-        className="border-l-4 border-primary hover:shadow-lg transition-all duration-200"
+        className="h-full flex flex-col border-l-4 border-primary hover:shadow-lg transition-all duration-200"
       >
         {/* Header */}
         <div className="flex items-start justify-between mb-4">
@@ -50,7 +50,7 @@ export function ClubCard({ club }: ClubCardProps) {
         )}
 
         {/* Footer with action button */}
-        <div className="flex items-center justify-between pt-4 border-t border-border">
+        <div className="mt-auto flex items-center justify-between pt-4 border-t border-border">
           {activeRecurringCount > 0 ? (
             <div className="flex items-center gap-1 text-xs text-text-secondary font-body">
               <Calendar className="h-3 w-3" />

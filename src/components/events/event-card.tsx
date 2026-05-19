@@ -3,6 +3,7 @@ import { Tag } from '@/components/ui/tag'
 import { Card } from '@/components/ui/card'
 import { LocationCard } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
+import { eventUrl } from '@/lib/utils/event-url'
 import { Link } from '@/i18n/navigation'
 import { Clock } from 'lucide-react'
 
@@ -13,7 +14,7 @@ export type EventCardProps = {
 
 export function EventCard({ event, showClubName = false }: EventCardProps) {
   return (
-    <Link href={`/events/${event.id}`} className="block h-full">
+    <Link href={eventUrl(event)} className="block h-full">
       <Card as="article" variant="interactive" className="h-full flex flex-col">
         {/* Fixed height header section */}
         <div className="h-16 mb-3">

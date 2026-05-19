@@ -129,6 +129,21 @@ export const eventIdSchema = z.object({
 })
 export type EventId = z.infer<typeof eventIdSchema>
 
+export const eventByClubAndSlugSchema = z.object({
+  clubSlug: z.string().min(1, 'Club slug is required'),
+  eventSlug: z.string().min(1, 'Event slug is required'),
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Date must be YYYY-MM-DD'),
+})
+export type EventByClubAndSlug = z.infer<typeof eventByClubAndSlugSchema>
+
+export const eventByClubAndSlugBareSchema = z.object({
+  clubSlug: z.string().min(1, 'Club slug is required'),
+  eventSlug: z.string().min(1, 'Event slug is required'),
+})
+export type EventByClubAndSlugBare = z.infer<
+  typeof eventByClubAndSlugBareSchema
+>
+
 // User schemas
 export const userIdSchema = z.object({
   id: z.string().min(1, 'User ID is required'),

@@ -10,6 +10,12 @@
 **Apply to:** components, schemas (Prisma/Zod/API), services, routes, hooks/utils, bug fixes, features
 **Lightweight lane:** docs/config/copy → lint + tsc + prettier only
 
+## Visual Review (Before PR is Ready)
+
+Any PR that touches UI must include a pinpoint pass before it's ready for review. Use the `pinpoint:using-pinpoint` skill — that owns the up-to-date flow. Mention findings in the PR description; out-of-scope ones land as a follow-up plan doc.
+
+**Skip pinpoint** for pure data/schema/refactor PRs with no pixel impact. Note the skip in the PR description.
+
 ## Testing Strategy
 
 **Coverage:** Maintain ≥95% threshold; focus on meaningful paths
