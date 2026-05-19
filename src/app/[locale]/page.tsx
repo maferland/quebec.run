@@ -56,11 +56,11 @@ export default function Home() {
       {/* Featured Clubs Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
             <h2 className="text-2xl md:text-3xl font-heading font-bold text-primary">
               {t('clubs.title')}
             </h2>
-            <Link href="/clubs">
+            <Link href="/clubs" className="self-start sm:self-auto">
               <Button variant="outline-primary">{t('clubs.viewAll')}</Button>
             </Link>
           </div>

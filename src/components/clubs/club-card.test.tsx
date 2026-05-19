@@ -117,7 +117,7 @@ describe('ClubCard Component', () => {
     it('displays recurring event count summary in footer', () => {
       render(<ClubCard club={mockClubWithRecurring} />)
 
-      expect(screen.getByText('3 active series')).toBeInTheDocument()
+      expect(screen.getByText('3 weekly runs')).toBeInTheDocument()
     })
 
     it('displays call-to-action text', () => {
@@ -129,7 +129,7 @@ describe('ClubCard Component', () => {
     it('includes calendar icon in count summary', () => {
       render(<ClubCard club={mockClubWithRecurring} />)
 
-      const eventSummary = screen.getByText('3 active series').closest('div')
+      const eventSummary = screen.getByText('3 weekly runs').closest('div')
       const calendarIcon = eventSummary?.querySelector('svg')
       expect(calendarIcon).toHaveClass('h-3', 'w-3')
     })
@@ -163,7 +163,7 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={mockClubNoRecurring} />)
 
       expect(screen.queryByText('0')).not.toBeInTheDocument()
-      expect(screen.queryByText(/active series/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/\d+ weekly runs?/)).not.toBeInTheDocument()
     })
 
     it('renders when club has exactly one recurring event', () => {
@@ -172,7 +172,7 @@ describe('ClubCard Component', () => {
 
       expect(screen.getByText('Quebec Running Club')).toBeInTheDocument()
       expect(screen.getByText('1')).toBeInTheDocument()
-      expect(screen.getByText('1 active series')).toBeInTheDocument()
+      expect(screen.getByText('1 weekly run')).toBeInTheDocument()
     })
   })
 

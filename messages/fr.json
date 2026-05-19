@@ -114,7 +114,7 @@
       "location": "Québec",
       "moreEvents": "+{count} autres événements cette semaine",
       "upcomingEvents": "{count} événements à venir",
-      "recurringEvents": "{count, plural, one {# série active} other {# séries actives}}",
+      "recurringEvents": "{count, plural, one {# course hebdomadaire} other {# courses hebdomadaires}}",
       "viewClub": "Voir le club →",
       "upcomingEventsTitle": "Événements à venir"
     }

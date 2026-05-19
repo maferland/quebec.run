@@ -114,7 +114,7 @@
       "location": "Quebec City",
       "moreEvents": "+{count} more events this week",
       "upcomingEvents": "{count} upcoming events",
-      "recurringEvents": "{count, plural, one {# active series} other {# active series}}",
+      "recurringEvents": "{count, plural, one {# weekly run} other {# weekly runs}}",
       "viewClub": "View Club →",
       "upcomingEventsTitle": "Upcoming Events"
     }
