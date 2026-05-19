@@ -36,10 +36,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
     <div className="min-h-screen bg-surface-variant">
       <PageContainer>
         {/* Back Navigation */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <Link
             href="/clubs"
-            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             <Icon icon={ArrowLeft} size="sm" decorative />
             {t('backToClubs')}
@@ -52,7 +52,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             <div className="max-w-4xl">
               {/* Club Name & Location */}
               <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-primary/10 rounded-lg">
+                <div className="hidden md:block p-3 bg-primary/10 rounded-lg">
                   <Icon icon={Users} size="xl" color="primary" decorative />
                 </div>
                 <div className="flex-1">
