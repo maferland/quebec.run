@@ -490,7 +490,7 @@ describe('Events Service Integration Tests', () => {
         data: { id: `${recurring.slug}--2026-03-13` },
       })
 
-      expect(result!.id).toBe('weekly-run--2026-03-13')
+      expect(result!.id).toBe(`${testClub.slug}-weekly-run--2026-03-13`)
       expect(result!.title).toBe('Weekly Run')
       expect(result!.description).toBe('A recurring run')
       expect(result!.address).toBe('456 Park Ave')
