@@ -44,7 +44,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Club Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-8">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-5 md:p-8">
             <div className="max-w-4xl">
               {/* Club Name & Location */}
               <div className="flex items-start gap-4 mb-6">
@@ -52,7 +52,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                   <Icon icon={Users} size="xl" color="primary" decorative />
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-4xl font-heading font-bold text-primary mb-2">
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-primary mb-2">
                     {club.name}
                   </h1>
                 </div>
@@ -60,7 +60,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
               {/* Description */}
               {club.description && (
-                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
+                <p className="text-base md:text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl line-clamp-5">
                   {club.description}
                 </p>
               )}
@@ -96,10 +96,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Events Section */}
         <Card>
-          <div className="p-8">
+          <div className="p-5 md:p-8">
             <div className="flex items-center gap-3 mb-8">
               <Icon icon={Calendar} size="lg" color="primary" decorative />
-              <h2 className="text-2xl font-heading font-bold text-primary">
+              <h2 className="text-xl md:text-2xl font-heading font-bold text-primary">
                 {t('card.upcomingEventsTitle')}
               </h2>
             </div>

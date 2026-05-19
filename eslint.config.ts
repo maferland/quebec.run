@@ -20,6 +20,11 @@ const eslintConfig: Linter.Config[] = [
       'build/**',
       'coverage/**',
       'next-env.d.ts',
+      '.worktrees/**',
+      'prisma/generated/**',
+      'storybook-static/**',
+      'playwright-report/**',
+      'test-results/**',
     ],
   },
 ]

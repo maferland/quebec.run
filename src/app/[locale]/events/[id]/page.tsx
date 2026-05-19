@@ -45,7 +45,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
         {/* Event Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-8">
+          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-5 md:p-8">
             <div className="max-w-4xl">
               {/* Event Title & Club */}
               <div className="flex items-start gap-4 mb-6">
@@ -58,7 +58,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   />
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-4xl font-heading font-bold text-secondary mb-3">
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-secondary mb-3">
                     {event.title}
                   </h1>
                   {event.club && (
@@ -117,32 +117,6 @@ export default async function EventPage({ params }: EventPageProps) {
             </div>
           </div>
         </Card>
-
-        {/* Organized By */}
-        {event.club && (
-          <Card>
-            <div className="p-8">
-              <div className="flex items-center gap-2 mb-4">
-                <Icon icon={Users} size="md" color="primary" decorative />
-                <h2 className="text-xl font-heading font-bold text-primary">
-                  {t('details.organizedBy')}
-                </h2>
-              </div>
-              <Link
-                href={`/clubs/${event.club.slug}`}
-                className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body font-medium transition-colors"
-              >
-                {event.club.name}
-                <Icon
-                  icon={ArrowLeft}
-                  size="sm"
-                  className="rotate-180"
-                  decorative
-                />
-              </Link>
-            </div>
-          </Card>
-        )}
       </PageContainer>
     </div>
   )

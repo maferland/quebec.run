@@ -21,7 +21,7 @@ export function ClubEventsList({ events }: ClubEventsListProps) {
     <div>
       <ContentGrid columns="2" gap="lg">
         {visible.map((event) => (
-          <EventCard key={event.id} event={event} />
+          <EventCard key={event.id} event={event} showClubName={false} />
         ))}
       </ContentGrid>
       {hasMore && !showAll && (

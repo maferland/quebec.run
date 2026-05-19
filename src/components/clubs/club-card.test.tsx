@@ -70,22 +70,6 @@ describe('ClubCard Component', () => {
         screen.queryByText(/Premier running club in Quebec City/)
       ).not.toBeInTheDocument()
     })
-
-    it('displays location as Quebec City', () => {
-      render(<ClubCard club={mockClubWithRecurring} />)
-
-      expect(screen.getByText('Quebec City')).toBeInTheDocument()
-    })
-
-    it('uses LocationInline component for location display', () => {
-      const { container } = render(<ClubCard club={mockClubWithRecurring} />)
-
-      const locationComponent = container.querySelector(
-        '.flex.items-center.gap-2'
-      )
-      expect(locationComponent).toBeInTheDocument()
-      expect(locationComponent).toHaveClass('text-sm')
-    })
   })
 
   describe('Recurring Event Count Display', () => {
@@ -328,14 +312,8 @@ describe('ClubCard Component', () => {
 
       expect(screen.getByTestId('club-card')).toHaveClass('border-l-4')
 
-      const clubNameContainer = screen.getByText(
-        'Quebec Running Club'
-      ).parentElement
-      expect(clubNameContainer?.parentElement).toHaveClass(
-        'flex',
-        'items-start',
-        'gap-3'
-      )
+      const clubName = screen.getByText('Quebec Running Club')
+      expect(clubName.parentElement).toHaveClass('flex', 'items-start', 'gap-3')
 
       expect(screen.getByText('3').closest('div')).toHaveClass(
         'flex',

@@ -358,6 +358,17 @@ export function normalizeTimeString(time: string): string {
   return `${hour.toString().padStart(2, '0')}:00`
 }
 
+export function groupEventsByDate<T extends { date: Date | string }>(
+  events: T[]
+): Record<string, T[]> {
+  return events.reduce<Record<string, T[]>>((groups, event) => {
+    const key = formatHumanFriendlyDate(event.date)
+    if (!groups[key]) groups[key] = []
+    groups[key].push(event)
+    return groups
+  }, {})
+}
+
 /**
  * Collection of date formatting utilities
  */
