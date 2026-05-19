@@ -23,7 +23,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <div>
-              <h1 className="text-5xl font-heading font-bold text-primary mb-6">
+              <h1 className="text-3xl md:text-5xl font-heading font-bold text-primary mb-6">
                 {t('hero.title')}
               </h1>
               <p className="text-xl text-accent mb-8 font-body leading-relaxed">
@@ -56,11 +56,11 @@ export default function Home() {
       {/* Featured Clubs Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between mb-8">
-            <h2 className="text-3xl font-heading font-bold text-primary">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
+            <h2 className="text-2xl md:text-3xl font-heading font-bold text-primary">
               {t('clubs.title')}
             </h2>
-            <Link href="/clubs">
+            <Link href="/clubs" className="self-start sm:self-auto">
               <Button variant="outline-primary">{t('clubs.viewAll')}</Button>
             </Link>
           </div>

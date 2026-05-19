@@ -6,6 +6,7 @@ import { ContentGrid } from '@/components/ui/content-grid'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageTitle } from '@/components/ui/page-title'
 import { EmptyState } from '@/components/ui/empty-state'
+import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { Calendar } from 'lucide-react'
 
 export default async function EventsPage() {
@@ -36,11 +37,19 @@ export default async function EventsPage() {
             description={t('empty.description')}
           />
         ) : (
-          <ContentGrid>
-            {events.map((event) => (
-              <EventCard key={event.id} event={event} showClubName />
-            ))}
-          </ContentGrid>
+          Object.entries(groupEventsByDate(events)).map(([date, dayEvents]) => (
+            <section key={date} className="mb-8">
+              <h3 className="text-lg font-heading font-semibold text-text-secondary mb-4 flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                {date}
+              </h3>
+              <ContentGrid>
+                {dayEvents.map((event) => (
+                  <EventCard key={event.id} event={event} showClubName />
+                ))}
+              </ContentGrid>
+            </section>
+          ))
         )}
       </section>
     </PageContainer>

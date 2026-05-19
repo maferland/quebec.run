@@ -8,24 +8,14 @@ import { Link } from '@/components/ui/link'
 import { PageContainer } from '@/components/ui/page-container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
-import { dateUtils } from '@/lib/utils/date-formatting'
+import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
 export default function CalendarPage() {
   const t = useTranslations('calendar')
   const { data: events = [], isLoading } = useUpcomingEvents()
 
-  const groupedEvents = events.reduce(
-    (groups, event) => {
-      const date = dateUtils.formatHumanFriendlyDate(event.date)
-      if (!groups[date]) {
-        groups[date] = []
-      }
-      groups[date].push(event)
-      return groups
-    },
-    {} as Record<string, typeof events>
-  )
+  const groupedEvents = groupEventsByDate(events)
 
   if (isLoading) {
     return (
@@ -53,13 +43,13 @@ export default function CalendarPage() {
       <PageContainer>
         {/* Calendar Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-8">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-5 md:p-8">
             <div className="text-center max-w-4xl mx-auto">
               <div className="flex items-center justify-center gap-4 mb-6">
                 <div className="p-3 bg-primary/10 rounded-lg">
                   <Icon icon={Calendar} size="xl" color="primary" decorative />
                 </div>
-                <h1 className="text-4xl font-heading font-bold text-primary">
+                <h1 className="text-2xl md:text-4xl font-heading font-bold text-primary">
                   {t('title')}
                 </h1>
               </div>
@@ -81,7 +71,7 @@ export default function CalendarPage() {
           <div className="space-y-8">
             {Object.entries(groupedEvents).map(([date, dayEvents]) => (
               <Card key={date}>
-                <div className="p-8">
+                <div className="p-5 md:p-8">
                   {/* Date Header */}
                   <div className="flex items-center gap-3 mb-6 pb-4 border-b border-border">
                     <Icon

@@ -50,7 +50,7 @@
     "hero": {
       "title": "Découvrez la course à pied à Québec",
       "description": "Connectez-vous avec les clubs de course locaux, trouvez les événements à venir et explorez des parcours pittoresques à travers les quartiers historiques de Québec.",
-      "findEvents": "Trouvez des événements près de chez vous",
+      "findEvents": "Trouver des événements",
       "browseClubs": "Parcourir les clubs de course",
       "mapTitle": "Carte interactive",
       "mapDescription": "Explorez les parcours et lieux à travers Québec"
@@ -108,13 +108,13 @@
     },
     "noEvents": {
       "title": "Aucun événement à venir",
-      "description": "Ce club n'a aucun événement programmé pour les 7 prochains jours. Revenez bientôt pour de nouvelles activités!"
+      "description": "Ce club n'a aucun événement programmé pour les 30 prochains jours. Revenez bientôt pour de nouvelles activités!"
     },
     "card": {
       "location": "Québec",
       "moreEvents": "+{count} autres événements cette semaine",
       "upcomingEvents": "{count} événements à venir",
-      "recurringEvents": "{count} séries actives",
+      "recurringEvents": "{count, plural, one {# course hebdomadaire} other {# courses hebdomadaires}}",
       "viewClub": "Voir le club →",
       "upcomingEventsTitle": "Événements à venir"
     }

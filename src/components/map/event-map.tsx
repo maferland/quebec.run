@@ -9,7 +9,7 @@ import 'leaflet/dist/leaflet.css'
 const MapContent = dynamic(() => import('./event-map-content'), {
   ssr: false,
   loading: () => (
-    <div className="h-[400px] md:h-[600px] w-full bg-gray-100 animate-pulse rounded-lg" />
+    <div className="h-[250px] md:h-[600px] w-full bg-gray-100 animate-pulse rounded-lg" />
   ),
 })
 
@@ -48,7 +48,7 @@ export function EventMap({
   if (eventsWithCoords.length === 0) {
     return (
       <div
-        className="h-[400px] md:h-[600px] w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
+        className="h-[250px] md:h-[600px] w-full bg-gray-50 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center"
         role="application"
         aria-label="Interactive event map"
       >
@@ -59,7 +59,7 @@ export function EventMap({
 
   return (
     <div
-      className="h-[400px] md:h-[600px] w-full rounded-lg overflow-hidden"
+      className="h-[250px] md:h-[600px] w-full rounded-lg overflow-hidden"
       role="application"
       aria-label="Interactive event map"
     >

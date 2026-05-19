@@ -108,13 +108,13 @@
     },
     "noEvents": {
       "title": "No upcoming events",
-      "description": "This club doesn't have any events scheduled for the next 7 days. Check back soon for new activities!"
+      "description": "This club doesn't have any events scheduled for the next 30 days. Check back soon for new activities!"
     },
     "card": {
       "location": "Quebec City",
       "moreEvents": "+{count} more events this week",
       "upcomingEvents": "{count} upcoming events",
-      "recurringEvents": "{count} active series",
+      "recurringEvents": "{count, plural, one {# weekly run} other {# weekly runs}}",
       "viewClub": "View Club →",
       "upcomingEventsTitle": "Upcoming Events"
     }
