@@ -18,6 +18,9 @@ import {
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 
+const withHttps = (url: string) =>
+  url.startsWith('http') ? url : `https://${url}`
+
 export type ClubPageProps = PageProps<{ slug: string }>
 
 export default async function ClubPage({ params }: ClubPageProps) {
@@ -68,21 +71,31 @@ export default async function ClubPage({ params }: ClubPageProps) {
               {/* Social Links & Stats */}
               <div className="flex items-center gap-3 flex-wrap">
                 {club.website && (
-                  <Link href={club.website}>
+                  <Link href={withHttps(club.website)}>
                     <Tag variant="outline" icon={Globe}>
                       Website
                     </Tag>
                   </Link>
                 )}
                 {club.instagram && (
-                  <Tag variant="outline" icon={Instagram}>
-                    @{club.instagram}
-                  </Tag>
+                  <Link href={`https://instagram.com/${club.instagram}`}>
+                    <Tag variant="outline" icon={Instagram}>
+                      @{club.instagram}
+                    </Tag>
+                  </Link>
                 )}
                 {club.facebook && (
-                  <Tag variant="outline" icon={Facebook}>
-                    Facebook
-                  </Tag>
+                  <Link
+                    href={withHttps(
+                      club.facebook.includes('facebook.com')
+                        ? club.facebook
+                        : `facebook.com/${club.facebook}`
+                    )}
+                  >
+                    <Tag variant="outline" icon={Facebook}>
+                      Facebook
+                    </Tag>
+                  </Link>
                 )}
                 {club.events && club.events.length > 0 && (
                   <Tag variant="primary" icon={Calendar}>

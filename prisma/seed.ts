@@ -294,15 +294,41 @@ async function main() {
     },
   })
 
-  // Kogi (on pause)
+  // Milaprès1000 — Café Mila, Limoilou
+  const milapres = await prisma.club.upsert({
+    where: { slug: createSlug('Milaprès1000') },
+    update: {
+      description:
+        'Club de course matinal au Café Mila, Limoilou. Rendez-vous tous les mardis à 6h30.',
+      language: 'fr',
+      website: 'lecafemila.com',
+      stravaClubId: '1539164',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Milaprès1000',
+      slug: createSlug('Milaprès1000'),
+      description:
+        'Club de course matinal au Café Mila, Limoilou. Rendez-vous tous les mardis à 6h30.',
+      language: 'fr',
+      website: 'lecafemila.com',
+      stravaClubId: '1539164',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Kogi
   await prisma.club.upsert({
     where: { slug: createSlug('Kogi') },
     update: {
-      description:
-        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      description: 'Club de course au Kogi Café, Limoilou.',
       language: 'fr',
       instagram: 'lekogicafe',
-      isActive: false,
+      isActive: true,
       vibe: 'SOCIAL',
       type: 'ROAD',
       ownerId: staffUser.id,
@@ -310,11 +336,10 @@ async function main() {
     create: {
       name: 'Kogi',
       slug: createSlug('Kogi'),
-      description:
-        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      description: 'Club de course au Kogi Café, Limoilou.',
       language: 'fr',
       instagram: 'lekogicafe',
-      isActive: false,
+      isActive: true,
       vibe: 'SOCIAL',
       type: 'ROAD',
       ownerId: staffUser.id,
@@ -637,6 +662,17 @@ async function main() {
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: laFoulee.id,
+    },
+    // Milaprès1000 — Tue 6:30AM at Café Mila, Limoilou
+    {
+      title: 'Milaprès1000',
+      description: 'Café Mila — 986 3e Av., Limoilou',
+      address: '986 3e Avenue, Québec, QC G1L 2X1',
+      latitude: 46.840183,
+      longitude: -71.22515,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: milapres.id,
     },
   ]
 
