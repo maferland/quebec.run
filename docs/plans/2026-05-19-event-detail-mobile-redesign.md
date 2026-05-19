@@ -1,7 +1,7 @@
 # Event detail page — mobile redesign brief
 
 **Status**: research / design brief, not an implementation plan.
-**Origin**: pinpoint annotations #9 and #10 on PR #35 review — "this UI sucks on mobile" both before and after.
+**Origin**: pinpoint annotation #9 and #10 on PR #35 review — "this UI sucks on mobile". Reaffirmed by annotation #4 on PR #37 review — "way too cramped". Same surface, same complaint, two reviews apart — confirms the page needs a real redesign pass, not another patch.
 
 ## What's broken (observed at 390×844)
 

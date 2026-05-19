@@ -12,21 +12,9 @@
 
 ## Visual Review (Before PR is Ready)
 
-Any PR that touches UI — pages, components, layout, copy, styling — must include a pinpoint pass before requesting review.
+Any PR that touches UI must include a pinpoint pass before it's ready for review. Use the `pinpoint:using-pinpoint` skill — that owns the up-to-date flow. Mention findings in the PR description; out-of-scope ones land as a follow-up plan doc.
 
-**Flow:**
-
-1. Start dev (or use a Vercel preview URL) and pick 3–6 touched surfaces.
-2. Capture each at mobile width (390×844) full-page. Save under `shots/<branch>/NN-name.png`.
-3. Run `pinpoint review <files...> --context "<PR# + branch + viewport + what to look for>"`.
-4. Act on the returned annotations — fix in the same PR, or open a follow-up plan doc if the fix is out of scope. Either way, mention pinpoint findings in the PR description.
-5. Re-pinpoint after non-trivial fixes.
-
-**Surfaces worth capturing by default:** home, the page that was directly changed, an event/club detail if data shape changed, the mobile menu open if nav was touched.
-
-**Skip pinpoint** for: pure data-layer changes (schema, service, seed) with no UI impact, doc-only changes, internal refactors that don't shift any pixel.
-
-`shots/` is gitignored — keep screenshots local; mention findings in the PR.
+**Skip pinpoint** for pure data/schema/refactor PRs with no pixel impact. Note the skip in the PR description.
 
 ## Testing Strategy
 
