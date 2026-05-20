@@ -141,8 +141,18 @@
       "when": "When",
       "distance": "Distance",
       "pace": "Pace",
-      "organizedBy": "Organized by"
-    }
+      "organizedBy": "Organized by",
+      "recurringEyebrow": "Recurring run",
+      "nextOccurrence": "Next occurrence"
+    },
+    "breadcrumb": {
+      "label": "Breadcrumb",
+      "clubs": "Clubs",
+      "events": "Events"
+    },
+    "moreFromClub": "More from {name}",
+    "aboutClub": "About {name}",
+    "viewClub": "View club"
   },
   "validation": {
     "required": "This field is required",

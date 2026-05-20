@@ -141,8 +141,18 @@
       "when": "Quand",
       "distance": "Distance",
       "pace": "Rythme",
-      "organizedBy": "Organisé par"
-    }
+      "organizedBy": "Organisé par",
+      "recurringEyebrow": "Course récurrente",
+      "nextOccurrence": "Prochaine occurrence"
+    },
+    "breadcrumb": {
+      "label": "Fil d'Ariane",
+      "clubs": "Clubs",
+      "events": "Événements"
+    },
+    "moreFromClub": "Plus de {name}",
+    "aboutClub": "À propos de {name}",
+    "viewClub": "Voir le club"
   },
   "validation": {
     "required": "Ce champ est requis",
