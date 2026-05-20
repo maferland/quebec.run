@@ -70,22 +70,6 @@ describe('ClubCard Component', () => {
         screen.queryByText(/Premier running club in Quebec City/)
       ).not.toBeInTheDocument()
     })
-
-    it('displays location as Quebec City', () => {
-      render(<ClubCard club={mockClubWithRecurring} />)
-
-      expect(screen.getByText('Quebec City')).toBeInTheDocument()
-    })
-
-    it('uses LocationInline component for location display', () => {
-      const { container } = render(<ClubCard club={mockClubWithRecurring} />)
-
-      const locationComponent = container.querySelector(
-        '.flex.items-center.gap-2'
-      )
-      expect(locationComponent).toBeInTheDocument()
-      expect(locationComponent).toHaveClass('text-sm')
-    })
   })
 
   describe('Recurring Event Count Display', () => {
@@ -133,7 +117,7 @@ describe('ClubCard Component', () => {
     it('displays recurring event count summary in footer', () => {
       render(<ClubCard club={mockClubWithRecurring} />)
 
-      expect(screen.getByText('3 active series')).toBeInTheDocument()
+      expect(screen.getByText('3 weekly runs')).toBeInTheDocument()
     })
 
     it('displays call-to-action text', () => {
@@ -145,7 +129,7 @@ describe('ClubCard Component', () => {
     it('includes calendar icon in count summary', () => {
       render(<ClubCard club={mockClubWithRecurring} />)
 
-      const eventSummary = screen.getByText('3 active series').closest('div')
+      const eventSummary = screen.getByText('3 weekly runs').closest('div')
       const calendarIcon = eventSummary?.querySelector('svg')
       expect(calendarIcon).toHaveClass('h-3', 'w-3')
     })
@@ -179,7 +163,7 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={mockClubNoRecurring} />)
 
       expect(screen.queryByText('0')).not.toBeInTheDocument()
-      expect(screen.queryByText(/active series/)).not.toBeInTheDocument()
+      expect(screen.queryByText(/\d+ weekly runs?/)).not.toBeInTheDocument()
     })
 
     it('renders when club has exactly one recurring event', () => {
@@ -188,7 +172,7 @@ describe('ClubCard Component', () => {
 
       expect(screen.getByText('Quebec Running Club')).toBeInTheDocument()
       expect(screen.getByText('1')).toBeInTheDocument()
-      expect(screen.getByText('1 active series')).toBeInTheDocument()
+      expect(screen.getByText('1 weekly run')).toBeInTheDocument()
     })
   })
 
@@ -290,7 +274,7 @@ describe('ClubCard Component', () => {
       render(<ClubCard club={clubWithLongDescription} />)
 
       const description = screen.getByText(/This is a very long description/)
-      expect(description).toHaveClass('line-clamp-2')
+      expect(description).toHaveClass('line-clamp-3')
     })
 
     it('handles special characters in club data', () => {
@@ -328,14 +312,8 @@ describe('ClubCard Component', () => {
 
       expect(screen.getByTestId('club-card')).toHaveClass('border-l-4')
 
-      const clubNameContainer = screen.getByText(
-        'Quebec Running Club'
-      ).parentElement
-      expect(clubNameContainer?.parentElement).toHaveClass(
-        'flex',
-        'items-start',
-        'gap-3'
-      )
+      const clubName = screen.getByText('Quebec Running Club')
+      expect(clubName.parentElement).toHaveClass('flex', 'items-start', 'gap-3')
 
       expect(screen.getByText('3').closest('div')).toHaveClass(
         'flex',

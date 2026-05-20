@@ -1,8 +1,7 @@
 import { getTranslations } from 'next-intl/server'
-import { EventCard } from '@/components/events/event-card'
+import { ClubEventsList } from '@/components/clubs/club-events-list'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
-import { ContentGrid } from '@/components/ui/content-grid'
 import { PageContainer } from '@/components/ui/page-container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
@@ -18,6 +17,9 @@ import {
   Users,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
+
+const withHttps = (url: string) =>
+  url.startsWith('http') ? url : `https://${url}`
 
 export type ClubPageProps = PageProps<{ slug: string }>
 
@@ -45,7 +47,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Club Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-8">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-5 md:p-8">
             <div className="max-w-4xl">
               {/* Club Name & Location */}
               <div className="flex items-start gap-4 mb-6">
@@ -53,7 +55,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                   <Icon icon={Users} size="xl" color="primary" decorative />
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-4xl font-heading font-bold text-primary mb-2">
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-primary mb-2">
                     {club.name}
                   </h1>
                 </div>
@@ -61,7 +63,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
               {/* Description */}
               {club.description && (
-                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
+                <p className="text-base md:text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl line-clamp-5">
                   {club.description}
                 </p>
               )}
@@ -69,25 +71,35 @@ export default async function ClubPage({ params }: ClubPageProps) {
               {/* Social Links & Stats */}
               <div className="flex items-center gap-3 flex-wrap">
                 {club.website && (
-                  <Link href={club.website}>
+                  <Link href={withHttps(club.website)}>
                     <Tag variant="outline" icon={Globe}>
                       Website
                     </Tag>
                   </Link>
                 )}
                 {club.instagram && (
-                  <Tag variant="outline" icon={Instagram}>
-                    @{club.instagram}
-                  </Tag>
+                  <Link href={`https://instagram.com/${club.instagram}`}>
+                    <Tag variant="outline" icon={Instagram}>
+                      @{club.instagram}
+                    </Tag>
+                  </Link>
                 )}
                 {club.facebook && (
-                  <Tag variant="outline" icon={Facebook}>
-                    Facebook
-                  </Tag>
+                  <Link
+                    href={withHttps(
+                      club.facebook.includes('facebook.com')
+                        ? club.facebook
+                        : `facebook.com/${club.facebook}`
+                    )}
+                  >
+                    <Tag variant="outline" icon={Facebook}>
+                      Facebook
+                    </Tag>
+                  </Link>
                 )}
                 {club.events && club.events.length > 0 && (
                   <Tag variant="primary" icon={Calendar}>
-                    {club.events.length} upcoming events
+                    {t('card.upcomingEvents', { count: club.events.length })}
                   </Tag>
                 )}
               </div>
@@ -97,20 +109,16 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Events Section */}
         <Card>
-          <div className="p-8">
+          <div className="p-5 md:p-8">
             <div className="flex items-center gap-3 mb-8">
               <Icon icon={Calendar} size="lg" color="primary" decorative />
-              <h2 className="text-2xl font-heading font-bold text-primary">
+              <h2 className="text-xl md:text-2xl font-heading font-bold text-primary">
                 {t('card.upcomingEventsTitle')}
               </h2>
             </div>
 
             {club.events && club.events.length > 0 ? (
-              <ContentGrid columns="2" gap="lg">
-                {club.events.map((event) => (
-                  <EventCard key={event.id} event={{ ...event, club }} />
-                ))}
-              </ContentGrid>
+              <ClubEventsList events={club.events} />
             ) : (
               <EmptyState
                 icon={Calendar}

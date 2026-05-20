@@ -294,15 +294,41 @@ async function main() {
     },
   })
 
-  // Kogi (on pause)
+  // Milaprès1000 — Café Mila, Limoilou
+  const milapres = await prisma.club.upsert({
+    where: { slug: createSlug('Milaprès1000') },
+    update: {
+      description:
+        'Club de course matinal au Café Mila, Limoilou. Rendez-vous tous les mardis à 6h30.',
+      language: 'fr',
+      website: 'lecafemila.com',
+      stravaClubId: '1539164',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'Milaprès1000',
+      slug: createSlug('Milaprès1000'),
+      description:
+        'Club de course matinal au Café Mila, Limoilou. Rendez-vous tous les mardis à 6h30.',
+      language: 'fr',
+      website: 'lecafemila.com',
+      stravaClubId: '1539164',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      ownerId: staffUser.id,
+    },
+  })
+
+  // Kogi
   await prisma.club.upsert({
     where: { slug: createSlug('Kogi') },
     update: {
-      description:
-        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      description: 'Club de course au Kogi Café, Limoilou.',
       language: 'fr',
       instagram: 'lekogicafe',
-      isActive: false,
+      isActive: true,
       vibe: 'SOCIAL',
       type: 'ROAD',
       ownerId: staffUser.id,
@@ -310,11 +336,10 @@ async function main() {
     create: {
       name: 'Kogi',
       slug: createSlug('Kogi'),
-      description:
-        'Club de course au Kogi Café, Limoilou. Présentement en pause.',
+      description: 'Club de course au Kogi Café, Limoilou.',
       language: 'fr',
       instagram: 'lekogicafe',
-      isActive: false,
+      isActive: true,
       vibe: 'SOCIAL',
       type: 'ROAD',
       ownerId: staffUser.id,
@@ -515,7 +540,8 @@ async function main() {
   const otherRecurringEvents = [
     // Faux Mouvement — Tue 6PM, Thu 6PM, Sun 9AM
     {
-      title: 'Faux Mouvement — Mardi',
+      title: 'Faux Mouvement',
+      slug: 'faux-mouvement-mardi',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -525,7 +551,8 @@ async function main() {
       clubId: fauxMouvement.id,
     },
     {
-      title: 'Faux Mouvement — Jeudi',
+      title: 'Faux Mouvement',
+      slug: 'faux-mouvement-jeudi',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -535,7 +562,8 @@ async function main() {
       clubId: fauxMouvement.id,
     },
     {
-      title: 'Faux Mouvement — Dimanche',
+      title: 'Faux Mouvement',
+      slug: 'faux-mouvement-dimanche',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -546,7 +574,8 @@ async function main() {
     },
     // Les Citrons Pressés — Mon & Wed 6:30PM
     {
-      title: 'Les Citrons Pressés — Lundi',
+      title: 'Les Citrons Pressés',
+      slug: 'les-citrons-presses-lundi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
       address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
@@ -556,7 +585,8 @@ async function main() {
       clubId: citronsPresses.id,
     },
     {
-      title: 'Les Citrons Pressés — Mercredi',
+      title: 'Les Citrons Pressés',
+      slug: 'les-citrons-presses-mercredi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
       address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
@@ -567,7 +597,8 @@ async function main() {
     },
     // La Panthère — Wed 5:30PM, Sat 9:30AM
     {
-      title: 'La Panthère — Mercredi',
+      title: 'La Panthère',
+      slug: 'la-panthere-mercredi',
       description: 'Parking de la Base de plein air de Sainte-Foy',
       address: 'Base de plein air de Sainte-Foy, Québec, QC',
       latitude: 46.7711,
@@ -577,7 +608,8 @@ async function main() {
       clubId: laPanthere.id,
     },
     {
-      title: 'La Panthère — Samedi',
+      title: 'La Panthère',
+      slug: 'la-panthere-samedi',
       description: 'Parking de la Base de plein air de Sainte-Foy',
       address: 'Base de plein air de Sainte-Foy, Québec, QC',
       latitude: 46.7711,
@@ -588,7 +620,8 @@ async function main() {
     },
     // Volt — Mon 7PM, Wed 7PM
     {
-      title: 'Volt — Lundi',
+      title: 'Volt',
+      slug: 'volt-lundi',
       description:
         'Nov–Mar: Centre de glaces Intact Assurance / Avr–Oct: Stade TELUS, Université Laval',
       address: '2300 Rue de la Terrasse, Québec, QC',
@@ -599,7 +632,8 @@ async function main() {
       clubId: volt.id,
     },
     {
-      title: 'Volt — Mercredi',
+      title: 'Volt',
+      slug: 'volt-mercredi',
       description: 'Intersection Grande-Allée & Bougainville',
       address: '750 Grande Allée Ouest, Québec, QC',
       latitude: 46.7997,
@@ -610,7 +644,8 @@ async function main() {
     },
     // Le Coureur Nordique — Tue 6:15PM
     {
-      title: 'Le Coureur Nordique — Mardi',
+      title: 'Le Coureur Nordique',
+      slug: 'le-coureur-nordique',
       description: '141 Ch. Sainte-Foy, Québec',
       address: '141 Ch. Sainte-Foy, Québec, QC G1R 1T1',
       latitude: 46.8023,
@@ -621,7 +656,8 @@ async function main() {
     },
     // Club La Foulée — Tue intervals, Sun long runs
     {
-      title: 'Club La Foulée — Intervalles mardi',
+      title: 'Club La Foulée — Intervalles',
+      slug: 'club-la-foulee-intervalles',
       description:
         'Mai–Oct: Polyvalente les Compagnons-de-Cartier, Ste-Foy / Nov–Avr: PEPS',
       address: '2300 Rue de la Terrasse, Québec, QC',
@@ -632,33 +668,33 @@ async function main() {
       clubId: laFoulee.id,
     },
     {
-      title: 'Club La Foulée — Longue sortie dimanche',
+      title: 'Club La Foulée — Longue sortie',
+      slug: 'club-la-foulee-longue-sortie',
       description: '15-25km, lieux variés',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
       timezone: 'America/Toronto',
       clubId: laFoulee.id,
     },
+    // Milaprès1000 — Tue 6:30AM at Café Mila, Limoilou
+    {
+      title: 'Milaprès1000',
+      slug: 'milapres1000',
+      description: 'Café Mila — 986 3e Av., Limoilou',
+      address: '986 3e Avenue, Québec, QC G1L 2X1',
+      latitude: 46.840183,
+      longitude: -71.22515,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      clubId: milapres.id,
+    },
   ]
 
   for (const event of otherRecurringEvents) {
-    const slug = createSlug(event.title)
-    const existing = await prisma.recurringEvent.findFirst({
-      where: {
-        title: event.title,
-        clubId: event.clubId,
-      },
+    await prisma.recurringEvent.upsert({
+      where: { slug: event.slug },
+      update: event,
+      create: event,
     })
-
-    if (existing) {
-      await prisma.recurringEvent.update({
-        where: { id: existing.id },
-        data: { ...event, slug },
-      })
-    } else {
-      await prisma.recurringEvent.create({
-        data: { ...event, slug },
-      })
-    }
   }
 
   // No concrete events pre-created — the hybrid system generates

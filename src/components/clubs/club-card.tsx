@@ -1,7 +1,6 @@
 import type { GetAllClubsReturn } from '@/lib/services/clubs'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
-import { LocationInline } from '@/components/ui/location'
 import { useTranslations } from 'next-intl'
 import { Calendar, Users } from 'lucide-react'
 
@@ -29,14 +28,9 @@ export function ClubCard({ club }: ClubCardProps) {
             <div className="p-2 bg-primary/10 rounded-lg">
               <Users className="h-5 w-5 text-primary" />
             </div>
-            <div>
-              <h2 className="text-xl font-heading font-bold text-primary hover:underline transition-colors">
-                {club.name}
-              </h2>
-              <div className="mt-1">
-                <LocationInline address={t('location')} className="text-sm" />
-              </div>
-            </div>
+            <h2 className="text-xl font-heading font-bold text-primary hover:underline transition-colors">
+              {club.name}
+            </h2>
           </div>
 
           {/* Active recurring events badge */}
@@ -50,7 +44,7 @@ export function ClubCard({ club }: ClubCardProps) {
 
         {/* Description - truncated */}
         {club.description && (
-          <p className="text-text-secondary font-body text-sm mb-4 line-clamp-2 leading-relaxed">
+          <p className="text-text-secondary font-body text-sm mb-4 line-clamp-3 leading-relaxed">
             {club.description}
           </p>
         )}

@@ -69,3 +69,13 @@ playwright-report/*
 test-results/*
 .worktrees/
 .claude/settings.local.json
+
+# scratch / audit artifacts
+/*.png
+/*.jpg
+/*.csv
+/differ.json
+/initial/
+/current/
+/.amp/
+/tasks/

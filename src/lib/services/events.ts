@@ -59,7 +59,7 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
       return null
     }
 
-    const date = new Date(`${dateKey}T00:00:00`)
+    const date = new Date(`${dateKey}T12:00:00`)
     return createVirtualEvent(recurringEvent, date)
   }
 

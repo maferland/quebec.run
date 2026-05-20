@@ -45,7 +45,7 @@ export default async function EventPage({ params }: EventPageProps) {
 
         {/* Event Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-8">
+          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-5 md:p-8">
             <div className="max-w-4xl">
               {/* Event Title & Club */}
               <div className="flex items-start gap-4 mb-6">
@@ -58,7 +58,7 @@ export default async function EventPage({ params }: EventPageProps) {
                   />
                 </div>
                 <div className="flex-1">
-                  <h1 className="text-4xl font-heading font-bold text-secondary mb-3">
+                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-secondary mb-3">
                     {event.title}
                   </h1>
                   {event.club && (
@@ -111,109 +111,6 @@ export default async function EventPage({ params }: EventPageProps) {
                         {event.address}
                       </p>
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-
-        {/* Additional Information */}
-        <Card>
-          <div className="p-8">
-            <div className="flex items-center gap-3 mb-8">
-              <Icon icon={Clock} size="lg" color="primary" decorative />
-              <h2 className="text-2xl font-heading font-bold text-primary">
-                {t('details.title')}
-              </h2>
-            </div>
-
-            <div className="grid md:grid-cols-2 gap-8">
-              {/* Event Info */}
-              <div className="space-y-6">
-                <div>
-                  <div className="flex items-center gap-2 mb-2">
-                    <Icon
-                      icon={Calendar}
-                      size="sm"
-                      color="text-secondary"
-                      decorative
-                    />
-                    <h3 className="font-heading font-semibold text-text-primary">
-                      {t('details.when')}
-                    </h3>
-                  </div>
-                  <p className="text-text-secondary font-body">
-                    {formatEventDateFr(event.date, 'full')} at {event.time}
-                  </p>
-                </div>
-
-                {event.distance && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon
-                        icon={Route}
-                        size="sm"
-                        color="text-secondary"
-                        decorative
-                      />
-                      <h3 className="font-heading font-semibold text-text-primary">
-                        {t('details.distance')}
-                      </h3>
-                    </div>
-                    <p className="text-text-secondary font-body">
-                      {event.distance}
-                    </p>
-                  </div>
-                )}
-
-                {event.pace && (
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon
-                        icon={Gauge}
-                        size="sm"
-                        color="text-secondary"
-                        decorative
-                      />
-                      <h3 className="font-heading font-semibold text-text-primary">
-                        {t('details.pace')}
-                      </h3>
-                    </div>
-                    <p className="text-text-secondary font-body">
-                      {event.pace}
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {/* Club Info */}
-              {event.club && (
-                <div className="space-y-6">
-                  <div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Icon
-                        icon={Users}
-                        size="sm"
-                        color="text-secondary"
-                        decorative
-                      />
-                      <h3 className="font-heading font-semibold text-text-primary">
-                        {t('details.organizedBy')}
-                      </h3>
-                    </div>
-                    <Link
-                      href={`/clubs/${event.club.slug}`}
-                      className="inline-flex items-center gap-2 text-primary hover:text-primary/80 font-body font-medium transition-colors"
-                    >
-                      {event.club.name}
-                      <Icon
-                        icon={ArrowLeft}
-                        size="sm"
-                        className="rotate-180"
-                        decorative
-                      />
-                    </Link>
                   </div>
                 </div>
               )}
