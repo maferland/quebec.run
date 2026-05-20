@@ -125,7 +125,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                   </SocialTag>
                 )}
                 {club.patterns.length > 0 && (
-                  <Tag variant="primary" icon={Calendar}>
+                  <Tag colorScheme="gray" icon={Calendar}>
                     {t('card.recurringEvents', {
                       count: club.patterns.length,
                     })}
