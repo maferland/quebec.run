@@ -69,8 +69,7 @@ export default async function ClubEventDatePage({
     : event.title
 
   const hasCoords = event.latitude !== null && event.longitude !== null
-  const otherPatterns =
-    club?.patterns.filter((p) => p.slug !== eventSlug).slice(0, 3) ?? []
+  const otherPatterns = club?.patterns.filter((p) => p.slug !== eventSlug) ?? []
 
   return (
     <div className="min-h-screen bg-surface-variant">

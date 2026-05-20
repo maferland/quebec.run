@@ -11,7 +11,7 @@ import { getClubBySlug } from '@/lib/services/clubs'
 import type { PageProps } from '@/lib/types/next'
 import {
   Calendar,
-  ArrowLeft,
+  ChevronRight,
   Globe,
   Instagram,
   Facebook,
@@ -54,6 +54,7 @@ export type ClubPageProps = PageProps<{ slug: string }>
 
 export default async function ClubPage({ params }: ClubPageProps) {
   const t = await getTranslations('clubs')
+  const tEvents = await getTranslations('events')
   const club = await getClubBySlug(await params)
 
   if (!club) {
@@ -63,16 +64,24 @@ export default async function ClubPage({ params }: ClubPageProps) {
   return (
     <div className="min-h-screen bg-surface-variant">
       <PageContainer>
-        {/* Back Navigation */}
-        <div className="mb-4 md:mb-8">
-          <Link
-            href="/clubs"
-            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
-          >
-            <Icon icon={ArrowLeft} size="sm" decorative />
-            {t('backToClubs')}
-          </Link>
-        </div>
+        <nav aria-label={tEvents('breadcrumb.label')} className="mb-4 text-sm">
+          <ol className="flex flex-wrap items-center gap-1.5 text-text-secondary">
+            <li>
+              <Link
+                href="/clubs"
+                className="hover:text-text-primary transition-colors"
+              >
+                {tEvents('breadcrumb.clubs')}
+              </Link>
+            </li>
+            <li aria-hidden="true" className="text-text-secondary/60">
+              <Icon icon={ChevronRight} size="sm" decorative />
+            </li>
+            <li className="text-text-primary font-medium" aria-current="page">
+              {club.name}
+            </li>
+          </ol>
+        </nav>
 
         {/* Club Header */}
         <Card className="mb-8 overflow-hidden">
