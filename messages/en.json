@@ -117,6 +117,9 @@
       "recurringEvents": "{count, plural, one {# weekly run} other {# weekly runs}}",
       "viewClub": "View Club →",
       "upcomingEventsTitle": "Upcoming Events"
+    },
+    "pattern": {
+      "next": "Next"
     }
   },
   "events": {

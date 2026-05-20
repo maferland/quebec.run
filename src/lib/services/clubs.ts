@@ -8,7 +8,7 @@ import type {
   PublicPayload,
 } from '@/lib/schemas'
 import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
-import { getEventsInRange } from './recurring-events'
+import { getEventsInRange, expandRRuleDates } from './recurring-events'
 import { addDays } from 'date-fns'
 
 // We need the ClubId type for getClubById
@@ -234,17 +234,36 @@ export async function getClubBySlug({ slug }: ClubSlug) {
       instagram: true,
       facebook: true,
       stravaSlug: true,
+      recurringEvents: {
+        where: { isActive: true },
+        select: {
+          id: true,
+          slug: true,
+          title: true,
+          description: true,
+          address: true,
+          schedulePattern: true,
+        },
+      },
     },
   })
 
   if (!club) return null
 
   const now = new Date()
-  now.setHours(0, 0, 0, 0)
-  const endDate = addDays(now, 30)
-  const events = await getEventsInRange(now, endDate, club.id)
+  const upper = addDays(now, 365)
+  const patterns = club.recurringEvents
+    .map((re) => {
+      const [next] = expandRRuleDates(re.schedulePattern, now, upper)
+      return { ...re, nextOccurrence: next ?? null }
+    })
+    .sort((a, b) => {
+      if (!a.nextOccurrence) return 1
+      if (!b.nextOccurrence) return -1
+      return a.nextOccurrence.getTime() - b.nextOccurrence.getTime()
+    })
 
-  return { ...club, events }
+  return { ...club, patterns }
 }
 
 export const updateClubById = async ({
