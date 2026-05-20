@@ -1,12 +1,10 @@
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
-import { Tag } from '@/components/ui/tag'
 import { LocationCard } from '@/components/ui/location'
-import { describePattern } from '@/lib/utils/rrule-builder'
+import { describePattern, parseRRuleToForm } from '@/lib/utils/rrule-builder'
 import { formatHumanFriendlyDate } from '@/lib/utils/date-formatting'
-import { useLocale, useTranslations } from 'next-intl'
+import { useLocale } from 'next-intl'
 import { format } from 'date-fns'
-import { Calendar } from 'lucide-react'
 
 export type RecurringPatternCardProps = {
   pattern: {
@@ -20,6 +18,23 @@ export type RecurringPatternCardProps = {
   clubName: string
 }
 
+const WEEKDAYS = new Set([
+  'monday',
+  'tuesday',
+  'wednesday',
+  'thursday',
+  'friday',
+  'saturday',
+  'sunday',
+  'lundi',
+  'mardi',
+  'mercredi',
+  'jeudi',
+  'vendredi',
+  'samedi',
+  'dimanche',
+])
+
 const titleCase = (value: string) =>
   value
     .split('-')
@@ -32,17 +47,19 @@ export function RecurringPatternCard({
   clubName,
 }: RecurringPatternCardProps) {
   const locale = useLocale() as 'en' | 'fr'
-  const t = useTranslations('clubs.pattern')
 
-  // Pattern title shouldn't repeat the club name. When the underlying
-  // recurring event title equals the club's name (e.g. Faux Mouvement's three
-  // weekly slots all share the title "Faux Mouvement"), derive the card label
-  // from the slug instead.
-  const cardTitle =
+  // Pattern label shouldn't repeat the club name. When the recurring event
+  // title equals the club's (Faux Mouvement × 3), derive from the slug.
+  const label =
     pattern.title === clubName ? titleCase(pattern.slug) : pattern.title
+
+  // If the label is just a weekday word (Mardi, Tuesday, etc.) it duplicates
+  // the date below — skip it.
+  const showLabel = !WEEKDAYS.has(label.toLowerCase())
 
   const schedule =
     describePattern(pattern.schedulePattern, locale) ?? pattern.schedulePattern
+  const time = parseRRuleToForm(pattern.schedulePattern).time
 
   const href = pattern.nextOccurrence
     ? `/clubs/${clubSlug}/events/${pattern.slug}/${format(pattern.nextOccurrence, 'yyyy-MM-dd')}`
@@ -53,20 +70,28 @@ export function RecurringPatternCard({
       <Card
         as="article"
         variant="interactive"
-        className="h-full flex flex-col border-l-4 border-primary hover:shadow-lg transition-all duration-200"
+        className="h-full flex flex-col border-l-4 border-primary p-3 md:p-4 hover:shadow-lg transition-all duration-200"
       >
-        <div className="flex items-start justify-between gap-3 mb-2">
-          <h3 className="text-lg font-heading font-bold text-primary hover:underline transition-colors leading-tight">
-            {cardTitle}
-          </h3>
-          {pattern.nextOccurrence && (
-            <Tag variant="datetime" icon={Calendar} size="xs">
-              {t('next')} {formatHumanFriendlyDate(pattern.nextOccurrence)}
-            </Tag>
+        <div className="mb-2">
+          <p className="text-lg font-heading font-semibold text-primary leading-tight">
+            {pattern.nextOccurrence ? (
+              <>
+                {formatHumanFriendlyDate(pattern.nextOccurrence)}
+                <span className="text-text-secondary"> · </span>
+                {time}
+              </>
+            ) : (
+              schedule
+            )}
+          </p>
+          {showLabel && (
+            <p className="text-sm text-text-secondary mt-0.5">{label}</p>
           )}
         </div>
 
-        <p className="text-sm text-text-secondary font-body mb-4">{schedule}</p>
+        <p className="hidden md:block text-sm text-text-secondary font-body mb-3">
+          {schedule}
+        </p>
 
         {pattern.address && (
           <div className="mt-auto">

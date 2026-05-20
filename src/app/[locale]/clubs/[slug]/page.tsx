@@ -48,12 +48,12 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Club Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-5 md:p-8">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-4 md:p-8">
             <div className="max-w-4xl">
               {/* Club Name & Location */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className="hidden md:block p-3 bg-primary/10 rounded-lg">
-                  <Icon icon={Users} size="xl" color="primary" decorative />
+              <div className="flex items-start gap-3 md:gap-4 mb-6">
+                <div className="p-2 md:p-3 bg-primary/10 rounded-lg">
+                  <Icon icon={Users} size="md" color="primary" decorative />
                 </div>
                 <div className="flex-1">
                   <h1 className="text-2xl md:text-4xl font-heading font-bold text-primary mb-2">
