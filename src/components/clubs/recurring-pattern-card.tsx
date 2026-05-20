@@ -1,6 +1,6 @@
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
-import { LocationCard } from '@/components/ui/location'
+import { LocationInline } from '@/components/ui/location'
 import { describePattern, parseRRuleToForm } from '@/lib/utils/rrule-builder'
 import { formatHumanFriendlyDate } from '@/lib/utils/date-formatting'
 import { useLocale } from 'next-intl'
@@ -70,7 +70,7 @@ export function RecurringPatternCard({
       <Card
         as="article"
         variant="interactive"
-        className="h-full flex flex-col border-l-4 border-primary p-3 md:p-4 hover:shadow-lg transition-all duration-200"
+        className="h-full flex flex-col border-l-4 border-primary p-2.5 md:p-4 hover:shadow-lg transition-all duration-200"
       >
         <div className="mb-2">
           <p className="text-lg font-heading font-semibold text-primary leading-tight">
@@ -95,7 +95,7 @@ export function RecurringPatternCard({
 
         {pattern.address && (
           <div className="mt-auto">
-            <LocationCard address={pattern.address} />
+            <LocationInline address={pattern.address} className="text-sm" />
           </div>
         )}
       </Card>

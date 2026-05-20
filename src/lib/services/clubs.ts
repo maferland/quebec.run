@@ -252,10 +252,16 @@ export async function getClubBySlug({ slug }: ClubSlug) {
 
   const now = new Date()
   const upper = addDays(now, 365)
-  const patterns = club.recurringEvents.map((re) => {
-    const [next] = expandRRuleDates(re.schedulePattern, now, upper)
-    return { ...re, nextOccurrence: next ?? null }
-  })
+  const patterns = club.recurringEvents
+    .map((re) => {
+      const [next] = expandRRuleDates(re.schedulePattern, now, upper)
+      return { ...re, nextOccurrence: next ?? null }
+    })
+    .sort((a, b) => {
+      if (!a.nextOccurrence) return 1
+      if (!b.nextOccurrence) return -1
+      return a.nextOccurrence.getTime() - b.nextOccurrence.getTime()
+    })
 
   return { ...club, patterns }
 }

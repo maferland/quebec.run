@@ -16,11 +16,39 @@ import {
   Instagram,
   Facebook,
   Users,
+  ExternalLink,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
 
 const withHttps = (url: string) =>
   url.startsWith('http') ? url : `https://${url}`
+
+function SocialTag({
+  href,
+  icon,
+  children,
+}: {
+  href: string
+  icon: LucideIcon
+  children: React.ReactNode
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="no-underline hover:no-underline transition-opacity hover:opacity-80"
+    >
+      <Tag colorScheme="primary" icon={icon}>
+        <span className="inline-flex items-center gap-1">
+          {children}
+          <ExternalLink className="h-3 w-3 opacity-70" />
+        </span>
+      </Tag>
+    </a>
+  )
+}
 
 export type ClubPageProps = PageProps<{ slug: string }>
 
@@ -52,7 +80,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             <div className="max-w-4xl">
               {/* Club Name & Location */}
               <div className="flex items-start gap-3 md:gap-4 mb-6">
-                <div className="p-2 md:p-3 bg-primary/10 rounded-lg">
+                <div className="p-2 md:p-3 bg-primary/10 rounded-xl">
                   <Icon icon={Users} size="md" color="primary" decorative />
                 </div>
                 <div className="flex-1">
@@ -70,33 +98,31 @@ export default async function ClubPage({ params }: ClubPageProps) {
               )}
 
               {/* Social Links & Stats */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 {club.website && (
-                  <Link href={withHttps(club.website)}>
-                    <Tag variant="outline" icon={Globe}>
-                      Website
-                    </Tag>
-                  </Link>
+                  <SocialTag href={withHttps(club.website)} icon={Globe}>
+                    Website
+                  </SocialTag>
                 )}
                 {club.instagram && (
-                  <Link href={`https://instagram.com/${club.instagram}`}>
-                    <Tag variant="outline" icon={Instagram}>
-                      @{club.instagram}
-                    </Tag>
-                  </Link>
+                  <SocialTag
+                    href={`https://instagram.com/${club.instagram}`}
+                    icon={Instagram}
+                  >
+                    @{club.instagram}
+                  </SocialTag>
                 )}
                 {club.facebook && (
-                  <Link
+                  <SocialTag
                     href={withHttps(
                       club.facebook.includes('facebook.com')
                         ? club.facebook
                         : `facebook.com/${club.facebook}`
                     )}
+                    icon={Facebook}
                   >
-                    <Tag variant="outline" icon={Facebook}>
-                      Facebook
-                    </Tag>
-                  </Link>
+                    Facebook
+                  </SocialTag>
                 )}
                 {club.patterns.length > 0 && (
                   <Tag variant="primary" icon={Calendar}>
