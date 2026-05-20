@@ -1,5 +1,6 @@
 import { getTranslations } from 'next-intl/server'
-import { ClubEventsList } from '@/components/clubs/club-events-list'
+import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
+import { ContentGrid } from '@/components/ui/content-grid'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { PageContainer } from '@/components/ui/page-container'
@@ -15,11 +16,39 @@ import {
   Instagram,
   Facebook,
   Users,
+  ExternalLink,
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
+import type { LucideIcon } from 'lucide-react'
 
 const withHttps = (url: string) =>
   url.startsWith('http') ? url : `https://${url}`
+
+function SocialTag({
+  href,
+  icon,
+  children,
+}: {
+  href: string
+  icon: LucideIcon
+  children: React.ReactNode
+}) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="no-underline hover:no-underline transition-opacity hover:opacity-80"
+    >
+      <Tag colorScheme="primary" icon={icon}>
+        <span className="inline-flex items-center gap-1">
+          {children}
+          <ExternalLink className="h-3 w-3 opacity-70" />
+        </span>
+      </Tag>
+    </a>
+  )
+}
 
 export type ClubPageProps = PageProps<{ slug: string }>
 
@@ -35,10 +64,10 @@ export default async function ClubPage({ params }: ClubPageProps) {
     <div className="min-h-screen bg-surface-variant">
       <PageContainer>
         {/* Back Navigation */}
-        <div className="mb-8">
+        <div className="mb-4 md:mb-8">
           <Link
             href="/clubs"
-            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
+            className="inline-flex items-center gap-1.5 text-sm text-text-secondary hover:text-text-primary transition-colors"
           >
             <Icon icon={ArrowLeft} size="sm" decorative />
             {t('backToClubs')}
@@ -47,12 +76,12 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Club Header */}
         <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-5 md:p-8">
+          <div className="bg-gradient-to-br from-primary/5 via-primary/10 to-secondary/5 p-4 md:p-8">
             <div className="max-w-4xl">
               {/* Club Name & Location */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-primary/10 rounded-lg">
-                  <Icon icon={Users} size="xl" color="primary" decorative />
+              <div className="flex items-start gap-3 md:gap-4 mb-6">
+                <div className="p-2 md:p-3 bg-primary/10 rounded-xl">
+                  <Icon icon={Users} size="md" color="primary" decorative />
                 </div>
                 <div className="flex-1">
                   <h1 className="text-2xl md:text-4xl font-heading font-bold text-primary mb-2">
@@ -69,37 +98,37 @@ export default async function ClubPage({ params }: ClubPageProps) {
               )}
 
               {/* Social Links & Stats */}
-              <div className="flex items-center gap-3 flex-wrap">
+              <div className="flex items-center gap-2 flex-wrap">
                 {club.website && (
-                  <Link href={withHttps(club.website)}>
-                    <Tag variant="outline" icon={Globe}>
-                      Website
-                    </Tag>
-                  </Link>
+                  <SocialTag href={withHttps(club.website)} icon={Globe}>
+                    Website
+                  </SocialTag>
                 )}
                 {club.instagram && (
-                  <Link href={`https://instagram.com/${club.instagram}`}>
-                    <Tag variant="outline" icon={Instagram}>
-                      @{club.instagram}
-                    </Tag>
-                  </Link>
+                  <SocialTag
+                    href={`https://instagram.com/${club.instagram}`}
+                    icon={Instagram}
+                  >
+                    @{club.instagram}
+                  </SocialTag>
                 )}
                 {club.facebook && (
-                  <Link
+                  <SocialTag
                     href={withHttps(
                       club.facebook.includes('facebook.com')
                         ? club.facebook
                         : `facebook.com/${club.facebook}`
                     )}
+                    icon={Facebook}
                   >
-                    <Tag variant="outline" icon={Facebook}>
-                      Facebook
-                    </Tag>
-                  </Link>
+                    Facebook
+                  </SocialTag>
                 )}
-                {club.events && club.events.length > 0 && (
-                  <Tag variant="primary" icon={Calendar}>
-                    {t('card.upcomingEvents', { count: club.events.length })}
+                {club.patterns.length > 0 && (
+                  <Tag colorScheme="gray" icon={Calendar}>
+                    {t('card.recurringEvents', {
+                      count: club.patterns.length,
+                    })}
                   </Tag>
                 )}
               </div>
@@ -117,8 +146,17 @@ export default async function ClubPage({ params }: ClubPageProps) {
               </h2>
             </div>
 
-            {club.events && club.events.length > 0 ? (
-              <ClubEventsList events={club.events} />
+            {club.patterns.length > 0 ? (
+              <ContentGrid columns="2" gap="lg">
+                {club.patterns.map((pattern) => (
+                  <RecurringPatternCard
+                    key={pattern.id}
+                    pattern={pattern}
+                    clubSlug={club.slug}
+                    clubName={club.name}
+                  />
+                ))}
+              </ContentGrid>
             ) : (
               <EmptyState
                 icon={Calendar}

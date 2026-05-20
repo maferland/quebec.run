@@ -3,6 +3,7 @@ import {
   buildRRuleString,
   parseRRuleToForm,
   validateRRulePattern,
+  describePattern,
 } from './rrule-builder'
 
 describe('buildRRuleString', () => {
@@ -135,5 +136,55 @@ describe('validateRRulePattern', () => {
         'FREQ=WEEKLY;INTERVAL=2;BYDAY=SA;BYHOUR=8;BYMINUTE=0'
       )
     }).not.toThrow()
+  })
+})
+
+describe('describePattern', () => {
+  const cases: Array<{
+    pattern: string
+    en: string
+    fr: string
+  }> = [
+    {
+      pattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=30',
+      en: 'Every Tuesday at 18:30',
+      fr: 'Tous les mardis à 18 h 30',
+    },
+    {
+      pattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
+      en: 'Every Sunday at 08:00',
+      fr: 'Tous les dimanches à 8 h 00',
+    },
+    {
+      pattern: 'FREQ=WEEKLY;BYDAY=MO,WE,FR;BYHOUR=6;BYMINUTE=30',
+      en: 'Every Monday, Wednesday, and Friday at 06:30',
+      fr: 'Tous les lundi, mercredi, et vendredi à 6 h 30',
+    },
+    {
+      pattern: 'FREQ=WEEKLY;BYDAY=TU,TH;BYHOUR=18;BYMINUTE=0',
+      en: 'Every Tuesday and Thursday at 18:00',
+      fr: 'Tous les mardi et jeudi à 18 h 00',
+    },
+    {
+      pattern: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=SA;BYHOUR=9;BYMINUTE=30',
+      en: 'Every 2 weeks on Saturday at 09:30',
+      fr: 'Toutes les 2 semaines le samedi à 9 h 30',
+    },
+  ]
+
+  it.each(cases)('describes $pattern in English', ({ pattern, en }) => {
+    expect(describePattern(pattern, 'en')).toBe(en)
+  })
+
+  it.each(cases)('describes $pattern in French', ({ pattern, fr }) => {
+    expect(describePattern(pattern, 'fr')).toBe(fr)
+  })
+
+  it('returns null for monthly patterns', () => {
+    expect(describePattern('FREQ=MONTHLY;BYMONTHDAY=1', 'en')).toBeNull()
+  })
+
+  it('returns null for patterns without BYDAY', () => {
+    expect(describePattern('FREQ=WEEKLY;BYHOUR=18;BYMINUTE=0', 'en')).toBeNull()
   })
 })
