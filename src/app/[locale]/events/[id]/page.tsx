@@ -1,123 +1,64 @@
-import { notFound } from 'next/navigation'
-import { getTranslations } from 'next-intl/server'
-import { getEventById } from '@/lib/services/events'
-import { Link } from '@/components/ui/link'
-import { Card } from '@/components/ui/card'
-import { Tag } from '@/components/ui/tag'
-import { PageContainer } from '@/components/ui/page-container'
-import { Icon } from '@/components/ui/icon'
-import { formatEventDateFr } from '@/lib/utils/date-formatting'
+import { notFound, redirect, permanentRedirect } from 'next/navigation'
+import { prisma } from '@/lib/prisma'
+import { LEGACY_VIRTUAL_SLUG_MAP } from '@/lib/utils/legacy-event-slugs'
 import type { PageProps } from '@/lib/types/next'
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Users,
-  ArrowLeft,
-  Route,
-  Gauge,
-} from 'lucide-react'
 
-export type EventPageProps = PageProps<{ id: string }>
+export type LegacyEventPageProps = PageProps<{ id: string }>
 
-export default async function EventPage({ params }: EventPageProps) {
+/**
+ * Legacy /events/[id] is a permanent redirect to the canonical nested URL
+ * /clubs/<club>/events/<event>/<date>. Three id shapes are accepted:
+ *
+ *   <legacy-virtual-slug>--<YYYY-MM-DD>   pre-migration globally unique slug
+ *   <cuid>:<YYYY-MM-DD>                   even older virtual id
+ *   <cuid>                                concrete one-off event
+ */
+export default async function LegacyEventPage({
+  params,
+}: LegacyEventPageProps) {
   const { id } = await params
-  const t = await getTranslations('events')
-  const event = await getEventById({ data: { id } })
 
-  if (!event) {
+  const slugMatch = id.match(/^(.+)--(\d{4}-\d{2}-\d{2})$/)
+  if (slugMatch) {
+    const [, legacySlug, date] = slugMatch
+    const mapped = LEGACY_VIRTUAL_SLUG_MAP[legacySlug]
+    if (mapped) {
+      permanentRedirect(
+        `/clubs/${mapped.clubSlug}/events/${mapped.eventSlug}/${date}`
+      )
+    }
     notFound()
   }
 
-  return (
-    <div className="min-h-screen bg-surface-variant">
-      <PageContainer>
-        {/* Back Navigation */}
-        <div className="mb-8">
-          <Link
-            href="/events"
-            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
-          >
-            <Icon icon={ArrowLeft} size="sm" decorative />
-            {t('backToEvents')}
-          </Link>
-        </div>
+  const cuidMatch = id.match(/^(.+):(\d{4}-\d{2}-\d{2})$/)
+  if (cuidMatch) {
+    const [, recurringId, date] = cuidMatch
+    const re = await prisma.recurringEvent.findUnique({
+      where: { id: recurringId },
+      select: { slug: true, club: { select: { slug: true } } },
+    })
+    if (re) {
+      permanentRedirect(`/clubs/${re.club.slug}/events/${re.slug}/${date}`)
+    }
+    notFound()
+  }
 
-        {/* Event Header */}
-        <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-5 md:p-8">
-            <div className="max-w-4xl">
-              {/* Event Title & Club */}
-              <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-secondary/10 rounded-lg">
-                  <Icon
-                    icon={Calendar}
-                    size="xl"
-                    color="secondary"
-                    decorative
-                  />
-                </div>
-                <div className="flex-1">
-                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-secondary mb-3">
-                    {event.title}
-                  </h1>
-                  {event.club && (
-                    <Link href={`/clubs/${event.club.slug}`}>
-                      <Tag variant="outline" icon={Users}>
-                        {event.club.name}
-                      </Tag>
-                    </Link>
-                  )}
-                </div>
-              </div>
+  // Concrete event by cuid — keep on this page for now (rare). Could redirect
+  // to a nested URL when concrete events grow their own slug column.
+  const concrete = await prisma.event.findUnique({
+    where: { id },
+    select: {
+      date: true,
+      recurringEvent: { select: { slug: true } },
+      club: { select: { slug: true } },
+    },
+  })
+  if (!concrete?.club || !concrete.recurringEvent) {
+    notFound()
+  }
 
-              {/* Description */}
-              {event.description && (
-                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
-                  {event.description}
-                </p>
-              )}
-
-              {/* Event Details */}
-              <div className="flex items-center gap-3 flex-wrap mb-6">
-                <Tag variant="datetime" icon={Calendar}>
-                  {formatEventDateFr(event.date, 'full')}
-                </Tag>
-                <Tag variant="time" icon={Clock}>
-                  {event.time}
-                </Tag>
-                {event.distance && (
-                  <Tag variant="distance" icon={Route}>
-                    {event.distance}
-                  </Tag>
-                )}
-                {event.pace && (
-                  <Tag variant="pace" icon={Gauge}>
-                    {event.pace}
-                  </Tag>
-                )}
-              </div>
-
-              {/* Location */}
-              {event.address && (
-                <div className="bg-surface border border-border rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Icon icon={MapPin} size="md" color="primary" decorative />
-                    <div>
-                      <h3 className="font-heading font-semibold text-text-primary mb-1">
-                        {t('details.meetingLocation')}
-                      </h3>
-                      <p className="text-text-secondary font-body">
-                        {event.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      </PageContainer>
-    </div>
+  const date = concrete.date.toISOString().slice(0, 10)
+  redirect(
+    `/clubs/${concrete.club.slug}/events/${concrete.recurringEvent.slug}/${date}`
   )
 }

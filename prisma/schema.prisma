@@ -118,7 +118,7 @@ model Club {
 
 model RecurringEvent {
   id          String  @id @default(cuid())
-  slug        String  @unique
+  slug        String
   title       String
   description String?
 
@@ -148,6 +148,7 @@ model RecurringEvent {
   club            Club    @relation(fields: [clubId], references: [id], onDelete: Cascade)
   generatedEvents Event[]
 
+  @@unique([clubId, slug])
   @@map("recurring_events")
 }
 

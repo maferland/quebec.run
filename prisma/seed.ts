@@ -513,26 +513,13 @@ async function main() {
     },
   ]
 
-  // Upsert recurring events (update existing or create new)
   for (const event of recurringEvents) {
-    const slug = createSlug(event.title)
-    const existing = await prisma.recurringEvent.findFirst({
-      where: {
-        title: event.title,
-        clubId: event.clubId,
-      },
+    const slug = createSlug(event.title.replace(/^6AM Club /, ''))
+    await prisma.recurringEvent.upsert({
+      where: { clubId_slug: { clubId: event.clubId, slug } },
+      update: { ...event, slug },
+      create: { ...event, slug },
     })
-
-    if (existing) {
-      await prisma.recurringEvent.update({
-        where: { id: existing.id },
-        data: { ...event, slug },
-      })
-    } else {
-      await prisma.recurringEvent.create({
-        data: { ...event, slug },
-      })
-    }
   }
 
   // Recurring events for other clubs
@@ -541,7 +528,7 @@ async function main() {
     // Faux Mouvement — Tue 6PM, Thu 6PM, Sun 9AM
     {
       title: 'Faux Mouvement',
-      slug: 'faux-mouvement-mardi',
+      slug: 'mardi',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -552,7 +539,7 @@ async function main() {
     },
     {
       title: 'Faux Mouvement',
-      slug: 'faux-mouvement-jeudi',
+      slug: 'jeudi',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -563,7 +550,7 @@ async function main() {
     },
     {
       title: 'Faux Mouvement',
-      slug: 'faux-mouvement-dimanche',
+      slug: 'dimanche',
       description: '70 Bd Champlain, Petit-Champlain, Québec (Café de Course)',
       address: '70 Bd Champlain, Québec, QC',
       latitude: 46.8112,
@@ -575,7 +562,7 @@ async function main() {
     // Les Citrons Pressés — Mon & Wed 6:30PM
     {
       title: 'Les Citrons Pressés',
-      slug: 'les-citrons-presses-lundi',
+      slug: 'lundi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
       address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
@@ -586,7 +573,7 @@ async function main() {
     },
     {
       title: 'Les Citrons Pressés',
-      slug: 'les-citrons-presses-mercredi',
+      slug: 'mercredi',
       description: 'Base des Bambies (près du Centre Vidéotron)',
       address: '250 Boulevard Wilfrid-Hamel, Québec, QC',
       latitude: 46.8297,
@@ -598,7 +585,7 @@ async function main() {
     // La Panthère — Wed 5:30PM, Sat 9:30AM
     {
       title: 'La Panthère',
-      slug: 'la-panthere-mercredi',
+      slug: 'mercredi',
       description: 'Parking de la Base de plein air de Sainte-Foy',
       address: 'Base de plein air de Sainte-Foy, Québec, QC',
       latitude: 46.7711,
@@ -609,7 +596,7 @@ async function main() {
     },
     {
       title: 'La Panthère',
-      slug: 'la-panthere-samedi',
+      slug: 'samedi',
       description: 'Parking de la Base de plein air de Sainte-Foy',
       address: 'Base de plein air de Sainte-Foy, Québec, QC',
       latitude: 46.7711,
@@ -621,7 +608,7 @@ async function main() {
     // Volt — Mon 7PM, Wed 7PM
     {
       title: 'Volt',
-      slug: 'volt-lundi',
+      slug: 'lundi',
       description:
         'Nov–Mar: Centre de glaces Intact Assurance / Avr–Oct: Stade TELUS, Université Laval',
       address: '2300 Rue de la Terrasse, Québec, QC',
@@ -633,7 +620,7 @@ async function main() {
     },
     {
       title: 'Volt',
-      slug: 'volt-mercredi',
+      slug: 'mercredi',
       description: 'Intersection Grande-Allée & Bougainville',
       address: '750 Grande Allée Ouest, Québec, QC',
       latitude: 46.7997,
@@ -645,7 +632,7 @@ async function main() {
     // Le Coureur Nordique — Tue 6:15PM
     {
       title: 'Le Coureur Nordique',
-      slug: 'le-coureur-nordique',
+      slug: 'mardi',
       description: '141 Ch. Sainte-Foy, Québec',
       address: '141 Ch. Sainte-Foy, Québec, QC G1R 1T1',
       latitude: 46.8023,
@@ -657,7 +644,7 @@ async function main() {
     // Club La Foulée — Tue intervals, Sun long runs
     {
       title: 'Intervalles',
-      slug: 'club-la-foulee-intervalles',
+      slug: 'intervalles-mardi',
       description:
         'Mai–Oct: Polyvalente les Compagnons-de-Cartier, Ste-Foy / Nov–Avr: PEPS',
       address: '2300 Rue de la Terrasse, Québec, QC',
@@ -669,7 +656,7 @@ async function main() {
     },
     {
       title: 'Longue sortie',
-      slug: 'club-la-foulee-longue-sortie',
+      slug: 'longue-sortie-dimanche',
       description: '15-25km, lieux variés',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
       timezone: 'America/Toronto',
@@ -678,7 +665,7 @@ async function main() {
     // Kogi — Tue 18:15 at Kogi Café, Limoilou
     {
       title: 'Kogi',
-      slug: 'kogi-mardi',
+      slug: 'mardi',
       description: 'Kogi Café — 1104 18e Rue, Limoilou',
       address: '1104 18e Rue, Québec, QC G1J 1Z1',
       latitude: 46.836,
@@ -690,7 +677,7 @@ async function main() {
     // Milaprès1000 — Tue 6:30AM at Café Mila, Limoilou
     {
       title: 'Milaprès1000',
-      slug: 'milapres1000',
+      slug: 'mardi',
       description: 'Café Mila — 986 3e Av., Limoilou',
       address: '986 3e Avenue, Québec, QC G1L 2X1',
       latitude: 46.840183,
@@ -703,7 +690,7 @@ async function main() {
 
   for (const event of otherRecurringEvents) {
     await prisma.recurringEvent.upsert({
-      where: { slug: event.slug },
+      where: { clubId_slug: { clubId: event.clubId, slug: event.slug } },
       update: event,
       create: event,
     })

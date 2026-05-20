@@ -344,7 +344,8 @@ describe('Hybrid query helpers', () => {
       const date = new Date('2025-12-24T18:00:00')
       const virtual = createVirtualEvent(recurring, date)
 
-      expect(virtual.id).toBe(`${recurring.slug}--2025-12-24`)
+      expect(virtual.id).toBe(`${club.slug}-${recurring.slug}--2025-12-24`)
+      expect(virtual.recurringSlug).toBe(recurring.slug)
       expect(virtual.title).toBe('Tuesday Run')
       expect(virtual.description).toBe('Weekly run')
       expect(virtual.address).toBe('123 Main St')

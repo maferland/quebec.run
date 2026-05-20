@@ -172,7 +172,10 @@ export function createVirtualEvent(
   const dateKey = format(date, 'yyyy-MM-dd')
 
   return {
-    id: `${recurringEvent.slug}--${dateKey}`,
+    // Club slug prefix keeps the id globally unique now that event slugs
+    // are only unique within a club (e.g. multiple clubs have `mardi`).
+    id: `${recurringEvent.club.slug}-${recurringEvent.slug}--${dateKey}`,
+    recurringSlug: recurringEvent.slug,
     title: recurringEvent.title,
     description: recurringEvent.description,
     date,
