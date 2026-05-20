@@ -1,22 +1,18 @@
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getEventByClubAndSlug } from '@/lib/services/events'
+import { getClubBySlug } from '@/lib/services/clubs'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { Tag } from '@/components/ui/tag'
+import { ContentGrid } from '@/components/ui/content-grid'
 import { PageContainer } from '@/components/ui/page-container'
 import { Icon } from '@/components/ui/icon'
+import { EventMap } from '@/components/map/event-map'
+import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
 import { formatEventDateFr } from '@/lib/utils/date-formatting'
 import type { PageProps } from '@/lib/types/next'
-import {
-  Calendar,
-  MapPin,
-  Clock,
-  Users,
-  ArrowLeft,
-  Route,
-  Gauge,
-} from 'lucide-react'
+import { MapPin, Route, Gauge, ChevronRight } from 'lucide-react'
 
 export type ClubEventDatePageProps = PageProps<{
   slug: string
@@ -24,101 +20,182 @@ export type ClubEventDatePageProps = PageProps<{
   date: string
 }>
 
+const ADDRESS_TOKEN = /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st)\b/i
+
+const cleanDescription = (description: string | null): string => {
+  if (!description) return ''
+  // Split only on em-dash (—). En-dash (–) is used for ranges like "Nov–Mar".
+  const parts = description.split(/\s*—\s*/)
+  const venueParts = parts.filter((p) => !ADDRESS_TOKEN.test(p))
+  if (venueParts.length === 0) return ''
+  const cleaned = venueParts.join(' — ').trim()
+  return cleaned.replace(ADDRESS_TOKEN, '').replace(/^[\s,]+|[\s,]+$/g, '')
+}
+
+const proseFromDescription = (description: string | null): string => {
+  const cleaned = cleanDescription(description)
+  if (!cleaned) return ''
+  if (cleaned.length >= 25 || /[.!?]/.test(cleaned)) return cleaned
+  return ''
+}
+
+const capitalize = (s: string) =>
+  s ? s.charAt(0).toUpperCase() + s.slice(1) : s
+
 export default async function ClubEventDatePage({
   params,
 }: ClubEventDatePageProps) {
   const { slug, eventSlug, date } = await params
   const t = await getTranslations('events')
-  const event = await getEventByClubAndSlug({
-    data: { clubSlug: slug, eventSlug, date },
-  })
+  const [event, club] = await Promise.all([
+    getEventByClubAndSlug({ data: { clubSlug: slug, eventSlug, date } }),
+    getClubBySlug({ slug }),
+  ])
 
   if (!event) {
     notFound()
   }
 
+  const cleanedDescription = cleanDescription(event.description)
+  const prose = proseFromDescription(event.description)
+  const venueIsProse = cleanedDescription === prose
+  const venueHeading = venueIsProse
+    ? t('details.meetingLocation')
+    : cleanedDescription || t('details.meetingLocation')
+  const formattedDate = capitalize(formatEventDateFr(event.date, 'full'))
+  const titleIsClubName = event.title === event.club?.name
+  const breadcrumbTail = titleIsClubName
+    ? capitalize(formatEventDateFr(event.date, 'abbreviated'))
+    : event.title
+
+  const hasCoords = event.latitude !== null && event.longitude !== null
+  const otherPatterns = club?.patterns.filter((p) => p.slug !== eventSlug) ?? []
+
   return (
     <div className="min-h-screen bg-surface-variant">
       <PageContainer>
-        <div className="mb-8">
-          <Link
-            href={`/clubs/${slug}`}
-            className="text-sm text-text-secondary hover:text-text-primary flex items-center gap-2 transition-colors"
-          >
-            <Icon icon={ArrowLeft} size="sm" decorative />
-            {event.club!.name}
-          </Link>
-        </div>
+        <nav aria-label={t('breadcrumb.label')} className="mb-4 text-sm">
+          <ol className="flex flex-wrap items-center gap-1.5 text-text-secondary">
+            <li>
+              <Link
+                href={`/clubs/${slug}`}
+                className="hover:text-text-primary transition-colors"
+              >
+                {event.club!.name}
+              </Link>
+            </li>
+            <li aria-hidden="true" className="text-text-secondary/60">
+              <Icon icon={ChevronRight} size="sm" decorative />
+            </li>
+            <li className="text-text-primary font-medium" aria-current="page">
+              {breadcrumbTail}
+            </li>
+          </ol>
+        </nav>
 
-        <Card className="mb-8 overflow-hidden">
-          <div className="bg-gradient-to-br from-secondary/5 via-secondary/10 to-primary/5 p-5 md:p-8">
-            <div className="max-w-4xl">
-              <div className="flex items-start gap-4 mb-6">
-                <div className="p-3 bg-secondary/10 rounded-lg">
-                  <Icon
-                    icon={Calendar}
-                    size="xl"
-                    color="secondary"
-                    decorative
-                  />
-                </div>
-                <div className="flex-1">
-                  <h1 className="text-2xl md:text-4xl font-heading font-bold text-secondary mb-3">
-                    {event.title}
-                  </h1>
-                  {event.club && (
-                    <Link href={`/clubs/${event.club.slug}`}>
-                      <Tag variant="outline" icon={Users}>
-                        {event.club.name}
-                      </Tag>
-                    </Link>
-                  )}
-                </div>
+        <header className="mb-6">
+          <h1 className="text-3xl md:text-4xl font-heading font-bold text-text-primary mb-1">
+            {event.title}
+          </h1>
+          <p className="text-base md:text-lg text-text-secondary font-body">
+            {formattedDate} · {event.time}
+          </p>
+        </header>
+
+        {prose && (
+          <p className="mb-6 text-sm text-text-secondary font-body leading-relaxed max-w-2xl">
+            {prose}
+          </p>
+        )}
+
+        <Card className="mb-8 p-5 md:p-6 rounded-2xl">
+          {event.address && (
+            <div className="flex items-start gap-3">
+              <Icon icon={MapPin} size="md" color="primary" decorative />
+              <div>
+                <h2 className="font-heading font-semibold text-text-primary mb-0.5">
+                  {venueHeading}
+                </h2>
+                <p className="text-text-secondary font-body">{event.address}</p>
               </div>
+            </div>
+          )}
 
-              {event.description && (
-                <p className="text-lg text-text-primary font-body leading-relaxed mb-6 max-w-3xl">
-                  {event.description}
-                </p>
+          {hasCoords && (
+            <div className="mt-5">
+              <EventMap
+                height="sm"
+                events={[
+                  {
+                    id: event.id,
+                    title: event.title,
+                    date: event.date,
+                    time: event.time,
+                    address: event.address,
+                    latitude: event.latitude,
+                    longitude: event.longitude,
+                    club: event.club,
+                  },
+                ]}
+                initialCenter={[event.latitude!, event.longitude!]}
+                initialZoom={15}
+              />
+            </div>
+          )}
+
+          {(event.distance || event.pace) && (
+            <div className="mt-5 flex items-center gap-2 flex-wrap">
+              {event.distance && (
+                <Tag variant="distance" icon={Route}>
+                  {event.distance}
+                </Tag>
               )}
-
-              <div className="flex items-center gap-3 flex-wrap mb-6">
-                <Tag variant="datetime" icon={Calendar}>
-                  {formatEventDateFr(event.date, 'full')}
+              {event.pace && (
+                <Tag variant="pace" icon={Gauge}>
+                  {event.pace}
                 </Tag>
-                <Tag variant="time" icon={Clock}>
-                  {event.time}
-                </Tag>
-                {event.distance && (
-                  <Tag variant="distance" icon={Route}>
-                    {event.distance}
-                  </Tag>
-                )}
-                {event.pace && (
-                  <Tag variant="pace" icon={Gauge}>
-                    {event.pace}
-                  </Tag>
-                )}
-              </div>
-
-              {event.address && (
-                <div className="bg-surface border border-border rounded-lg p-4">
-                  <div className="flex items-start gap-3">
-                    <Icon icon={MapPin} size="md" color="primary" decorative />
-                    <div>
-                      <h3 className="font-heading font-semibold text-text-primary mb-1">
-                        {t('details.meetingLocation')}
-                      </h3>
-                      <p className="text-text-secondary font-body">
-                        {event.address}
-                      </p>
-                    </div>
-                  </div>
-                </div>
               )}
             </div>
-          </div>
+          )}
         </Card>
+
+        {otherPatterns.length > 0 && (
+          <section className="mb-8">
+            <h2 className="text-xl md:text-2xl font-heading font-bold text-text-primary mb-4">
+              {t('moreFromClub', { name: event.club!.name })}
+            </h2>
+            <ContentGrid columns="auto" gap="md">
+              {otherPatterns.map((pattern) => (
+                <RecurringPatternCard
+                  key={pattern.id}
+                  pattern={pattern}
+                  clubSlug={slug}
+                  clubName={event.club!.name}
+                />
+              ))}
+            </ContentGrid>
+          </section>
+        )}
+
+        {club?.description && (
+          <Link
+            href={`/clubs/${slug}`}
+            className="block no-underline hover:no-underline mb-8"
+          >
+            <Card variant="interactive" className="p-5 md:p-6 rounded-2xl">
+              <h2 className="font-heading font-semibold text-text-primary mb-1">
+                {t('aboutClub', { name: event.club!.name })}
+              </h2>
+              <p className="text-sm text-text-secondary line-clamp-2 mb-2">
+                {club.description}
+              </p>
+              <span className="text-sm text-primary font-medium inline-flex items-center gap-1">
+                {t('viewClub')}
+                <Icon icon={ChevronRight} size="sm" decorative />
+              </span>
+            </Card>
+          </Link>
+        )}
       </PageContainer>
     </div>
   )
