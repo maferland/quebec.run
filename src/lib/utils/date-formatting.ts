@@ -228,27 +228,27 @@ export function formatHumanFriendlyDate(
     dateObj.getFullYear() === now.getFullYear()
   ) {
     return dateObj.toLocaleDateString(locale, {
-      weekday: 'short',
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       timeZone: timezone,
     })
   }
 
-  // For dates in other months this year, show "Mon, Aug 18"
+  // For dates in other months this year, show "Monday, August 18"
   if (dateObj.getFullYear() === now.getFullYear()) {
     return dateObj.toLocaleDateString(locale, {
-      weekday: 'short',
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       timeZone: timezone,
     })
   }
 
-  // For dates in other years, show "Mon, Aug 18, 2025"
+  // For dates in other years, show "Monday, August 18, 2025"
   return dateObj.toLocaleDateString(locale, {
-    weekday: 'short',
-    month: 'short',
+    weekday: 'long',
+    month: 'long',
     day: 'numeric',
     year: 'numeric',
     timeZone: timezone,
