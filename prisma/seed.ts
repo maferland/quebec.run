@@ -696,17 +696,18 @@ async function main() {
     })
   }
 
-  // Seed pace policy — best-guess starting point. Clubs can refine later.
-  // INCLUSIVE: morning social, café-pickup, "tous les niveaux" runs.
-  // SHARED: known training/competitive runs.
+  // Seed pace policy.
+  // SHARED = single group pace (default for social + training runs alike).
+  // INCLUSIVE = pace flexibility built into the run — split groups or
+  //   interval-style sessions where runners run at their own effort. Most
+  //   "social" clubs still have a pre-set conversational pace, so they're
+  //   SHARED, not INCLUSIVE.
   await prisma.recurringEvent.updateMany({
     where: {
-      clubId: { in: [sixAmClub.id, fauxMouvement.id, kogi.id, milapres.id] },
+      clubId: {
+        in: [sixAmClub.id, fauxMouvement.id, kogi.id, milapres.id, volt.id],
+      },
     },
-    data: { pacePolicy: 'INCLUSIVE' },
-  })
-  await prisma.recurringEvent.updateMany({
-    where: { clubId: volt.id },
     data: { pacePolicy: 'SHARED' },
   })
   await prisma.recurringEvent.updateMany({
@@ -714,7 +715,7 @@ async function main() {
       clubId: laFoulee.id,
       slug: 'intervalles-mardi',
     },
-    data: { pacePolicy: 'SHARED' },
+    data: { pacePolicy: 'INCLUSIVE' },
   })
 
   // No concrete events pre-created — the hybrid system generates
