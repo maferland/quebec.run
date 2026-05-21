@@ -156,7 +156,8 @@
     "viewClub": "View club",
     "pacePolicy": {
       "shared": "Group pace",
-      "openPace": "Open pace"
+      "openPace": "Open pace",
+      "openPaceHint": "Pace-flexible run — split into pace groups or interval-style structure that accommodates different paces."
     }
   },
   "validation": {

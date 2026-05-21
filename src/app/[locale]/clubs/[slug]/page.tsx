@@ -147,8 +147,8 @@ export default async function ClubPage({ params }: ClubPageProps) {
 
         {/* Events Section */}
         <Card>
-          <div className="p-5 md:p-8">
-            <div className="flex items-center gap-3 mb-8">
+          <div className="p-3 md:p-8">
+            <div className="flex items-center gap-3 mb-6 md:mb-8">
               <Icon icon={Calendar} size="lg" color="primary" decorative />
               <h2 className="text-xl md:text-2xl font-heading font-bold text-primary">
                 {t('card.upcomingEventsTitle')}

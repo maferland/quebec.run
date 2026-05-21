@@ -161,9 +161,11 @@ export default async function ClubEventDatePage({
               {/* SHARED is the default assumption — pace value itself carries
                   the signal. Only INCLUSIVE is worth a badge. */}
               {event.pacePolicy === 'OPEN_PACE' && (
-                <Tag colorScheme="success" icon={UserCheck}>
-                  {t('pacePolicy.openPace')}
-                </Tag>
+                <span title={t('pacePolicy.openPaceHint')}>
+                  <Tag colorScheme="success" icon={UserCheck}>
+                    {t('pacePolicy.openPace')}
+                  </Tag>
+                </span>
               )}
             </div>
           )}
