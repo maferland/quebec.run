@@ -76,7 +76,9 @@ export function RecurringPatternCard({
           <p className="text-lg font-heading font-semibold text-primary leading-tight">
             {pattern.nextOccurrence ? (
               <>
-                {formatHumanFriendlyDate(pattern.nextOccurrence)}
+                {formatHumanFriendlyDate(pattern.nextOccurrence, {
+                  locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+                })}
                 <span className="text-text-secondary"> · </span>
                 {time}
               </>
