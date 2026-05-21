@@ -712,8 +712,10 @@ async function main() {
   })
   await prisma.recurringEvent.updateMany({
     where: {
-      clubId: laFoulee.id,
-      slug: 'intervalles-mardi',
+      OR: [
+        { clubId: laFoulee.id, slug: 'intervalles-mardi' },
+        { clubId: coureurNordique.id, slug: 'mardi' },
+      ],
     },
     data: { pacePolicy: 'INCLUSIVE' },
   })

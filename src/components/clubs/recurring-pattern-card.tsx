@@ -6,7 +6,7 @@ import { describePattern, parseRRuleToForm } from '@/lib/utils/rrule-builder'
 import { formatHumanFriendlyDate } from '@/lib/utils/date-formatting'
 import { useLocale, useTranslations } from 'next-intl'
 import { format } from 'date-fns'
-import { Users2, UserCheck } from 'lucide-react'
+import { UserCheck } from 'lucide-react'
 
 export type RecurringPatternCardProps = {
   pattern: {
@@ -15,6 +15,7 @@ export type RecurringPatternCardProps = {
     address: string | null
     schedulePattern: string
     nextOccurrence: Date | null
+    pace?: string | null
     pacePolicy?: 'SHARED' | 'INCLUSIVE' | null
   }
   clubSlug: string
@@ -107,17 +108,11 @@ export function RecurringPatternCard({
           </div>
         )}
 
-        {pattern.pacePolicy && (
+        {pattern.pacePolicy === 'INCLUSIVE' && (
           <div className="mt-2">
-            {pattern.pacePolicy === 'SHARED' ? (
-              <Tag colorScheme="primary" icon={Users2} size="xs">
-                {t('pacePolicy.shared')}
-              </Tag>
-            ) : (
-              <Tag colorScheme="success" icon={UserCheck} size="xs">
-                {t('pacePolicy.inclusive')}
-              </Tag>
-            )}
+            <Tag colorScheme="success" icon={UserCheck} size="xs">
+              {t('pacePolicy.inclusive')}
+            </Tag>
           </div>
         )}
       </Card>
