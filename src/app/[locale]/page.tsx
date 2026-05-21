@@ -1,24 +1,25 @@
-'use client'
-
-import { useTranslations } from 'next-intl'
-import { useClubs } from '@/lib/hooks/use-clubs'
-import { useUpcomingEvents } from '@/lib/hooks/use-events'
+import { getTranslations } from 'next-intl/server'
 import { ClubCard } from '@/components/clubs/club-card'
 import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
-import { LoadingGrid, LoadingCard } from '@/components/ui/loading-card'
 import { EventMap } from '@/components/map/event-map'
 import { Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
+import { getAllClubs } from '@/lib/services/clubs'
+import { getAllEvents } from '@/lib/services/events'
 
-export default function Home() {
-  const t = useTranslations('home')
-  const { data: clubs, isLoading: clubsLoading } = useClubs()
-  const { data: events, isLoading: eventsLoading } = useUpcomingEvents()
+export const dynamic = 'force-dynamic'
+
+export default async function Home() {
+  const t = await getTranslations('home')
+
+  const [clubs, events] = await Promise.all([
+    getAllClubs({ data: { limit: 6, offset: 0 } }),
+    getAllEvents({ data: { limit: 50, offset: 0 } }),
+  ])
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
       <section className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
@@ -43,17 +44,12 @@ export default function Home() {
               </div>
             </div>
             <div className="relative">
-              {eventsLoading ? (
-                <div className="aspect-square bg-gradient-to-br from-primary/10 to-secondary/10 rounded-2xl animate-pulse" />
-              ) : (
-                <EventMap events={events || []} />
-              )}
+              <EventMap events={events} />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Featured Clubs Section */}
       <section className="py-16">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
@@ -65,21 +61,14 @@ export default function Home() {
             </Link>
           </div>
 
-          {clubsLoading ? (
-            <LoadingGrid count={6}>
-              <LoadingCard />
-            </LoadingGrid>
-          ) : (
-            <ContentGrid>
-              {clubs?.slice(0, 6).map((club) => (
-                <ClubCard key={club.id} club={club} />
-              ))}
-            </ContentGrid>
-          )}
+          <ContentGrid>
+            {clubs.map((club) => (
+              <ClubCard key={club.id} club={club} />
+            ))}
+          </ContentGrid>
         </div>
       </section>
 
-      {/* Quick Actions */}
       <section className="py-16 bg-white border-t">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-2 gap-8">

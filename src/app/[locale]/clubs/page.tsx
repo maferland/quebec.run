@@ -7,6 +7,8 @@ import { PageTitle } from '@/components/ui/page-title'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function ClubsPage() {
   const t = await getTranslations('clubs')
   const clubs = await getAllClubs({ data: {} })
