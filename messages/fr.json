@@ -12,7 +12,8 @@
     "joinShort": "M'inscrire",
     "logoTagline": "Communauté de course",
     "openMenu": "Ouvrir le menu",
-    "closeMenu": "Fermer le menu"
+    "closeMenu": "Fermer le menu",
+    "menuTitle": "Menu"
   },
   "auth": {
     "signIn": "Se connecter",

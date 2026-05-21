@@ -32,15 +32,19 @@ describe('Header', () => {
   it('renders the logo and navigation links', () => {
     render(<Header />)
 
-    expect(screen.getByText('Clubs')).toBeInTheDocument()
-    expect(screen.getByText('Events')).toBeInTheDocument()
-    expect(screen.getByText('Calendar')).toBeInTheDocument()
+    // Both desktop nav + mobile drawer render the links (mobile is hidden via
+    // transform until opened, so the elements still exist in the DOM).
+    expect(screen.getAllByText('Clubs').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Events').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Calendar').length).toBeGreaterThan(0)
   })
 
   it('shows sign in button when unauthenticated', () => {
     render(<Header />)
 
-    expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
+    expect(
+      screen.getAllByRole('button', { name: /sign in/i }).length
+    ).toBeGreaterThan(0)
   })
 
   it('shows mobile menu hamburger button', () => {
@@ -88,7 +92,10 @@ describe('Header', () => {
 
     render(<Header />)
 
-    expect(screen.getByRole('link', { name: /admin/i })).toBeInTheDocument()
+    // Admin link renders in both desktop nav and mobile drawer.
+    expect(
+      screen.getAllByRole('link', { name: /admin/i }).length
+    ).toBeGreaterThan(0)
   })
 
   it('does not show admin link for regular users', () => {
