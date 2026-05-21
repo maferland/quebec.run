@@ -1,40 +1,10 @@
-import type { Metadata } from 'next'
-import { Inter, Montserrat } from 'next/font/google'
-import { Analytics } from '@vercel/analytics/next'
-import { SpeedInsights } from '@vercel/speed-insights/next'
-import './globals.css'
-
-const montserrat = Montserrat({
-  variable: '--font-heading',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-const inter = Inter({
-  variable: '--font-body',
-  subsets: ['latin'],
-  display: 'swap',
-})
-
-export const metadata: Metadata = {
-  title: 'quebec.run',
-  description: 'Running Community in Quebec City',
-}
-
+// Root layout intentionally a pass-through. The real <html>/<body>/<head>
+// live in app/[locale]/layout.tsx so we can set lang={locale}. Per Next.js,
+// the root layout must still exist and render its children.
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  return (
-    <html suppressHydrationWarning>
-      <body
-        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant`}
-      >
-        {children}
-        <Analytics />
-        <SpeedInsights />
-      </body>
-    </html>
-  )
+  return children
 }

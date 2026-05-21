@@ -2,11 +2,27 @@ import { Footer } from '@/components/layout/footer'
 import { Header } from '@/components/layout/header'
 import { ConsentBannerWrapper } from '@/components/consent-banner-wrapper'
 import type { Metadata } from 'next'
+import { Inter, Montserrat } from 'next/font/google'
+import { Analytics } from '@vercel/analytics/next'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 import { NextIntlClientProvider } from 'next-intl'
 import { getMessages, getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Providers } from '../providers'
 import { locales } from '@/i18n'
+import '../globals.css'
+
+const montserrat = Montserrat({
+  variable: '--font-heading',
+  subsets: ['latin'],
+  display: 'swap',
+})
+
+const inter = Inter({
+  variable: '--font-body',
+  subsets: ['latin'],
+  display: 'swap',
+})
 
 export const dynamicParams = false
 
@@ -45,15 +61,23 @@ export default async function LocaleLayout({ children, params }: Props) {
   const messages = await getMessages({ locale })
 
   return (
-    <NextIntlClientProvider locale={locale} messages={messages}>
-      <Providers>
-        <div className="flex flex-col min-h-screen">
-          <Header />
-          <main className="flex-1">{children}</main>
-          <Footer />
-        </div>
-        <ConsentBannerWrapper />
-      </Providers>
-    </NextIntlClientProvider>
+    <html lang={locale} suppressHydrationWarning>
+      <body
+        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant`}
+      >
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <Providers>
+            <div className="flex flex-col min-h-screen">
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+            </div>
+            <ConsentBannerWrapper />
+          </Providers>
+        </NextIntlClientProvider>
+        <Analytics />
+        <SpeedInsights />
+      </body>
+    </html>
   )
 }

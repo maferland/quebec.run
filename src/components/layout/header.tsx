@@ -15,7 +15,7 @@ const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
       <div className="text-xl font-heading font-bold text-primary leading-tight">
         quebec<span className="text-secondary">.run</span>
       </div>
-      <div className="text-xs text-text-secondary font-body opacity-75 -mt-0.5">
+      <div className="text-xs text-text-secondary font-body -mt-0.5">
         {t('logoTagline')}
       </div>
     </div>
