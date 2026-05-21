@@ -153,7 +153,12 @@
     },
     "moreFromClub": "Plus de {name}",
     "aboutClub": "À propos de {name}",
-    "viewClub": "Voir le club"
+    "viewClub": "Voir le club",
+    "pacePolicy": {
+      "shared": "Allure de groupe",
+      "openPace": "Allure libre",
+      "openPaceHint": "Course flexible — groupes par allure ou structure d'intervalles qui accommode différents rythmes."
+    }
   },
   "validation": {
     "required": "Ce champ est requis",

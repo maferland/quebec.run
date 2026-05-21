@@ -655,7 +655,7 @@ async function main() {
       clubId: laFoulee.id,
     },
     {
-      title: 'Longue sortie',
+      title: 'Sortie longue',
       slug: 'longue-sortie-dimanche',
       description: '15-25km, lieux variés',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',
@@ -695,6 +695,30 @@ async function main() {
       create: event,
     })
   }
+
+  // Seed pace policy.
+  // SHARED = single group pace (default for social + training runs alike).
+  // INCLUSIVE = pace flexibility built into the run — split groups or
+  //   interval-style sessions where runners run at their own effort. Most
+  //   "social" clubs still have a pre-set conversational pace, so they're
+  //   SHARED, not INCLUSIVE.
+  await prisma.recurringEvent.updateMany({
+    where: {
+      clubId: {
+        in: [sixAmClub.id, fauxMouvement.id, kogi.id, milapres.id, volt.id],
+      },
+    },
+    data: { pacePolicy: 'SHARED' },
+  })
+  await prisma.recurringEvent.updateMany({
+    where: {
+      OR: [
+        { clubId: laFoulee.id, slug: 'intervalles-mardi' },
+        { clubId: coureurNordique.id, slug: 'mardi' },
+      ],
+    },
+    data: { pacePolicy: 'OPEN_PACE' },
+  })
 
   // No concrete events pre-created — the hybrid system generates
   // virtual events on-the-fly from recurring patterns

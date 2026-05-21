@@ -128,8 +128,9 @@ model RecurringEvent {
   longitude Float?
 
   // Event details
-  distance String?
-  pace     String?
+  distance    String?
+  pace        String?
+  pacePolicy  PacePolicy?
 
   // Schedule
   schedulePattern String
@@ -168,8 +169,9 @@ model Event {
   time String
 
   // Event details
-  distance String?
-  pace     String?
+  distance   String?
+  pace       String?
+  pacePolicy PacePolicy?
 
   // Status (for cancellations)
   status EventStatus @default(SCHEDULED)
@@ -278,4 +280,9 @@ enum ClubVibe {
 enum EventStatus {
   SCHEDULED
   CANCELLED
+}
+
+enum PacePolicy {
+  SHARED
+  OPEN_PACE
 }

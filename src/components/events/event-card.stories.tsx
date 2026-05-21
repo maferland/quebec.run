@@ -22,6 +22,7 @@ const mockEvent = {
   time: '06:00',
   distance: '5-8 km',
   pace: 'Rythme modéré',
+  pacePolicy: null,
   latitude: 46.8139,
   longitude: -71.208,
   status: 'SCHEDULED' as const,

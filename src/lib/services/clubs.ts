@@ -243,6 +243,8 @@ export async function getClubBySlug({ slug }: ClubSlug) {
           description: true,
           address: true,
           schedulePattern: true,
+          pace: true,
+          pacePolicy: true,
         },
       },
     },

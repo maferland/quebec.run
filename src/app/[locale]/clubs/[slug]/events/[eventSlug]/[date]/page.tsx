@@ -12,7 +12,7 @@ import { EventMap } from '@/components/map/event-map'
 import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
 import { formatEventDateFr } from '@/lib/utils/date-formatting'
 import type { PageProps } from '@/lib/types/next'
-import { MapPin, Route, Gauge, ChevronRight } from 'lucide-react'
+import { MapPin, Route, Gauge, ChevronRight, UserCheck } from 'lucide-react'
 
 export type ClubEventDatePageProps = PageProps<{
   slug: string
@@ -20,7 +20,8 @@ export type ClubEventDatePageProps = PageProps<{
   date: string
 }>
 
-const ADDRESS_TOKEN = /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st)\b/i
+const ADDRESS_TOKEN =
+  /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st|ch|chemin|route|rang)\b\.?/i
 
 const cleanDescription = (description: string | null): string => {
   if (!description) return ''
@@ -93,7 +94,7 @@ export default async function ClubEventDatePage({
           </ol>
         </nav>
 
-        <header className="mb-6">
+        <header className="mb-4">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-text-primary mb-1">
             {event.title}
           </h1>
@@ -103,7 +104,7 @@ export default async function ClubEventDatePage({
         </header>
 
         {prose && (
-          <p className="mb-6 text-sm text-text-secondary font-body leading-relaxed max-w-2xl">
+          <p className="mb-4 text-sm text-text-secondary font-body leading-relaxed max-w-2xl">
             {prose}
           </p>
         )}
@@ -143,7 +144,9 @@ export default async function ClubEventDatePage({
             </div>
           )}
 
-          {(event.distance || event.pace) && (
+          {(event.distance ||
+            event.pace ||
+            event.pacePolicy === 'OPEN_PACE') && (
             <div className="mt-5 flex items-center gap-2 flex-wrap">
               {event.distance && (
                 <Tag variant="distance" icon={Route}>
@@ -154,6 +157,15 @@ export default async function ClubEventDatePage({
                 <Tag variant="pace" icon={Gauge}>
                   {event.pace}
                 </Tag>
+              )}
+              {/* SHARED is the default assumption — pace value itself carries
+                  the signal. Only INCLUSIVE is worth a badge. */}
+              {event.pacePolicy === 'OPEN_PACE' && (
+                <span title={t('pacePolicy.openPaceHint')}>
+                  <Tag colorScheme="success" icon={UserCheck}>
+                    {t('pacePolicy.openPace')}
+                  </Tag>
+                </span>
               )}
             </div>
           )}
