@@ -1,7 +1,4 @@
-'use client'
-
-import { useTranslations } from 'next-intl'
-import { useUpcomingEvents } from '@/lib/hooks/use-events'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { Card } from '@/components/ui/card'
 import { Tag } from '@/components/ui/tag'
 import { Link } from '@/components/ui/link'
@@ -9,34 +6,17 @@ import { PageContainer } from '@/components/ui/page-container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
 import { groupEventsByDate } from '@/lib/utils/date-formatting'
+import { getAllEvents } from '@/lib/services/events'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
-export default function CalendarPage() {
-  const t = useTranslations('calendar')
-  const { data: events = [], isLoading } = useUpcomingEvents()
+export default async function CalendarPage() {
+  const t = await getTranslations('calendar')
+  const locale = await getLocale()
+  const events = await getAllEvents({ data: { limit: 200, offset: 0 } })
 
-  const groupedEvents = groupEventsByDate(events)
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-surface-variant">
-        <PageContainer>
-          <div className="text-center py-20">
-            <Icon
-              icon={Calendar}
-              size="xl"
-              color="primary"
-              decorative
-              className="mx-auto mb-4"
-            />
-            <p className="text-text-secondary text-lg font-body">
-              {t('loading')}
-            </p>
-          </div>
-        </PageContainer>
-      </div>
-    )
-  }
+  const groupedEvents = groupEventsByDate(events, {
+    locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+  })
 
   return (
     <div className="min-h-screen bg-surface-variant">

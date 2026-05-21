@@ -374,10 +374,11 @@ export function normalizeTimeString(time: string): string {
 }
 
 export function groupEventsByDate<T extends { date: Date | string }>(
-  events: T[]
+  events: T[],
+  options: DateFormatOptions = {}
 ): Record<string, T[]> {
   return events.reduce<Record<string, T[]>>((groups, event) => {
-    const key = formatHumanFriendlyDate(event.date)
+    const key = formatHumanFriendlyDate(event.date, options)
     if (!groups[key]) groups[key] = []
     groups[key].push(event)
     return groups
