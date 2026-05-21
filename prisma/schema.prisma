@@ -284,5 +284,5 @@ enum EventStatus {
 
 enum PacePolicy {
   SHARED
-  INCLUSIVE
+  OPEN_PACE
 }

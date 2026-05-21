@@ -145,7 +145,7 @@ export default async function ClubEventDatePage({
 
           {(event.distance ||
             event.pace ||
-            event.pacePolicy === 'INCLUSIVE') && (
+            event.pacePolicy === 'OPEN_PACE') && (
             <div className="mt-5 flex items-center gap-2 flex-wrap">
               {event.distance && (
                 <Tag variant="distance" icon={Route}>
@@ -159,9 +159,9 @@ export default async function ClubEventDatePage({
               )}
               {/* SHARED is the default assumption — pace value itself carries
                   the signal. Only INCLUSIVE is worth a badge. */}
-              {event.pacePolicy === 'INCLUSIVE' && (
+              {event.pacePolicy === 'OPEN_PACE' && (
                 <Tag colorScheme="success" icon={UserCheck}>
-                  {t('pacePolicy.inclusive')}
+                  {t('pacePolicy.openPace')}
                 </Tag>
               )}
             </div>

@@ -717,7 +717,7 @@ async function main() {
         { clubId: coureurNordique.id, slug: 'mardi' },
       ],
     },
-    data: { pacePolicy: 'INCLUSIVE' },
+    data: { pacePolicy: 'OPEN_PACE' },
   })
 
   // No concrete events pre-created — the hybrid system generates

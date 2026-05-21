@@ -156,7 +156,7 @@
     "viewClub": "View club",
     "pacePolicy": {
       "shared": "Group pace",
-      "inclusive": "All levels welcome"
+      "openPace": "Open pace"
     }
   },
   "validation": {

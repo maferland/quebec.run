@@ -16,7 +16,7 @@ export type RecurringPatternCardProps = {
     schedulePattern: string
     nextOccurrence: Date | null
     pace?: string | null
-    pacePolicy?: 'SHARED' | 'INCLUSIVE' | null
+    pacePolicy?: 'SHARED' | 'OPEN_PACE' | null
   }
   clubSlug: string
   clubName: string
@@ -108,10 +108,10 @@ export function RecurringPatternCard({
           </div>
         )}
 
-        {pattern.pacePolicy === 'INCLUSIVE' && (
+        {pattern.pacePolicy === 'OPEN_PACE' && (
           <div className="mt-2">
             <Tag colorScheme="success" icon={UserCheck} size="xs">
-              {t('pacePolicy.inclusive')}
+              {t('pacePolicy.openPace')}
             </Tag>
           </div>
         )}

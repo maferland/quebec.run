@@ -156,7 +156,7 @@
     "viewClub": "Voir le club",
     "pacePolicy": {
       "shared": "Allure de groupe",
-      "inclusive": "Tous les niveaux"
+      "openPace": "Allure libre"
     }
   },
   "validation": {

@@ -1,5 +1,5 @@
 -- CreateEnum
-CREATE TYPE "PacePolicy" AS ENUM ('SHARED', 'INCLUSIVE');
+CREATE TYPE "PacePolicy" AS ENUM ('SHARED', 'OPEN_PACE');
 
 -- AlterTable
 ALTER TABLE "recurring_events" ADD COLUMN     "pacePolicy" "PacePolicy";
