@@ -9,6 +9,8 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { Calendar } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function EventsPage() {
   const t = await getTranslations('events')
   const events = await getAllEvents({ data: {} })
