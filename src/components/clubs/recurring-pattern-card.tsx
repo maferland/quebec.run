@@ -77,7 +77,7 @@ export function RecurringPatternCard({
         variant="interactive"
         className="h-full flex flex-col border-l-4 border-primary p-2 md:p-4 hover:shadow-lg transition-all duration-200"
       >
-        <div className="mb-2">
+        <div className="mb-1.5">
           {showLabel ? (
             <>
               <h3 className="text-lg font-heading font-semibold text-primary leading-tight">

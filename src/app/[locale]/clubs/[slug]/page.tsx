@@ -156,7 +156,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
             </div>
 
             {club.patterns.length > 0 ? (
-              <ContentGrid columns="2" gap="lg">
+              <ContentGrid columns="2" gap="md">
                 {club.patterns.map((pattern) => (
                   <RecurringPatternCard
                     key={pattern.id}
