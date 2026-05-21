@@ -1,10 +1,12 @@
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { LocationInline } from '@/components/ui/location'
+import { Tag } from '@/components/ui/tag'
 import { describePattern, parseRRuleToForm } from '@/lib/utils/rrule-builder'
 import { formatHumanFriendlyDate } from '@/lib/utils/date-formatting'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { format } from 'date-fns'
+import { Users2, UserCheck } from 'lucide-react'
 
 export type RecurringPatternCardProps = {
   pattern: {
@@ -13,6 +15,7 @@ export type RecurringPatternCardProps = {
     address: string | null
     schedulePattern: string
     nextOccurrence: Date | null
+    pacePolicy?: 'SHARED' | 'INCLUSIVE' | null
   }
   clubSlug: string
   clubName: string
@@ -47,6 +50,7 @@ export function RecurringPatternCard({
   clubName,
 }: RecurringPatternCardProps) {
   const locale = useLocale() as 'en' | 'fr'
+  const t = useTranslations('events')
 
   // Pattern label shouldn't repeat the club name. When the recurring event
   // title equals the club's (Faux Mouvement × 3), derive from the slug.
@@ -100,6 +104,20 @@ export function RecurringPatternCard({
         {pattern.address && (
           <div className="mt-auto">
             <LocationInline address={pattern.address} className="text-sm" />
+          </div>
+        )}
+
+        {pattern.pacePolicy && (
+          <div className="mt-2">
+            {pattern.pacePolicy === 'SHARED' ? (
+              <Tag colorScheme="primary" icon={Users2} size="xs">
+                {t('pacePolicy.shared')}
+              </Tag>
+            ) : (
+              <Tag colorScheme="success" icon={UserCheck} size="xs">
+                {t('pacePolicy.inclusive')}
+              </Tag>
+            )}
           </div>
         )}
       </Card>

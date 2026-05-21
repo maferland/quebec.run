@@ -696,6 +696,27 @@ async function main() {
     })
   }
 
+  // Seed pace policy — best-guess starting point. Clubs can refine later.
+  // INCLUSIVE: morning social, café-pickup, "tous les niveaux" runs.
+  // SHARED: known training/competitive runs.
+  await prisma.recurringEvent.updateMany({
+    where: {
+      clubId: { in: [sixAmClub.id, fauxMouvement.id, kogi.id, milapres.id] },
+    },
+    data: { pacePolicy: 'INCLUSIVE' },
+  })
+  await prisma.recurringEvent.updateMany({
+    where: { clubId: volt.id },
+    data: { pacePolicy: 'SHARED' },
+  })
+  await prisma.recurringEvent.updateMany({
+    where: {
+      clubId: laFoulee.id,
+      slug: 'intervalles-mardi',
+    },
+    data: { pacePolicy: 'SHARED' },
+  })
+
   // No concrete events pre-created — the hybrid system generates
   // virtual events on-the-fly from recurring patterns
 

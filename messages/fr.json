@@ -153,7 +153,11 @@
     },
     "moreFromClub": "Plus de {name}",
     "aboutClub": "À propos de {name}",
-    "viewClub": "Voir le club"
+    "viewClub": "Voir le club",
+    "pacePolicy": {
+      "shared": "Allure de groupe",
+      "inclusive": "Tous les niveaux"
+    }
   },
   "validation": {
     "required": "Ce champ est requis",

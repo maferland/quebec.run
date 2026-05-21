@@ -81,6 +81,7 @@ export async function generateEventsFromRecurring(
     longitude: recurringEvent.longitude,
     distance: recurringEvent.distance,
     pace: recurringEvent.pace,
+    pacePolicy: recurringEvent.pacePolicy,
     clubId: recurringEvent.clubId,
     recurringEventId: recurringEvent.id,
   }))
@@ -185,6 +186,7 @@ export function createVirtualEvent(
     longitude: recurringEvent.longitude,
     distance: recurringEvent.distance,
     pace: recurringEvent.pace,
+    pacePolicy: recurringEvent.pacePolicy,
     status: 'SCHEDULED' as const,
     clubId: recurringEvent.clubId,
     organizationId: null,
@@ -227,6 +229,7 @@ export async function getEventsInRange(
       time: true,
       distance: true,
       pace: true,
+      pacePolicy: true,
       address: true,
       latitude: true,
       longitude: true,

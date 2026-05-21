@@ -153,7 +153,11 @@
     },
     "moreFromClub": "More from {name}",
     "aboutClub": "About {name}",
-    "viewClub": "View club"
+    "viewClub": "View club",
+    "pacePolicy": {
+      "shared": "Group pace",
+      "inclusive": "All levels welcome"
+    }
   },
   "validation": {
     "required": "This field is required",

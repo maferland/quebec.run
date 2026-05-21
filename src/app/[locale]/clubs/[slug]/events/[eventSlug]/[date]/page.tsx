@@ -12,7 +12,14 @@ import { EventMap } from '@/components/map/event-map'
 import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
 import { formatEventDateFr } from '@/lib/utils/date-formatting'
 import type { PageProps } from '@/lib/types/next'
-import { MapPin, Route, Gauge, ChevronRight } from 'lucide-react'
+import {
+  MapPin,
+  Route,
+  Gauge,
+  ChevronRight,
+  Users2,
+  UserCheck,
+} from 'lucide-react'
 
 export type ClubEventDatePageProps = PageProps<{
   slug: string
@@ -143,7 +150,7 @@ export default async function ClubEventDatePage({
             </div>
           )}
 
-          {(event.distance || event.pace) && (
+          {(event.distance || event.pace || event.pacePolicy) && (
             <div className="mt-5 flex items-center gap-2 flex-wrap">
               {event.distance && (
                 <Tag variant="distance" icon={Route}>
@@ -153,6 +160,16 @@ export default async function ClubEventDatePage({
               {event.pace && (
                 <Tag variant="pace" icon={Gauge}>
                   {event.pace}
+                </Tag>
+              )}
+              {event.pacePolicy === 'SHARED' && (
+                <Tag colorScheme="primary" icon={Users2}>
+                  {t('pacePolicy.shared')}
+                </Tag>
+              )}
+              {event.pacePolicy === 'INCLUSIVE' && (
+                <Tag colorScheme="success" icon={UserCheck}>
+                  {t('pacePolicy.inclusive')}
                 </Tag>
               )}
             </div>
