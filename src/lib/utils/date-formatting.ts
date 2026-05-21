@@ -176,9 +176,22 @@ export function formatRelativeDate(date: Date | string): string {
   return formatEventDate(dateObj, 'compact')
 }
 
+type HumanFriendlyLanguage = 'en' | 'fr'
+
+const RELATIVE_DATE_STRINGS: Record<
+  HumanFriendlyLanguage,
+  { today: string; tomorrow: string; yesterday: string }
+> = {
+  en: { today: 'Today', tomorrow: 'Tomorrow', yesterday: 'Yesterday' },
+  fr: { today: "Aujourd'hui", tomorrow: 'Demain', yesterday: 'Hier' },
+}
+
+const languageFromLocale = (locale: string): HumanFriendlyLanguage =>
+  locale.toLowerCase().startsWith('fr') ? 'fr' : 'en'
+
 /**
  * Format human-friendly date that prioritizes readability
- * Shows "Today", "Tomorrow", "This Monday", or "Mon, Aug 18"
+ * Shows "Today", "Tomorrow", or "Mon, Aug 18" (locale-aware).
  */
 export function formatHumanFriendlyDate(
   date: Date | string,
@@ -197,15 +210,17 @@ export function formatHumanFriendlyDate(
   }
 
   const { locale = DEFAULT_LOCALE, timezone = DEFAULT_TIMEZONE } = options
+  const language = languageFromLocale(locale)
+  const strings = RELATIVE_DATE_STRINGS[language]
   const now = new Date()
   const diffInDays = Math.ceil(
     (dateObj.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
   )
 
   // Handle nearby dates with friendly terms
-  if (diffInDays === 0) return 'Today'
-  if (diffInDays === 1) return 'Tomorrow'
-  if (diffInDays === -1) return 'Yesterday'
+  if (diffInDays === 0) return strings.today
+  if (diffInDays === 1) return strings.tomorrow
+  if (diffInDays === -1) return strings.yesterday
 
   // For dates within the current month, show "Mon, Aug 18"
   if (
@@ -213,27 +228,27 @@ export function formatHumanFriendlyDate(
     dateObj.getFullYear() === now.getFullYear()
   ) {
     return dateObj.toLocaleDateString(locale, {
-      weekday: 'short',
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       timeZone: timezone,
     })
   }
 
-  // For dates in other months this year, show "Mon, Aug 18"
+  // For dates in other months this year, show "Monday, August 18"
   if (dateObj.getFullYear() === now.getFullYear()) {
     return dateObj.toLocaleDateString(locale, {
-      weekday: 'short',
-      month: 'short',
+      weekday: 'long',
+      month: 'long',
       day: 'numeric',
       timeZone: timezone,
     })
   }
 
-  // For dates in other years, show "Mon, Aug 18, 2025"
+  // For dates in other years, show "Monday, August 18, 2025"
   return dateObj.toLocaleDateString(locale, {
-    weekday: 'short',
-    month: 'short',
+    weekday: 'long',
+    month: 'long',
     day: 'numeric',
     year: 'numeric',
     timeZone: timezone,
