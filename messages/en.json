@@ -12,7 +12,8 @@
     "joinShort": "Join",
     "logoTagline": "Running Community",
     "openMenu": "Open menu",
-    "closeMenu": "Close menu"
+    "closeMenu": "Close menu",
+    "menuTitle": "Menu"
   },
   "auth": {
     "signIn": "Sign In",

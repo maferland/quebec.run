@@ -51,12 +51,10 @@ describe('MobileMenu', () => {
     const closeButton = screen.getByRole('button', { name: /close menu/i })
     await user.click(closeButton)
 
-    expect(
-      screen.queryByRole('link', { name: /clubs/i })
-    ).not.toBeInTheDocument()
-    expect(
-      screen.queryByRole('link', { name: /events/i })
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /open menu/i })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    )
   })
 
   it('closes menu when backdrop is clicked', async () => {
@@ -67,12 +65,15 @@ describe('MobileMenu', () => {
     await user.click(menuButton)
 
     // Click backdrop
-    const backdrop = document.querySelector('.fixed.inset-0') as HTMLElement
+    const backdrop = document.querySelector(
+      '[aria-hidden="true"]'
+    ) as HTMLElement
     await user.click(backdrop)
 
-    expect(
-      screen.queryByRole('link', { name: /clubs/i })
-    ).not.toBeInTheDocument()
+    expect(screen.getByRole('button', { name: /open menu/i })).toHaveAttribute(
+      'aria-expanded',
+      'false'
+    )
   })
 
   it('shows admin link for admin users', async () => {
