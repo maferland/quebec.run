@@ -9,6 +9,8 @@ import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { getAllEvents } from '@/lib/services/events'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
+export const dynamic = 'force-dynamic'
+
 export default async function CalendarPage() {
   const t = await getTranslations('calendar')
   const locale = await getLocale()

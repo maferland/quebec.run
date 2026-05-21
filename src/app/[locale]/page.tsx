@@ -8,6 +8,8 @@ import { Link } from '@/i18n/navigation'
 import { getAllClubs } from '@/lib/services/clubs'
 import { getAllEvents } from '@/lib/services/events'
 
+export const dynamic = 'force-dynamic'
+
 export default async function Home() {
   const t = await getTranslations('home')
 
