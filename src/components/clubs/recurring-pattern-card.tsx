@@ -78,29 +78,47 @@ export function RecurringPatternCard({
         className="h-full flex flex-col border-l-4 border-primary p-2 md:p-4 hover:shadow-lg transition-all duration-200"
       >
         <div className="mb-2">
-          <p className="text-lg font-heading font-semibold text-primary leading-tight">
-            {pattern.nextOccurrence ? (
-              <>
-                {formatHumanFriendlyDate(pattern.nextOccurrence, {
-                  locale: locale === 'fr' ? 'fr-CA' : 'en-US',
-                })}
-                <span className="text-text-secondary"> · </span>
-                {time}
-              </>
-            ) : (
-              schedule
-            )}
-          </p>
-          <p className="text-sm text-text-secondary mt-0.5">
-            {showLabel ? label : schedule}
-          </p>
+          {showLabel ? (
+            <>
+              <h3 className="text-lg font-heading font-semibold text-primary leading-tight">
+                {label}
+              </h3>
+              <p className="text-sm text-text-secondary mt-0.5">
+                {pattern.nextOccurrence ? (
+                  <>
+                    {formatHumanFriendlyDate(pattern.nextOccurrence, {
+                      locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+                    })}
+                    <span> · </span>
+                    {time}
+                  </>
+                ) : (
+                  schedule
+                )}
+              </p>
+              <p className="hidden md:block text-sm text-text-secondary font-body mt-1">
+                {schedule}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg font-heading font-semibold text-primary leading-tight">
+                {pattern.nextOccurrence ? (
+                  <>
+                    {formatHumanFriendlyDate(pattern.nextOccurrence, {
+                      locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+                    })}
+                    <span className="text-text-secondary"> · </span>
+                    {time}
+                  </>
+                ) : (
+                  schedule
+                )}
+              </p>
+              <p className="text-sm text-text-secondary mt-0.5">{schedule}</p>
+            </>
+          )}
         </div>
-
-        {showLabel && (
-          <p className="hidden md:block text-sm text-text-secondary font-body mb-3">
-            {schedule}
-          </p>
-        )}
 
         {pattern.address && (
           <div className="mt-auto">
