@@ -1,10 +1,12 @@
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { LocationInline } from '@/components/ui/location'
+import { Tag } from '@/components/ui/tag'
 import { describePattern, parseRRuleToForm } from '@/lib/utils/rrule-builder'
 import { formatHumanFriendlyDate } from '@/lib/utils/date-formatting'
-import { useLocale } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { format } from 'date-fns'
+import { UserCheck } from 'lucide-react'
 
 export type RecurringPatternCardProps = {
   pattern: {
@@ -13,6 +15,8 @@ export type RecurringPatternCardProps = {
     address: string | null
     schedulePattern: string
     nextOccurrence: Date | null
+    pace?: string | null
+    pacePolicy?: 'SHARED' | 'OPEN_PACE' | null
   }
   clubSlug: string
   clubName: string
@@ -47,6 +51,7 @@ export function RecurringPatternCard({
   clubName,
 }: RecurringPatternCardProps) {
   const locale = useLocale() as 'en' | 'fr'
+  const t = useTranslations('events')
 
   // Pattern label shouldn't repeat the club name. When the recurring event
   // title equals the club's (Faux Mouvement × 3), derive from the slug.
@@ -72,34 +77,63 @@ export function RecurringPatternCard({
         variant="interactive"
         className="h-full flex flex-col border-l-4 border-primary p-2 md:p-4 hover:shadow-lg transition-all duration-200"
       >
-        <div className="mb-2">
-          <p className="text-lg font-heading font-semibold text-primary leading-tight">
-            {pattern.nextOccurrence ? (
-              <>
-                {formatHumanFriendlyDate(pattern.nextOccurrence, {
-                  locale: locale === 'fr' ? 'fr-CA' : 'en-US',
-                })}
-                <span className="text-text-secondary"> · </span>
-                {time}
-              </>
-            ) : (
-              schedule
-            )}
-          </p>
-          <p className="text-sm text-text-secondary mt-0.5">
-            {showLabel ? label : schedule}
-          </p>
+        <div className="mb-1.5">
+          {showLabel ? (
+            <>
+              <h3 className="text-lg font-heading font-semibold text-primary leading-tight">
+                {label}
+              </h3>
+              <p className="text-sm text-text-secondary mt-0.5">
+                {pattern.nextOccurrence ? (
+                  <>
+                    {formatHumanFriendlyDate(pattern.nextOccurrence, {
+                      locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+                    })}
+                    <span> · </span>
+                    {time}
+                  </>
+                ) : (
+                  schedule
+                )}
+              </p>
+              <p className="hidden md:block text-sm text-text-secondary font-body mt-1">
+                {schedule}
+              </p>
+            </>
+          ) : (
+            <>
+              <p className="text-lg font-heading font-semibold text-primary leading-tight">
+                {pattern.nextOccurrence ? (
+                  <>
+                    {formatHumanFriendlyDate(pattern.nextOccurrence, {
+                      locale: locale === 'fr' ? 'fr-CA' : 'en-US',
+                    })}
+                    <span className="text-text-secondary"> · </span>
+                    {time}
+                  </>
+                ) : (
+                  schedule
+                )}
+              </p>
+              <p className="text-sm text-text-secondary mt-0.5">{schedule}</p>
+            </>
+          )}
         </div>
-
-        {showLabel && (
-          <p className="hidden md:block text-sm text-text-secondary font-body mb-3">
-            {schedule}
-          </p>
-        )}
 
         {pattern.address && (
           <div className="mt-auto">
             <LocationInline address={pattern.address} className="text-sm" />
+          </div>
+        )}
+
+        {pattern.pacePolicy === 'OPEN_PACE' && (
+          <div
+            className={pattern.address ? 'mt-2' : 'mt-auto'}
+            title={t('pacePolicy.openPaceHint')}
+          >
+            <Tag colorScheme="success" icon={UserCheck} size="xs">
+              {t('pacePolicy.openPace')}
+            </Tag>
           </div>
         )}
       </Card>
