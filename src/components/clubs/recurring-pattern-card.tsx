@@ -71,11 +71,11 @@ export function RecurringPatternCard({
     : `/clubs/${clubSlug}/events/${pattern.slug}`
 
   return (
-    <Link href={href} className="block h-full no-underline hover:no-underline">
+    <Link href={href} className="block no-underline hover:no-underline">
       <Card
         as="article"
         variant="interactive"
-        className="h-full flex flex-col border-l-4 border-primary p-2 md:p-4 hover:shadow-lg transition-all duration-200"
+        className="flex flex-col border-l-4 border-primary p-2 md:p-4 hover:shadow-lg transition-all duration-200"
       >
         <div className="mb-2">
           <p className="text-lg font-heading font-semibold text-primary leading-tight">
@@ -103,7 +103,7 @@ export function RecurringPatternCard({
         )}
 
         {pattern.address && (
-          <div className="mt-auto">
+          <div>
             <LocationInline address={pattern.address} className="text-sm" />
           </div>
         )}

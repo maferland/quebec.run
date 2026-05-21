@@ -655,7 +655,7 @@ async function main() {
       clubId: laFoulee.id,
     },
     {
-      title: 'Longue sortie',
+      title: 'Sortie longue',
       slug: 'longue-sortie-dimanche',
       description: '15-25km, lieux variés',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=SU;BYHOUR=8;BYMINUTE=0',

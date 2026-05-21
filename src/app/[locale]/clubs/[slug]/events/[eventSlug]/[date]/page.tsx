@@ -20,7 +20,8 @@ export type ClubEventDatePageProps = PageProps<{
   date: string
 }>
 
-const ADDRESS_TOKEN = /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st)\b/i
+const ADDRESS_TOKEN =
+  /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st|ch|chemin|route|rang)\b\.?/i
 
 const cleanDescription = (description: string | null): string => {
   if (!description) return ''
@@ -93,7 +94,7 @@ export default async function ClubEventDatePage({
           </ol>
         </nav>
 
-        <header className="mb-6">
+        <header className="mb-4">
           <h1 className="text-3xl md:text-4xl font-heading font-bold text-text-primary mb-1">
             {event.title}
           </h1>
@@ -103,7 +104,7 @@ export default async function ClubEventDatePage({
         </header>
 
         {prose && (
-          <p className="mb-6 text-sm text-text-secondary font-body leading-relaxed max-w-2xl">
+          <p className="mb-4 text-sm text-text-secondary font-body leading-relaxed max-w-2xl">
             {prose}
           </p>
         )}
