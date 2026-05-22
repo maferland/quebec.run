@@ -29,6 +29,9 @@
     "sendingLink": "Sending...",
     "backToHome": "Back to home"
   },
+  "common": {
+    "loadMore": "Show {count, plural, one {# more} other {# more}}"
+  },
   "footer": {
     "tagline": "Running Community in Quebec City",
     "clubs": "Clubs",

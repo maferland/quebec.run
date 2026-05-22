@@ -1,6 +1,6 @@
 import { getTranslations } from 'next-intl/server'
 import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
-import { ContentGrid } from '@/components/ui/content-grid'
+import { LoadMoreList } from '@/components/ui/load-more-list'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
 import { PageContainer } from '@/components/ui/page-container'
@@ -156,7 +156,11 @@ export default async function ClubPage({ params }: ClubPageProps) {
             </div>
 
             {club.patterns.length > 0 ? (
-              <ContentGrid columns="2" gap="md">
+              <LoadMoreList
+                initial={6}
+                step={6}
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
+              >
                 {club.patterns.map((pattern) => (
                   <RecurringPatternCard
                     key={pattern.id}
@@ -165,7 +169,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
                     clubName={club.name}
                   />
                 ))}
-              </ContentGrid>
+              </LoadMoreList>
             ) : (
               <EmptyState
                 icon={Calendar}
