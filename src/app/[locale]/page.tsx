@@ -14,11 +14,11 @@ export const dynamic = 'force-dynamic'
 export default async function Home() {
   const t = await getTranslations('home')
 
-  const [clubs, locations] = await Promise.all([
+  const [clubs, listing] = await Promise.all([
     getAllClubs({ data: { limit: 6, offset: 0 } }),
     getEventLocations({ data: {} }),
   ])
-  const events = locations.map((location) => location.next)
+  const events = listing.buckets.map((bucket) => bucket.next)
 
   return (
     <div className="min-h-screen bg-gray-50">

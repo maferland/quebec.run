@@ -1,6 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { getEventLocations } from '@/lib/services/events'
 import { EventLocationCard } from '@/components/events/event-location-card'
+import { OverrideEventCard } from '@/components/events/override-event-card'
 import { EventFilters } from '@/components/events/event-filters'
 import { EventMap } from '@/components/map/event-map'
 import { MobileMapButton } from '@/components/events/mobile-map-button'
@@ -28,10 +29,24 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     query.search || query.pacePolicy || query.timeOfDay || query.weekend
   )
 
-  const locations = await getEventLocations({ data: query })
-  const mapEvents = locations.map((location) => location.next)
+  const { buckets, overrides } = await getEventLocations({ data: query })
+  const mapEvents = buckets.map((bucket) => bucket.next)
+  const items = [
+    ...buckets.map((bucket) => ({
+      type: 'bucket' as const,
+      sortDate: bucket.next.date,
+      key: bucket.key,
+      data: bucket,
+    })),
+    ...overrides.map((event) => ({
+      type: 'override' as const,
+      sortDate: event.date,
+      key: `override-${event.id}`,
+      data: event,
+    })),
+  ].sort((a, b) => a.sortDate.getTime() - b.sortDate.getTime())
 
-  if (locations.length === 0) {
+  if (items.length === 0) {
     return (
       <PageContainer>
         <PageTitle>{t('title')}</PageTitle>
@@ -68,9 +83,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
         <section>
           <LoadMoreList initial={6} step={6} className="flex flex-col gap-4">
-            {locations.map((location) => (
-              <EventLocationCard key={location.key} location={location} />
-            ))}
+            {items.map((item) =>
+              item.type === 'bucket' ? (
+                <EventLocationCard key={item.key} location={item.data} />
+              ) : (
+                <OverrideEventCard key={item.key} event={item.data} />
+              )
+            )}
           </LoadMoreList>
         </section>
 

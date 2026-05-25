@@ -113,12 +113,16 @@ export type EventLocation = {
   occurrenceCount: number
   isRecurring: boolean
   next: GetAllEventsReturn
-  notable: GetAllEventsReturn[]
+}
+
+export type EventListing = {
+  buckets: EventLocation[]
+  overrides: GetAllEventsReturn[]
 }
 
 export async function getEventLocations({
   data,
-}: PublicPayload<EventsQuery>): Promise<EventLocation[]> {
+}: PublicPayload<EventsQuery>): Promise<EventListing> {
   const { clubId, clubSlug } = data
 
   const startDate = new Date()
@@ -131,17 +135,16 @@ export async function getEventLocations({
       where: { slug: clubSlug },
       select: { id: true },
     })
-    if (!club) return []
+    if (!club) return { buckets: [], overrides: [] }
     resolvedClubId = club.id
   }
 
   const events = await getEventsInRange(startDate, endDate, resolvedClubId)
 
   const titleCounts = new Map<string, Map<string, number>>()
-  const recurringIds = new Map<string, Set<string>>()
   const bucketEvents = new Map<string, GetAllEventsReturn[]>()
+  const bucketMap = new Map<string, EventLocation>()
 
-  const buckets = new Map<string, EventLocation>()
   for (const event of events) {
     if (!event.club) continue
     if (!matchesFilters(event, data)) continue
@@ -155,15 +158,6 @@ export async function getEventLocations({
     }
     titleMap.set(event.title, (titleMap.get(event.title) ?? 0) + 1)
 
-    if (event.recurringEventId) {
-      let ids = recurringIds.get(key)
-      if (!ids) {
-        ids = new Set()
-        recurringIds.set(key, ids)
-      }
-      ids.add(event.recurringEventId)
-    }
-
     let list = bucketEvents.get(key)
     if (!list) {
       list = []
@@ -171,9 +165,9 @@ export async function getEventLocations({
     }
     list.push(event)
 
-    const existing = buckets.get(key)
+    const existing = bucketMap.get(key)
     if (!existing) {
-      buckets.set(key, {
+      bucketMap.set(key, {
         key,
         club: event.club,
         title: event.title,
@@ -184,7 +178,6 @@ export async function getEventLocations({
         occurrenceCount: 1,
         isRecurring: Boolean(event.recurringEventId),
         next: event,
-        notable: [],
       })
     } else {
       if (!existing.weekdays.includes(day)) existing.weekdays.push(day)
@@ -195,7 +188,9 @@ export async function getEventLocations({
     }
   }
 
-  for (const bucket of buckets.values()) {
+  const overrides: GetAllEventsReturn[] = []
+
+  for (const bucket of bucketMap.values()) {
     bucket.weekdays.sort(
       (a, b) =>
         WEEKDAY_ORDER.indexOf(a as 0 | 1 | 2 | 3 | 4 | 5 | 6) -
@@ -203,30 +198,42 @@ export async function getEventLocations({
     )
 
     const titleMap = titleCounts.get(bucket.key)
-    if (titleMap) {
-      let dominantTitle = bucket.title
-      let dominantCount = 0
-      for (const [title, count] of titleMap.entries()) {
-        if (count > dominantCount) {
-          dominantCount = count
-          dominantTitle = title
+    if (!titleMap) continue
+    let dominantTitle = bucket.title
+    let dominantCount = 0
+    for (const [title, count] of titleMap.entries()) {
+      if (count > dominantCount) {
+        dominantCount = count
+        dominantTitle = title
+      }
+    }
+    bucket.title = dominantTitle
+
+    const all = bucketEvents.get(bucket.key) ?? []
+    for (const event of all) {
+      if (event.title !== dominantTitle) {
+        overrides.push(event)
+        bucket.occurrenceCount -= 1
+        if (bucket.next.id === event.id) {
+          const remaining = all
+            .filter(
+              (candidate) =>
+                candidate.id !== event.id && candidate.title === dominantTitle
+            )
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
+          if (remaining[0]) bucket.next = remaining[0]
         }
       }
-      bucket.title = dominantTitle
-
-      const all = bucketEvents.get(bucket.key) ?? []
-      bucket.notable = all
-        .filter(
-          (event) =>
-            event.id !== bucket.next.id && event.title !== dominantTitle
-        )
-        .sort((a, b) => a.date.getTime() - b.date.getTime())
     }
   }
 
-  return Array.from(buckets.values()).sort(
-    (a, b) => a.next.date.getTime() - b.next.date.getTime()
-  )
+  const buckets = Array.from(bucketMap.values())
+    .filter((bucket) => bucket.occurrenceCount > 0)
+    .sort((a, b) => a.next.date.getTime() - b.next.date.getTime())
+
+  overrides.sort((a, b) => a.date.getTime() - b.date.getTime())
+
+  return { buckets, overrides }
 }
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {

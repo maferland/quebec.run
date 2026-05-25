@@ -176,8 +176,7 @@
     "locations": {
       "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours",
       "recurring": "Récurrent",
-      "notableTitle": "Sorties à noter",
-      "moreNotable": "+{count, plural, one {# de plus} other {# de plus}}"
+      "takeNote": "Prenez note"
     },
     "pacePolicy": {
       "shared": "Allure de groupe",

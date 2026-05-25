@@ -868,9 +868,8 @@ describe('Events Service Integration Tests', () => {
         },
       })
 
-      const result = await getEventLocations({ data: {} })
-
-      const weeklyBuckets = result.filter((loc) => loc.title === 'Weekly Run')
+      const { buckets } = await getEventLocations({ data: {} })
+      const weeklyBuckets = buckets.filter((loc) => loc.title === 'Weekly Run')
       expect(weeklyBuckets.length).toBe(1)
       expect(weeklyBuckets[0].occurrenceCount).toBeGreaterThan(1)
       expect(weeklyBuckets[0].weekdays).toEqual([2])
@@ -905,8 +904,8 @@ describe('Events Service Integration Tests', () => {
         ],
       })
 
-      const result = await getEventLocations({ data: {} })
-      const sameClubBuckets = result.filter((loc) => loc.club.id === club.id)
+      const { buckets } = await getEventLocations({ data: {} })
+      const sameClubBuckets = buckets.filter((loc) => loc.club.id === club.id)
       const eastBucket = sameClubBuckets.find(
         (loc) => loc.title === 'East Location'
       )
@@ -919,19 +918,20 @@ describe('Events Service Integration Tests', () => {
     })
 
     it('sorts buckets by next occurrence date', async () => {
-      const result = await getEventLocations({ data: {} })
-      for (let i = 1; i < result.length; i++) {
-        expect(result[i].next.date.getTime()).toBeGreaterThanOrEqual(
-          result[i - 1].next.date.getTime()
+      const { buckets } = await getEventLocations({ data: {} })
+      for (let i = 1; i < buckets.length; i++) {
+        expect(buckets[i].next.date.getTime()).toBeGreaterThanOrEqual(
+          buckets[i - 1].next.date.getTime()
         )
       }
     })
 
     it('applies search filter at the bucket level', async () => {
-      const result = await getEventLocations({
+      const { buckets, overrides } = await getEventLocations({
         data: { search: 'absolutely-no-match-zzz' },
       })
-      expect(result).toEqual([])
+      expect(buckets).toEqual([])
+      expect(overrides).toEqual([])
     })
 
     it('applies pacePolicy filter at the bucket level', async () => {
@@ -952,11 +952,49 @@ describe('Events Service Integration Tests', () => {
         },
       })
 
-      const result = await getEventLocations({
+      const { buckets } = await getEventLocations({
         data: { pacePolicy: 'OPEN_PACE' },
       })
-      expect(result.length).toBeGreaterThan(0)
-      result.forEach((loc) => expect(loc.next.pacePolicy).toBe('OPEN_PACE'))
+      expect(buckets.length).toBeGreaterThan(0)
+      buckets.forEach((loc) => expect(loc.next.pacePolicy).toBe('OPEN_PACE'))
+    })
+
+    it('lifts events whose title differs from the bucket into overrides', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      const pattern = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Steady Run',
+          slug: 'steady-run-override-test',
+          address: '900 Override Way',
+          latitude: 46.86,
+          longitude: -71.28,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const targetDate = addDays(new Date(), 10)
+      await testPrisma.event.create({
+        data: {
+          title: 'Pizza Run',
+          date: targetDate,
+          time: '18:00',
+          address: '900 Override Way',
+          latitude: 46.86,
+          longitude: -71.28,
+          clubId: club.id,
+          recurringEventId: pattern.id,
+        },
+      })
+
+      const { buckets, overrides } = await getEventLocations({ data: {} })
+      const steadyBucket = buckets.find((b) => b.title === 'Steady Run')
+      expect(steadyBucket).toBeDefined()
+      expect(overrides.some((o) => o.title === 'Pizza Run')).toBe(true)
+      expect(steadyBucket!.next.title).toBe('Steady Run')
     })
   })
 })
