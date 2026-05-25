@@ -76,7 +76,7 @@ export default function EventMapContent({
       <MarkerClusterGroup
         iconCreateFunction={createClusterIcon}
         showCoverageOnHover={false}
-        maxClusterRadius={25}
+        maxClusterRadius={35}
       >
         {events.map((event) => (
           <Marker

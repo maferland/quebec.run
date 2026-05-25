@@ -3,18 +3,19 @@
 import { useEffect, useRef, useState } from 'react'
 import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
-import { Search, X } from 'lucide-react'
+import { Search, X, Users, Sunrise, Sunset, CalendarRange } from 'lucide-react'
+import type { LucideIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 
 const SEARCH_DEBOUNCE_MS = 300
 
-type Facet = { key: string; param: string; value: string }
+type Facet = { key: string; param: string; value: string; icon: LucideIcon }
 
 const FACETS: Facet[] = [
-  { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE' },
-  { key: 'morning', param: 'timeOfDay', value: 'morning' },
-  { key: 'evening', param: 'timeOfDay', value: 'evening' },
-  { key: 'weekend', param: 'weekend', value: '1' },
+  { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE', icon: Users },
+  { key: 'morning', param: 'timeOfDay', value: 'morning', icon: Sunrise },
+  { key: 'evening', param: 'timeOfDay', value: 'evening', icon: Sunset },
+  { key: 'weekend', param: 'weekend', value: '1', icon: CalendarRange },
 ]
 
 export function EventFilters() {
@@ -79,6 +80,7 @@ export function EventFilters() {
       <div className="flex flex-wrap items-center gap-2">
         {FACETS.map((facet) => {
           const active = isFacetActive(facet)
+          const Icon = facet.icon
           return (
             <button
               key={facet.key}
@@ -87,10 +89,11 @@ export function EventFilters() {
               aria-pressed={active}
               className={
                 active
-                  ? 'rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
-                  : 'rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
+                  ? 'inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
+                  : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
               }
             >
+              <Icon aria-hidden="true" className="h-3.5 w-3.5" />
               {t(`facets.${facet.key}`)}
             </button>
           )
