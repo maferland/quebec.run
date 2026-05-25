@@ -35,6 +35,7 @@ interface EventMapProps {
   initialCenter?: [number, number]
   initialZoom?: number
   height?: EventMapHeight
+  emptyMessage?: string
 }
 
 export function EventMap({
@@ -42,6 +43,7 @@ export function EventMap({
   initialCenter = [46.8139, -71.208], // Quebec City
   initialZoom = 10,
   height = 'md',
+  emptyMessage,
 }: EventMapProps) {
   const t = useTranslations('home.map')
   const heightCls = heightClasses[height]
@@ -63,7 +65,9 @@ export function EventMap({
         role="application"
         aria-label="Interactive event map"
       >
-        <p className="text-gray-500 text-center px-4">{t('emptyState')}</p>
+        <p className="text-gray-500 text-center px-4">
+          {emptyMessage ?? t('emptyState')}
+        </p>
       </div>
     )
   }

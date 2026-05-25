@@ -130,14 +130,30 @@
     "title": "Running Events",
     "backToEvents": "Back to All Events",
     "map": {
-      "title": "Events Near You"
+      "title": "Events Near You",
+      "openButton": "Open events map",
+      "closeButton": "Close map"
     },
     "list": {
       "title": "All Events"
     },
     "empty": {
       "title": "No upcoming events found",
-      "description": "Check back soon for new running events in Quebec City"
+      "description": "Check back soon for new running events in Quebec City",
+      "noResults": "No events match your filters",
+      "tryAdjusting": "Try a different search term or clear the filters."
+    },
+    "filters": {
+      "searchLabel": "Search events",
+      "searchPlaceholder": "Search title or location",
+      "clearFilters": "Clear",
+      "facets": {
+        "openPace": "Every pace welcome",
+        "morning": "Morning",
+        "evening": "Evening",
+        "weekend": "Weekend"
+      },
+      "noResultsMapHint": "No events match the active filters"
     },
     "details": {
       "title": "Event Details",
