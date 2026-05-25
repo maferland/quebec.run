@@ -43,7 +43,7 @@ export default async function Home() {
                   </Button>
                 </Link>
               </div>
-              <div className="mt-8">
+              <div className="mt-8 hidden md:block">
                 <HomeSearch />
               </div>
             </div>

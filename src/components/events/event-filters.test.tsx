@@ -12,35 +12,23 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/en/events',
 }))
 
-const CLUBS = [
-  { slug: 'fauxmouvement', name: 'Faux Mouvement' },
-  { slug: 'kogi', name: 'Kogi' },
-]
-
 describe('EventFilters', () => {
   beforeEach(() => {
     mockParams = new URLSearchParams()
     vi.clearAllMocks()
   })
 
-  it('renders search input, club select, and pace toggle', () => {
-    render(<EventFilters clubs={CLUBS} />)
+  it('renders the search input and pace facet chip', () => {
+    render(<EventFilters />)
     expect(screen.getByLabelText(/search events/i)).toBeInTheDocument()
-    expect(screen.getByLabelText(/filter by club/i)).toBeInTheDocument()
-    expect(screen.getByRole('checkbox')).toBeInTheDocument()
-    expect(screen.getByText(/pace-flexible only/i)).toBeInTheDocument()
-  })
-
-  it('lists each club as an option', () => {
-    render(<EventFilters clubs={CLUBS} />)
-    const select = screen.getByLabelText(/filter by club/i)
-    expect(select).toHaveTextContent('Faux Mouvement')
-    expect(select).toHaveTextContent('Kogi')
+    expect(
+      screen.getByRole('button', { name: /every pace welcome/i })
+    ).toBeInTheDocument()
   })
 
   it('debounces search input before pushing URL', async () => {
     const user = userEvent.setup()
-    render(<EventFilters clubs={CLUBS} />)
+    render(<EventFilters />)
 
     await user.type(screen.getByLabelText(/search events/i), 'run')
     expect(mockPush).not.toHaveBeenCalled()
@@ -50,65 +38,60 @@ describe('EventFilters', () => {
     )
   })
 
-  it('updates URL immediately when club is selected', async () => {
+  it('activates the open-pace facet on click', async () => {
     const user = userEvent.setup()
-    render(<EventFilters clubs={CLUBS} />)
+    render(<EventFilters />)
 
-    await user.selectOptions(
-      screen.getByLabelText(/filter by club/i),
-      'fauxmouvement'
+    await user.click(
+      screen.getByRole('button', { name: /every pace welcome/i })
     )
-    expect(mockPush).toHaveBeenCalledWith('/en/events?clubSlug=fauxmouvement')
-  })
-
-  it('toggles pacePolicy=OPEN_PACE when checkbox checked', async () => {
-    const user = userEvent.setup()
-    render(<EventFilters clubs={CLUBS} />)
-
-    await user.click(screen.getByRole('checkbox'))
     expect(mockPush).toHaveBeenCalledWith('/en/events?pacePolicy=OPEN_PACE')
   })
 
-  it('removes pacePolicy param when checkbox unchecked', async () => {
+  it('deactivates the open-pace facet when toggled off', async () => {
     mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
     const user = userEvent.setup()
-    render(<EventFilters clubs={CLUBS} />)
+    render(<EventFilters />)
 
-    await user.click(screen.getByRole('checkbox'))
+    await user.click(
+      screen.getByRole('button', { name: /every pace welcome/i })
+    )
     expect(mockPush).toHaveBeenCalledWith('/en/events')
   })
 
+  it('reflects active state via aria-pressed', () => {
+    mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
+    render(<EventFilters />)
+
+    expect(
+      screen.getByRole('button', { name: /every pace welcome/i })
+    ).toHaveAttribute('aria-pressed', 'true')
+  })
+
   it('shows clear button only when a filter is active', () => {
-    const { rerender } = render(<EventFilters clubs={CLUBS} />)
-    expect(screen.queryByRole('button', { name: /clear/i })).toBeNull()
+    const { rerender } = render(<EventFilters />)
+    expect(screen.queryByRole('button', { name: /^clear$/i })).toBeNull()
 
     mockParams = new URLSearchParams({ search: 'run' })
-    rerender(<EventFilters clubs={CLUBS} />)
-    expect(screen.getByRole('button', { name: /clear/i })).toBeInTheDocument()
+    rerender(<EventFilters />)
+    expect(screen.getByRole('button', { name: /^clear$/i })).toBeInTheDocument()
   })
 
   it('clear button resets to base path', async () => {
     mockParams = new URLSearchParams({
       search: 'run',
-      clubSlug: 'kogi',
       pacePolicy: 'OPEN_PACE',
     })
     const user = userEvent.setup()
-    render(<EventFilters clubs={CLUBS} />)
+    render(<EventFilters />)
 
-    await user.click(screen.getByRole('button', { name: /clear/i }))
+    await user.click(screen.getByRole('button', { name: /^clear$/i }))
     expect(mockPush).toHaveBeenCalledWith('/en/events')
   })
 
   it('hydrates search input from URL', () => {
     mockParams = new URLSearchParams({ search: 'morning' })
-    render(<EventFilters clubs={CLUBS} />)
+    render(<EventFilters />)
     expect(screen.getByLabelText(/search events/i)).toHaveValue('morning')
-  })
-
-  it('marks the active club option', () => {
-    mockParams = new URLSearchParams({ clubSlug: 'kogi' })
-    render(<EventFilters clubs={CLUBS} />)
-    expect(screen.getByLabelText(/filter by club/i)).toHaveValue('kogi')
   })
 })

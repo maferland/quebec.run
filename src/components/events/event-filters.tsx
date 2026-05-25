@@ -5,24 +5,22 @@ import { useRouter, useSearchParams, usePathname } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { Search, X } from 'lucide-react'
 import { Input } from '@/components/ui/input'
-import { Button } from '@/components/ui/button'
 
 const SEARCH_DEBOUNCE_MS = 300
 
-export type EventFiltersProps = {
-  clubs: { slug: string; name: string }[]
-}
+type FacetKey = 'openPace'
 
-export function EventFilters({ clubs }: EventFiltersProps) {
+const FACETS: { key: FacetKey; param: string; value: string }[] = [
+  { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE' },
+]
+
+export function EventFilters() {
   const t = useTranslations('events.filters')
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
   const initialSearch = searchParams.get('search') ?? ''
-  const clubSlug = searchParams.get('clubSlug') ?? ''
-  const pacePolicy = searchParams.get('pacePolicy') ?? ''
-
   const [search, setSearch] = useState(initialSearch)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -48,11 +46,19 @@ export function EventFilters({ clubs }: EventFiltersProps) {
     }, SEARCH_DEBOUNCE_MS)
   }
 
-  const hasFilters = Boolean(initialSearch || clubSlug || pacePolicy)
+  const isFacetActive = (facet: (typeof FACETS)[number]) =>
+    searchParams.get(facet.param) === facet.value
+
+  const toggleFacet = (facet: (typeof FACETS)[number]) => {
+    updateParams({ [facet.param]: isFacetActive(facet) ? '' : facet.value })
+  }
+
+  const hasFilters =
+    Boolean(initialSearch) || FACETS.some((f) => isFacetActive(f))
 
   return (
-    <div className="mb-6 flex flex-col gap-3 md:flex-row md:items-center md:gap-4">
-      <div className="relative flex-1">
+    <div className="mb-6 flex flex-col gap-3">
+      <div className="relative">
         <Search
           aria-hidden="true"
           className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
@@ -67,42 +73,38 @@ export function EventFilters({ clubs }: EventFiltersProps) {
         />
       </div>
 
-      <select
-        aria-label={t('clubLabel')}
-        value={clubSlug}
-        onChange={(e) => updateParams({ clubSlug: e.target.value })}
-        className="h-10 rounded-md border border-border bg-surface px-3 text-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus focus-visible:ring-offset-2"
-      >
-        <option value="">{t('allClubs')}</option>
-        {clubs.map((club) => (
-          <option key={club.slug} value={club.slug}>
-            {club.name}
-          </option>
-        ))}
-      </select>
+      <div className="flex flex-wrap items-center gap-2">
+        {FACETS.map((facet) => {
+          const active = isFacetActive(facet)
+          return (
+            <button
+              key={facet.key}
+              type="button"
+              onClick={() => toggleFacet(facet)}
+              aria-pressed={active}
+              className={
+                active
+                  ? 'rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
+                  : 'rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
+              }
+            >
+              {t(`facets.${facet.key}`)}
+            </button>
+          )
+        })}
 
-      <label className="flex h-10 cursor-pointer items-center gap-2 rounded-md border border-border bg-surface px-3 text-sm text-text-primary hover:bg-surface-variant has-[:checked]:border-primary has-[:checked]:bg-primary/5 has-[:checked]:text-primary">
-        <input
-          type="checkbox"
-          checked={pacePolicy === 'OPEN_PACE'}
-          onChange={(e) =>
-            updateParams({ pacePolicy: e.target.checked ? 'OPEN_PACE' : '' })
-          }
-          className="h-4 w-4 accent-primary"
-        />
-        {t('openPaceOnly')}
-      </label>
-
-      {hasFilters && (
-        <Button
-          variant="ghost"
-          onClick={() => router.push(pathname)}
-          aria-label={t('clearFilters')}
-        >
-          <X className="h-4 w-4" />
-          {t('clearFilters')}
-        </Button>
-      )}
+        {hasFilters && (
+          <button
+            type="button"
+            onClick={() => router.push(pathname)}
+            className="ml-auto inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-variant"
+            aria-label={t('clearFilters')}
+          >
+            <X aria-hidden="true" className="h-3.5 w-3.5" />
+            {t('clearFilters')}
+          </button>
+        )}
+      </div>
     </div>
   )
 }

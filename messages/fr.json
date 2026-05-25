@@ -144,10 +144,10 @@
     "filters": {
       "searchLabel": "Rechercher des événements",
       "searchPlaceholder": "Rechercher par titre ou lieu",
-      "clubLabel": "Filtrer par club",
-      "allClubs": "Tous les clubs",
-      "openPaceOnly": "Allure flexible seulement",
-      "clearFilters": "Effacer"
+      "clearFilters": "Effacer",
+      "facets": {
+        "openPace": "Toutes allures bienvenues"
+      }
     },
     "details": {
       "title": "Détails de l'événement",
