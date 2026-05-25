@@ -159,6 +159,7 @@ export default async function ClubPage({ params }: ClubPageProps) {
               <LoadMoreList
                 initial={6}
                 step={6}
+                columns={{ base: 1, md: 2 }}
                 className="grid grid-cols-1 md:grid-cols-2 gap-6"
               >
                 {club.patterns.map((pattern) => (

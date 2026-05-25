@@ -25,8 +25,9 @@ export default async function ClubsPage() {
         />
       ) : (
         <LoadMoreList
-          initial={8}
-          step={5}
+          initial={10}
+          step={6}
+          columns={{ base: 1, md: 2, lg: 3 }}
           className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
         >
           {clubs.map((club) => (
