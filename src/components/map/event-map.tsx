@@ -9,6 +9,7 @@ const heightClasses = {
   sm: 'h-[220px] md:h-[320px]',
   md: 'h-[250px] md:h-[600px]',
   lg: 'h-[400px] md:h-[700px]',
+  fill: 'h-full',
 } as const
 
 export type EventMapHeight = keyof typeof heightClasses

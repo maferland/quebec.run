@@ -30,7 +30,9 @@ export function EventLocationCard({ location }: EventLocationCardProps) {
   })
   const recurrence = format.list(weekdayLabels)
 
-  const showClubSubtitle = location.title !== location.club.name
+  const showDistinctTitle =
+    location.title.trim().toLowerCase() !==
+    location.club.name.trim().toLowerCase()
 
   return (
     <Card as="article" variant="interactive" className="flex flex-col">
@@ -39,13 +41,13 @@ export function EventLocationCard({ location }: EventLocationCardProps) {
         className="mb-3 flex items-start justify-between gap-3"
       >
         <div className="flex-1 min-w-0">
-          <h3 className="text-lg font-heading font-bold text-primary hover:underline mb-1 line-clamp-2 leading-tight">
-            {location.title}
-          </h3>
-          {showClubSubtitle && (
-            <p className="text-xs text-accent font-body">
-              {location.club.name}
-            </p>
+          <p className="mb-1 text-[11px] font-heading font-semibold uppercase tracking-wider text-text-secondary">
+            {location.club.name}
+          </p>
+          {showDistinctTitle && (
+            <h3 className="text-lg font-heading font-bold text-primary hover:underline line-clamp-2 leading-tight">
+              {location.title}
+            </h3>
           )}
         </div>
         <Tag variant="datetime" icon={Clock} size="xs">

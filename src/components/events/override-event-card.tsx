@@ -28,19 +28,25 @@ export function OverrideEventCard({ event }: OverrideEventCardProps) {
         <div className="p-4 md:p-5">
           <div className="mb-3 flex items-start justify-between gap-3">
             <div className="flex-1 min-w-0">
-              <h3 className="text-lg font-heading font-bold text-primary hover:underline mb-1 line-clamp-2 leading-tight">
-                {event.title}
-              </h3>
               {event.club && (
-                <p className="text-xs text-accent font-body">
+                <p className="mb-1 text-[11px] font-heading font-semibold uppercase tracking-wider text-text-secondary">
                   {event.club.name}
                 </p>
               )}
+              <h3 className="text-lg font-heading font-bold text-primary hover:underline line-clamp-2 leading-tight">
+                {event.title}
+              </h3>
             </div>
             <Tag variant="datetime" icon={Clock} size="xs">
               {formatDateTime(event.date, event.time)}
             </Tag>
           </div>
+
+          {event.description && (
+            <p className="mb-3 text-sm text-text-secondary font-body leading-relaxed line-clamp-2">
+              {event.description}
+            </p>
+          )}
 
           {(event.distance || event.pace) && (
             <div className="mb-4 flex flex-wrap items-center gap-2">

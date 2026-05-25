@@ -41,33 +41,41 @@ export function MobileMapButton({
       </button>
 
       {open && (
-        <div
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('map.title')}
-          className="fixed inset-x-0 bottom-0 z-50 flex h-[75vh] flex-col rounded-t-2xl border-t border-border bg-surface shadow-2xl"
-        >
-          <div className="relative flex items-center justify-between border-b border-border px-4 py-3">
-            <span
-              aria-hidden="true"
-              className="absolute left-1/2 top-1.5 h-1.5 w-12 -translate-x-1/2 rounded-full bg-text-tertiary/40"
-            />
-            <h2 className="text-base font-heading font-bold text-primary">
-              {t('map.title')}
-            </h2>
-            <button
-              type="button"
-              onClick={() => setOpen(false)}
-              className="rounded-full p-2 hover:bg-surface-variant"
-              aria-label={t('map.closeButton')}
-            >
-              <X aria-hidden="true" className="h-5 w-5" />
-            </button>
+        <>
+          <button
+            type="button"
+            onClick={() => setOpen(false)}
+            aria-label={t('map.closeButton')}
+            className="fixed inset-0 z-40 bg-black/40 lg:hidden"
+          />
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('map.title')}
+            className="fixed inset-x-0 bottom-0 z-50 flex h-[75vh] flex-col rounded-t-2xl border-t border-border bg-surface shadow-2xl"
+          >
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h2 className="text-base font-heading font-bold text-primary">
+                {t('map.title')}
+              </h2>
+              <button
+                type="button"
+                onClick={() => setOpen(false)}
+                className="rounded-full p-2 hover:bg-surface-variant"
+                aria-label={t('map.closeButton')}
+              >
+                <X aria-hidden="true" className="h-5 w-5" />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <EventMap
+                events={events}
+                height="fill"
+                emptyMessage={emptyMessage}
+              />
+            </div>
           </div>
-          <div className="flex-1 overflow-hidden p-3">
-            <EventMap events={events} height="lg" emptyMessage={emptyMessage} />
-          </div>
-        </div>
+        </>
       )}
     </>
   )
