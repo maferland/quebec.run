@@ -3,6 +3,7 @@ import { getAllEvents } from '@/lib/services/events'
 import { EventCard } from '@/components/events/event-card'
 import { EventMap } from '@/components/map/event-map'
 import { ContentGrid } from '@/components/ui/content-grid'
+import { LoadMoreList } from '@/components/ui/load-more-list'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageTitle } from '@/components/ui/page-title'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -39,19 +40,23 @@ export default async function EventsPage() {
             description={t('empty.description')}
           />
         ) : (
-          Object.entries(groupEventsByDate(events)).map(([date, dayEvents]) => (
-            <section key={date} className="mb-8">
-              <h3 className="text-lg font-heading font-semibold text-text-secondary mb-4 flex items-center gap-2">
-                <Calendar className="h-4 w-4" />
-                {date}
-              </h3>
-              <ContentGrid>
-                {dayEvents.map((event) => (
-                  <EventCard key={event.id} event={event} showClubName />
-                ))}
-              </ContentGrid>
-            </section>
-          ))
+          <LoadMoreList initial={3} step={3}>
+            {Object.entries(groupEventsByDate(events)).map(
+              ([date, dayEvents]) => (
+                <section key={date} className="mb-8">
+                  <h3 className="text-lg font-heading font-semibold text-text-secondary mb-4 flex items-center gap-2">
+                    <Calendar className="h-4 w-4" />
+                    {date}
+                  </h3>
+                  <ContentGrid>
+                    {dayEvents.map((event) => (
+                      <EventCard key={event.id} event={event} showClubName />
+                    ))}
+                  </ContentGrid>
+                </section>
+              )
+            )}
+          </LoadMoreList>
         )}
       </section>
     </PageContainer>
