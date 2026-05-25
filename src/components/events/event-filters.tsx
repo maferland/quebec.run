@@ -8,10 +8,13 @@ import { Input } from '@/components/ui/input'
 
 const SEARCH_DEBOUNCE_MS = 300
 
-type FacetKey = 'openPace'
+type Facet = { key: string; param: string; value: string }
 
-const FACETS: { key: FacetKey; param: string; value: string }[] = [
+const FACETS: Facet[] = [
   { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE' },
+  { key: 'morning', param: 'timeOfDay', value: 'morning' },
+  { key: 'evening', param: 'timeOfDay', value: 'evening' },
+  { key: 'weekend', param: 'weekend', value: '1' },
 ]
 
 export function EventFilters() {
@@ -46,10 +49,10 @@ export function EventFilters() {
     }, SEARCH_DEBOUNCE_MS)
   }
 
-  const isFacetActive = (facet: (typeof FACETS)[number]) =>
+  const isFacetActive = (facet: Facet) =>
     searchParams.get(facet.param) === facet.value
 
-  const toggleFacet = (facet: (typeof FACETS)[number]) => {
+  const toggleFacet = (facet: Facet) => {
     updateParams({ [facet.param]: isFacetActive(facet) ? '' : facet.value })
   }
 

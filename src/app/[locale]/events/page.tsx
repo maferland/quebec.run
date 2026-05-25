@@ -3,6 +3,7 @@ import { getAllEvents } from '@/lib/services/events'
 import { EventCard } from '@/components/events/event-card'
 import { EventFilters } from '@/components/events/event-filters'
 import { EventMap } from '@/components/map/event-map'
+import { MobileMapButton } from '@/components/events/mobile-map-button'
 import { LoadMoreList } from '@/components/ui/load-more-list'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageTitle } from '@/components/ui/page-title'
@@ -22,10 +23,12 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
   const params = await searchParams
   const parsed = eventsQuerySchema.safeParse(params)
   const query = parsed.success ? parsed.data : {}
-  const hasFilters = Boolean(query.search || query.pacePolicy)
+  const hasFilters = Boolean(
+    query.search || query.pacePolicy || query.timeOfDay || query.weekend
+  )
 
   const events = await getAllEvents({ data: query })
-  const showMap = events.length > 0
+  const mapEmptyMessage = hasFilters ? t('filters.noResultsMapHint') : undefined
 
   return (
     <PageContainer>
@@ -44,7 +47,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
               }
             />
           ) : (
-            <LoadMoreList initial={6} step={6}>
+            <LoadMoreList initial={3} step={6}>
               {Object.entries(groupEventsByDate(events)).map(
                 ([date, dayEvents]) => (
                   <section key={date} className="mb-8">
@@ -64,13 +67,13 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
           )}
         </section>
 
-        {showMap && (
-          <aside className="lg:sticky lg:top-6 lg:self-start">
-            <h2 className="sr-only">{t('map.title')}</h2>
-            <EventMap events={events} />
-          </aside>
-        )}
+        <aside className="hidden lg:block lg:sticky lg:top-6 lg:self-start">
+          <h2 className="sr-only">{t('map.title')}</h2>
+          <EventMap events={events} emptyMessage={mapEmptyMessage} />
+        </aside>
       </div>
+
+      <MobileMapButton events={events} emptyMessage={mapEmptyMessage} />
     </PageContainer>
   )
 }

@@ -52,6 +52,21 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
     events = events.filter((e) => e.pacePolicy === pacePolicy)
   }
 
+  if (data.timeOfDay) {
+    events = events.filter((e) => {
+      const hour = Number(e.time.split(':')[0])
+      if (Number.isNaN(hour)) return false
+      return data.timeOfDay === 'morning' ? hour < 12 : hour >= 17
+    })
+  }
+
+  if (data.weekend) {
+    events = events.filter((e) => {
+      const day = e.date.getDay()
+      return day === 0 || day === 6
+    })
+  }
+
   return events.slice(offset, offset + limit)
 }
 

@@ -810,6 +810,30 @@ describe('Events Service Integration Tests', () => {
       result.forEach((event) => expect(event.pacePolicy).toBe('OPEN_PACE'))
     })
 
+    it('filters by morning time of day', async () => {
+      const result = await getAllEvents({ data: { timeOfDay: 'morning' } })
+      result.forEach((event) => {
+        const hour = Number(event.time.split(':')[0])
+        expect(hour).toBeLessThan(12)
+      })
+    })
+
+    it('filters by evening time of day', async () => {
+      const result = await getAllEvents({ data: { timeOfDay: 'evening' } })
+      result.forEach((event) => {
+        const hour = Number(event.time.split(':')[0])
+        expect(hour).toBeGreaterThanOrEqual(17)
+      })
+    })
+
+    it('filters by weekend', async () => {
+      const result = await getAllEvents({ data: { weekend: '1' } })
+      result.forEach((event) => {
+        const day = event.date.getDay()
+        expect([0, 6]).toContain(day)
+      })
+    })
+
     it('combines search and clubSlug filters', async () => {
       const club = await testPrisma.club.findFirst()
       assert(club, 'expected seeded club')

@@ -130,7 +130,9 @@
     "title": "Événements de course",
     "backToEvents": "Retour à tous les événements",
     "map": {
-      "title": "Événements près de chez vous"
+      "title": "Événements près de chez vous",
+      "openButton": "Ouvrir la carte des événements",
+      "closeButton": "Fermer la carte"
     },
     "list": {
       "title": "Tous les événements"
@@ -146,8 +148,12 @@
       "searchPlaceholder": "Rechercher par titre ou lieu",
       "clearFilters": "Effacer",
       "facets": {
-        "openPace": "Toutes allures bienvenues"
-      }
+        "openPace": "Toutes allures bienvenues",
+        "morning": "Matin",
+        "evening": "Soir",
+        "weekend": "Fin de semaine"
+      },
+      "noResultsMapHint": "Aucun événement ne correspond aux filtres actifs"
     },
     "details": {
       "title": "Détails de l'événement",
