@@ -29,6 +29,9 @@
     "sendingLink": "Envoi en cours...",
     "backToHome": "Retour à l'accueil"
   },
+  "common": {
+    "loadMore": "Afficher {count, plural, one {# de plus} other {# de plus}}"
+  },
   "footer": {
     "tagline": "Communauté de course à Québec",
     "clubs": "Clubs",

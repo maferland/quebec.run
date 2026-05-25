@@ -1,7 +1,7 @@
 import { getTranslations } from 'next-intl/server'
 import { getAllClubs } from '@/lib/services/clubs'
 import { ClubCard } from '@/components/clubs/club-card'
-import { ContentGrid } from '@/components/ui/content-grid'
+import { LoadMoreList } from '@/components/ui/load-more-list'
 import { PageContainer } from '@/components/ui/page-container'
 import { PageTitle } from '@/components/ui/page-title'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -24,11 +24,16 @@ export default async function ClubsPage() {
           description={t('empty.description')}
         />
       ) : (
-        <ContentGrid>
+        <LoadMoreList
+          initial={10}
+          step={6}
+          columns={{ base: 1, md: 2, lg: 3 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+        >
           {clubs.map((club) => (
             <ClubCard key={club.id} club={club} />
           ))}
-        </ContentGrid>
+        </LoadMoreList>
       )}
     </PageContainer>
   )
