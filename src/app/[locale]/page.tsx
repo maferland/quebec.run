@@ -3,6 +3,7 @@ import { ClubCard } from '@/components/clubs/club-card'
 import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
 import { EventMap } from '@/components/map/event-map'
+import { HomeSearch } from '@/components/home/home-search'
 import { Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { getAllClubs } from '@/lib/services/clubs'
@@ -41,6 +42,9 @@ export default async function Home() {
                     {t('hero.browseClubs')}
                   </Button>
                 </Link>
+              </div>
+              <div className="mt-8 hidden md:block">
+                <HomeSearch />
               </div>
             </div>
             <div className="relative">

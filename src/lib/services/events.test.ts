@@ -745,4 +745,107 @@ describe('Events Service Integration Tests', () => {
       })
     })
   })
+
+  describe('getAllEvents filters', () => {
+    it('resolves clubSlug to clubId', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      const result = await getAllEvents({ data: { clubSlug: club.slug } })
+
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((event) => expect(event.clubId).toBe(club.id))
+    })
+
+    it('returns empty array when clubSlug does not match a club', async () => {
+      const result = await getAllEvents({
+        data: { clubSlug: 'no-such-club-9999' },
+      })
+      expect(result).toEqual([])
+    })
+
+    it('filters by case-insensitive title match', async () => {
+      const result = await getAllEvents({ data: { search: 'MORNING' } })
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((event) =>
+        expect(event.title.toLowerCase()).toContain('morning')
+      )
+    })
+
+    it('filters by address match', async () => {
+      const result = await getAllEvents({ data: { search: 'jog avenue' } })
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((event) =>
+        expect(event.address?.toLowerCase()).toContain('jog avenue')
+      )
+    })
+
+    it('returns empty array when nothing matches search', async () => {
+      const result = await getAllEvents({
+        data: { search: 'absolutely-no-match-zzzzzzzz' },
+      })
+      expect(result).toEqual([])
+    })
+
+    it('filters by pacePolicy', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      const tomorrow = addDays(new Date(), 1)
+
+      await testPrisma.event.create({
+        data: {
+          title: 'Flexible pace run',
+          date: tomorrow,
+          time: '18:00',
+          address: '999 Flexible Way',
+          clubId: club.id,
+          pacePolicy: 'OPEN_PACE',
+        },
+      })
+
+      const result = await getAllEvents({
+        data: { pacePolicy: 'OPEN_PACE' },
+      })
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((event) => expect(event.pacePolicy).toBe('OPEN_PACE'))
+    })
+
+    it('filters by morning time of day', async () => {
+      const result = await getAllEvents({ data: { timeOfDay: 'morning' } })
+      result.forEach((event) => {
+        const hour = Number(event.time.split(':')[0])
+        expect(hour).toBeLessThan(12)
+      })
+    })
+
+    it('filters by evening time of day', async () => {
+      const result = await getAllEvents({ data: { timeOfDay: 'evening' } })
+      result.forEach((event) => {
+        const hour = Number(event.time.split(':')[0])
+        expect(hour).toBeGreaterThanOrEqual(17)
+      })
+    })
+
+    it('filters by weekend', async () => {
+      const result = await getAllEvents({ data: { weekend: '1' } })
+      result.forEach((event) => {
+        const day = event.date.getDay()
+        expect([0, 6]).toContain(day)
+      })
+    })
+
+    it('combines search and clubSlug filters', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      const result = await getAllEvents({
+        data: { clubSlug: club.slug, search: 'morning' },
+      })
+
+      result.forEach((event) => {
+        expect(event.clubId).toBe(club.id)
+        expect(event.title.toLowerCase()).toContain('morning')
+      })
+    })
+  })
 })
