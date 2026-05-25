@@ -137,7 +137,17 @@
     },
     "empty": {
       "title": "Aucun événement à venir trouvé",
-      "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
+      "description": "Revenez bientôt pour de nouveaux événements de course à Québec",
+      "noResults": "Aucun événement ne correspond à vos filtres",
+      "tryAdjusting": "Essayez un autre terme ou effacez les filtres."
+    },
+    "filters": {
+      "searchLabel": "Rechercher des événements",
+      "searchPlaceholder": "Rechercher par titre ou lieu",
+      "clubLabel": "Filtrer par club",
+      "allClubs": "Tous les clubs",
+      "openPaceOnly": "Allure flexible seulement",
+      "clearFilters": "Effacer"
     },
     "details": {
       "title": "Détails de l'événement",

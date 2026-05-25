@@ -107,6 +107,9 @@ export const eventCreateSchema = z.object({
 
 export const eventsQuerySchema = paginationQuerySchema.extend({
   clubId: z.string().optional(),
+  clubSlug: z.string().optional(),
+  search: z.string().optional(),
+  pacePolicy: z.enum(['OPEN_PACE', 'SHARED']).optional(),
 })
 
 export const eventUpdateSchema = eventCreateSchema.partial().extend({

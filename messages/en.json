@@ -137,7 +137,17 @@
     },
     "empty": {
       "title": "No upcoming events found",
-      "description": "Check back soon for new running events in Quebec City"
+      "description": "Check back soon for new running events in Quebec City",
+      "noResults": "No events match your filters",
+      "tryAdjusting": "Try a different search term or clear the filters."
+    },
+    "filters": {
+      "searchLabel": "Search events",
+      "searchPlaceholder": "Search title or location",
+      "clubLabel": "Filter by club",
+      "allClubs": "All clubs",
+      "openPaceOnly": "Pace-flexible only",
+      "clearFilters": "Clear"
     },
     "details": {
       "title": "Event Details",
