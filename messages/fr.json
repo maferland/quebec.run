@@ -174,7 +174,10 @@
     "aboutClub": "À propos de {name}",
     "viewClub": "Voir le club",
     "locations": {
-      "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours"
+      "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours",
+      "recurring": "Récurrent",
+      "notableTitle": "Sorties à noter",
+      "moreNotable": "+{count, plural, one {# de plus} other {# de plus}}"
     },
     "pacePolicy": {
       "shared": "Allure de groupe",

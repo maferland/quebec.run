@@ -174,7 +174,10 @@
     "aboutClub": "About {name}",
     "viewClub": "View club",
     "locations": {
-      "upcomingCount": "{count, plural, one {# upcoming run} other {# upcoming runs}} in the next 60 days"
+      "upcomingCount": "{count, plural, one {# upcoming run} other {# upcoming runs}} in the next 60 days",
+      "recurring": "Recurring",
+      "notableTitle": "Notable upcoming runs",
+      "moreNotable": "+{count, plural, one {# more} other {# more}}"
     },
     "pacePolicy": {
       "shared": "Group pace",
