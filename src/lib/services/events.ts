@@ -74,13 +74,6 @@ export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
 const WEEKDAY_ORDER: Array<0 | 1 | 2 | 3 | 4 | 5 | 6> = [1, 2, 3, 4, 5, 6, 0]
 
-function locationKey(event: GetAllEventsReturn): string {
-  if (event.latitude !== null && event.longitude !== null) {
-    return `${event.latitude.toFixed(4)},${event.longitude.toFixed(4)}`
-  }
-  return (event.address ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
-}
-
 function matchesFilters(event: GetAllEventsReturn, data: EventsQuery): boolean {
   if (data.search) {
     const q = data.search.toLowerCase()
@@ -141,22 +134,28 @@ export async function getEventLocations({
 
   const events = await getEventsInRange(startDate, endDate, resolvedClubId)
 
-  const titleCounts = new Map<string, Map<string, number>>()
+  // Bucket by recurring pattern id when available so same-club same-location
+  // patterns with distinct schedules stay distinct. One-off concrete events
+  // (no recurring parent) get their own bucket keyed by event id.
+  const bucketKeyFor = (event: GetAllEventsReturn): string =>
+    event.recurringEventId
+      ? `pattern:${event.recurringEventId}`
+      : `oneoff:${event.id}`
+
+  // Virtual events synthesized from recurring patterns use a slug-based id
+  // format containing `--YYYY-MM-DD`; that's how we identify the pattern's
+  // canonical title within a bucket.
+  const isVirtualEvent = (event: GetAllEventsReturn): boolean =>
+    event.id.includes('--')
+
   const bucketEvents = new Map<string, GetAllEventsReturn[]>()
   const bucketMap = new Map<string, EventLocation>()
 
   for (const event of events) {
     if (!event.club) continue
     if (!matchesFilters(event, data)) continue
-    const key = `${event.club.id}|${locationKey(event)}`
+    const key = bucketKeyFor(event)
     const day = event.date.getDay()
-
-    let titleMap = titleCounts.get(key)
-    if (!titleMap) {
-      titleMap = new Map()
-      titleCounts.set(key, titleMap)
-    }
-    titleMap.set(event.title, (titleMap.get(event.title) ?? 0) + 1)
 
     let list = bucketEvents.get(key)
     if (!list) {
@@ -197,28 +196,21 @@ export async function getEventLocations({
         WEEKDAY_ORDER.indexOf(b as 0 | 1 | 2 | 3 | 4 | 5 | 6)
     )
 
-    const titleMap = titleCounts.get(bucket.key)
-    if (!titleMap) continue
-    let dominantTitle = bucket.title
-    let dominantCount = 0
-    for (const [title, count] of titleMap.entries()) {
-      if (count > dominantCount) {
-        dominantCount = count
-        dominantTitle = title
-      }
-    }
-    bucket.title = dominantTitle
-
     const all = bucketEvents.get(bucket.key) ?? []
+    const canonicalSample = all.find(isVirtualEvent) ?? all[0]
+    if (!canonicalSample) continue
+    const canonicalTitle = canonicalSample.title
+    bucket.title = canonicalTitle
+
     for (const event of all) {
-      if (event.title !== dominantTitle) {
+      if (event.title !== canonicalTitle) {
         overrides.push(event)
         bucket.occurrenceCount -= 1
         if (bucket.next.id === event.id) {
           const remaining = all
             .filter(
               (candidate) =>
-                candidate.id !== event.id && candidate.title === dominantTitle
+                candidate.id !== event.id && candidate.title === canonicalTitle
             )
             .sort((a, b) => a.date.getTime() - b.date.getTime())
           if (remaining[0]) bucket.next = remaining[0]
