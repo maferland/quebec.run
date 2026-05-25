@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import {
   getAllEvents,
+  getEventLocations,
   getEventById,
   getEventByClubAndSlug,
   getNextOccurrenceDate,
@@ -846,6 +847,116 @@ describe('Events Service Integration Tests', () => {
         expect(event.clubId).toBe(club.id)
         expect(event.title.toLowerCase()).toContain('morning')
       })
+    })
+  })
+
+  describe('getEventLocations', () => {
+    it('collapses repeated occurrences into a single bucket per (club, address)', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Weekly Run',
+          slug: 'weekly-run-loc',
+          address: '500 Bucket Lane',
+          latitude: 46.81,
+          longitude: -71.22,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const result = await getEventLocations({ data: {} })
+
+      const weeklyBuckets = result.filter((loc) => loc.title === 'Weekly Run')
+      expect(weeklyBuckets.length).toBe(1)
+      expect(weeklyBuckets[0].occurrenceCount).toBeGreaterThan(1)
+      expect(weeklyBuckets[0].weekdays).toEqual([2])
+    })
+
+    it('separates buckets when the same club runs at different addresses', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      await testPrisma.recurringEvent.createMany({
+        data: [
+          {
+            title: 'East Location',
+            slug: 'east-location',
+            address: '100 East St',
+            latitude: 46.82,
+            longitude: -71.23,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=0',
+            isActive: true,
+          },
+          {
+            title: 'West Location',
+            slug: 'west-location',
+            address: '200 West St',
+            latitude: 46.83,
+            longitude: -71.25,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
+            isActive: true,
+          },
+        ],
+      })
+
+      const result = await getEventLocations({ data: {} })
+      const sameClubBuckets = result.filter((loc) => loc.club.id === club.id)
+      const eastBucket = sameClubBuckets.find(
+        (loc) => loc.title === 'East Location'
+      )
+      const westBucket = sameClubBuckets.find(
+        (loc) => loc.title === 'West Location'
+      )
+      expect(eastBucket).toBeDefined()
+      expect(westBucket).toBeDefined()
+      expect(eastBucket!.key).not.toBe(westBucket!.key)
+    })
+
+    it('sorts buckets by next occurrence date', async () => {
+      const result = await getEventLocations({ data: {} })
+      for (let i = 1; i < result.length; i++) {
+        expect(result[i].next.date.getTime()).toBeGreaterThanOrEqual(
+          result[i - 1].next.date.getTime()
+        )
+      }
+    })
+
+    it('applies search filter at the bucket level', async () => {
+      const result = await getEventLocations({
+        data: { search: 'absolutely-no-match-zzz' },
+      })
+      expect(result).toEqual([])
+    })
+
+    it('applies pacePolicy filter at the bucket level', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      const tomorrow = addDays(new Date(), 1)
+
+      await testPrisma.event.create({
+        data: {
+          title: 'Open Pace Run',
+          date: tomorrow,
+          time: '18:00',
+          address: '777 Flex Way',
+          latitude: 46.85,
+          longitude: -71.27,
+          clubId: club.id,
+          pacePolicy: 'OPEN_PACE',
+        },
+      })
+
+      const result = await getEventLocations({
+        data: { pacePolicy: 'OPEN_PACE' },
+      })
+      expect(result.length).toBeGreaterThan(0)
+      result.forEach((loc) => expect(loc.next.pacePolicy).toBe('OPEN_PACE'))
     })
   })
 })

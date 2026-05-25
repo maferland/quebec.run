@@ -72,6 +72,106 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 
 export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
+const WEEKDAY_ORDER: Array<0 | 1 | 2 | 3 | 4 | 5 | 6> = [1, 2, 3, 4, 5, 6, 0]
+
+function locationKey(event: GetAllEventsReturn): string {
+  if (event.latitude !== null && event.longitude !== null) {
+    return `${event.latitude.toFixed(4)},${event.longitude.toFixed(4)}`
+  }
+  return (event.address ?? '').trim().toLowerCase().replace(/\s+/g, ' ')
+}
+
+function matchesFilters(event: GetAllEventsReturn, data: EventsQuery): boolean {
+  if (data.search) {
+    const q = data.search.toLowerCase()
+    const titleHit = event.title.toLowerCase().includes(q)
+    const addrHit = event.address?.toLowerCase().includes(q) ?? false
+    if (!titleHit && !addrHit) return false
+  }
+  if (data.pacePolicy && event.pacePolicy !== data.pacePolicy) return false
+  if (data.timeOfDay) {
+    const hour = Number(event.time.split(':')[0])
+    if (Number.isNaN(hour)) return false
+    if (data.timeOfDay === 'morning' && hour >= 12) return false
+    if (data.timeOfDay === 'evening' && hour < 17) return false
+  }
+  if (data.weekend) {
+    const day = event.date.getDay()
+    if (day !== 0 && day !== 6) return false
+  }
+  return true
+}
+
+export type EventLocation = {
+  key: string
+  club: NonNullable<GetAllEventsReturn['club']>
+  title: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  weekdays: number[]
+  occurrenceCount: number
+  next: GetAllEventsReturn
+}
+
+export async function getEventLocations({
+  data,
+}: PublicPayload<EventsQuery>): Promise<EventLocation[]> {
+  const { clubId, clubSlug } = data
+
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  const endDate = addDays(startDate, 60)
+
+  let resolvedClubId = clubId
+  if (!resolvedClubId && clubSlug) {
+    const club = await prisma.club.findUnique({
+      where: { slug: clubSlug },
+      select: { id: true },
+    })
+    if (!club) return []
+    resolvedClubId = club.id
+  }
+
+  const events = await getEventsInRange(startDate, endDate, resolvedClubId)
+
+  const buckets = new Map<string, EventLocation>()
+  for (const event of events) {
+    if (!event.club) continue
+    if (!matchesFilters(event, data)) continue
+    const key = `${event.club.id}|${locationKey(event)}`
+    const day = event.date.getDay()
+    const existing = buckets.get(key)
+    if (!existing) {
+      buckets.set(key, {
+        key,
+        club: event.club,
+        title: event.title,
+        address: event.address,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        weekdays: [day],
+        occurrenceCount: 1,
+        next: event,
+      })
+    } else {
+      if (!existing.weekdays.includes(day)) existing.weekdays.push(day)
+      existing.occurrenceCount += 1
+      if (event.date < existing.next.date) existing.next = event
+    }
+  }
+
+  const result = Array.from(buckets.values())
+  for (const bucket of result) {
+    bucket.weekdays.sort(
+      (a, b) =>
+        WEEKDAY_ORDER.indexOf(a as 0 | 1 | 2 | 3 | 4 | 5 | 6) -
+        WEEKDAY_ORDER.indexOf(b as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+    )
+  }
+  return result.sort((a, b) => a.next.date.getTime() - b.next.date.getTime())
+}
+
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
 

@@ -173,6 +173,9 @@
     "moreFromClub": "Plus de {name}",
     "aboutClub": "À propos de {name}",
     "viewClub": "Voir le club",
+    "locations": {
+      "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours"
+    },
     "pacePolicy": {
       "shared": "Allure de groupe",
       "openPace": "Allure libre",

@@ -7,17 +7,18 @@ import { HomeSearch } from '@/components/home/home-search'
 import { Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { getAllClubs } from '@/lib/services/clubs'
-import { getAllEvents } from '@/lib/services/events'
+import { getEventLocations } from '@/lib/services/events'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const t = await getTranslations('home')
 
-  const [clubs, events] = await Promise.all([
+  const [clubs, locations] = await Promise.all([
     getAllClubs({ data: { limit: 6, offset: 0 } }),
-    getAllEvents({ data: { limit: 50, offset: 0 } }),
+    getEventLocations({ data: {} }),
   ])
+  const events = locations.map((location) => location.next)
 
   return (
     <div className="min-h-screen bg-gray-50">
