@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslations } from 'next-intl'
 import { MapPin, X } from 'lucide-react'
 import { EventMap } from '@/components/map/event-map'
@@ -20,6 +20,15 @@ export function MobileMapButton({
   const [open, setOpen] = useState(false)
   const t = useTranslations('events')
 
+  useEffect(() => {
+    if (!open) return
+    const handler = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('keydown', handler)
+    return () => document.removeEventListener('keydown', handler)
+  }, [open])
+
   return (
     <>
       <button
@@ -36,10 +45,14 @@ export function MobileMapButton({
           role="dialog"
           aria-modal="true"
           aria-label={t('map.title')}
-          className="fixed inset-0 z-50 flex flex-col bg-surface"
+          className="fixed inset-x-0 bottom-0 z-50 flex h-[75vh] flex-col rounded-t-2xl border-t border-border bg-surface shadow-2xl"
         >
-          <div className="flex items-center justify-between border-b border-border px-4 py-3">
-            <h2 className="text-lg font-heading font-bold text-primary">
+          <div className="relative flex items-center justify-between border-b border-border px-4 py-3">
+            <span
+              aria-hidden="true"
+              className="absolute left-1/2 top-1.5 h-1.5 w-12 -translate-x-1/2 rounded-full bg-text-tertiary/40"
+            />
+            <h2 className="text-base font-heading font-bold text-primary">
               {t('map.title')}
             </h2>
             <button
@@ -51,7 +64,7 @@ export function MobileMapButton({
               <X aria-hidden="true" className="h-5 w-5" />
             </button>
           </div>
-          <div className="flex-1 overflow-hidden p-4">
+          <div className="flex-1 overflow-hidden p-3">
             <EventMap events={events} height="lg" emptyMessage={emptyMessage} />
           </div>
         </div>
