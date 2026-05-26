@@ -94,4 +94,58 @@ describe('EventFilters', () => {
     render(<EventFilters />)
     expect(screen.getByLabelText(/search events/i)).toHaveValue('morning')
   })
+
+  it('renders facet counts next to each chip when provided', () => {
+    render(
+      <EventFilters
+        facetCounts={{ openPace: 2, morning: 20, evening: 11, weekend: 3 }}
+      />
+    )
+    expect(
+      screen.getByRole('button', { name: /every pace welcome.*2/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /morning.*20/i })
+    ).toBeInTheDocument()
+    expect(
+      screen.getByRole('button', { name: /weekend.*3/i })
+    ).toBeInTheDocument()
+  })
+
+  it('disables an inactive chip with zero count', () => {
+    render(
+      <EventFilters
+        facetCounts={{ openPace: 0, morning: 5, evening: 0, weekend: 3 }}
+      />
+    )
+    expect(
+      screen.getByRole('button', { name: /every pace welcome.*0/i })
+    ).toBeDisabled()
+    expect(screen.getByRole('button', { name: /evening.*0/i })).toBeDisabled()
+    expect(
+      screen.getByRole('button', { name: /morning.*5/i })
+    ).not.toBeDisabled()
+  })
+
+  it('does not disable an active chip even if its count is zero', () => {
+    mockParams = new URLSearchParams({ weekend: '1' })
+    render(
+      <EventFilters
+        facetCounts={{ openPace: 0, morning: 0, evening: 0, weekend: 0 }}
+      />
+    )
+    const weekendChip = screen.getByRole('button', { name: /weekend.*0/i })
+    expect(weekendChip).not.toBeDisabled()
+    // Active chip never picks up the disabled styling
+    expect(weekendChip).not.toHaveClass('cursor-not-allowed')
+    expect(weekendChip).not.toHaveClass('line-through')
+  })
+
+  it('renders chips without counts or disabled state when facetCounts is undefined', () => {
+    render(<EventFilters />)
+    const openPace = screen.getByRole('button', { name: /every pace welcome/i })
+    expect(openPace).not.toBeDisabled()
+    // No trailing number after the label
+    expect(openPace.textContent?.trim()).toBe('Every pace welcome')
+  })
 })

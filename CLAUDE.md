@@ -10,11 +10,13 @@
 **Apply to:** components, schemas (Prisma/Zod/API), services, routes, hooks/utils, bug fixes, features
 **Lightweight lane:** docs/config/copy → lint + tsc + prettier only
 
-## Visual Review (Before PR is Ready)
+## Visual Review (ALWAYS run pinpoint on UI changes)
 
-Any PR that touches UI must include a pinpoint pass before it's ready for review. Use the `pinpoint:using-pinpoint` skill — that owns the up-to-date flow. Mention findings in the PR description; out-of-scope ones land as a follow-up plan doc.
+**Default**: every PR that renders pixels gets a pinpoint pass before it goes up. Don't ask, don't wait to be prompted — capture desktop + mobile screenshots of the affected screens (including hover/empty/active states when relevant) and run pinpoint via the `pinpoint:using-pinpoint` skill. Surface findings in the PR description; out-of-scope items land as a follow-up plan doc.
 
-**Skip pinpoint** for pure data/schema/refactor PRs with no pixel impact. Note the skip in the PR description.
+**Skip only** for pure data/schema/refactor PRs with no visual diff. Note the skip in the PR description.
+
+If multiple iterations of feedback are needed, keep running pinpoint after each round until the user signals "ship it." Treat every round as cheap.
 
 ## Testing Strategy
 
@@ -50,6 +52,7 @@ Auto-generates:
 
 ## Critical Rules
 
+- **Run pinpoint after every UI change** — capture screenshots at desktop + mobile, run the `pinpoint:using-pinpoint` skill, address findings before opening or updating a PR. Don't wait to be prompted.
 - Run all quality gates before commit (never use `--no-verify`)
 - Use `prisma migrate dev` (not `db push`)
 - Prefix branches with `maferland/`
