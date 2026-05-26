@@ -68,6 +68,25 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
     })
   }
 
+  if (data.clubVibe) {
+    events = events.filter((e) => e.club?.vibe === data.clubVibe)
+  }
+
+  if (data.beginner === '1') {
+    events = events.filter((e) => e.club?.beginnerFriendly === true)
+  }
+
+  // Default: hide past events. Opt-in via showPast=1.
+  if (data.showPast !== '1') {
+    const nowDate = new Date()
+    events = events.filter((e) => {
+      const [h, m] = e.time.split(':').map(Number)
+      const start = new Date(e.date)
+      start.setHours(h || 0, m || 0, 0, 0)
+      return start >= nowDate
+    })
+  }
+
   return events.slice(offset, offset + limit)
 }
 
@@ -93,6 +112,15 @@ function matchesFilters(event: GetAllEventsReturn, data: EventsQuery): boolean {
     const day = event.date.getDay()
     if (day !== 0 && day !== 6) return false
   }
+  if (data.clubVibe && event.club?.vibe !== data.clubVibe) return false
+  if (data.beginner === '1' && !event.club?.beginnerFriendly) return false
+  // Hide past events by default; opt-in to keep them via showPast=1.
+  if (data.showPast !== '1') {
+    const [h, m] = event.time.split(':').map(Number)
+    const start = new Date(event.date)
+    start.setHours(h || 0, m || 0, 0, 0)
+    if (start < new Date()) return false
+  }
   return true
 }
 
@@ -114,6 +142,10 @@ export type FacetCounts = {
   morning: number
   evening: number
   weekend: number
+  social: number
+  training: number
+  beginner: number
+  showPast: number
 }
 
 const EMPTY_FACET_COUNTS: FacetCounts = {
@@ -121,6 +153,10 @@ const EMPTY_FACET_COUNTS: FacetCounts = {
   morning: 0,
   evening: 0,
   weekend: 0,
+  social: 0,
+  training: 0,
+  beginner: 0,
+  showPast: 0,
 }
 
 export type EventListing = {
@@ -241,12 +277,20 @@ function computeFacetCounts(
     morning: new Set(),
     evening: new Set(),
     weekend: new Set(),
+    social: new Set(),
+    training: new Set(),
+    beginner: new Set(),
+    showPast: new Set(),
   }
   const overrideCounts: Record<FacetKey, number> = {
     openPace: 0,
     morning: 0,
     evening: 0,
     weekend: 0,
+    social: 0,
+    training: 0,
+    beginner: 0,
+    showPast: 0,
   }
 
   for (const event of events) {
@@ -267,6 +311,10 @@ function computeFacetCounts(
     morning: bucketKeys.morning.size + overrideCounts.morning,
     evening: bucketKeys.evening.size + overrideCounts.evening,
     weekend: bucketKeys.weekend.size + overrideCounts.weekend,
+    social: bucketKeys.social.size + overrideCounts.social,
+    training: bucketKeys.training.size + overrideCounts.training,
+    beginner: bucketKeys.beginner.size + overrideCounts.beginner,
+    showPast: bucketKeys.showPast.size + overrideCounts.showPast,
   }
 }
 
@@ -317,6 +365,54 @@ export async function getEventLocations({
   const facetCounts = computeFacetCounts(events, data, canonicalTitles)
 
   return { buckets, overrides, facetCounts }
+}
+
+export type CalendarListing = {
+  events: GetAllEventsReturn[]
+  facetCounts: FacetCounts
+}
+
+// Calendar surface: events kept as a flat list (no bucketing) grouped client-side
+// by date. Filters honor the same EVENT_FACETS as /events; counts simulate
+// "add this facet on top of current filters".
+export async function getCalendarListing({
+  data,
+}: PublicPayload<EventsQuery>): Promise<CalendarListing> {
+  const { limit = 200, offset = 0, clubId, clubSlug } = data
+
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  const endDate = addDays(startDate, 60)
+
+  let resolvedClubId = clubId
+  if (!resolvedClubId && clubSlug) {
+    const club = await prisma.club.findUnique({
+      where: { slug: clubSlug },
+      select: { id: true },
+    })
+    if (!club) {
+      return { events: [], facetCounts: EMPTY_FACET_COUNTS }
+    }
+    resolvedClubId = club.id
+  }
+
+  const all = await getEventsInRange(startDate, endDate, resolvedClubId)
+  const filtered = all.filter((event) => matchesFilters(event, data))
+
+  const facetCounts: FacetCounts = { ...EMPTY_FACET_COUNTS }
+  for (const event of all) {
+    if (!event.club) continue
+    for (const facet of EVENT_FACETS) {
+      if (matchesFilters(event, { ...data, [facet.param]: facet.value })) {
+        facetCounts[facet.key] += 1
+      }
+    }
+  }
+
+  return {
+    events: filtered.slice(offset, offset + limit),
+    facetCounts,
+  }
 }
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {

@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest'
-import { render, screen, waitFor } from '@/lib/test-utils'
+import { render, screen } from '@/lib/test-utils'
 import userEvent from '@testing-library/user-event'
 import { EventFilters } from './event-filters'
 
@@ -12,76 +12,61 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/en/events',
 }))
 
-describe('EventFilters', () => {
+const FULL_COUNTS = {
+  openPace: 5,
+  morning: 10,
+  evening: 8,
+  weekend: 4,
+  social: 6,
+  training: 2,
+  beginner: 3,
+  showPast: 0,
+}
+
+describe('EventFilters (combobox)', () => {
   beforeEach(() => {
     mockParams = new URLSearchParams()
     vi.clearAllMocks()
   })
 
-  it('renders the search input and pace facet chip', () => {
+  it('shows the filter input with placeholder text', () => {
     render(<EventFilters />)
-    expect(screen.getByLabelText(/search events/i)).toBeInTheDocument()
+    expect(screen.getByPlaceholderText(/filter/i)).toBeInTheDocument()
+  })
+
+  it('does not show facet options until the input is focused', () => {
+    render(<EventFilters />)
+    expect(screen.queryByRole('option', { name: /open pace/i })).toBeNull()
+  })
+
+  it('opens the popover when the input is clicked', async () => {
+    const user = userEvent.setup()
+    render(<EventFilters />)
+
+    await user.click(screen.getByPlaceholderText(/filter/i))
     expect(
-      screen.getByRole('button', { name: /every pace welcome/i })
+      screen.getByRole('option', { name: /open pace/i })
     ).toBeInTheDocument()
+    expect(screen.getByRole('option', { name: /morning/i })).toBeInTheDocument()
   })
 
-  it('debounces search input before pushing URL', async () => {
+  it('toggles a facet via URL when an option is clicked', async () => {
     const user = userEvent.setup()
     render(<EventFilters />)
 
-    await user.type(screen.getByLabelText(/search events/i), 'run')
-    expect(mockPush).not.toHaveBeenCalled()
-
-    await waitFor(() =>
-      expect(mockPush).toHaveBeenCalledWith('/en/events?search=run')
-    )
-  })
-
-  it('activates the open-pace facet on click', async () => {
-    const user = userEvent.setup()
-    render(<EventFilters />)
-
-    await user.click(
-      screen.getByRole('button', { name: /every pace welcome/i })
-    )
+    await user.click(screen.getByPlaceholderText(/filter/i))
+    await user.click(screen.getByRole('option', { name: /open pace/i }))
     expect(mockPush).toHaveBeenCalledWith('/en/events?pacePolicy=OPEN_PACE')
   })
 
-  it('deactivates the open-pace facet when toggled off', async () => {
-    mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
-    const user = userEvent.setup()
-    render(<EventFilters />)
-
-    await user.click(
-      screen.getByRole('button', { name: /every pace welcome/i })
-    )
-    expect(mockPush).toHaveBeenCalledWith('/en/events')
-  })
-
-  it('reflects active state via aria-pressed', () => {
+  it('renders an active filter as an inline pill', () => {
     mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
     render(<EventFilters />)
-
-    expect(
-      screen.getByRole('button', { name: /every pace welcome/i })
-    ).toHaveAttribute('aria-pressed', 'true')
+    expect(screen.getByText(/open pace/i)).toBeInTheDocument()
   })
 
-  it('shows clear button only when a filter is active', () => {
-    const { rerender } = render(<EventFilters />)
-    expect(screen.queryByRole('button', { name: /^clear$/i })).toBeNull()
-
-    mockParams = new URLSearchParams({ search: 'run' })
-    rerender(<EventFilters />)
-    expect(screen.getByRole('button', { name: /^clear$/i })).toBeInTheDocument()
-  })
-
-  it('clear button resets to base path', async () => {
-    mockParams = new URLSearchParams({
-      search: 'run',
-      pacePolicy: 'OPEN_PACE',
-    })
+  it('clears all filters when the clear button is clicked', async () => {
+    mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
     const user = userEvent.setup()
     render(<EventFilters />)
 
@@ -89,63 +74,49 @@ describe('EventFilters', () => {
     expect(mockPush).toHaveBeenCalledWith('/en/events')
   })
 
-  it('hydrates search input from URL', () => {
-    mockParams = new URLSearchParams({ search: 'morning' })
+  it('filters options by query when typing', async () => {
+    const user = userEvent.setup()
     render(<EventFilters />)
-    expect(screen.getByLabelText(/search events/i)).toHaveValue('morning')
+
+    await user.click(screen.getByPlaceholderText(/filter/i))
+    await user.type(screen.getByPlaceholderText(/filter/i), 'morn')
+    expect(screen.getByRole('option', { name: /morning/i })).toBeInTheDocument()
+    expect(screen.queryByRole('option', { name: /evening/i })).toBeNull()
   })
 
-  it('renders facet counts next to each chip when provided', () => {
-    render(
-      <EventFilters
-        facetCounts={{ openPace: 2, morning: 20, evening: 11, weekend: 3 }}
-      />
-    )
-    expect(
-      screen.getByRole('button', { name: /every pace welcome.*2/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /morning.*20/i })
-    ).toBeInTheDocument()
-    expect(
-      screen.getByRole('button', { name: /weekend.*3/i })
-    ).toBeInTheDocument()
+  it('shows facet counts in the popover when provided', async () => {
+    const user = userEvent.setup()
+    render(<EventFilters facetCounts={FULL_COUNTS} />)
+
+    await user.click(screen.getByPlaceholderText(/filter/i))
+    const morning = screen.getByRole('option', { name: /morning/i })
+    expect(morning.textContent).toContain('10')
   })
 
-  it('disables an inactive chip with zero count', () => {
-    render(
-      <EventFilters
-        facetCounts={{ openPace: 0, morning: 5, evening: 0, weekend: 3 }}
-      />
-    )
-    expect(
-      screen.getByRole('button', { name: /every pace welcome.*0/i })
-    ).toBeDisabled()
-    expect(screen.getByRole('button', { name: /evening.*0/i })).toBeDisabled()
-    expect(
-      screen.getByRole('button', { name: /morning.*5/i })
-    ).not.toBeDisabled()
+  it('disables an inactive option with zero count', async () => {
+    const user = userEvent.setup()
+    render(<EventFilters facetCounts={{ ...FULL_COUNTS, evening: 0 }} />)
+
+    await user.click(screen.getByPlaceholderText(/filter/i))
+    expect(screen.getByRole('option', { name: /evening/i })).toBeDisabled()
   })
 
-  it('does not disable an active chip even if its count is zero', () => {
-    mockParams = new URLSearchParams({ weekend: '1' })
-    render(
-      <EventFilters
-        facetCounts={{ openPace: 0, morning: 0, evening: 0, weekend: 0 }}
-      />
-    )
-    const weekendChip = screen.getByRole('button', { name: /weekend.*0/i })
-    expect(weekendChip).not.toBeDisabled()
-    // Active chip never picks up the disabled styling
-    expect(weekendChip).not.toHaveClass('cursor-not-allowed')
-    expect(weekendChip).not.toHaveClass('line-through')
+  it('suppresses counts in the popover when hideCountsWhenInactive and no filters active', async () => {
+    const user = userEvent.setup()
+    render(<EventFilters facetCounts={FULL_COUNTS} hideCountsWhenInactive />)
+
+    await user.click(screen.getByPlaceholderText(/filter/i))
+    const morning = screen.getByRole('option', { name: /morning/i })
+    expect(morning.textContent).not.toContain('10')
   })
 
-  it('renders chips without counts or disabled state when facetCounts is undefined', () => {
-    render(<EventFilters />)
-    const openPace = screen.getByRole('button', { name: /every pace welcome/i })
-    expect(openPace).not.toBeDisabled()
-    // No trailing number after the label
-    expect(openPace.textContent?.trim()).toBe('Every pace welcome')
+  it('shows counts when hideCountsWhenInactive but a filter is active', async () => {
+    mockParams = new URLSearchParams({ pacePolicy: 'OPEN_PACE' })
+    const user = userEvent.setup()
+    render(<EventFilters facetCounts={FULL_COUNTS} hideCountsWhenInactive />)
+
+    await user.click(screen.getByRole('textbox'))
+    const morning = screen.getByRole('option', { name: /morning/i })
+    expect(morning.textContent).toContain('10')
   })
 })

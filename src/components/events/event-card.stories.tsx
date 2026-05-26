@@ -36,6 +36,8 @@ const mockEvent = {
     id: 'club-1',
     name: '6AM Club Quebec',
     slug: '6am-club-quebec',
+    vibe: null,
+    beginnerFriendly: false,
   },
 }
 

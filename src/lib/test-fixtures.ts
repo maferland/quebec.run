@@ -7,6 +7,9 @@ export const mockClubsData: GetAllClubsReturn[] = [
     slug: '6am-club-test',
     description: 'Early morning running club for testing',
     stravaSlug: null,
+    type: 'ROAD',
+    vibe: 'SOCIAL',
+    beginnerFriendly: true,
     _count: { recurringEvents: 2 },
   },
   {
@@ -15,6 +18,9 @@ export const mockClubsData: GetAllClubsReturn[] = [
     slug: 'quebec-runners-test',
     description: 'Running club for all levels - test version',
     stravaSlug: null,
+    type: 'ROAD',
+    vibe: 'TRAINING',
+    beginnerFriendly: false,
     _count: { recurringEvents: 1 },
   },
 ]
