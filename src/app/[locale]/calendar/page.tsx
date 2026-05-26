@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
 import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { getAllEvents } from '@/lib/services/events'
+import { eventUrl } from '@/lib/utils/event-url'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
@@ -70,9 +71,10 @@ export default async function CalendarPage() {
                   {/* Day Events */}
                   <div className="space-y-6">
                     {dayEvents.map((event) => (
-                      <div
+                      <Link
                         key={event.id}
-                        className="bg-surface border border-border rounded-lg p-6 hover:shadow-md transition-shadow"
+                        href={eventUrl(event)}
+                        className="block bg-surface border border-border rounded-lg p-6 transition-all duration-200 hover:-translate-y-1 hover:border-primary/20 hover:shadow-lg hover:shadow-primary/5"
                       >
                         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
                           {/* Event Info */}
@@ -91,11 +93,9 @@ export default async function CalendarPage() {
                                   {event.title}
                                 </h3>
                                 {event.club && (
-                                  <Link href={`/clubs/${event.club.slug}`}>
-                                    <Tag variant="outline" icon={Users}>
-                                      {event.club.name}
-                                    </Tag>
-                                  </Link>
+                                  <Tag variant="outline" icon={Users}>
+                                    {event.club.name}
+                                  </Tag>
                                 )}
                               </div>
                             </div>
@@ -147,7 +147,7 @@ export default async function CalendarPage() {
                             </div>
                           )}
                         </div>
-                      </div>
+                      </Link>
                     ))}
                   </div>
                 </div>
