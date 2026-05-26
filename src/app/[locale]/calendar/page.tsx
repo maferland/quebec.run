@@ -139,7 +139,7 @@ export default async function CalendarPage({
                                 </div>
                                 <div className="flex-1">
                                   <h3
-                                    className={`text-xl font-heading font-bold text-text-primary mb-2${isPast ? ' line-through decoration-text-tertiary/60' : ''}`}
+                                    className={`text-xl font-heading font-bold mb-2 ${isPast ? 'text-text-secondary line-through decoration-2 decoration-text-secondary/70' : 'text-text-primary'}`}
                                   >
                                     {event.title}
                                   </h3>
@@ -149,9 +149,6 @@ export default async function CalendarPage({
                                     </Tag>
                                   )}
                                 </div>
-                                {isPast && (
-                                  <Tag variant="outline">{t('past')}</Tag>
-                                )}
                               </div>
 
                               {/* Description */}
@@ -163,7 +160,15 @@ export default async function CalendarPage({
 
                               {/* Event Details */}
                               <div className="flex items-center gap-3 flex-wrap">
-                                <Tag variant="time" icon={Clock}>
+                                <Tag
+                                  variant={isPast ? 'outline' : 'time'}
+                                  icon={Clock}
+                                  className={
+                                    isPast
+                                      ? 'line-through decoration-text-secondary/70'
+                                      : ''
+                                  }
+                                >
                                   {event.time}
                                 </Tag>
                                 {event.distance && (
