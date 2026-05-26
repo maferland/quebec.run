@@ -79,3 +79,4 @@ test-results/*
 /current/
 /.amp/
 /tasks/
+.env*.local

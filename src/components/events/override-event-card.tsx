@@ -17,7 +17,7 @@ export function OverrideEventCard({ event }: OverrideEventCardProps) {
 
   return (
     <Link href={eventUrl(event)} className="block">
-      <article className="overflow-hidden rounded-xl border border-secondary/30 bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent shadow-sm transition-shadow hover:shadow-md">
+      <article className="group cursor-pointer overflow-hidden rounded-xl border border-secondary/30 bg-gradient-to-br from-secondary/10 via-secondary/5 to-transparent shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-secondary/50 hover:shadow-lg hover:shadow-secondary/10">
         <header className="flex items-center gap-2 border-b border-secondary/30 bg-secondary/15 px-4 py-2">
           <Icon icon={BookmarkCheck} size="sm" color="secondary" decorative />
           <span className="text-xs font-heading font-bold uppercase tracking-wider text-secondary">
