@@ -115,6 +115,13 @@ export type FacetCounts = {
   weekend: number
 }
 
+const EMPTY_FACET_COUNTS: FacetCounts = {
+  openPace: 0,
+  morning: 0,
+  evening: 0,
+  weekend: 0,
+}
+
 export type EventListing = {
   buckets: EventLocation[]
   overrides: GetAllEventsReturn[]
@@ -222,13 +229,10 @@ function buildListing(
 function countWithFacet(
   events: GetAllEventsReturn[],
   data: EventsQuery,
-  overrides: Partial<EventsQuery>
+  patch: Partial<EventsQuery>
 ): number {
-  const { buckets, overrides: ov } = buildListing(events, {
-    ...data,
-    ...overrides,
-  })
-  return buckets.length + ov.length
+  const { buckets, overrides } = buildListing(events, { ...data, ...patch })
+  return buckets.length + overrides.length
 }
 
 export async function getEventLocations({
@@ -247,11 +251,7 @@ export async function getEventLocations({
       select: { id: true },
     })
     if (!club) {
-      return {
-        buckets: [],
-        overrides: [],
-        facetCounts: { openPace: 0, morning: 0, evening: 0, weekend: 0 },
-      }
+      return { buckets: [], overrides: [], facetCounts: EMPTY_FACET_COUNTS }
     }
     resolvedClubId = club.id
   }

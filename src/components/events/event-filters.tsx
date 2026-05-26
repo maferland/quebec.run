@@ -94,7 +94,7 @@ export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
           const active = isFacetActive(facet)
           const Icon = facet.icon
           const count = facetCounts?.[facet.key]
-          const disabled = !active && count === 0
+          const disabled = count === 0 && !active
           return (
             <button
               key={facet.key}
@@ -106,7 +106,7 @@ export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
                 active
                   ? 'inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
                   : disabled
-                    ? 'inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border/60 bg-surface/60 px-3 py-1.5 text-sm text-text-tertiary'
+                    ? 'inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border bg-surface-variant px-3 py-1.5 text-sm text-text-secondary line-through decoration-text-tertiary/50'
                     : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
               }
             >
