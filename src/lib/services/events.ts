@@ -17,6 +17,7 @@ import {
   expandRRuleDates,
 } from './recurring-events'
 import { addDays } from 'date-fns'
+import { EVENT_FACETS, type FacetKey } from '@/lib/facets'
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -226,13 +227,62 @@ function buildListing(
   return { buckets, overrides }
 }
 
-function countWithFacet(
+// Compute all four facet counts in a single walk over the event stream.
+// For each event we check membership against the four "what if this facet were
+// added" filters; surviving events contribute to either the bucket set (canonical
+// title) or the override count for the matching facet.
+function computeFacetCounts(
   events: GetAllEventsReturn[],
   data: EventsQuery,
-  patch: Partial<EventsQuery>
-): number {
-  const { buckets, overrides } = buildListing(events, { ...data, ...patch })
-  return buckets.length + overrides.length
+  canonicalTitles: Map<string, string>
+): FacetCounts {
+  const bucketKeys: Record<FacetKey, Set<string>> = {
+    openPace: new Set(),
+    morning: new Set(),
+    evening: new Set(),
+    weekend: new Set(),
+  }
+  const overrideCounts: Record<FacetKey, number> = {
+    openPace: 0,
+    morning: 0,
+    evening: 0,
+    weekend: 0,
+  }
+
+  for (const event of events) {
+    if (!event.club) continue
+    const key = bucketKeyFor(event)
+    const canonical = canonicalTitles.get(key) ?? event.title
+    const isOverride = event.title !== canonical
+    for (const facet of EVENT_FACETS) {
+      if (matchesFilters(event, { ...data, [facet.param]: facet.value })) {
+        if (isOverride) overrideCounts[facet.key] += 1
+        else bucketKeys[facet.key].add(key)
+      }
+    }
+  }
+
+  return {
+    openPace: bucketKeys.openPace.size + overrideCounts.openPace,
+    morning: bucketKeys.morning.size + overrideCounts.morning,
+    evening: bucketKeys.evening.size + overrideCounts.evening,
+    weekend: bucketKeys.weekend.size + overrideCounts.weekend,
+  }
+}
+
+function canonicalTitlesByBucket(
+  events: GetAllEventsReturn[]
+): Map<string, string> {
+  // Pattern title comes from the recurring source; virtual events synthesized
+  // from the pattern hold it. For one-off buckets, the event's own title is
+  // canonical.
+  const titles = new Map<string, string>()
+  for (const event of events) {
+    if (!event.club) continue
+    const key = bucketKeyFor(event)
+    if (isVirtualEvent(event) || !titles.has(key)) titles.set(key, event.title)
+  }
+  return titles
 }
 
 export async function getEventLocations({
@@ -261,15 +311,10 @@ export async function getEventLocations({
   const { buckets, overrides } = buildListing(events, data)
 
   // Counts simulate "if I add this facet on top of current other filters,
-  // how many results would I see?" Each facet count is independent of
-  // whether it's currently active — clicking an active chip still reflects
-  // the current total.
-  const facetCounts: FacetCounts = {
-    openPace: countWithFacet(events, data, { pacePolicy: 'OPEN_PACE' }),
-    morning: countWithFacet(events, data, { timeOfDay: 'morning' }),
-    evening: countWithFacet(events, data, { timeOfDay: 'evening' }),
-    weekend: countWithFacet(events, data, { weekend: '1' }),
-  }
+  // how many results would I see?" Single-pass over the event stream; the
+  // canonical titles per bucket are computed once and reused.
+  const canonicalTitles = canonicalTitlesByBucket(events)
+  const facetCounts = computeFacetCounts(events, data, canonicalTitles)
 
   return { buckets, overrides, facetCounts }
 }

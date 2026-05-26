@@ -7,24 +7,16 @@ import { Search, X, Users, Sunrise, Sunset, CalendarRange } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import type { FacetCounts } from '@/lib/services/events'
+import { EVENT_FACETS, type FacetDef, type FacetKey } from '@/lib/facets'
 
 const SEARCH_DEBOUNCE_MS = 300
 
-type FacetKey = keyof FacetCounts
-
-type Facet = {
-  key: FacetKey
-  param: string
-  value: string
-  icon: LucideIcon
+const FACET_ICONS: Record<FacetKey, LucideIcon> = {
+  openPace: Users,
+  morning: Sunrise,
+  evening: Sunset,
+  weekend: CalendarRange,
 }
-
-const FACETS: Facet[] = [
-  { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE', icon: Users },
-  { key: 'morning', param: 'timeOfDay', value: 'morning', icon: Sunrise },
-  { key: 'evening', param: 'timeOfDay', value: 'evening', icon: Sunset },
-  { key: 'weekend', param: 'weekend', value: '1', icon: CalendarRange },
-]
 
 export type EventFiltersProps = {
   facetCounts?: FacetCounts
@@ -62,15 +54,15 @@ export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
     }, SEARCH_DEBOUNCE_MS)
   }
 
-  const isFacetActive = (facet: Facet) =>
+  const isFacetActive = (facet: FacetDef) =>
     searchParams.get(facet.param) === facet.value
 
-  const toggleFacet = (facet: Facet) => {
+  const toggleFacet = (facet: FacetDef) => {
     updateParams({ [facet.param]: isFacetActive(facet) ? '' : facet.value })
   }
 
   const hasFilters =
-    Boolean(initialSearch) || FACETS.some((f) => isFacetActive(f))
+    Boolean(initialSearch) || EVENT_FACETS.some((f) => isFacetActive(f))
 
   return (
     <div className="mb-6 flex flex-col gap-3">
@@ -90,9 +82,9 @@ export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        {FACETS.map((facet) => {
+        {EVENT_FACETS.map((facet) => {
           const active = isFacetActive(facet)
-          const Icon = facet.icon
+          const Icon = FACET_ICONS[facet.key]
           const count = facetCounts?.[facet.key]
           const disabled = count === 0 && !active
           return (
