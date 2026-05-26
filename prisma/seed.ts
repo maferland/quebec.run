@@ -346,6 +346,33 @@ async function main() {
     },
   })
 
+  // Club de course On court Parlabas — Lac-Beauport
+  const onCourtParlabas = await prisma.club.upsert({
+    where: { slug: createSlug('On court Parlabas') },
+    update: {
+      description:
+        'Club de course gratuit. Lundis 18h au Parc du Brûlé, Lac-Beauport (1h, D+), mardis 6h15 au Parlabas café-boutique, Québec (45 min sur route).',
+      language: 'fr',
+      facebook: 'profile.php?id=61558673138284',
+      vibe: 'SOCIAL',
+      type: 'MIXED',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: 'On court Parlabas',
+      slug: createSlug('On court Parlabas'),
+      description:
+        'Club de course gratuit. Lundis 18h au Parc du Brûlé, Lac-Beauport (1h, D+), mardis 6h15 au Parlabas café-boutique, Québec (45 min sur route).',
+      language: 'fr',
+      facebook: 'profile.php?id=61558673138284',
+      vibe: 'SOCIAL',
+      type: 'MIXED',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+  })
+
   // Create recurring events for each 6AM Club location
   // Source: https://6amclub.run (scraped March 2026)
   const recurringEvents = [
@@ -686,6 +713,30 @@ async function main() {
       timezone: 'America/Toronto',
       clubId: milapres.id,
     },
+    // On court Parlabas — Mon 18:00 at Parc du Brûlé, Tue 6:15 at Parlabas café-boutique
+    {
+      title: 'On court Parlabas',
+      slug: 'lundi',
+      description:
+        'Parc du Brûlé — 79 Chemin du Brûlé, Lac-Beauport — 1h, party D+',
+      address: '79 Chemin du Brûlé, Lac-Beauport, QC',
+      latitude: 46.942,
+      longitude: -71.3102,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=18;BYMINUTE=0',
+      timezone: 'America/Toronto',
+      clubId: onCourtParlabas.id,
+    },
+    {
+      title: 'On court Parlabas',
+      slug: 'mardi',
+      description: 'Parlabas café-boutique — 8 rue George-Muir, Québec',
+      address: '8 rue George-Muir, Québec, QC',
+      latitude: 46.8996541,
+      longitude: -71.3051365,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=15',
+      timezone: 'America/Toronto',
+      clubId: onCourtParlabas.id,
+    },
   ]
 
   for (const event of otherRecurringEvents) {
@@ -705,7 +756,14 @@ async function main() {
   await prisma.recurringEvent.updateMany({
     where: {
       clubId: {
-        in: [sixAmClub.id, fauxMouvement.id, kogi.id, milapres.id, volt.id],
+        in: [
+          sixAmClub.id,
+          fauxMouvement.id,
+          kogi.id,
+          milapres.id,
+          volt.id,
+          onCourtParlabas.id,
+        ],
       },
     },
     data: { pacePolicy: 'SHARED' },
