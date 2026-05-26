@@ -4,6 +4,8 @@ import {
   updateRecurringEvent,
   deleteRecurringEvent,
 } from '@/lib/services/recurring-events'
+import { assertClubOwnership } from '@/lib/services/clubs'
+import { NotFoundError } from '@/lib/errors'
 import {
   recurringEventIdSchema,
   recurringEventUpdateSchema,
@@ -26,20 +28,30 @@ export const GET = withPublic(recurringEventIdSchema)(async (data) => {
 
 /**
  * PUT /api/recurring-events/[id]
- * Update recurring event (requires auth)
+ * Update recurring event (requires auth + club ownership of the event's club)
  */
-export const PUT = withAuth(recurringEventUpdateSchema)(async ({ data }) => {
-  // TODO: Check user owns club
+export const PUT = withAuth(recurringEventUpdateSchema)(async ({
+  user,
+  data,
+}) => {
+  const existing = await getRecurringEventById(data.id)
+  if (!existing) throw new NotFoundError('Recurring event not found')
+  await assertClubOwnership(existing.clubId, user)
   const event = await updateRecurringEvent(data.id, data)
   return Response.json(event)
 })
 
 /**
  * DELETE /api/recurring-events/[id]
- * Soft delete recurring event (requires auth)
+ * Soft delete recurring event (requires auth + club ownership)
  */
-export const DELETE = withAuth(recurringEventDeleteSchema)(async ({ data }) => {
-  // TODO: Check user owns club
+export const DELETE = withAuth(recurringEventDeleteSchema)(async ({
+  user,
+  data,
+}) => {
+  const existing = await getRecurringEventById(data.id)
+  if (!existing) throw new NotFoundError('Recurring event not found')
+  await assertClubOwnership(existing.clubId, user)
   await deleteRecurringEvent(data.id)
   return Response.json({ success: true })
 })

@@ -214,7 +214,7 @@ async function main() {
   })
 
   // Le Crew Run Club
-  const leCrew = await prisma.club.upsert({
+  await prisma.club.upsert({
     where: { slug: createSlug('Le Crew Run Club') },
     update: {
       description:

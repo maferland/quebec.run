@@ -8,21 +8,18 @@ import { eventUrl } from '@/lib/utils/event-url'
 import { formatDateTime } from '@/lib/utils/date-formatting'
 import { Calendar, Clock, Repeat } from 'lucide-react'
 import type { EventLocation } from '@/lib/services/events'
+import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
 
 export type EventLocationCardProps = {
   location: EventLocation
 }
 
-const WEEKDAY_ORDER = [1, 2, 3, 4, 5, 6, 0] as const
-
 export function EventLocationCard({ location }: EventLocationCardProps) {
   const t = useTranslations('events')
   const format = useFormatter()
 
-  const orderedWeekdays = [...location.weekdays].sort(
-    (a, b) =>
-      WEEKDAY_ORDER.indexOf(a as (typeof WEEKDAY_ORDER)[number]) -
-      WEEKDAY_ORDER.indexOf(b as (typeof WEEKDAY_ORDER)[number])
+  const orderedWeekdays = [...location.weekdays].sort((a, b) =>
+    compareWeekdays(a as Weekday, b as Weekday)
   )
   const weekdayLabels = orderedWeekdays.map((day) => {
     const reference = new Date(2024, 0, 7 + day)

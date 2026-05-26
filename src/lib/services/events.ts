@@ -19,24 +19,38 @@ import {
 import { addDays } from 'date-fns'
 import { EVENT_FACETS, type FacetKey } from '@/lib/facets'
 
+import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
+
 // Pure business logic functions - let TypeScript infer return types
+
+const DEFAULT_LOOKAHEAD_DAYS = 60
+
+/**
+ * Resolves clubSlug → clubId. Returns { ok, clubId } so callers can early-out
+ * with their preferred empty shape when the slug doesn't match a known club.
+ */
+async function resolveClubIdFromSlug(
+  clubId: string | undefined,
+  clubSlug: string | undefined
+): Promise<{ ok: true; clubId: string | undefined } | { ok: false }> {
+  if (clubId || !clubSlug) return { ok: true, clubId }
+  const club = await prisma.club.findUnique({
+    where: { slug: clubSlug },
+    select: { id: true },
+  })
+  return club ? { ok: true, clubId: club.id } : { ok: false }
+}
 
 export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   const { limit = 50, offset = 0, clubId, clubSlug, search, pacePolicy } = data
 
   const startDate = new Date()
   startDate.setHours(0, 0, 0, 0)
-  const endDate = addDays(startDate, 60)
+  const endDate = addDays(startDate, DEFAULT_LOOKAHEAD_DAYS)
 
-  let resolvedClubId = clubId
-  if (!resolvedClubId && clubSlug) {
-    const club = await prisma.club.findUnique({
-      where: { slug: clubSlug },
-      select: { id: true },
-    })
-    if (!club) return []
-    resolvedClubId = club.id
-  }
+  const resolution = await resolveClubIdFromSlug(clubId, clubSlug)
+  if (!resolution.ok) return []
+  const resolvedClubId = resolution.clubId
 
   let events = await getEventsInRange(startDate, endDate, resolvedClubId)
 
@@ -91,8 +105,6 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 }
 
 export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
-
-const WEEKDAY_ORDER: Array<0 | 1 | 2 | 3 | 4 | 5 | 6> = [1, 2, 3, 4, 5, 6, 0]
 
 function matchesFilters(event: GetAllEventsReturn, data: EventsQuery): boolean {
   if (data.search) {
@@ -225,11 +237,7 @@ function buildListing(
   const overrides: GetAllEventsReturn[] = []
 
   for (const bucket of bucketMap.values()) {
-    bucket.weekdays.sort(
-      (a, b) =>
-        WEEKDAY_ORDER.indexOf(a as 0 | 1 | 2 | 3 | 4 | 5 | 6) -
-        WEEKDAY_ORDER.indexOf(b as 0 | 1 | 2 | 3 | 4 | 5 | 6)
-    )
+    bucket.weekdays.sort((a, b) => compareWeekdays(a as Weekday, b as Weekday))
 
     const all = bucketEvents.get(bucket.key) ?? []
     const canonicalSample = all.find(isVirtualEvent) ?? all[0]
@@ -340,21 +348,14 @@ export async function getEventLocations({
 
   const startDate = new Date()
   startDate.setHours(0, 0, 0, 0)
-  const endDate = addDays(startDate, 60)
+  const endDate = addDays(startDate, DEFAULT_LOOKAHEAD_DAYS)
 
-  let resolvedClubId = clubId
-  if (!resolvedClubId && clubSlug) {
-    const club = await prisma.club.findUnique({
-      where: { slug: clubSlug },
-      select: { id: true },
-    })
-    if (!club) {
-      return { buckets: [], overrides: [], facetCounts: EMPTY_FACET_COUNTS }
-    }
-    resolvedClubId = club.id
+  const resolution = await resolveClubIdFromSlug(clubId, clubSlug)
+  if (!resolution.ok) {
+    return { buckets: [], overrides: [], facetCounts: EMPTY_FACET_COUNTS }
   }
 
-  const events = await getEventsInRange(startDate, endDate, resolvedClubId)
+  const events = await getEventsInRange(startDate, endDate, resolution.clubId)
 
   const { buckets, overrides } = buildListing(events, data)
 
@@ -382,21 +383,14 @@ export async function getCalendarListing({
 
   const startDate = new Date()
   startDate.setHours(0, 0, 0, 0)
-  const endDate = addDays(startDate, 60)
+  const endDate = addDays(startDate, DEFAULT_LOOKAHEAD_DAYS)
 
-  let resolvedClubId = clubId
-  if (!resolvedClubId && clubSlug) {
-    const club = await prisma.club.findUnique({
-      where: { slug: clubSlug },
-      select: { id: true },
-    })
-    if (!club) {
-      return { events: [], facetCounts: EMPTY_FACET_COUNTS }
-    }
-    resolvedClubId = club.id
+  const resolution = await resolveClubIdFromSlug(clubId, clubSlug)
+  if (!resolution.ok) {
+    return { events: [], facetCounts: EMPTY_FACET_COUNTS }
   }
 
-  const all = await getEventsInRange(startDate, endDate, resolvedClubId)
+  const all = await getEventsInRange(startDate, endDate, resolution.clubId)
   const filtered = all.filter((event) => matchesFilters(event, data))
 
   const facetCounts: FacetCounts = { ...EMPTY_FACET_COUNTS }

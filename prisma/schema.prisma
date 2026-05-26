@@ -150,6 +150,8 @@ model RecurringEvent {
   generatedEvents Event[]
 
   @@unique([clubId, slug])
+  @@index([clubId])
+  @@index([isActive])
   @@map("recurring_events")
 }
 
@@ -192,6 +194,10 @@ model Event {
   organization   Organization?   @relation("OrganizationEvents", fields: [organizationId], references: [id], onDelete: Cascade)
   recurringEvent RecurringEvent? @relation(fields: [recurringEventId], references: [id], onDelete: SetNull)
 
+  @@index([clubId])
+  @@index([recurringEventId])
+  @@index([date])
+  @@index([status])
   @@map("events")
 }
 
