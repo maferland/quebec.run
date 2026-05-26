@@ -1,6 +1,9 @@
+import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
 import { getEventByClubAndSlug } from '@/lib/services/events'
+import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
+import { JsonLd, breadcrumbList, eventJsonLd } from '@/components/seo/json-ld'
 import { getClubBySlug } from '@/lib/services/clubs'
 import { Link } from '@/components/ui/link'
 import { Card } from '@/components/ui/card'
@@ -15,6 +18,7 @@ import type { PageProps } from '@/lib/types/next'
 import { MapPin, Route, Gauge, ChevronRight, UserCheck } from 'lucide-react'
 
 export type ClubEventDatePageProps = PageProps<{
+  locale: string
   slug: string
   eventSlug: string
   date: string
@@ -43,10 +47,51 @@ const proseFromDescription = (description: string | null): string => {
 const capitalize = (s: string) =>
   s ? s.charAt(0).toUpperCase() + s.slice(1) : s
 
+export async function generateMetadata({
+  params,
+}: ClubEventDatePageProps): Promise<Metadata> {
+  const { locale, slug, eventSlug, date } = await params
+  const event = await getEventByClubAndSlug({
+    data: { clubSlug: slug, eventSlug, date },
+  }).catch(() => null)
+  const t = await getTranslations({
+    locale,
+    namespace: 'metadata.eventDetail',
+  })
+  const path = `/clubs/${slug}/events/${eventSlug}/${date}`
+  if (!event || !event.club) {
+    return buildPageMetadata({
+      locale: locale as Locale,
+      path,
+      title: t('title', { eventTitle: eventSlug, clubName: slug }),
+      description: t('description', {
+        eventTitle: eventSlug,
+        clubName: slug,
+      }),
+      noIndex: true,
+    })
+  }
+  return buildPageMetadata({
+    locale: locale as Locale,
+    path,
+    title: t('title', {
+      eventTitle: event.title,
+      clubName: event.club.name,
+    }),
+    description:
+      event.description?.slice(0, 160) ??
+      t('description', {
+        eventTitle: event.title,
+        clubName: event.club.name,
+      }),
+    ogType: 'article',
+  })
+}
+
 export default async function ClubEventDatePage({
   params,
 }: ClubEventDatePageProps) {
-  const { slug, eventSlug, date } = await params
+  const { locale, slug, eventSlug, date } = await params
   const t = await getTranslations('events')
   const [event, club] = await Promise.all([
     getEventByClubAndSlug({ data: { clubSlug: slug, eventSlug, date } }),
@@ -72,8 +117,37 @@ export default async function ClubEventDatePage({
   const hasCoords = event.latitude !== null && event.longitude !== null
   const otherPatterns = club?.patterns.filter((p) => p.slug !== eventSlug) ?? []
 
+  const pageUrl = `${SITE_URL}/${locale}/clubs/${slug}/events/${eventSlug}/${date}`
+  const clubUrl = `${SITE_URL}/${locale}/clubs/${slug}`
+
   return (
     <div className="min-h-screen bg-surface-variant">
+      {event.club && (
+        <JsonLd
+          data={[
+            eventJsonLd({
+              locale: locale as 'fr' | 'en',
+              url: pageUrl,
+              title: event.title,
+              description: event.description,
+              startDate: event.date,
+              address: event.address,
+              latitude: event.latitude,
+              longitude: event.longitude,
+              clubName: event.club.name,
+              clubUrl,
+            }),
+            breadcrumbList([
+              {
+                name: t('breadcrumb.clubs'),
+                url: `${SITE_URL}/${locale}/clubs`,
+              },
+              { name: event.club.name, url: clubUrl },
+              { name: event.title, url: pageUrl },
+            ]),
+          ]}
+        />
+      )}
       <PageContainer>
         <nav aria-label={t('breadcrumb.label')} className="mb-4 text-sm">
           <ol className="flex flex-wrap items-center gap-1.5 text-text-secondary">

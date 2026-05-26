@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
 import { LoadMoreList } from '@/components/ui/load-more-list'
@@ -20,6 +21,12 @@ import {
 } from 'lucide-react'
 import { notFound } from 'next/navigation'
 import type { LucideIcon } from 'lucide-react'
+import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
+import {
+  JsonLd,
+  breadcrumbList,
+  sportsOrganization,
+} from '@/components/seo/json-ld'
 
 const withHttps = (url: string) =>
   url.startsWith('http') ? url : `https://${url}`
@@ -50,19 +57,71 @@ function SocialTag({
   )
 }
 
-export type ClubPageProps = PageProps<{ slug: string }>
+export type ClubPageProps = PageProps<{ locale: string; slug: string }>
+
+export async function generateMetadata({
+  params,
+}: ClubPageProps): Promise<Metadata> {
+  const { locale, slug } = await params
+  const club = await getClubBySlug({ slug })
+  const t = await getTranslations({
+    locale,
+    namespace: 'metadata.clubDetail',
+  })
+  if (!club) {
+    return buildPageMetadata({
+      locale: locale as Locale,
+      path: `/clubs/${slug}`,
+      title: t('title', { clubName: slug }),
+      description: t('description', { clubName: slug }),
+      noIndex: true,
+    })
+  }
+  return buildPageMetadata({
+    locale: locale as Locale,
+    path: `/clubs/${slug}`,
+    title: t('title', { clubName: club.name }),
+    description:
+      club.description?.slice(0, 160) ??
+      t('description', { clubName: club.name }),
+  })
+}
 
 export default async function ClubPage({ params }: ClubPageProps) {
+  const { locale, slug } = await params
   const t = await getTranslations('clubs')
   const tEvents = await getTranslations('events')
-  const club = await getClubBySlug(await params)
+  const club = await getClubBySlug({ slug })
 
   if (!club) {
     notFound()
   }
 
+  const clubUrl = `${SITE_URL}/${locale}/clubs/${slug}`
+
   return (
     <div className="min-h-screen bg-surface-variant">
+      <JsonLd
+        data={[
+          sportsOrganization({
+            locale: locale as 'fr' | 'en',
+            name: club.name,
+            slug,
+            description: club.description,
+            website: club.website,
+            instagram: club.instagram,
+            facebook: club.facebook,
+            stravaSlug: club.stravaSlug,
+          }),
+          breadcrumbList([
+            {
+              name: tEvents('breadcrumb.clubs'),
+              url: `${SITE_URL}/${locale}/clubs`,
+            },
+            { name: club.name, url: clubUrl },
+          ]),
+        ]}
+      />
       <PageContainer>
         <nav aria-label={tEvents('breadcrumb.label')} className="mb-4 text-sm">
           <ol className="flex flex-wrap items-center gap-1.5 text-text-secondary">

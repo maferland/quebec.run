@@ -1,3 +1,4 @@
+import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { getClubListing } from '@/lib/services/clubs'
 import { ClubCard } from '@/components/clubs/club-card'
@@ -8,8 +9,24 @@ import { PageTitle } from '@/components/ui/page-title'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Users } from 'lucide-react'
 import { clubsQuerySchema } from '@/lib/schemas'
+import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'metadata.clubs' })
+  return buildPageMetadata({
+    locale: locale as Locale,
+    path: '/clubs',
+    title: t('title'),
+    description: t('description'),
+  })
+}
 
 type SearchParams = Record<string, string | string[] | undefined>
 
