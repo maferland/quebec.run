@@ -108,46 +108,44 @@ export type EventLocation = {
   next: GetAllEventsReturn
 }
 
+export type FacetCounts = {
+  openPace: number
+  morning: number
+  evening: number
+  weekend: number
+}
+
+const EMPTY_FACET_COUNTS: FacetCounts = {
+  openPace: 0,
+  morning: 0,
+  evening: 0,
+  weekend: 0,
+}
+
 export type EventListing = {
   buckets: EventLocation[]
   overrides: GetAllEventsReturn[]
+  facetCounts: FacetCounts
 }
 
-export async function getEventLocations({
-  data,
-}: PublicPayload<EventsQuery>): Promise<EventListing> {
-  const { clubId, clubSlug } = data
+// Bucket by recurring pattern id when available so same-club same-location
+// patterns with distinct schedules stay distinct. One-off concrete events
+// (no recurring parent) get their own bucket keyed by event id.
+const bucketKeyFor = (event: GetAllEventsReturn): string =>
+  event.recurringEventId
+    ? `pattern:${event.recurringEventId}`
+    : `oneoff:${event.id}`
 
-  const startDate = new Date()
-  startDate.setHours(0, 0, 0, 0)
-  const endDate = addDays(startDate, 60)
+// Virtual events synthesized from recurring patterns use a slug-based id
+// format containing `--YYYY-MM-DD`; that's how we identify the pattern's
+// canonical title within a bucket.
+const isVirtualEvent = (event: GetAllEventsReturn): boolean =>
+  event.id.includes('--')
 
-  let resolvedClubId = clubId
-  if (!resolvedClubId && clubSlug) {
-    const club = await prisma.club.findUnique({
-      where: { slug: clubSlug },
-      select: { id: true },
-    })
-    if (!club) return { buckets: [], overrides: [] }
-    resolvedClubId = club.id
-  }
-
-  const events = await getEventsInRange(startDate, endDate, resolvedClubId)
-
-  // Bucket by recurring pattern id when available so same-club same-location
-  // patterns with distinct schedules stay distinct. One-off concrete events
-  // (no recurring parent) get their own bucket keyed by event id.
-  const bucketKeyFor = (event: GetAllEventsReturn): string =>
-    event.recurringEventId
-      ? `pattern:${event.recurringEventId}`
-      : `oneoff:${event.id}`
-
-  // Virtual events synthesized from recurring patterns use a slug-based id
-  // format containing `--YYYY-MM-DD`; that's how we identify the pattern's
-  // canonical title within a bucket.
-  const isVirtualEvent = (event: GetAllEventsReturn): boolean =>
-    event.id.includes('--')
-
+function buildListing(
+  events: GetAllEventsReturn[],
+  data: EventsQuery
+): { buckets: EventLocation[]; overrides: GetAllEventsReturn[] } {
   const bucketEvents = new Map<string, GetAllEventsReturn[]>()
   const bucketMap = new Map<string, EventLocation>()
 
@@ -226,6 +224,54 @@ export async function getEventLocations({
   overrides.sort((a, b) => a.date.getTime() - b.date.getTime())
 
   return { buckets, overrides }
+}
+
+function countWithFacet(
+  events: GetAllEventsReturn[],
+  data: EventsQuery,
+  patch: Partial<EventsQuery>
+): number {
+  const { buckets, overrides } = buildListing(events, { ...data, ...patch })
+  return buckets.length + overrides.length
+}
+
+export async function getEventLocations({
+  data,
+}: PublicPayload<EventsQuery>): Promise<EventListing> {
+  const { clubId, clubSlug } = data
+
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  const endDate = addDays(startDate, 60)
+
+  let resolvedClubId = clubId
+  if (!resolvedClubId && clubSlug) {
+    const club = await prisma.club.findUnique({
+      where: { slug: clubSlug },
+      select: { id: true },
+    })
+    if (!club) {
+      return { buckets: [], overrides: [], facetCounts: EMPTY_FACET_COUNTS }
+    }
+    resolvedClubId = club.id
+  }
+
+  const events = await getEventsInRange(startDate, endDate, resolvedClubId)
+
+  const { buckets, overrides } = buildListing(events, data)
+
+  // Counts simulate "if I add this facet on top of current other filters,
+  // how many results would I see?" Each facet count is independent of
+  // whether it's currently active — clicking an active chip still reflects
+  // the current total.
+  const facetCounts: FacetCounts = {
+    openPace: countWithFacet(events, data, { pacePolicy: 'OPEN_PACE' }),
+    morning: countWithFacet(events, data, { timeOfDay: 'morning' }),
+    evening: countWithFacet(events, data, { timeOfDay: 'evening' }),
+    weekend: countWithFacet(events, data, { weekend: '1' }),
+  }
+
+  return { buckets, overrides, facetCounts }
 }
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {

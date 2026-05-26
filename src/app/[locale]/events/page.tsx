@@ -29,7 +29,9 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     query.search || query.pacePolicy || query.timeOfDay || query.weekend
   )
 
-  const { buckets, overrides } = await getEventLocations({ data: query })
+  const { buckets, overrides, facetCounts } = await getEventLocations({
+    data: query,
+  })
   const mapEvents = buckets.map((bucket) => bucket.next)
   const items = [
     ...buckets.map((bucket) => ({
@@ -50,7 +52,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     return (
       <PageContainer>
         <PageTitle>{t('title')}</PageTitle>
-        <EventFilters />
+        <EventFilters facetCounts={facetCounts} />
         <div className="flex min-h-[40vh] items-center justify-center">
           <EmptyState
             icon={Calendar}
@@ -78,7 +80,7 @@ export default async function EventsPage({ searchParams }: EventsPageProps) {
     <PageContainer>
       <PageTitle>{t('title')}</PageTitle>
 
-      <EventFilters />
+      <EventFilters facetCounts={facetCounts} />
 
       <div className="grid grid-cols-1 gap-8 lg:grid-cols-[3fr_2fr]">
         <section>

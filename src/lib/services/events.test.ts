@@ -996,5 +996,108 @@ describe('Events Service Integration Tests', () => {
       expect(overrides.some((o) => o.title === 'Pizza Run')).toBe(true)
       expect(steadyBucket!.next.title).toBe('Steady Run')
     })
+
+    it('returns facet counts for the four facets', async () => {
+      const { facetCounts } = await getEventLocations({ data: {} })
+      expect(facetCounts).toEqual(
+        expect.objectContaining({
+          openPace: expect.any(Number),
+          morning: expect.any(Number),
+          evening: expect.any(Number),
+          weekend: expect.any(Number),
+        })
+      )
+    })
+
+    it('counts a facet as if it were added on top of current filters', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      const saturday = addDays(
+        new Date(),
+        (6 - new Date().getDay() + 7) % 7 || 7
+      )
+      await testPrisma.event.create({
+        data: {
+          title: 'Saturday Evening Run',
+          date: saturday,
+          time: '18:00',
+          address: '500 Facet Way',
+          latitude: 46.85,
+          longitude: -71.27,
+          clubId: club.id,
+        },
+      })
+
+      const eveningOnly = await getEventLocations({
+        data: { timeOfDay: 'evening' },
+      })
+      const withWeekendAdded = await getEventLocations({
+        data: { timeOfDay: 'evening', weekend: '1' },
+      })
+
+      expect(eveningOnly.facetCounts.weekend).toBe(
+        withWeekendAdded.buckets.length + withWeekendAdded.overrides.length
+      )
+    })
+
+    it('reports zero counts when nothing matches the current filter', async () => {
+      const { facetCounts } = await getEventLocations({
+        data: { search: 'absolutely-no-match-zzz' },
+      })
+      expect(facetCounts.openPace).toBe(0)
+      expect(facetCounts.morning).toBe(0)
+      expect(facetCounts.evening).toBe(0)
+      expect(facetCounts.weekend).toBe(0)
+    })
+
+    it('returns zero counts when clubSlug does not resolve to a club', async () => {
+      const { facetCounts } = await getEventLocations({
+        data: { clubSlug: 'no-such-club-xyz' },
+      })
+      expect(facetCounts).toEqual({
+        openPace: 0,
+        morning: 0,
+        evening: 0,
+        weekend: 0,
+      })
+    })
+
+    it('honors the search filter when computing facet counts', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      // Two recurring patterns at distinct addresses; only one matches the search
+      await testPrisma.recurringEvent.createMany({
+        data: [
+          {
+            title: 'Search-Match Run',
+            slug: 'search-facet-match',
+            address: '111 Match Way',
+            latitude: 46.9,
+            longitude: -71.3,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=MO;BYHOUR=7;BYMINUTE=0',
+            isActive: true,
+          },
+          {
+            title: 'Other Run',
+            slug: 'search-facet-other',
+            address: '222 Other Lane',
+            latitude: 46.91,
+            longitude: -71.31,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=7;BYMINUTE=0',
+            isActive: true,
+          },
+        ],
+      })
+
+      const { facetCounts } = await getEventLocations({
+        data: { search: 'Search-Match' },
+      })
+      // Morning matches only the search-filtered bucket (7am = morning)
+      expect(facetCounts.morning).toBe(1)
+    })
   })
 })
