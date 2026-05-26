@@ -6,10 +6,18 @@ import { useTranslations } from 'next-intl'
 import { Search, X, Users, Sunrise, Sunset, CalendarRange } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 import { Input } from '@/components/ui/input'
+import type { FacetCounts } from '@/lib/services/events'
 
 const SEARCH_DEBOUNCE_MS = 300
 
-type Facet = { key: string; param: string; value: string; icon: LucideIcon }
+type FacetKey = keyof FacetCounts
+
+type Facet = {
+  key: FacetKey
+  param: string
+  value: string
+  icon: LucideIcon
+}
 
 const FACETS: Facet[] = [
   { key: 'openPace', param: 'pacePolicy', value: 'OPEN_PACE', icon: Users },
@@ -18,7 +26,11 @@ const FACETS: Facet[] = [
   { key: 'weekend', param: 'weekend', value: '1', icon: CalendarRange },
 ]
 
-export function EventFilters() {
+export type EventFiltersProps = {
+  facetCounts?: FacetCounts
+}
+
+export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
   const t = useTranslations('events.filters')
   const router = useRouter()
   const pathname = usePathname()
@@ -81,20 +93,36 @@ export function EventFilters() {
         {FACETS.map((facet) => {
           const active = isFacetActive(facet)
           const Icon = facet.icon
+          const count = facetCounts?.[facet.key]
+          const disabled = !active && count === 0
           return (
             <button
               key={facet.key}
               type="button"
               onClick={() => toggleFacet(facet)}
               aria-pressed={active}
+              disabled={disabled}
               className={
                 active
                   ? 'inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
-                  : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
+                  : disabled
+                    ? 'inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border/60 bg-surface/60 px-3 py-1.5 text-sm text-text-tertiary'
+                    : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
               }
             >
               <Icon aria-hidden="true" className="h-3.5 w-3.5" />
               {t(`facets.${facet.key}`)}
+              {count !== undefined && (
+                <span
+                  className={
+                    active
+                      ? 'ml-0.5 text-xs font-semibold opacity-90'
+                      : 'ml-0.5 text-xs text-text-secondary'
+                  }
+                >
+                  {count}
+                </span>
+              )}
             </button>
           )
         })}
