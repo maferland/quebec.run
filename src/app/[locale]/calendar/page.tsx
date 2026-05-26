@@ -8,7 +8,6 @@ import { Icon } from '@/components/ui/icon'
 import { EventFilters } from '@/components/events/event-filters'
 import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { getCalendarListing } from '@/lib/services/events'
-import { eventsQuerySchema } from '@/lib/schemas'
 import { eventUrl } from '@/lib/utils/event-url'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
@@ -29,14 +28,22 @@ export default async function CalendarPage({
   const t = await getTranslations('calendar')
   const locale = await getLocale()
   const params = await searchParams
-  const parsed = eventsQuerySchema.safeParse({
+  const query = {
     limit: 200,
     offset: 0,
-    pacePolicy: firstString(params.pacePolicy),
-    timeOfDay: firstString(params.timeOfDay),
-    weekend: firstString(params.weekend),
-  })
-  const query = parsed.success ? parsed.data : { limit: 200, offset: 0 }
+    pacePolicy: firstString(params.pacePolicy) as
+      | 'OPEN_PACE'
+      | 'SHARED'
+      | undefined,
+    timeOfDay: firstString(params.timeOfDay) as
+      | 'morning'
+      | 'evening'
+      | undefined,
+    weekend: firstString(params.weekend) as '1' | undefined,
+    clubVibe: firstString(params.clubVibe) as 'SOCIAL' | 'TRAINING' | undefined,
+    beginner: firstString(params.beginner) as '1' | undefined,
+    showPast: firstString(params.showPast) as '1' | undefined,
+  }
 
   const { events, facetCounts } = await getCalendarListing({ data: query })
 
