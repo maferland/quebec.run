@@ -720,8 +720,44 @@ async function main() {
     data: { pacePolicy: 'OPEN_PACE' },
   })
 
-  // No concrete events pre-created — the hybrid system generates
-  // virtual events on-the-fly from recurring patterns
+  // Seed a single concrete override so the "Notable runs" surface has
+  // a real example to render against the Kogi recurring pattern.
+  const kogiPattern = await prisma.recurringEvent.findFirst({
+    where: { clubId: kogi.id, slug: 'mardi' },
+  })
+  if (kogiPattern) {
+    const beerNight = new Date()
+    beerNight.setHours(0, 0, 0, 0)
+    const offset = (2 - beerNight.getDay() + 14) % 7 || 7
+    beerNight.setDate(beerNight.getDate() + offset + 7)
+    const existing = await prisma.event.findFirst({
+      where: {
+        recurringEventId: kogiPattern.id,
+        date: {
+          gte: beerNight,
+          lt: new Date(beerNight.getTime() + 86400000),
+        },
+      },
+      select: { id: true },
+    })
+    if (!existing) {
+      await prisma.event.create({
+        data: {
+          title: 'Bière au Kogi avec La Souche',
+          description:
+            'Sortie hebdomadaire suivie d’une bière offerte par La Souche.',
+          date: beerNight,
+          time: '18:15',
+          address: kogiPattern.address,
+          latitude: kogiPattern.latitude,
+          longitude: kogiPattern.longitude,
+          clubId: kogi.id,
+          recurringEventId: kogiPattern.id,
+          pacePolicy: 'SHARED',
+        },
+      })
+    }
+  }
 
   console.log('Database seeded successfully!')
 }

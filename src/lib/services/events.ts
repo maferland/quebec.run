@@ -72,6 +72,162 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
 
 export type GetAllEventsReturn = Awaited<ReturnType<typeof getAllEvents>>[0]
 
+const WEEKDAY_ORDER: Array<0 | 1 | 2 | 3 | 4 | 5 | 6> = [1, 2, 3, 4, 5, 6, 0]
+
+function matchesFilters(event: GetAllEventsReturn, data: EventsQuery): boolean {
+  if (data.search) {
+    const q = data.search.toLowerCase()
+    const titleHit = event.title.toLowerCase().includes(q)
+    const addrHit = event.address?.toLowerCase().includes(q) ?? false
+    if (!titleHit && !addrHit) return false
+  }
+  if (data.pacePolicy && event.pacePolicy !== data.pacePolicy) return false
+  if (data.timeOfDay) {
+    const hour = Number(event.time.split(':')[0])
+    if (Number.isNaN(hour)) return false
+    if (data.timeOfDay === 'morning' && hour >= 12) return false
+    if (data.timeOfDay === 'evening' && hour < 17) return false
+  }
+  if (data.weekend) {
+    const day = event.date.getDay()
+    if (day !== 0 && day !== 6) return false
+  }
+  return true
+}
+
+export type EventLocation = {
+  key: string
+  club: NonNullable<GetAllEventsReturn['club']>
+  title: string
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  weekdays: number[]
+  occurrenceCount: number
+  isRecurring: boolean
+  next: GetAllEventsReturn
+}
+
+export type EventListing = {
+  buckets: EventLocation[]
+  overrides: GetAllEventsReturn[]
+}
+
+export async function getEventLocations({
+  data,
+}: PublicPayload<EventsQuery>): Promise<EventListing> {
+  const { clubId, clubSlug } = data
+
+  const startDate = new Date()
+  startDate.setHours(0, 0, 0, 0)
+  const endDate = addDays(startDate, 60)
+
+  let resolvedClubId = clubId
+  if (!resolvedClubId && clubSlug) {
+    const club = await prisma.club.findUnique({
+      where: { slug: clubSlug },
+      select: { id: true },
+    })
+    if (!club) return { buckets: [], overrides: [] }
+    resolvedClubId = club.id
+  }
+
+  const events = await getEventsInRange(startDate, endDate, resolvedClubId)
+
+  // Bucket by recurring pattern id when available so same-club same-location
+  // patterns with distinct schedules stay distinct. One-off concrete events
+  // (no recurring parent) get their own bucket keyed by event id.
+  const bucketKeyFor = (event: GetAllEventsReturn): string =>
+    event.recurringEventId
+      ? `pattern:${event.recurringEventId}`
+      : `oneoff:${event.id}`
+
+  // Virtual events synthesized from recurring patterns use a slug-based id
+  // format containing `--YYYY-MM-DD`; that's how we identify the pattern's
+  // canonical title within a bucket.
+  const isVirtualEvent = (event: GetAllEventsReturn): boolean =>
+    event.id.includes('--')
+
+  const bucketEvents = new Map<string, GetAllEventsReturn[]>()
+  const bucketMap = new Map<string, EventLocation>()
+
+  for (const event of events) {
+    if (!event.club) continue
+    if (!matchesFilters(event, data)) continue
+    const key = bucketKeyFor(event)
+    const day = event.date.getDay()
+
+    let list = bucketEvents.get(key)
+    if (!list) {
+      list = []
+      bucketEvents.set(key, list)
+    }
+    list.push(event)
+
+    const existing = bucketMap.get(key)
+    if (!existing) {
+      bucketMap.set(key, {
+        key,
+        club: event.club,
+        title: event.title,
+        address: event.address,
+        latitude: event.latitude,
+        longitude: event.longitude,
+        weekdays: [day],
+        occurrenceCount: 1,
+        isRecurring: Boolean(event.recurringEventId),
+        next: event,
+      })
+    } else {
+      if (!existing.weekdays.includes(day)) existing.weekdays.push(day)
+      existing.occurrenceCount += 1
+      existing.isRecurring =
+        existing.isRecurring || Boolean(event.recurringEventId)
+      if (event.date < existing.next.date) existing.next = event
+    }
+  }
+
+  const overrides: GetAllEventsReturn[] = []
+
+  for (const bucket of bucketMap.values()) {
+    bucket.weekdays.sort(
+      (a, b) =>
+        WEEKDAY_ORDER.indexOf(a as 0 | 1 | 2 | 3 | 4 | 5 | 6) -
+        WEEKDAY_ORDER.indexOf(b as 0 | 1 | 2 | 3 | 4 | 5 | 6)
+    )
+
+    const all = bucketEvents.get(bucket.key) ?? []
+    const canonicalSample = all.find(isVirtualEvent) ?? all[0]
+    if (!canonicalSample) continue
+    const canonicalTitle = canonicalSample.title
+    bucket.title = canonicalTitle
+
+    for (const event of all) {
+      if (event.title !== canonicalTitle) {
+        overrides.push(event)
+        bucket.occurrenceCount -= 1
+        if (bucket.next.id === event.id) {
+          const remaining = all
+            .filter(
+              (candidate) =>
+                candidate.id !== event.id && candidate.title === canonicalTitle
+            )
+            .sort((a, b) => a.date.getTime() - b.date.getTime())
+          if (remaining[0]) bucket.next = remaining[0]
+        }
+      }
+    }
+  }
+
+  const buckets = Array.from(bucketMap.values())
+    .filter((bucket) => bucket.occurrenceCount > 0)
+    .sort((a, b) => a.next.date.getTime() - b.next.date.getTime())
+
+  overrides.sort((a, b) => a.date.getTime() - b.date.getTime())
+
+  return { buckets, overrides }
+}
+
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   const { id } = data
 

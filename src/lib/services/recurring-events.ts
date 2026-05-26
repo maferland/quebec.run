@@ -214,12 +214,15 @@ export async function getEventsInRange(
   endDate: Date,
   clubId?: string
 ) {
-  // 1. Fetch concrete Events in range (exclude cancelled)
+  // 1. Fetch concrete Events in range (exclude cancelled). Skip concretes whose
+  //    parent recurring pattern is paused so the listing matches what virtual
+  //    expansion produces.
   const concreteEvents = await prisma.event.findMany({
     where: {
       date: { gte: startDate, lte: endDate },
       status: 'SCHEDULED',
       ...(clubId && { clubId }),
+      OR: [{ recurringEventId: null }, { recurringEvent: { isActive: true } }],
     },
     select: {
       id: true,

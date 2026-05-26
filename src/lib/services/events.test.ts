@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import {
   getAllEvents,
+  getEventLocations,
   getEventById,
   getEventByClubAndSlug,
   getNextOccurrenceDate,
@@ -846,6 +847,154 @@ describe('Events Service Integration Tests', () => {
         expect(event.clubId).toBe(club.id)
         expect(event.title.toLowerCase()).toContain('morning')
       })
+    })
+  })
+
+  describe('getEventLocations', () => {
+    it('collapses repeated occurrences into a single bucket per (club, address)', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Weekly Run',
+          slug: 'weekly-run-loc',
+          address: '500 Bucket Lane',
+          latitude: 46.81,
+          longitude: -71.22,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const { buckets } = await getEventLocations({ data: {} })
+      const weeklyBuckets = buckets.filter((loc) => loc.title === 'Weekly Run')
+      expect(weeklyBuckets.length).toBe(1)
+      expect(weeklyBuckets[0].occurrenceCount).toBeGreaterThan(1)
+      expect(weeklyBuckets[0].weekdays).toEqual([2])
+    })
+
+    it('separates buckets when the same club runs at different addresses', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      await testPrisma.recurringEvent.createMany({
+        data: [
+          {
+            title: 'East Location',
+            slug: 'east-location',
+            address: '100 East St',
+            latitude: 46.82,
+            longitude: -71.23,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=0',
+            isActive: true,
+          },
+          {
+            title: 'West Location',
+            slug: 'west-location',
+            address: '200 West St',
+            latitude: 46.83,
+            longitude: -71.25,
+            clubId: club.id,
+            schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=6;BYMINUTE=0',
+            isActive: true,
+          },
+        ],
+      })
+
+      const { buckets } = await getEventLocations({ data: {} })
+      const sameClubBuckets = buckets.filter((loc) => loc.club.id === club.id)
+      const eastBucket = sameClubBuckets.find(
+        (loc) => loc.title === 'East Location'
+      )
+      const westBucket = sameClubBuckets.find(
+        (loc) => loc.title === 'West Location'
+      )
+      expect(eastBucket).toBeDefined()
+      expect(westBucket).toBeDefined()
+      expect(eastBucket!.key).not.toBe(westBucket!.key)
+    })
+
+    it('sorts buckets by next occurrence date', async () => {
+      const { buckets } = await getEventLocations({ data: {} })
+      for (let i = 1; i < buckets.length; i++) {
+        expect(buckets[i].next.date.getTime()).toBeGreaterThanOrEqual(
+          buckets[i - 1].next.date.getTime()
+        )
+      }
+    })
+
+    it('applies search filter at the bucket level', async () => {
+      const { buckets, overrides } = await getEventLocations({
+        data: { search: 'absolutely-no-match-zzz' },
+      })
+      expect(buckets).toEqual([])
+      expect(overrides).toEqual([])
+    })
+
+    it('applies pacePolicy filter at the bucket level', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      const tomorrow = addDays(new Date(), 1)
+
+      await testPrisma.event.create({
+        data: {
+          title: 'Open Pace Run',
+          date: tomorrow,
+          time: '18:00',
+          address: '777 Flex Way',
+          latitude: 46.85,
+          longitude: -71.27,
+          clubId: club.id,
+          pacePolicy: 'OPEN_PACE',
+        },
+      })
+
+      const { buckets } = await getEventLocations({
+        data: { pacePolicy: 'OPEN_PACE' },
+      })
+      expect(buckets.length).toBeGreaterThan(0)
+      buckets.forEach((loc) => expect(loc.next.pacePolicy).toBe('OPEN_PACE'))
+    })
+
+    it('lifts events whose title differs from the bucket into overrides', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+
+      const pattern = await testPrisma.recurringEvent.create({
+        data: {
+          title: 'Steady Run',
+          slug: 'steady-run-override-test',
+          address: '900 Override Way',
+          latitude: 46.86,
+          longitude: -71.28,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=0',
+          isActive: true,
+        },
+      })
+
+      const targetDate = addDays(new Date(), 10)
+      await testPrisma.event.create({
+        data: {
+          title: 'Pizza Run',
+          date: targetDate,
+          time: '18:00',
+          address: '900 Override Way',
+          latitude: 46.86,
+          longitude: -71.28,
+          clubId: club.id,
+          recurringEventId: pattern.id,
+        },
+      })
+
+      const { buckets, overrides } = await getEventLocations({ data: {} })
+      const steadyBucket = buckets.find((b) => b.title === 'Steady Run')
+      expect(steadyBucket).toBeDefined()
+      expect(overrides.some((o) => o.title === 'Pizza Run')).toBe(true)
+      expect(steadyBucket!.next.title).toBe('Steady Run')
     })
   })
 })
