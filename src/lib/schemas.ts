@@ -112,6 +112,9 @@ export const eventsQuerySchema = paginationQuerySchema.extend({
   pacePolicy: z.enum(['OPEN_PACE', 'SHARED']).optional(),
   timeOfDay: z.enum(['morning', 'evening']).optional(),
   weekend: z.enum(['1']).optional(),
+  clubVibe: z.enum(['SOCIAL', 'TRAINING']).optional(),
+  beginner: z.enum(['1']).optional(),
+  showPast: z.enum(['1']).optional(),
 })
 
 export const eventUpdateSchema = eventCreateSchema.partial().extend({
@@ -173,7 +176,12 @@ export const eventWithClubSchema = eventSchema.extend({
 })
 
 // Query parameter schemas - extending base pagination
-export const clubsQuerySchema = paginationQuerySchema
+export const clubsQuerySchema = paginationQuerySchema.extend({
+  search: z.string().optional(),
+  type: z.enum(['ROAD', 'TRAIL']).optional(),
+  vibe: z.enum(['SOCIAL', 'TRAINING']).optional(),
+  beginner: z.enum(['1']).optional(),
+})
 
 // Service function utility types
 export type ServiceUser = {

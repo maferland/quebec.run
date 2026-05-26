@@ -10,6 +10,9 @@ const mockClubWithRecurring: GetAllClubsReturn = {
   description:
     'Premier running club in Quebec City for runners of all levels. Join us for weekly runs and training sessions.',
   stravaSlug: null,
+  type: 'ROAD',
+  vibe: 'SOCIAL',
+  beginnerFriendly: true,
   _count: { recurringEvents: 3 },
 }
 

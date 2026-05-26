@@ -20,6 +20,9 @@ const mockClub: GetAllClubsReturn = {
   description:
     'Club de course matinal présent dans plusieurs quartiers de Québec. Rendez-vous à 6h pile!',
   stravaSlug: null,
+  type: 'ROAD',
+  vibe: 'SOCIAL',
+  beginnerFriendly: false,
   _count: { recurringEvents: 2 },
 }
 

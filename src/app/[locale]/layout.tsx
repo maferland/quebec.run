@@ -63,7 +63,7 @@ export default async function LocaleLayout({ children, params }: Props) {
   return (
     <html lang={locale} suppressHydrationWarning>
       <body
-        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant`}
+        className={`${montserrat.variable} ${inter.variable} font-body antialiased bg-surface-variant overflow-x-hidden`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
           <Providers>

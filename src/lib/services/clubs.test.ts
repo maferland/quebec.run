@@ -5,6 +5,7 @@ import {
   deleteClub,
   getAllClubs,
   getClubById,
+  getClubListing,
   updateClub,
 } from './clubs'
 
@@ -96,6 +97,137 @@ describe('Clubs Service Integration Tests', () => {
 
       const result = await getAllClubs({ data: { limit: 1, offset: 0 } })
       expect(result).toHaveLength(1)
+    })
+  })
+
+  describe('getClubListing', () => {
+    async function seedVariety() {
+      // Replace single seeded club with a varied set.
+      await testPrisma.event.deleteMany({})
+      await testPrisma.club.deleteMany({})
+      await testPrisma.club.createMany({
+        data: [
+          {
+            name: 'Road Social Beginner',
+            slug: 'road-social-beginner',
+            description: 'beginner-friendly road club',
+            type: 'ROAD',
+            vibe: 'SOCIAL',
+            beginnerFriendly: true,
+            ownerId: testUserId,
+          },
+          {
+            name: 'Road Training',
+            slug: 'road-training',
+            description: 'serious road training',
+            type: 'ROAD',
+            vibe: 'TRAINING',
+            beginnerFriendly: false,
+            ownerId: testUserId,
+          },
+          {
+            name: 'Trail Social',
+            slug: 'trail-social',
+            description: 'forest trail vibes',
+            type: 'TRAIL',
+            vibe: 'SOCIAL',
+            beginnerFriendly: false,
+            ownerId: testUserId,
+          },
+          {
+            name: 'Mixed Social',
+            slug: 'mixed-social',
+            description: 'both road and trail',
+            type: 'MIXED',
+            vibe: 'SOCIAL',
+            beginnerFriendly: false,
+            ownerId: testUserId,
+          },
+        ],
+      })
+    }
+
+    it('returns all clubs when no filters provided', async () => {
+      await seedVariety()
+      const { clubs, facetCounts } = await getClubListing({ data: {} })
+
+      expect(clubs).toHaveLength(4)
+      // ROAD chip should match ROAD + MIXED → 3
+      expect(facetCounts.road).toBe(3)
+      // TRAIL chip should match TRAIL + MIXED → 2
+      expect(facetCounts.trail).toBe(2)
+      expect(facetCounts.social).toBe(3)
+      expect(facetCounts.training).toBe(1)
+      expect(facetCounts.beginner).toBe(1)
+    })
+
+    it('filters by search term against name and description', async () => {
+      await seedVariety()
+      const { clubs } = await getClubListing({ data: { search: 'trail' } })
+
+      expect(clubs.map((c) => c.slug).sort()).toEqual([
+        'mixed-social',
+        'trail-social',
+      ])
+    })
+
+    it('filters by type=ROAD (includes MIXED)', async () => {
+      await seedVariety()
+      const { clubs } = await getClubListing({ data: { type: 'ROAD' } })
+
+      expect(clubs.map((c) => c.slug).sort()).toEqual([
+        'mixed-social',
+        'road-social-beginner',
+        'road-training',
+      ])
+    })
+
+    it('filters by type=TRAIL (includes MIXED)', async () => {
+      await seedVariety()
+      const { clubs } = await getClubListing({ data: { type: 'TRAIL' } })
+
+      expect(clubs.map((c) => c.slug).sort()).toEqual([
+        'mixed-social',
+        'trail-social',
+      ])
+    })
+
+    it('filters by vibe (exact match, MIXED type unaffected)', async () => {
+      await seedVariety()
+      const { clubs } = await getClubListing({
+        data: { vibe: 'TRAINING' },
+      })
+
+      expect(clubs).toHaveLength(1)
+      expect(clubs[0].slug).toBe('road-training')
+    })
+
+    it('filters by beginner=1', async () => {
+      await seedVariety()
+      const { clubs } = await getClubListing({ data: { beginner: '1' } })
+
+      expect(clubs).toHaveLength(1)
+      expect(clubs[0].slug).toBe('road-social-beginner')
+    })
+
+    it('computes facet counts assuming "if I added this facet" semantics', async () => {
+      await seedVariety()
+      // With vibe=SOCIAL active, count what each chip would yield if also active
+      const { facetCounts } = await getClubListing({
+        data: { vibe: 'SOCIAL' },
+      })
+
+      // Facet counts simulate "swap or add this facet on top of current
+      // filters" — same param overwrites (matches the /events semantics).
+      // With vibe=SOCIAL active:
+      //   ROAD chip + SOCIAL: road-social-beginner + mixed-social = 2
+      //   TRAIL chip + SOCIAL: trail-social + mixed-social = 2
+      //   TRAINING chip swaps vibe → road-training = 1
+      //   beginner + SOCIAL: road-social-beginner = 1
+      expect(facetCounts.road).toBe(2)
+      expect(facetCounts.trail).toBe(2)
+      expect(facetCounts.training).toBe(1)
+      expect(facetCounts.beginner).toBe(1)
     })
   })
 

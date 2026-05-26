@@ -101,11 +101,26 @@
       "title": "No upcoming runs scheduled",
       "description": "Check back soon for new running events in Quebec City"
     },
-    "meetingLocation": "Meeting Location"
+    "meetingLocation": "Meeting Location",
+    "past": "Past"
   },
   "clubs": {
     "title": "Running Clubs",
     "backToClubs": "Back to All Clubs",
+    "filters": {
+      "searchLabel": "Search clubs",
+      "searchPlaceholder": "Search by name or description",
+      "comboboxPlaceholder": "Filter...",
+      "noMatches": "No matching filters",
+      "clearFilters": "Clear",
+      "facets": {
+        "road": "Road",
+        "trail": "Trail",
+        "social": "Social",
+        "training": "Training",
+        "beginner": "Beginner-friendly"
+      }
+    },
     "empty": {
       "title": "No running clubs found",
       "description": "Be the first to create a running club in Quebec City"
@@ -146,12 +161,19 @@
     "filters": {
       "searchLabel": "Search events",
       "searchPlaceholder": "Search title or location",
+      "comboboxPlaceholder": "Filter...",
+      "noMatches": "No matching filters",
       "clearFilters": "Clear",
+      "more": "More",
       "facets": {
-        "openPace": "Every pace welcome",
+        "openPace": "Open pace",
         "morning": "Morning",
         "evening": "Evening",
-        "weekend": "Weekend"
+        "weekend": "Weekend",
+        "social": "Social",
+        "training": "Training",
+        "beginner": "Beginner-friendly",
+        "showPast": "Show past"
       },
       "noResultsMapHint": "No events match the active filters"
     },

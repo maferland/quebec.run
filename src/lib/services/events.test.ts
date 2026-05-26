@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, assert, vi } from 'vitest'
 import { seedTestData, testPrisma, teardownTestData } from '@/lib/test-seed'
 import {
   getAllEvents,
+  getCalendarListing,
   getEventLocations,
   getEventById,
   getEventByClubAndSlug,
@@ -1060,6 +1061,10 @@ describe('Events Service Integration Tests', () => {
         morning: 0,
         evening: 0,
         weekend: 0,
+        social: 0,
+        training: 0,
+        beginner: 0,
+        showPast: 0,
       })
     })
 
@@ -1098,6 +1103,62 @@ describe('Events Service Integration Tests', () => {
       })
       // Morning matches only the search-filtered bucket (7am = morning)
       expect(facetCounts.morning).toBe(1)
+    })
+  })
+
+  describe('getCalendarListing', () => {
+    it('returns events + facet counts shaped for the calendar surface', async () => {
+      const { events, facetCounts } = await getCalendarListing({ data: {} })
+
+      expect(events.length).toBeGreaterThan(0)
+      // Seed has one 07:00 and one 18:00 event → morning + evening each ≥ 1
+      expect(facetCounts.morning).toBeGreaterThanOrEqual(1)
+      expect(facetCounts.evening).toBeGreaterThanOrEqual(1)
+    })
+
+    it('filters events by search term against title and address', async () => {
+      const { events } = await getCalendarListing({
+        data: { search: 'morning' },
+      })
+      expect(events.length).toBeGreaterThan(0)
+      events.forEach((event) =>
+        expect(event.title.toLowerCase()).toContain('morning')
+      )
+    })
+
+    it('returns empty events but defined facet counts when no match', async () => {
+      const { events, facetCounts } = await getCalendarListing({
+        data: { search: 'absolutely-no-match-zzzz' },
+      })
+      expect(events).toEqual([])
+      // Facet counts still computed against the underlying event stream
+      // (independent of the active search filter)
+      expect(facetCounts.morning).toBeGreaterThanOrEqual(0)
+    })
+
+    it('returns empty listing when clubSlug does not resolve', async () => {
+      const result = await getCalendarListing({
+        data: { clubSlug: 'no-such-club-zzzz' },
+      })
+      expect(result.events).toEqual([])
+      expect(result.facetCounts).toEqual({
+        openPace: 0,
+        morning: 0,
+        evening: 0,
+        weekend: 0,
+        social: 0,
+        training: 0,
+        beginner: 0,
+        showPast: 0,
+      })
+    })
+
+    it('applies weekend filter', async () => {
+      const { events } = await getCalendarListing({ data: { weekend: '1' } })
+      events.forEach((event) => {
+        const day = event.date.getDay()
+        expect([0, 6]).toContain(day)
+      })
     })
   })
 })

@@ -198,6 +198,8 @@ export function createVirtualEvent(
       id: recurringEvent.club.id,
       name: recurringEvent.club.name,
       slug: recurringEvent.club.slug,
+      vibe: recurringEvent.club.vibe,
+      beginnerFriendly: recurringEvent.club.beginnerFriendly,
     },
   }
 }
@@ -244,6 +246,8 @@ export async function getEventsInRange(
           id: true,
           name: true,
           slug: true,
+          vibe: true,
+          beginnerFriendly: true,
         },
       },
     },

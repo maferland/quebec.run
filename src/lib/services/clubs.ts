@@ -10,6 +10,7 @@ import type {
 import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
 import { getEventsInRange, expandRRuleDates } from './recurring-events'
 import { addDays } from 'date-fns'
+import { CLUB_FACETS, type ClubFacetKey } from '@/lib/facets'
 
 // We need the ClubId type for getClubById
 import { clubIdSchema, clubSlugSchema } from '@/lib/schemas'
@@ -19,29 +20,105 @@ type ClubSlug = z.infer<typeof clubSlugSchema>
 
 // Pure business logic functions - let TypeScript infer return types
 
-export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
-  const { limit = 50, offset = 0 } = data
-
-  return await prisma.club.findMany({
-    skip: offset,
-    take: limit,
-    orderBy: { createdAt: 'desc' },
+const CLUB_LIST_SELECT = {
+  id: true,
+  name: true,
+  slug: true,
+  description: true,
+  stravaSlug: true,
+  type: true,
+  vibe: true,
+  beginnerFriendly: true,
+  _count: {
     select: {
-      id: true,
-      name: true,
-      slug: true,
-      description: true,
-      stravaSlug: true,
-      _count: {
-        select: {
-          recurringEvents: { where: { isActive: true } },
-        },
-      },
+      recurringEvents: { where: { isActive: true } },
     },
+  },
+} as const
+
+type ClubListItem = Awaited<
+  ReturnType<typeof prisma.club.findFirst<{ select: typeof CLUB_LIST_SELECT }>>
+>
+
+function matchesClubFilters(
+  club: NonNullable<ClubListItem>,
+  data: ClubsQuery
+): boolean {
+  if (data.search) {
+    const q = data.search.toLowerCase()
+    const nameHit = club.name.toLowerCase().includes(q)
+    const descHit = club.description?.toLowerCase().includes(q) ?? false
+    if (!nameHit && !descHit) return false
+  }
+  if (data.type === 'ROAD' && club.type !== 'ROAD' && club.type !== 'MIXED') {
+    return false
+  }
+  if (data.type === 'TRAIL' && club.type !== 'TRAIL' && club.type !== 'MIXED') {
+    return false
+  }
+  if (data.vibe && club.vibe !== data.vibe) return false
+  if (data.beginner === '1' && !club.beginnerFriendly) return false
+  return true
+}
+
+export type ClubFacetCounts = Record<ClubFacetKey, number>
+
+const EMPTY_CLUB_FACET_COUNTS: ClubFacetCounts = {
+  road: 0,
+  trail: 0,
+  social: 0,
+  training: 0,
+  beginner: 0,
+}
+
+function computeClubFacetCounts(
+  clubs: NonNullable<ClubListItem>[],
+  data: ClubsQuery
+): ClubFacetCounts {
+  const counts: ClubFacetCounts = { ...EMPTY_CLUB_FACET_COUNTS }
+  for (const club of clubs) {
+    for (const facet of CLUB_FACETS) {
+      if (matchesClubFilters(club, { ...data, [facet.param]: facet.value })) {
+        counts[facet.key] += 1
+      }
+    }
+  }
+  return counts
+}
+
+async function fetchClubList(): Promise<NonNullable<ClubListItem>[]> {
+  return prisma.club.findMany({
+    orderBy: { createdAt: 'desc' },
+    select: CLUB_LIST_SELECT,
   })
 }
 
+export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
+  const { limit = 50, offset = 0 } = data
+  const all = await fetchClubList()
+  const filtered = all.filter((club) => matchesClubFilters(club, data))
+  return filtered.slice(offset, offset + limit)
+}
+
 export type GetAllClubsReturn = Awaited<ReturnType<typeof getAllClubs>>[0]
+
+export type ClubListing = {
+  clubs: GetAllClubsReturn[]
+  facetCounts: ClubFacetCounts
+}
+
+export const getClubListing = async ({
+  data,
+}: PublicPayload<ClubsQuery>): Promise<ClubListing> => {
+  const { limit = 50, offset = 0 } = data
+  const all = await fetchClubList()
+  const filtered = all.filter((club) => matchesClubFilters(club, data))
+  const facetCounts = computeClubFacetCounts(all, data)
+  return {
+    clubs: filtered.slice(offset, offset + limit),
+    facetCounts,
+  }
+}
 
 export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
   const { id } = data
