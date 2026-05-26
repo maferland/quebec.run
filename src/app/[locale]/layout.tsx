@@ -10,6 +10,7 @@ import { getMessages, getTranslations } from 'next-intl/server'
 import { notFound } from 'next/navigation'
 import { Providers } from '../providers'
 import { locales } from '@/i18n'
+import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
 import '../globals.css'
 
 const montserrat = Montserrat({
@@ -36,11 +37,16 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }): Promise<Metadata> {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'metadata' })
+  const t = await getTranslations({ locale, namespace: 'metadata.home' })
 
   return {
-    title: t('title'),
-    description: t('description'),
+    metadataBase: new URL(SITE_URL),
+    ...buildPageMetadata({
+      locale: locale as Locale,
+      path: '',
+      title: t('title'),
+      description: t('description'),
+    }),
   }
 }
 

@@ -48,7 +48,31 @@
   },
   "metadata": {
     "title": "quebec.run - Find Your Next Run in Quebec City",
-    "description": "Discover running clubs and events in Quebec City. Connect with fellow runners and explore new routes together."
+    "description": "Discover running clubs and events in Quebec City. Connect with fellow runners and explore new routes together.",
+    "home": {
+      "title": "quebec.run — Running clubs and events in Quebec City",
+      "description": "Find a running club in Quebec City: 6AM Club, Faux Mouvement, La Foulée, Le Coureur Nordique and more. Every running event this week."
+    },
+    "clubs": {
+      "title": "Running clubs in Quebec City — quebec.run",
+      "description": "Directory of running clubs in the Quebec City area. Filter by vibe (social, training), type (road, trail) or find a beginner-friendly club."
+    },
+    "clubDetail": {
+      "title": "{clubName} — Running club in Quebec City",
+      "description": "{clubName} — schedules, meeting points and upcoming runs in Quebec City."
+    },
+    "events": {
+      "title": "Running events in Quebec City — quebec.run",
+      "description": "Every group run in Quebec City this week. Filter by time of day, club or pace."
+    },
+    "eventDetail": {
+      "title": "{eventTitle} — {clubName} — quebec.run",
+      "description": "{eventTitle} with {clubName} in Quebec City. Time, meeting point and run details."
+    },
+    "calendar": {
+      "title": "Running calendar in Quebec City — quebec.run",
+      "description": "Full calendar of group runs in Quebec City and surroundings over the next 60 days."
+    }
   },
   "home": {
     "hero": {

@@ -1,4 +1,4 @@
-import { getTranslations } from 'next-intl/server'
+import { getTranslations, getLocale } from 'next-intl/server'
 import { ClubCard } from '@/components/clubs/club-card'
 import { Button } from '@/components/ui/button'
 import { ContentGrid } from '@/components/ui/content-grid'
@@ -8,11 +8,13 @@ import { Calendar } from 'lucide-react'
 import { Link } from '@/i18n/navigation'
 import { getAllClubs } from '@/lib/services/clubs'
 import { getEventLocations } from '@/lib/services/events'
+import { JsonLd, organization, website } from '@/components/seo/json-ld'
 
 export const dynamic = 'force-dynamic'
 
 export default async function Home() {
   const t = await getTranslations('home')
+  const locale = (await getLocale()) as 'fr' | 'en'
 
   const [clubs, listing] = await Promise.all([
     getAllClubs({ data: { limit: 6, offset: 0 } }),
@@ -22,6 +24,7 @@ export default async function Home() {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      <JsonLd data={[organization(), website(locale)]} />
       <section className="bg-white border-b">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
