@@ -111,22 +111,27 @@ export default function EventMapContent({
                   )}
 
                   {multi ? (
-                    <ul className="m-0 p-0 list-none space-y-1.5">
+                    <ul className="m-0 p-0 list-none space-y-0.5">
                       {group.map((event) => (
                         <li key={event.id}>
                           <Link
                             href={eventUrl(event)}
-                            className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 -mx-2 hover:bg-surface-variant/60 transition-colors"
+                            className="block transition-opacity hover:opacity-80"
                           >
                             <Tag
                               variant="datetime"
                               icon={Clock}
                               size="xs"
-                              className="tabular-nums justify-start flex-1"
+                              className="w-full tabular-nums"
                             >
-                              {formatDateTime(event.date, event.time)}
+                              <span className="flex-1">
+                                {formatDateTime(event.date, event.time)}
+                              </span>
+                              <ChevronRight
+                                aria-hidden="true"
+                                className="size-3.5 -mr-0.5 opacity-70 shrink-0"
+                              />
                             </Tag>
-                            <ChevronRight className="size-4 text-text-secondary shrink-0" />
                           </Link>
                         </li>
                       ))}
