@@ -2,6 +2,7 @@
 
 import { Footprints, Mountain, Coffee, Dumbbell, Sparkles } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { FacetCombobox } from '@/components/filters/facet-combobox'
 import { CLUB_FACETS, type ClubFacetKey } from '@/lib/facets'
 import type { ClubFacetCounts } from '@/lib/services/clubs'
@@ -19,12 +20,14 @@ export type ClubFiltersProps = {
 }
 
 export function ClubFilters({ facetCounts }: ClubFiltersProps = {}) {
+  const t = useTranslations('clubs.filters.facets')
   return (
     <FacetCombobox
       facets={CLUB_FACETS}
       iconMap={FACET_ICONS}
       facetCounts={facetCounts}
       namespace="clubs.filters"
+      getLabel={(key) => t(key)}
     />
   )
 }

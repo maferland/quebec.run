@@ -11,8 +11,11 @@ export type FacetComboboxProps<TKey extends string, TParam extends string> = {
   facets: readonly FacetDef<TKey, TParam>[]
   iconMap: Record<TKey, LucideIcon>
   facetCounts?: Record<TKey, number>
-  /** next-intl namespace exposing searchLabel / clearFilters / comboboxPlaceholder / facets.{key} / noMatches */
+  /** next-intl namespace exposing searchLabel / clearFilters / comboboxPlaceholder / noMatches */
   namespace: string
+  /** Resolves the user-facing label for each facet key. Caller controls the
+   *  i18n namespace so we keep static typing on facet keys. */
+  getLabel: (key: TKey) => string
   /** Suppress count badges in the popover until at least one filter is active. */
   hideCountsWhenInactive?: boolean
 }
@@ -22,6 +25,7 @@ export function FacetCombobox<TKey extends string, TParam extends string>({
   iconMap,
   facetCounts,
   namespace,
+  getLabel,
   hideCountsWhenInactive = false,
 }: FacetComboboxProps<TKey, TParam>) {
   const t = useTranslations(namespace)
@@ -68,10 +72,8 @@ export function FacetCombobox<TKey extends string, TParam extends string>({
   const showCounts = !hideCountsWhenInactive || activeFacets.length > 0
 
   const lowerQuery = query.trim().toLowerCase()
-  const labelFor = (facet: FacetDef<TKey, TParam>): string => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    return (t as any)(`facets.${facet.key}`)
-  }
+  const labelFor = (facet: FacetDef<TKey, TParam>): string =>
+    getLabel(facet.key)
   const visibleFacets = lowerQuery
     ? facets.filter((f) => labelFor(f).toLowerCase().includes(lowerQuery))
     : facets

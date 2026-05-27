@@ -10,6 +10,7 @@ import { Icon } from '@/components/ui/icon'
 import { EventFilters } from '@/components/events/event-filters'
 import { groupEventsByDate } from '@/lib/utils/date-formatting'
 import { getCalendarListing } from '@/lib/services/events'
+import { eventsQuerySchema } from '@/lib/schemas'
 import { eventUrl } from '@/lib/utils/event-url'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
@@ -45,21 +46,20 @@ export default async function CalendarPage({
   const t = await getTranslations('calendar')
   const locale = await getLocale()
   const params = await searchParams
+  // Parse + validate URL filter params via Zod. Limit/offset aren't in the
+  // URL on this surface — we override them server-side after validation.
+  const parsed = eventsQuerySchema.safeParse({
+    pacePolicy: firstString(params.pacePolicy),
+    timeOfDay: firstString(params.timeOfDay),
+    weekend: firstString(params.weekend),
+    clubVibe: firstString(params.clubVibe),
+    beginner: firstString(params.beginner),
+    showPast: firstString(params.showPast),
+  })
   const query = {
     limit: 200,
     offset: 0,
-    pacePolicy: firstString(params.pacePolicy) as
-      | 'OPEN_PACE'
-      | 'SHARED'
-      | undefined,
-    timeOfDay: firstString(params.timeOfDay) as
-      | 'morning'
-      | 'evening'
-      | undefined,
-    weekend: firstString(params.weekend) as '1' | undefined,
-    clubVibe: firstString(params.clubVibe) as 'SOCIAL' | 'TRAINING' | undefined,
-    beginner: firstString(params.beginner) as '1' | undefined,
-    showPast: firstString(params.showPast) as '1' | undefined,
+    ...(parsed.success ? parsed.data : {}),
   }
 
   const { events, facetCounts } = await getCalendarListing({ data: query })

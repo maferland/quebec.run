@@ -11,6 +11,7 @@ import {
   Eye,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
+import { useTranslations } from 'next-intl'
 import { FacetCombobox } from '@/components/filters/facet-combobox'
 import type { FacetCounts } from '@/lib/services/events'
 import {
@@ -42,12 +43,14 @@ export function EventFilters({
   hideCountsWhenInactive,
   facets = EVENT_FACETS,
 }: EventFiltersProps = {}) {
+  const t = useTranslations('events.filters.facets')
   return (
     <FacetCombobox
       facets={facets}
       iconMap={FACET_ICONS}
       facetCounts={facetCounts}
       namespace="events.filters"
+      getLabel={(key) => t(key)}
       hideCountsWhenInactive={hideCountsWhenInactive}
     />
   )
