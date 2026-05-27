@@ -2,7 +2,7 @@ import { authOptions } from '@/lib/auth'
 import type { ServiceUser } from '@/lib/schemas'
 import { getServerSession } from 'next-auth'
 import { z } from 'zod'
-import { NotFoundError, UnauthorizedError } from '@/lib/errors'
+import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // Shared type for Next.js route handler context
 export type RouteHandlerContext = {
@@ -27,6 +27,11 @@ function withErrorHandler<T extends unknown[]>(
       // Handle unauthorized errors
       if (error instanceof UnauthorizedError) {
         return Response.json({ error: error.message }, { status: 403 })
+      }
+
+      // Handle conflict errors (e.g. duplicate unique constraints)
+      if (error instanceof ConflictError) {
+        return Response.json({ error: error.message }, { status: 409 })
       }
 
       // Handle authentication errors

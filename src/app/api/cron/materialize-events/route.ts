@@ -8,9 +8,6 @@ import { generateAllRecurringEvents } from '@/lib/services/recurring-events'
 export async function POST() {
   try {
     const result = await generateAllRecurringEvents(7) // 7 days ahead
-
-    console.log('Event materialization complete:', result)
-
     return NextResponse.json(result, { status: 200 })
   } catch (error) {
     console.error('Event materialization failed:', error)

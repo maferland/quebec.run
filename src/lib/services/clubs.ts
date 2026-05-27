@@ -6,11 +6,13 @@ import type {
   ClubsQuery,
   ClubUpdate,
   PublicPayload,
+  ServiceUser,
 } from '@/lib/schemas'
 import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
 import { getEventsInRange, expandRRuleDates } from './recurring-events'
 import { addDays } from 'date-fns'
 import { CLUB_FACETS, type ClubFacetKey } from '@/lib/facets'
+import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // We need the ClubId type for getClubById
 import { clubIdSchema, clubSlugSchema } from '@/lib/schemas'
@@ -120,6 +122,25 @@ export const getClubListing = async ({
   }
 }
 
+/**
+ * Throws if `user` neither owns the club nor is staff. Used by API routes
+ * that mutate club-scoped resources (events, recurring events, etc).
+ */
+export async function assertClubOwnership(
+  clubId: string,
+  user: ServiceUser
+): Promise<void> {
+  if (user.isStaff) return
+  const club = await prisma.club.findUnique({
+    where: { id: clubId },
+    select: { ownerId: true },
+  })
+  if (!club) throw new NotFoundError('Club not found')
+  if (club.ownerId !== user.id) {
+    throw new UnauthorizedError('Not authorized for this club')
+  }
+}
+
 export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
   const { id } = data
   const club = await prisma.club.findUnique({
@@ -127,7 +148,7 @@ export const getClubById = async ({ data }: PublicPayload<ClubId>) => {
   })
 
   if (!club) {
-    throw new Error('Club not found')
+    throw new NotFoundError('Club not found')
   }
 
   const upcomingEvents = await prisma.event.findMany({
@@ -152,7 +173,7 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
       where: { stravaSlug: data.stravaSlug },
     })
     if (existingClub) {
-      throw new Error(
+      throw new ConflictError(
         'A club with this Strava slug already exists. Please use a different slug or unlink the existing club.'
       )
     }
@@ -222,7 +243,7 @@ export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
       where: { stravaSlug: updateData.stravaSlug },
     })
     if (existingClub && existingClub.id !== id) {
-      throw new Error(
+      throw new ConflictError(
         'A club with this Strava slug already exists. Please use a different slug or unlink the existing club.'
       )
     }
@@ -246,7 +267,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   if (!club) return null
 
   if (club.ownerId !== user.id && !user.isStaff) {
-    throw new Error('Unauthorized to delete this club')
+    throw new UnauthorizedError('Unauthorized to delete this club')
   }
 
   // Delete club and potentially orphaned organization in transaction
@@ -355,11 +376,11 @@ export const updateClubById = async ({
   })
 
   if (!club) {
-    throw new Error('Club not found')
+    throw new NotFoundError('Club not found')
   }
 
   if (club.ownerId !== user.id && !user.isStaff) {
-    throw new Error('Unauthorized to update this club')
+    throw new UnauthorizedError('Unauthorized to update this club')
   }
 
   const { id, ...updateData } = data

@@ -3,6 +3,7 @@ import {
   createRecurringEvent,
   getRecurringEventsByClub,
 } from '@/lib/services/recurring-events'
+import { assertClubOwnership } from '@/lib/services/clubs'
 import {
   recurringEventCreateSchema,
   recurringEventQuerySchema,
@@ -19,10 +20,13 @@ export const GET = withPublic(recurringEventQuerySchema)(async (data) => {
 
 /**
  * POST /api/recurring-events
- * Create recurring event (requires auth)
+ * Create recurring event (requires auth + club ownership)
  */
-export const POST = withAuth(recurringEventCreateSchema)(async ({ data }) => {
-  // TODO: Check user owns club
+export const POST = withAuth(recurringEventCreateSchema)(async ({
+  user,
+  data,
+}) => {
+  await assertClubOwnership(data.clubId, user)
   const event = await createRecurringEvent(data)
   return Response.json(event, { status: 201 })
 })
