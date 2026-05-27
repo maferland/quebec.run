@@ -1,6 +1,7 @@
 import { seedTestData, teardownTestData, testPrisma } from '@/lib/test-seed'
 import { afterEach, assert, beforeEach, describe, expect, it } from 'vitest'
 import {
+  assertClubOwnership,
   createClub,
   deleteClub,
   getAllClubs,
@@ -8,6 +9,7 @@ import {
   getClubListing,
   updateClub,
 } from './clubs'
+import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // Test helpers
 const expectValidClub = (overrides = {}) =>
@@ -228,6 +230,38 @@ describe('Clubs Service Integration Tests', () => {
       expect(facetCounts.trail).toBe(2)
       expect(facetCounts.training).toBe(1)
       expect(facetCounts.beginner).toBe(1)
+    })
+  })
+
+  describe('assertClubOwnership', () => {
+    it('resolves silently when the user owns the club', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      await expect(
+        assertClubOwnership(club.id, { id: testUserId, isStaff: false })
+      ).resolves.toBeUndefined()
+    })
+
+    it('resolves silently for staff users on any club', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      await expect(
+        assertClubOwnership(club.id, { id: 'someone-else', isStaff: true })
+      ).resolves.toBeUndefined()
+    })
+
+    it('throws UnauthorizedError when a non-staff user does not own the club', async () => {
+      const club = await testPrisma.club.findFirst()
+      assert(club, 'expected seeded club')
+      await expect(
+        assertClubOwnership(club.id, { id: 'not-the-owner', isStaff: false })
+      ).rejects.toBeInstanceOf(UnauthorizedError)
+    })
+
+    it('throws NotFoundError when the club does not exist', async () => {
+      await expect(
+        assertClubOwnership('no-such-club', { id: testUserId, isStaff: false })
+      ).rejects.toBeInstanceOf(NotFoundError)
     })
   })
 
