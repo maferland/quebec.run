@@ -101,11 +101,26 @@
       "title": "Aucune course programmée",
       "description": "Revenez bientôt pour de nouveaux événements de course à Québec"
     },
-    "meetingLocation": "Lieu de rencontre"
+    "meetingLocation": "Lieu de rencontre",
+    "past": "Terminé"
   },
   "clubs": {
     "title": "Clubs de course",
     "backToClubs": "Retour à tous les clubs",
+    "filters": {
+      "searchLabel": "Rechercher des clubs",
+      "searchPlaceholder": "Rechercher par nom ou description",
+      "comboboxPlaceholder": "Filtrer...",
+      "noMatches": "Aucun filtre ne correspond",
+      "clearFilters": "Effacer",
+      "facets": {
+        "road": "Route",
+        "trail": "Sentier",
+        "social": "Social",
+        "training": "Entraînement",
+        "beginner": "Pour débutants"
+      }
+    },
     "empty": {
       "title": "Aucun club de course trouvé",
       "description": "Soyez le premier à créer un club de course à Québec"
@@ -146,12 +161,19 @@
     "filters": {
       "searchLabel": "Rechercher des événements",
       "searchPlaceholder": "Rechercher par titre ou lieu",
+      "comboboxPlaceholder": "Filtrer...",
+      "noMatches": "Aucun filtre ne correspond",
       "clearFilters": "Effacer",
+      "more": "Plus",
       "facets": {
-        "openPace": "Toutes allures bienvenues",
+        "openPace": "Toutes allures",
         "morning": "Matin",
         "evening": "Soir",
-        "weekend": "Fin de semaine"
+        "weekend": "Fin de semaine",
+        "social": "Social",
+        "training": "Entraînement",
+        "beginner": "Pour débutants",
+        "showPast": "Voir terminés"
       },
       "noResultsMapHint": "Aucun événement ne correspond aux filtres actifs"
     },

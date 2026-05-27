@@ -1,136 +1,54 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
-import { useRouter, useSearchParams, usePathname } from 'next/navigation'
-import { useTranslations } from 'next-intl'
-import { Search, X, Users, Sunrise, Sunset, CalendarRange } from 'lucide-react'
+import {
+  Users,
+  Sunrise,
+  Sunset,
+  CalendarRange,
+  Coffee,
+  Dumbbell,
+  Sparkles,
+  Eye,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
-import { Input } from '@/components/ui/input'
+import { FacetCombobox } from '@/components/filters/facet-combobox'
 import type { FacetCounts } from '@/lib/services/events'
-import { EVENT_FACETS, type FacetDef, type FacetKey } from '@/lib/facets'
+import {
+  EVENT_FACETS,
+  type EventFacetDef,
+  type EventFacetKey,
+} from '@/lib/facets'
 
-const SEARCH_DEBOUNCE_MS = 300
-
-const FACET_ICONS: Record<FacetKey, LucideIcon> = {
+const FACET_ICONS: Record<EventFacetKey, LucideIcon> = {
   openPace: Users,
   morning: Sunrise,
   evening: Sunset,
   weekend: CalendarRange,
+  social: Coffee,
+  training: Dumbbell,
+  beginner: Sparkles,
+  showPast: Eye,
 }
 
 export type EventFiltersProps = {
   facetCounts?: FacetCounts
+  hideCountsWhenInactive?: boolean
+  /** Override the facet list (default: EVENT_FACETS). */
+  facets?: readonly EventFacetDef[]
 }
 
-export function EventFilters({ facetCounts }: EventFiltersProps = {}) {
-  const t = useTranslations('events.filters')
-  const router = useRouter()
-  const pathname = usePathname()
-  const searchParams = useSearchParams()
-
-  const initialSearch = searchParams.get('search') ?? ''
-  const [search, setSearch] = useState(initialSearch)
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  useEffect(() => {
-    setSearch(searchParams.get('search') ?? '')
-  }, [searchParams])
-
-  const updateParams = (updates: Record<string, string>) => {
-    const params = new URLSearchParams(searchParams)
-    for (const [key, val] of Object.entries(updates)) {
-      if (val) params.set(key, val)
-      else params.delete(key)
-    }
-    const query = params.toString()
-    router.push(query ? `${pathname}?${query}` : pathname)
-  }
-
-  const onSearchChange = (value: string) => {
-    setSearch(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      updateParams({ search: value.trim() })
-    }, SEARCH_DEBOUNCE_MS)
-  }
-
-  const isFacetActive = (facet: FacetDef) =>
-    searchParams.get(facet.param) === facet.value
-
-  const toggleFacet = (facet: FacetDef) => {
-    updateParams({ [facet.param]: isFacetActive(facet) ? '' : facet.value })
-  }
-
-  const hasFilters =
-    Boolean(initialSearch) || EVENT_FACETS.some((f) => isFacetActive(f))
-
+export function EventFilters({
+  facetCounts,
+  hideCountsWhenInactive,
+  facets = EVENT_FACETS,
+}: EventFiltersProps = {}) {
   return (
-    <div className="mb-6 flex flex-col gap-3">
-      <div className="relative">
-        <Search
-          aria-hidden="true"
-          className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-text-secondary"
-        />
-        <Input
-          type="search"
-          aria-label={t('searchLabel')}
-          value={search}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={t('searchPlaceholder')}
-          className="pl-9"
-        />
-      </div>
-
-      <div className="flex flex-wrap items-center gap-2">
-        {EVENT_FACETS.map((facet) => {
-          const active = isFacetActive(facet)
-          const Icon = FACET_ICONS[facet.key]
-          const count = facetCounts?.[facet.key]
-          const disabled = count === 0 && !active
-          return (
-            <button
-              key={facet.key}
-              type="button"
-              onClick={() => toggleFacet(facet)}
-              aria-pressed={active}
-              disabled={disabled}
-              className={
-                active
-                  ? 'inline-flex items-center gap-1.5 rounded-full border border-primary bg-primary px-3 py-1.5 text-sm font-medium text-white'
-                  : disabled
-                    ? 'inline-flex cursor-not-allowed items-center gap-1.5 rounded-full border border-border bg-surface-variant px-3 py-1.5 text-sm text-text-secondary line-through decoration-text-tertiary/50'
-                    : 'inline-flex items-center gap-1.5 rounded-full border border-border bg-surface px-3 py-1.5 text-sm text-text-primary hover:border-primary/40 hover:bg-primary/5'
-              }
-            >
-              <Icon aria-hidden="true" className="h-3.5 w-3.5" />
-              {t(`facets.${facet.key}`)}
-              {count !== undefined && (
-                <span
-                  className={
-                    active
-                      ? 'ml-0.5 text-xs font-semibold opacity-90'
-                      : 'ml-0.5 text-xs text-text-secondary'
-                  }
-                >
-                  {count}
-                </span>
-              )}
-            </button>
-          )
-        })}
-
-        {hasFilters && (
-          <button
-            type="button"
-            onClick={() => router.push(pathname)}
-            className="ml-auto inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-sm text-text-secondary hover:bg-surface-variant"
-            aria-label={t('clearFilters')}
-          >
-            <X aria-hidden="true" className="h-3.5 w-3.5" />
-            {t('clearFilters')}
-          </button>
-        )}
-      </div>
-    </div>
+    <FacetCombobox
+      facets={facets}
+      iconMap={FACET_ICONS}
+      facetCounts={facetCounts}
+      namespace="events.filters"
+      hideCountsWhenInactive={hideCountsWhenInactive}
+    />
   )
 }
