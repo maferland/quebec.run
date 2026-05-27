@@ -20,3 +20,13 @@ export class ConflictError extends Error {
     this.name = 'ConflictError'
   }
 }
+
+export class EmailSendError extends Error {
+  cause?: unknown
+
+  constructor(message: string, cause?: unknown) {
+    super(message)
+    this.name = 'EmailSendError'
+    this.cause = cause
+  }
+}

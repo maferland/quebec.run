@@ -11,7 +11,11 @@ import type {
 import { createSlug, createUniqueSlug } from '@/lib/utils/slug'
 import { getEventsInRange, expandRRuleDates } from './recurring-events'
 import { addDays } from 'date-fns'
-import { CLUB_FACETS, type ClubFacetKey } from '@/lib/facets'
+import {
+  CLUB_FACETS,
+  createEmptyFacetCounts,
+  type ClubFacetKey,
+} from '@/lib/facets'
 import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors'
 
 // We need the ClubId type for getClubById
@@ -65,13 +69,8 @@ function matchesClubFilters(
 
 export type ClubFacetCounts = Record<ClubFacetKey, number>
 
-const EMPTY_CLUB_FACET_COUNTS: ClubFacetCounts = {
-  road: 0,
-  trail: 0,
-  social: 0,
-  training: 0,
-  beginner: 0,
-}
+const EMPTY_CLUB_FACET_COUNTS: ClubFacetCounts =
+  createEmptyFacetCounts(CLUB_FACETS)
 
 function computeClubFacetCounts(
   clubs: NonNullable<ClubListItem>[],

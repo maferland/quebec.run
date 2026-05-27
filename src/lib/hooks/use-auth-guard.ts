@@ -13,15 +13,16 @@ export function useAuthGuard(
   const { data: session, status } = useSession()
   const router = useRouter()
   const hasRedirected = useRef(false)
+  const skip = options?.skip
 
   useEffect(() => {
-    if (options?.skip || hasRedirected.current) return
+    if (skip || hasRedirected.current) return
 
     if (status === 'authenticated' && session) {
       hasRedirected.current = true
       router.replace(redirectTo)
     }
-  }, [status, session, router, redirectTo, options?.skip])
+  }, [status, session, router, redirectTo, skip])
 
   return { isRedirecting: status === 'authenticated' && !!session }
 }

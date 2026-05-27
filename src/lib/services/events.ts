@@ -17,7 +17,11 @@ import {
   expandRRuleDates,
 } from './recurring-events'
 import { addDays } from 'date-fns'
-import { EVENT_FACETS, type FacetKey } from '@/lib/facets'
+import {
+  EVENT_FACETS,
+  createEmptyFacetCounts,
+  type FacetKey,
+} from '@/lib/facets'
 
 import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
 
@@ -160,16 +164,7 @@ export type FacetCounts = {
   showPast: number
 }
 
-const EMPTY_FACET_COUNTS: FacetCounts = {
-  openPace: 0,
-  morning: 0,
-  evening: 0,
-  weekend: 0,
-  social: 0,
-  training: 0,
-  beginner: 0,
-  showPast: 0,
-}
+const EMPTY_FACET_COUNTS: FacetCounts = createEmptyFacetCounts(EVENT_FACETS)
 
 export type EventListing = {
   buckets: EventLocation[]

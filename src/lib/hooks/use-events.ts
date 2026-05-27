@@ -5,18 +5,13 @@ import type {
   EventCreate,
   EventUpdate,
 } from '@/lib/schemas'
+import { buildFetchUrl } from '@/lib/utils/fetch-url'
 
 // API functions
 async function fetchUpcomingEvents(
   query: EventsQuery = {}
 ): Promise<EventWithClub[]> {
-  const params = new URLSearchParams()
-  if (query.limit) params.set('limit', query.limit.toString())
-  if (query.offset) params.set('offset', query.offset.toString())
-  if (query.clubId) params.set('clubId', query.clubId)
-
-  const url = `/api/events${params.toString() ? `?${params.toString()}` : ''}`
-  const response = await fetch(url)
+  const response = await fetch(buildFetchUrl('/api/events', query))
 
   if (!response.ok) {
     throw new Error('Failed to fetch events')
