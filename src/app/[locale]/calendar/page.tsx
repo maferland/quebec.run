@@ -1,4 +1,6 @@
+import type { Metadata } from 'next'
 import { getTranslations, getLocale } from 'next-intl/server'
+import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 import { Card } from '@/components/ui/card'
 import { Tag } from '@/components/ui/tag'
 import { Link } from '@/components/ui/link'
@@ -12,6 +14,21 @@ import { eventUrl } from '@/lib/utils/event-url'
 import { Calendar, Clock, MapPin, Users, Route, Gauge } from 'lucide-react'
 
 export const dynamic = 'force-dynamic'
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>
+}): Promise<Metadata> {
+  const { locale } = await params
+  const t = await getTranslations({ locale, namespace: 'metadata.calendar' })
+  return buildPageMetadata({
+    locale: locale as Locale,
+    path: '/calendar',
+    title: t('title'),
+    description: t('description'),
+  })
+}
 
 type SearchParams = Record<string, string | string[] | undefined>
 
