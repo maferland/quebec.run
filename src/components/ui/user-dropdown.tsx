@@ -73,7 +73,7 @@ export function UserDropdown({ userName, userEmail }: UserDropdownProps) {
               className="flex items-center px-4 py-2 text-sm text-text-primary hover:bg-surface-variant transition-colors"
               onClick={() => setIsOpen(false)}
             >
-              Privacy Settings
+              {t('privacySettings')}
             </Link>
             <button
               onClick={handleSignOut}

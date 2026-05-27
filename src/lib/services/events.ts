@@ -392,21 +392,30 @@ export async function getCalendarListing({
 
   const all = await getEventsInRange(startDate, endDate, resolution.clubId)
   const filtered = all.filter((event) => matchesFilters(event, data))
-
-  const facetCounts: FacetCounts = { ...EMPTY_FACET_COUNTS }
-  for (const event of all) {
-    if (!event.club) continue
-    for (const facet of EVENT_FACETS) {
-      if (matchesFilters(event, { ...data, [facet.param]: facet.value })) {
-        facetCounts[facet.key] += 1
-      }
-    }
-  }
+  const facetCounts = countEventFacets(all, data)
 
   return {
     events: filtered.slice(offset, offset + limit),
     facetCounts,
   }
+}
+
+// Shared "if I added this facet on top of current filters" counter for surfaces
+// that don't need the bucket/override split (calendar list, future flat lists).
+function countEventFacets(
+  events: GetAllEventsReturn[],
+  data: EventsQuery
+): FacetCounts {
+  const counts: FacetCounts = { ...EMPTY_FACET_COUNTS }
+  for (const event of events) {
+    if (!event.club) continue
+    for (const facet of EVENT_FACETS) {
+      if (matchesFilters(event, { ...data, [facet.param]: facet.value })) {
+        counts[facet.key] += 1
+      }
+    }
+  }
+  return counts
 }
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
