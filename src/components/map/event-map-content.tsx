@@ -108,38 +108,30 @@ export default function EventMapContent({
                   )}
 
                   {multi ? (
-                    <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
-                      {group.map((event) => {
-                        const weekday = event.date
-                          .toLocaleDateString('fr-CA', { weekday: 'short' })
-                          .replace('.', '')
-                        return (
-                          <li key={event.id}>
-                            <Link
-                              href={eventUrl(event)}
-                              className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface px-3 py-2 hover:border-primary hover:shadow-sm transition-all"
+                    <ul className="m-0 p-0 list-none grid justify-start gap-y-1">
+                      {group.map((event) => (
+                        <li key={event.id}>
+                          <Link
+                            href={eventUrl(event)}
+                            className="block transition-opacity hover:opacity-80"
+                          >
+                            <Tag
+                              variant="datetime"
+                              icon={Clock}
+                              size="xs"
+                              className="tabular-nums"
                             >
-                              <div className="flex items-center gap-2.5 min-w-0">
-                                <span className="font-heading font-bold text-primary tabular-nums text-base leading-none">
-                                  {event.date.getDate()}
-                                </span>
-                                <div className="flex flex-col leading-tight">
-                                  <span className="text-[10px] uppercase tracking-wider font-heading font-bold text-text-secondary">
-                                    {weekday}
-                                  </span>
-                                  <span className="text-xs text-text-primary tabular-nums">
-                                    {event.time}
-                                  </span>
-                                </div>
-                              </div>
+                              <span className="flex-1">
+                                {formatDateTime(event.date, event.time)}
+                              </span>
                               <ChevronRight
                                 aria-hidden="true"
-                                className="size-4 text-text-secondary shrink-0"
+                                className="size-3.5 -mr-0.5 opacity-70 shrink-0"
                               />
-                            </Link>
-                          </li>
-                        )
-                      })}
+                            </Tag>
+                          </Link>
+                        </li>
+                      ))}
                     </ul>
                   ) : (
                     <>
