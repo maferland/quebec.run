@@ -92,3 +92,12 @@
 body {
   font-family: Arial, Helvetica, sans-serif;
 }
+
+/* Tighten Leaflet popup chrome so our compact map popups breathe properly. */
+.leaflet-popup-content {
+  margin: 12px 14px;
+  line-height: 1.4;
+}
+.leaflet-popup-content p {
+  margin: 0;
+}

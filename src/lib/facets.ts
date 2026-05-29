@@ -53,3 +53,11 @@ export const CLUB_FACETS: readonly ClubFacetDef[] = [
   { key: 'training', param: 'vibe', value: 'TRAINING' },
   { key: 'beginner', param: 'beginner', value: '1' },
 ] as const
+
+export function createEmptyFacetCounts<TKey extends string>(
+  facets: readonly { key: TKey }[]
+): Record<TKey, number> {
+  const counts = {} as Record<TKey, number>
+  for (const facet of facets) counts[facet.key] = 0
+  return counts
+}

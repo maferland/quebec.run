@@ -1,4 +1,5 @@
 import { env } from '@/lib/env'
+import { EmailSendError } from '@/lib/errors'
 import { prisma } from '@/lib/prisma'
 import { PrismaAdapter } from '@next-auth/prisma-adapter'
 import { NextAuthOptions } from 'next-auth'
@@ -33,8 +34,10 @@ const createEmailProvider = () => {
             `,
           })
         } catch (error) {
-          console.error('Failed to send email with Resend:', error)
-          throw error
+          throw new EmailSendError(
+            `Failed to send sign-in email to ${email}`,
+            error
+          )
         }
       },
     })

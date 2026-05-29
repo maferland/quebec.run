@@ -15,8 +15,9 @@ import { Tag } from '@/components/ui/tag'
 import { LocationInline } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
 import { eventUrl } from '@/lib/utils/event-url'
+import { groupByLocation } from '@/lib/utils/group-by-location'
 import { markerIconConfig } from '@/lib/utils/map'
-import { Clock } from 'lucide-react'
+import { ChevronRight, Clock } from 'lucide-react'
 
 // Custom blue-indigo marker icon
 const markerIcon = new Icon(markerIconConfig)
@@ -42,17 +43,19 @@ const createClusterIcon = (cluster: MarkerCluster) => {
   })
 }
 
+type MapEvent = {
+  id: string
+  title: string
+  date: Date
+  time: string
+  address: string | null
+  latitude: number
+  longitude: number
+  club: { id: string; name: string; slug: string } | null
+}
+
 interface EventMapContentProps {
-  events: Array<{
-    id: string
-    title: string
-    date: Date
-    time: string
-    address: string | null
-    latitude: number
-    longitude: number
-    club: { id: string; name: string; slug: string } | null
-  }>
+  events: MapEvent[]
   initialCenter: [number, number]
   initialZoom: number
 }
@@ -63,6 +66,7 @@ export default function EventMapContent({
   initialZoom,
 }: EventMapContentProps) {
   const t = useTranslations('home.map.popup')
+  const groups = groupByLocation(events)
 
   return (
     <MapContainer
@@ -78,45 +82,79 @@ export default function EventMapContent({
         showCoverageOnHover={false}
         maxClusterRadius={35}
       >
-        {events.map((event) => (
-          <Marker
-            key={event.id}
-            position={[event.latitude, event.longitude]}
-            icon={markerIcon}
-          >
-            <Popup>
-              <div className="min-w-[240px]">
-                <div className="flex items-start gap-3 mb-3">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-heading font-bold text-primary mb-2 line-clamp-2 leading-tight">
-                      {event.title}
-                    </h3>
-                    {event.club && (
-                      <p className="text-xs text-accent font-body">
-                        {event.club.name}
-                      </p>
-                    )}
-                  </div>
-                  <Tag variant="datetime" icon={Clock} size="xs">
-                    {formatDateTime(event.date, event.time)}
-                  </Tag>
+        {groups.map((group) => {
+          const head = group[0]
+          const multi = group.length > 1
+          return (
+            <Marker
+              key={head.id}
+              position={[head.latitude, head.longitude]}
+              icon={markerIcon}
+            >
+              <Popup>
+                <div className="min-w-[240px]">
+                  <h3 className="text-lg font-heading font-bold text-primary line-clamp-2 leading-tight mb-1">
+                    {head.title}
+                  </h3>
+                  {head.club && head.club.name !== head.title && (
+                    <p className="text-xs text-accent font-body mb-1">
+                      {head.club.name}
+                    </p>
+                  )}
+                  {head.address && (
+                    <div className="mb-3">
+                      <LocationInline address={head.address} />
+                    </div>
+                  )}
+
+                  {multi ? (
+                    <ul className="m-0 p-0 list-none grid justify-start gap-y-1">
+                      {group.map((event) => (
+                        <li key={event.id}>
+                          <Link
+                            href={eventUrl(event)}
+                            className="block transition-opacity hover:opacity-80"
+                          >
+                            <Tag
+                              variant="datetime"
+                              icon={Clock}
+                              size="xs"
+                              className="tabular-nums"
+                            >
+                              <span className="flex-1">
+                                {formatDateTime(event.date, event.time)}
+                              </span>
+                              <ChevronRight
+                                aria-hidden="true"
+                                className="size-3.5 -mr-0.5 opacity-70 shrink-0"
+                              />
+                            </Tag>
+                          </Link>
+                        </li>
+                      ))}
+                    </ul>
+                  ) : (
+                    <>
+                      <Tag
+                        variant="datetime"
+                        icon={Clock}
+                        size="xs"
+                        className="mb-3"
+                      >
+                        {formatDateTime(head.date, head.time)}
+                      </Tag>
+                      <Link href={eventUrl(head)}>
+                        <Button size="sm" variant="primary" className="w-full">
+                          {t('viewDetails')}
+                        </Button>
+                      </Link>
+                    </>
+                  )}
                 </div>
-
-                {event.address && (
-                  <div className="mb-3">
-                    <LocationInline address={event.address} />
-                  </div>
-                )}
-
-                <Link href={eventUrl(event)}>
-                  <Button size="sm" variant="primary" className="w-full">
-                    {t('viewDetails')}
-                  </Button>
-                </Link>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
+              </Popup>
+            </Marker>
+          )
+        })}
       </MarkerClusterGroup>
     </MapContainer>
   )
