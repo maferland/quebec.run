@@ -93,17 +93,14 @@ export default function EventMapContent({
             >
               <Popup>
                 <div className="min-w-[240px]">
-                  <div className="mb-3">
-                    <h3 className="text-lg font-heading font-bold text-primary mb-1 line-clamp-2 leading-tight">
-                      {head.title}
-                    </h3>
-                    {head.club && (
-                      <p className="text-xs text-accent font-body">
-                        {head.club.name}
-                      </p>
-                    )}
-                  </div>
-
+                  <h3 className="text-lg font-heading font-bold text-primary line-clamp-2 leading-tight mb-1">
+                    {head.title}
+                  </h3>
+                  {head.club && head.club.name !== head.title && (
+                    <p className="text-xs text-accent font-body mb-1">
+                      {head.club.name}
+                    </p>
+                  )}
                   {head.address && (
                     <div className="mb-3">
                       <LocationInline address={head.address} />
@@ -111,38 +108,49 @@ export default function EventMapContent({
                   )}
 
                   {multi ? (
-                    <ul className="m-0 p-0 list-none space-y-0.5">
-                      {group.map((event) => (
-                        <li key={event.id}>
-                          <Link
-                            href={eventUrl(event)}
-                            className="block transition-opacity hover:opacity-80"
-                          >
-                            <Tag
-                              variant="datetime"
-                              icon={Clock}
-                              size="xs"
-                              className="w-full tabular-nums"
+                    <ul className="m-0 p-0 list-none flex flex-col gap-1.5">
+                      {group.map((event) => {
+                        const weekday = event.date
+                          .toLocaleDateString('fr-CA', { weekday: 'short' })
+                          .replace('.', '')
+                        return (
+                          <li key={event.id}>
+                            <Link
+                              href={eventUrl(event)}
+                              className="flex items-center justify-between gap-3 rounded-lg border border-border-subtle bg-surface px-3 py-2 hover:border-primary hover:shadow-sm transition-all"
                             >
-                              <span className="flex-1">
-                                {formatDateTime(event.date, event.time)}
-                              </span>
+                              <div className="flex items-center gap-2.5 min-w-0">
+                                <span className="font-heading font-bold text-primary tabular-nums text-base leading-none">
+                                  {event.date.getDate()}
+                                </span>
+                                <div className="flex flex-col leading-tight">
+                                  <span className="text-[10px] uppercase tracking-wider font-heading font-bold text-text-secondary">
+                                    {weekday}
+                                  </span>
+                                  <span className="text-xs text-text-primary tabular-nums">
+                                    {event.time}
+                                  </span>
+                                </div>
+                              </div>
                               <ChevronRight
                                 aria-hidden="true"
-                                className="size-3.5 -mr-0.5 opacity-70 shrink-0"
+                                className="size-4 text-text-secondary shrink-0"
                               />
-                            </Tag>
-                          </Link>
-                        </li>
-                      ))}
+                            </Link>
+                          </li>
+                        )
+                      })}
                     </ul>
                   ) : (
                     <>
-                      <div className="mb-3">
-                        <Tag variant="datetime" icon={Clock} size="xs">
-                          {formatDateTime(head.date, head.time)}
-                        </Tag>
-                      </div>
+                      <Tag
+                        variant="datetime"
+                        icon={Clock}
+                        size="xs"
+                        className="mb-3"
+                      >
+                        {formatDateTime(head.date, head.time)}
+                      </Tag>
                       <Link href={eventUrl(head)}>
                         <Button size="sm" variant="primary" className="w-full">
                           {t('viewDetails')}
