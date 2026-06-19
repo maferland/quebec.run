@@ -8,6 +8,7 @@ import {
   getClubById,
   getClubListing,
   updateClub,
+  getClubsForExplore,
 } from './clubs'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
@@ -392,6 +393,43 @@ describe('Clubs Service Integration Tests', () => {
         where: { id: testClub.id },
       })
       expect(dbClub).toBeNull()
+    })
+  })
+
+  describe('getClubsForExplore', () => {
+    it('returns the seeded club', async () => {
+      const clubs = await getClubsForExplore()
+      expect(clubs.length).toBeGreaterThanOrEqual(1)
+      const names = clubs.map((c) => c.name)
+      expect(names).toContain('Test Running Club')
+    })
+
+    it('returns ExploreClub shape', async () => {
+      const clubs = await getClubsForExplore()
+      const club = clubs[0]
+      expect(club).toMatchObject({
+        id: expect.any(String),
+        slug: expect.any(String),
+        name: expect.any(String),
+        beginnerFriendly: expect.any(Boolean),
+        memberCount: expect.any(Number),
+      })
+      // nullable fields present in shape
+      expect('type' in club).toBe(true)
+      expect('vibe' in club).toBe(true)
+      expect('paceMin' in club).toBe(true)
+      expect('paceMax' in club).toBe(true)
+      expect('description' in club).toBe(true)
+      expect('website' in club).toBe(true)
+      expect('lat' in club).toBe(true)
+      expect('lng' in club).toBe(true)
+    })
+
+    it('memberCount reflects active recurring event count', async () => {
+      const clubs = await getClubsForExplore()
+      const club = clubs.find((c) => c.name === 'Test Running Club')
+      // Seed does not create recurring events for the test club → count = 0
+      expect(club?.memberCount).toBe(0)
     })
   })
 })

@@ -365,6 +365,72 @@ export async function getClubBySlug({ slug }: ClubSlug) {
   return { ...club, patterns }
 }
 
+// ─── Explore data layer ───────────────────────────────────────────────────────
+
+export type ExploreClub = {
+  id: string
+  slug: string
+  name: string
+  type: string | null
+  vibe: string | null
+  beginnerFriendly: boolean
+  paceMin: string | null
+  paceMax: string | null
+  description: string | null
+  website: string | null
+  instagram: string | null
+  facebook: string | null
+  memberCount: number
+  lat: number | null
+  lng: number | null
+}
+
+export async function getClubsForExplore(): Promise<ExploreClub[]> {
+  const clubs = await prisma.club.findMany({
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      vibe: true,
+      beginnerFriendly: true,
+      paceMin: true,
+      paceMax: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      _count: {
+        select: { recurringEvents: { where: { isActive: true } } },
+      },
+      addresses: {
+        where: { latitude: { not: null }, longitude: { not: null } },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  return clubs.map((club) => ({
+    id: club.id,
+    slug: club.slug,
+    name: club.name,
+    type: club.type ?? null,
+    vibe: club.vibe ?? null,
+    beginnerFriendly: club.beginnerFriendly,
+    paceMin: club.paceMin ?? null,
+    paceMax: club.paceMax ?? null,
+    description: club.description ?? null,
+    website: club.website ?? null,
+    instagram: club.instagram ?? null,
+    facebook: club.facebook ?? null,
+    memberCount: club._count.recurringEvents,
+    lat: club.addresses[0]?.latitude ?? null,
+    lng: club.addresses[0]?.longitude ?? null,
+  }))
+}
+
 export const updateClubById = async ({
   user,
   data,

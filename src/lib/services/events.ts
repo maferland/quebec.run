@@ -25,6 +25,246 @@ import {
 
 import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
 
+// ─── Explore data layer ───────────────────────────────────────────────────────
+
+export type ExploreRun = {
+  id: string
+  title: string
+  time: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  lat: number | null
+  lng: number | null
+  distance: string | null
+  isPast: boolean
+  address: string | null
+  club: {
+    id: string
+    slug: string
+    name: string
+    type: string | null
+    vibe: string | null
+    beginnerFriendly: boolean
+    paceMin: string | null
+    paceMax: string | null
+  }
+}
+
+// Returns {start, end} UTC boundaries for a Toronto calendar day offset from today.
+function getTorontoDayBounds(dayOffset: number): { start: Date; end: Date } {
+  const target = new Date()
+  target.setDate(target.getDate() + dayOffset)
+
+  // Get Toronto date string (sv-SE locale returns "YYYY-MM-DD")
+  const dateStr = new Intl.DateTimeFormat('sv-SE', {
+    timeZone: 'America/Toronto',
+  }).format(target)
+  const [ty, tm, td] = dateStr.split('-').map(Number)
+
+  // Find Toronto's UTC offset by checking what hour noon UTC is in Toronto.
+  const noonUTC = new Date(Date.UTC(ty, tm - 1, td, 12, 0, 0))
+  const noonTorontoHour = parseInt(
+    new Intl.DateTimeFormat('en-US', {
+      timeZone: 'America/Toronto',
+      hour: 'numeric',
+      hour12: false,
+    }).format(noonUTC),
+    10
+  )
+  const offsetHours = 12 - noonTorontoHour // 4 (EDT) or 5 (EST)
+
+  const start = new Date(Date.UTC(ty, tm - 1, td, offsetHours, 0, 0))
+  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
+  return { start, end }
+}
+
+function toExploreRun(
+  event: {
+    id: string
+    title: string
+    time: string
+    status: 'SCHEDULED' | 'CANCELLED'
+    latitude: number | null
+    longitude: number | null
+    distance: string | null
+    address: string | null
+    club: {
+      id: string
+      slug: string
+      name: string
+      type: string | null
+      vibe: string | null
+      beginnerFriendly: boolean
+      paceMin: string | null
+      paceMax: string | null
+    } | null
+  },
+  now: Date
+): ExploreRun | null {
+  if (!event.club) return null
+  const [h, m] = event.time.split(':').map(Number)
+  const eventMinutes = (h ?? 0) * 60 + (m ?? 0)
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  return {
+    id: event.id,
+    title: event.title,
+    time: event.time,
+    status: event.status,
+    lat: event.latitude,
+    lng: event.longitude,
+    distance: event.distance,
+    isPast: eventMinutes < nowMinutes,
+    address: event.address,
+    club: event.club,
+  }
+}
+
+const EXPLORE_CLUB_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  type: true,
+  vibe: true,
+  beginnerFriendly: true,
+  paceMin: true,
+  paceMax: true,
+} as const
+
+export async function getEventsForDay(
+  dayOffset: number
+): Promise<ExploreRun[]> {
+  const { start, end } = getTorontoDayBounds(dayOffset)
+  const now = new Date()
+  const isToday = dayOffset === 0
+
+  // Concrete events (including CANCELLED) — exclude those whose recurring parent is inactive
+  const concreteEvents = await prisma.event.findMany({
+    where: {
+      date: { gte: start, lte: end },
+      OR: [{ recurringEventId: null }, { recurringEvent: { isActive: true } }],
+    },
+    select: {
+      id: true,
+      title: true,
+      time: true,
+      status: true,
+      latitude: true,
+      longitude: true,
+      distance: true,
+      address: true,
+      recurringEventId: true,
+      club: { select: EXPLORE_CLUB_SELECT },
+    },
+    orderBy: { time: 'asc' },
+  })
+
+  // Keys of dates that have concrete events (to skip virtual expansion)
+  const materializedKeys = new Set(
+    concreteEvents.map((e) => `${e.recurringEventId}`)
+  )
+
+  // Expand active recurring events for this day, skipping materialized dates
+  const recurringEvents = await prisma.recurringEvent.findMany({
+    where: { isActive: true },
+    include: { club: true },
+  })
+
+  const virtualEvents = recurringEvents.flatMap((re) => {
+    const occurrences = expandRRuleDates(re.schedulePattern, start, end)
+    // Check if this pattern has a concrete event on this day
+    const hasConcreteOnDay = concreteEvents.some(
+      (e) => e.recurringEventId === re.id
+    )
+    if (hasConcreteOnDay) return []
+    return occurrences.map((date) => {
+      const virt = createVirtualEvent(re, date)
+      return {
+        id: virt.id,
+        title: virt.title,
+        time: virt.time,
+        status: 'SCHEDULED' as const,
+        latitude: virt.latitude,
+        longitude: virt.longitude,
+        distance: virt.distance,
+        address: virt.address,
+        recurringEventId: re.id,
+        club: {
+          id: re.club.id,
+          slug: re.club.slug,
+          name: re.club.name,
+          type: re.club.type ?? null,
+          vibe: re.club.vibe ?? null,
+          beginnerFriendly: re.club.beginnerFriendly,
+          paceMin: re.club.paceMin ?? null,
+          paceMax: re.club.paceMax ?? null,
+        },
+      }
+    })
+  })
+
+  void materializedKeys // used implicitly above
+
+  const all = [...concreteEvents, ...virtualEvents].sort((a, b) =>
+    a.time.localeCompare(b.time)
+  )
+
+  // isPast only applies to today's runs
+  const effectiveNow = isToday ? now : new Date(0)
+  return all
+    .map((e) => toExploreRun(e, effectiveNow))
+    .filter((e): e is ExploreRun => e !== null)
+}
+
+export async function getWeekEventCounts(): Promise<
+  { day: number; count: number }[]
+> {
+  const counts: { day: number; count: number }[] = []
+
+  await Promise.all(
+    Array.from({ length: 7 }, async (_, dayOffset) => {
+      const { start, end } = getTorontoDayBounds(dayOffset)
+
+      // Count concrete scheduled events
+      const concreteCount = await prisma.event.count({
+        where: {
+          date: { gte: start, lte: end },
+          status: 'SCHEDULED',
+          OR: [
+            { recurringEventId: null },
+            { recurringEvent: { isActive: true } },
+          ],
+        },
+      })
+
+      // Count virtual (recurring) events for this day that don't have concrete counterparts
+      const recurringEvents = await prisma.recurringEvent.findMany({
+        where: { isActive: true },
+        select: { id: true, schedulePattern: true },
+      })
+      const concreteRecurringIds = await prisma.event
+        .findMany({
+          where: {
+            date: { gte: start, lte: end },
+            status: 'SCHEDULED',
+            recurringEventId: { not: null },
+          },
+          select: { recurringEventId: true },
+        })
+        .then((rows) => new Set(rows.map((r) => r.recurringEventId)))
+
+      let virtualCount = 0
+      for (const re of recurringEvents) {
+        if (concreteRecurringIds.has(re.id)) continue
+        const occurrences = expandRRuleDates(re.schedulePattern, start, end)
+        virtualCount += occurrences.length
+      }
+
+      counts.push({ day: dayOffset, count: concreteCount + virtualCount })
+    })
+  )
+
+  return counts.sort((a, b) => a.day - b.day)
+}
+
 // Pure business logic functions - let TypeScript infer return types
 
 const DEFAULT_LOOKAHEAD_DAYS = 60

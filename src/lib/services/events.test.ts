@@ -10,6 +10,8 @@ import {
   createEvent,
   updateEvent,
   deleteEvent,
+  getEventsForDay,
+  getWeekEventCounts,
 } from './events'
 import { geocodeAddress } from './geocoding'
 import { addDays } from 'date-fns'
@@ -1159,6 +1161,78 @@ describe('Events Service Integration Tests', () => {
         const day = event.date.getDay()
         expect([0, 6]).toContain(day)
       })
+    })
+  })
+
+  describe('getEventsForDay', () => {
+    it('returns runs for the correct day offset', async () => {
+      // Seed creates "Morning Test Run" at offset +1 (tomorrow)
+      const runs = await getEventsForDay(1)
+      expect(runs.length).toBeGreaterThanOrEqual(1)
+      const titles = runs.map((r) => r.title)
+      expect(titles).toContain('Morning Test Run')
+    })
+
+    it('returns empty array when no events fall on the given offset', async () => {
+      // Seed has nothing on day 0 (today)
+      const runs = await getEventsForDay(0)
+      expect(runs).toEqual([])
+    })
+
+    it('returns ExploreRun shape', async () => {
+      const runs = await getEventsForDay(1)
+      expect(runs.length).toBeGreaterThan(0)
+      const run = runs[0]
+      expect(run).toMatchObject({
+        id: expect.any(String),
+        title: expect.any(String),
+        time: expect.any(String),
+        status: expect.stringMatching(/^(SCHEDULED|CANCELLED)$/),
+        isPast: expect.any(Boolean),
+        club: expect.objectContaining({
+          id: expect.any(String),
+          slug: expect.any(String),
+          name: expect.any(String),
+        }),
+      })
+    })
+
+    it('does not return events from a different day', async () => {
+      // Day 2 has "Evening Test Run", day 1 should not contain it
+      const day1 = await getEventsForDay(1)
+      const day2 = await getEventsForDay(2)
+      const day1Titles = day1.map((r) => r.title)
+      const day2Titles = day2.map((r) => r.title)
+      expect(day1Titles).not.toContain('Evening Test Run')
+      expect(day2Titles).toContain('Evening Test Run')
+    })
+  })
+
+  describe('getWeekEventCounts', () => {
+    it('returns exactly 7 entries', async () => {
+      const counts = await getWeekEventCounts()
+      expect(counts).toHaveLength(7)
+    })
+
+    it('entries have day (0-6) and count shape', async () => {
+      const counts = await getWeekEventCounts()
+      counts.forEach(({ day, count }) => {
+        expect(day).toBeGreaterThanOrEqual(0)
+        expect(day).toBeLessThanOrEqual(6)
+        expect(typeof count).toBe('number')
+        expect(count).toBeGreaterThanOrEqual(0)
+      })
+    })
+
+    it('reflects seed data counts', async () => {
+      const counts = await getWeekEventCounts()
+      const byDay = Object.fromEntries(
+        counts.map(({ day, count }) => [day, count])
+      )
+      // Seed has 1 event at offset 1 and 1 event at offset 2
+      expect(byDay[1]).toBe(1)
+      expect(byDay[2]).toBe(1)
+      expect(byDay[0]).toBe(0)
     })
   })
 })
