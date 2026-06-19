@@ -41,16 +41,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
 
   return [
     ...staticEntry('', 1.0, 'daily'),
-    ...staticEntry('/clubs', 0.9, 'daily'),
-    ...staticEntry('/events', 0.8, 'daily'),
-    ...staticEntry('/calendar', 0.8, 'daily'),
     ...clubs.flatMap((club) =>
       LOCALES.map((locale: Locale) => ({
-        url: `${SITE_URL}/${locale}/clubs/${club.slug}`,
+        url: `${SITE_URL}/${locale}/club/${club.slug}`,
         priority: 0.7,
         changeFrequency: 'weekly' as const,
         lastModified: club.updatedAt,
-        alternates: alternates(`/clubs/${club.slug}`),
+        alternates: alternates(`/club/${club.slug}`),
       }))
     ),
   ]
