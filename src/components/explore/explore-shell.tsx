@@ -19,11 +19,15 @@ import {
   filterCount,
   runMatches,
   clubMatches,
+  DEFAULT_FILTERS,
   type Filters,
 } from './filter-panel'
+import { EmptyDay, NoMatch, AllDoneNote } from './quiet-states'
+import { PassportFAB } from './passport/passport-fab'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 
+const PASSPORT_ENABLED = Boolean(process.env.NEXT_PUBLIC_PASSPORT_ENABLED)
 const RAIL_WIDTH = 404
 
 type Mode = 'runs' | 'clubs'
@@ -357,6 +361,11 @@ function ExploreShellInner() {
     </>
   )
 
+  const clearFilters = useCallback(
+    () => updateUrl({ filters: DEFAULT_FILTERS }),
+    [updateUrl]
+  )
+
   const list = (
     <RunList
       runs={filteredRuns}
@@ -372,6 +381,9 @@ function ExploreShellInner() {
       nowMin={nowMin}
       locale={locale}
       router={router}
+      hasActiveFilters={activeFilterCount > 0}
+      onClearFilters={clearFilters}
+      allRuns={runs}
     />
   )
 
@@ -642,6 +654,9 @@ function ExploreShellInner() {
           tr={tr}
         />
       )}
+
+      {/* Passport FAB */}
+      {PASSPORT_ENABLED && <PassportFAB tr={tr} />}
     </div>
   )
 }
@@ -794,6 +809,9 @@ function RunList({
   nowMin,
   locale,
   router,
+  hasActiveFilters,
+  onClearFilters,
+  allRuns,
 }: {
   runs: ExploreRun[]
   clubs: ExploreClub[]
@@ -808,6 +826,9 @@ function RunList({
   nowMin: number
   locale: string
   router: ReturnType<typeof useRouter>
+  hasActiveFilters: boolean
+  onClearFilters: () => void
+  allRuns: ExploreRun[]
 }) {
   if (loading) {
     return (
@@ -825,31 +846,7 @@ function RunList({
 
   if (mode === 'clubs') {
     if (clubs.length === 0) {
-      return (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            textAlign: 'center',
-            gap: 14,
-            padding: '42px 24px 30px',
-          }}
-        >
-          <h3 style={{ fontSize: 18 }}>{tr('no_match_title')}</h3>
-          <p
-            style={{
-              fontSize: 14,
-              color: 'var(--dim)',
-              maxWidth: 260,
-              lineHeight: 1.5,
-              margin: 0,
-            }}
-          >
-            {tr('no_match_body')}
-          </p>
-        </div>
-      )
+      return <NoMatch onClearFilters={onClearFilters} tr={tr} />
     }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -865,55 +862,26 @@ function RunList({
     )
   }
 
+  // No runs on this day at all (no filters applied)
+  if (allRuns.length === 0) {
+    return <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
+  }
+
+  // Filters excluded all runs
   if (runs.length === 0) {
-    const target =
-      week.find((d, i) => i > 0 && d.offset !== day && d.count > 0) ?? null
-    return (
-      <div
-        className="screen-enter"
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          textAlign: 'center',
-          gap: 14,
-          padding: '42px 24px 30px',
-        }}
-      >
-        <h3 style={{ fontSize: 18 }}>{tr('no_runs_title')}</h3>
-        <p
-          style={{
-            fontSize: 14,
-            color: 'var(--dim)',
-            maxWidth: 260,
-            lineHeight: 1.5,
-            margin: 0,
-          }}
-        >
-          {tr('no_runs_body')}
-        </p>
-        {target && (
-          <button
-            onClick={() => setDay(target.offset)}
-            style={{
-              marginTop: 4,
-              border: 'none',
-              background: 'var(--accent)',
-              color: 'var(--accent-ink)',
-              borderRadius: 100,
-              padding: '12px 20px',
-              fontFamily: 'var(--font-ui)',
-              fontWeight: 700,
-              fontSize: 14,
-              cursor: 'pointer',
-            }}
-          >
-            {tr('no_runs_cta')} {target.short.toLowerCase()} ·{' '}
-            {target.dateLabel}
-          </button>
-        )}
-      </div>
+    return hasActiveFilters ? (
+      <NoMatch onClearFilters={onClearFilters} tr={tr} />
+    ) : (
+      <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
     )
+  }
+
+  // Today's runs are all in the past
+  const allPast =
+    day === 0 &&
+    runs.every((r) => r.status !== 'CANCELLED' && toMin(r.time) < nowMin)
+  if (allPast) {
+    return <AllDoneNote week={week} setDay={setDay} tr={tr} />
   }
 
   return (
