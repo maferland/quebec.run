@@ -40,9 +40,15 @@ export function runMatches(
   },
   filters: Filters
 ): boolean {
-  if (filters.types.length > 0 && !filters.types.includes(run.club.type ?? ''))
+  if (
+    filters.types.length > 0 &&
+    !filters.types.includes((run.club.type ?? '').toLowerCase())
+  )
     return false
-  if (filters.vibes.length > 0 && !filters.vibes.includes(run.club.vibe ?? ''))
+  if (
+    filters.vibes.length > 0 &&
+    !filters.vibes.includes((run.club.vibe ?? '').toLowerCase())
+  )
     return false
   if (filters.beginner && !run.club.beginnerFriendly) return false
   if (filters.tod !== 'all' && todBucket(run.time) !== filters.tod) return false
@@ -67,9 +73,15 @@ export function clubMatches(
   },
   filters: Filters
 ): boolean {
-  if (filters.types.length > 0 && !filters.types.includes(club.type ?? ''))
+  if (
+    filters.types.length > 0 &&
+    !filters.types.includes((club.type ?? '').toLowerCase())
+  )
     return false
-  if (filters.vibes.length > 0 && !filters.vibes.includes(club.vibe ?? ''))
+  if (
+    filters.vibes.length > 0 &&
+    !filters.vibes.includes((club.vibe ?? '').toLowerCase())
+  )
     return false
   if (filters.beginner && !club.beginnerFriendly) return false
   if (filters.pace !== 'any') {

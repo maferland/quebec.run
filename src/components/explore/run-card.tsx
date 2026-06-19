@@ -88,8 +88,12 @@ export function RunCard({
   const dimmed = isPast && !selected
 
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
-  const typeLabel = run.club.type ? tr(`type_${run.club.type}`) : null
-  const vibeLabel = run.club.vibe ? tr(`vibe_${run.club.vibe}`) : null
+  const typeLabel = run.club.type
+    ? tr(`type_${run.club.type.toLowerCase()}`)
+    : null
+  const vibeLabel = run.club.vibe
+    ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
+    : null
 
   return (
     <div
@@ -186,27 +190,29 @@ export function RunCard({
       >
         {typeLabel && <TypeTag kind={run.club.type} label={typeLabel} />}
         {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+        {vibeLabel && <VibePill label={vibeLabel} />}
       </div>
 
       {/* meta */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 14,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-        }}
-      >
-        {run.distance && (
-          <MetaPill icon={RulerIcon}>{run.distance} km</MetaPill>
-        )}
-        {pace && (
-          <MetaPill icon={GaugeIcon}>
-            {pace} {tr('pace_unit')}
-          </MetaPill>
-        )}
-        {vibeLabel && <VibePill label={vibeLabel} />}
-      </div>
+      {(run.distance || pace) && (
+        <div
+          style={{
+            display: 'flex',
+            gap: 14,
+            alignItems: 'center',
+            flexWrap: 'wrap',
+          }}
+        >
+          {run.distance && (
+            <MetaPill icon={RulerIcon}>{run.distance} km</MetaPill>
+          )}
+          {pace && (
+            <MetaPill icon={GaugeIcon}>
+              {pace} {tr('pace_unit')}
+            </MetaPill>
+          )}
+        </div>
+      )}
 
       {/* expanded reveal */}
       {selected && (

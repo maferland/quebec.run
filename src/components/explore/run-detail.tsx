@@ -400,7 +400,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
                 <div style={{ fontSize: 15, fontWeight: 600 }}>
                   {run.address}
                 </div>
-                {run.lat && run.lng && (
+                {!run.address && run.lat && run.lng && (
                   <div
                     style={{
                       fontFamily: 'var(--font-mono)',

@@ -2,21 +2,6 @@
 import type { ExploreClub } from '@/lib/services/clubs'
 import { TypeTag, VibePill, MetaPill, Flag, paceRange } from './badges'
 
-const PinIcon = (
-  <svg
-    width="13"
-    height="13"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 1 1 16 0Z" />
-    <circle cx="12" cy="10" r="3" />
-  </svg>
-)
 const UsersIcon = (
   <svg
     width="14"
@@ -58,8 +43,8 @@ type Props = {
 
 export function ClubCard({ club, onOpen, tr }: Props) {
   const pace = paceRange(club.paceMin, club.paceMax)
-  const typeLabel = club.type ? tr(`type_${club.type}`) : null
-  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe}`) : null
+  const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
+  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
 
   return (
     <div
@@ -86,23 +71,6 @@ export function ClubCard({ club, onOpen, tr }: Props) {
       >
         <div style={{ minWidth: 0 }}>
           <h3 style={{ fontSize: 17, margin: 0 }}>{club.name}</h3>
-          {club.description && (
-            <div
-              style={{
-                fontSize: 13,
-                color: 'var(--dim)',
-                marginTop: 3,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 6,
-              }}
-            >
-              <span style={{ color: 'var(--faint)', display: 'inline-flex' }}>
-                {PinIcon}
-              </span>
-              {club.description.slice(0, 60)}
-            </div>
-          )}
         </div>
         <span
           style={{
