@@ -101,3 +101,422 @@ body {
 .leaflet-popup-content p {
   margin: 0;
 }
+
+/* ─────────────────────────────────────────────────────────────
+   EXPLORE UI — design tokens + component styles
+   All scoped to .qr-root so admin pages are unaffected.
+   Dark is the default; [data-theme="light"] overrides.
+   ───────────────────────────────────────────────────────────── */
+
+.qr-root {
+  /* surfaces — cool charcoal (dark default) */
+  --bg: oklch(0.165 0.012 264);
+  --bg-2: oklch(0.205 0.014 264);
+  --surface: oklch(0.225 0.015 264);
+  --surface-2: oklch(0.265 0.016 264);
+  --surface-3: oklch(0.31 0.017 264);
+  --line: oklch(1 0 0 / 0.08);
+  --line-2: oklch(1 0 0 / 0.14);
+
+  /* text */
+  --text: oklch(0.965 0.004 100);
+  --dim: oklch(0.74 0.012 264);
+  --faint: oklch(0.56 0.013 264);
+
+  /* accents */
+  --accent: oklch(0.82 0.13 300);
+  --accent-ink: oklch(0.27 0.08 300);
+  --accent-dim: oklch(0.82 0.13 300 / 0.16);
+  --accent-fg: var(--accent);
+  --coral: oklch(0.73 0.17 32);
+  --coral-dim: oklch(0.73 0.17 32 / 0.16);
+
+  /* run-type hues */
+  --t-trail: oklch(0.82 0.13 145);
+  --t-road: oklch(0.82 0.11 240);
+  --t-track: oklch(0.82 0.13 60);
+  --t-mixed: oklch(0.82 0.1 310);
+
+  /* fonts (CSS vars reference next/font injected vars) */
+  --font-display: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-ui: var(--font-hanken-grotesk), system-ui, sans-serif;
+  --font-mono: var(--font-space-mono), ui-monospace, monospace;
+
+  /* radii */
+  --r-sm: 10px;
+  --r-md: 16px;
+  --r-lg: 22px;
+  --r-xl: 28px;
+
+  font-family: var(--font-ui);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+/* light theme */
+.qr-root[data-theme='light'] {
+  --bg: oklch(0.935 0.005 100);
+  --bg-2: oklch(0.975 0.004 100);
+  --surface: oklch(0.995 0.002 100);
+  --surface-2: oklch(0.965 0.005 100);
+  --surface-3: oklch(0.915 0.008 100);
+  --line: oklch(0.2 0.02 264 / 0.1);
+  --line-2: oklch(0.2 0.02 264 / 0.18);
+  --text: oklch(0.24 0.012 264);
+  --dim: oklch(0.46 0.012 264);
+  --faint: oklch(0.6 0.012 264);
+  --accent-fg: var(--accent-ink);
+  --t-trail: oklch(0.5 0.13 145);
+  --t-road: oklch(0.5 0.14 250);
+  --t-track: oklch(0.52 0.12 70);
+  --t-mixed: oklch(0.5 0.13 312);
+  background: var(--bg);
+}
+
+/* typography helpers */
+.qr-root h1,
+.qr-root h2,
+.qr-root h3,
+.qr-root .display {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+.qr-root .mono {
+  font-family: var(--font-mono);
+  font-feature-settings: 'tnum';
+}
+
+/* scrollbar suppression */
+.qr-root .qr-scroll::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+}
+.qr-root .qr-scroll {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+/* interactive tap target */
+.qr-root .tap {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  user-select: none;
+  transition:
+    transform 0.12s cubic-bezier(0.2, 0.7, 0.3, 1),
+    background 0.15s ease,
+    color 0.15s ease,
+    border-color 0.15s ease,
+    filter 0.16s ease,
+    box-shadow 0.16s ease;
+}
+.qr-root .tap:active {
+  transform: scale(0.965);
+}
+@media (hover: hover) {
+  .qr-root .tap:not(.sheet-card-enter):hover {
+    filter: brightness(1.08);
+  }
+  .qr-root a.tap:hover {
+    transform: translateY(-1px);
+  }
+  .qr-root .sheet-card-enter.tap:hover {
+    transform: translateY(-2px);
+    opacity: 1 !important;
+  }
+  .qr-root .sheet-card-enter.tap:not(.is-sel):hover {
+    box-shadow:
+      0 14px 30px -16px rgba(0, 0, 0, 0.5),
+      0 0 0 1px var(--line-2) !important;
+    border-color: var(--line-2) !important;
+  }
+}
+.qr-root .sheet-card-enter.tap {
+  transition:
+    opacity 0.22s ease,
+    transform 0.16s cubic-bezier(0.2, 0.7, 0.3, 1),
+    box-shadow 0.18s ease,
+    border-color 0.15s ease,
+    background 0.15s ease;
+}
+
+/* Leaflet overrides */
+.qr-root .leaflet-container {
+  background: var(--bg) !important;
+  font-family: var(--font-ui) !important;
+  outline: none;
+}
+.qr-root .leaflet-control-attribution {
+  background: oklch(0.165 0.012 264 / 0.6) !important;
+  color: var(--faint) !important;
+  font-family: var(--font-mono) !important;
+  font-size: 8px !important;
+  padding: 1px 5px !important;
+  backdrop-filter: blur(4px);
+}
+.qr-root .leaflet-control-attribution a {
+  color: var(--dim) !important;
+}
+.qr-root .leaflet-bar {
+  display: none;
+}
+.qr-root .leaflet-tile-pane {
+  filter: saturate(0.85) brightness(0.92);
+}
+.qr-root[data-theme='light'] .leaflet-tile-pane {
+  filter: saturate(1.02) brightness(1);
+}
+.qr-root[data-theme='light'] .leaflet-container {
+  background: var(--bg) !important;
+}
+.qr-root[data-theme='light'] .leaflet-control-attribution {
+  background: oklch(1 0 0 / 0.7) !important;
+  color: var(--faint) !important;
+}
+
+/* map pins */
+.qr-root .pin {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.qr-root .pin-dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--dim);
+  border: 2px solid var(--bg);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+  transition: all 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
+.qr-root .pin.is-accent .pin-dot {
+  background: var(--accent);
+  box-shadow:
+    0 0 0 4px var(--accent-dim),
+    0 2px 8px rgba(0, 0, 0, 0.5);
+}
+.qr-root .pin.is-cancelled .pin-dot {
+  background: var(--coral);
+}
+.qr-root .pin.is-club .pin-dot {
+  background: var(--text);
+}
+.qr-root .pin.is-past .pin-dot {
+  background: var(--faint);
+  width: 10px;
+  height: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+  opacity: 0.85;
+}
+.qr-root .pin.is-past .pin-label {
+  background: var(--faint);
+}
+.qr-root .pin.is-past.is-active .pin-dot {
+  width: 20px;
+  height: 20px;
+  opacity: 1;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 5px var(--accent-dim),
+    0 0 16px var(--accent),
+    0 4px 12px rgba(0, 0, 0, 0.55);
+}
+.qr-root .pin-label {
+  position: absolute;
+  bottom: 130%;
+  left: 50%;
+  transform: translate(-50%, 4px);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--bg);
+  background: var(--accent);
+  padding: 2px 7px;
+  border-radius: 100px;
+  white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+  opacity: 0;
+  transition: all 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
+  pointer-events: none;
+}
+.qr-root .pin:hover .pin-label {
+  opacity: 1;
+  transform: translateX(-50%);
+}
+.qr-root[data-theme='light'] .pin-label {
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.22);
+}
+.qr-root .pin.is-active .pin-dot {
+  width: 20px;
+  height: 20px;
+  background: var(--accent);
+  box-shadow:
+    0 0 0 5px var(--accent-dim),
+    0 0 16px var(--accent),
+    0 4px 12px rgba(0, 0, 0, 0.55);
+}
+.qr-root .pin.is-active.is-cancelled .pin-dot {
+  background: var(--coral);
+  box-shadow:
+    0 0 0 5px var(--coral-dim),
+    0 0 16px var(--coral);
+}
+.qr-root .pin-ring {
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  border: 2px solid var(--accent);
+  opacity: 0;
+}
+.qr-root .pin.is-active .pin-ring {
+  animation: ping 1.8s ease-out infinite;
+}
+@keyframes ping {
+  0% {
+    transform: scale(0.6);
+    opacity: 0.7;
+  }
+  100% {
+    transform: scale(2.6);
+    opacity: 0;
+  }
+}
+
+/* skeleton loading */
+.qr-root .skel {
+  background: linear-gradient(
+    100deg,
+    var(--surface) 30%,
+    var(--surface-2) 50%,
+    var(--surface) 70%
+  );
+  background-size: 220% 100%;
+  animation: skelShimmer 1.3s ease-in-out infinite;
+}
+@keyframes skelShimmer {
+  from {
+    background-position: 180% 0;
+  }
+  to {
+    background-position: -80% 0;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .qr-root .skel {
+    animation: none;
+  }
+}
+
+/* sheet grip handle */
+.qr-root .sheet-grip {
+  width: 36px;
+  height: 5px;
+  border-radius: 100px;
+  background: var(--line-2);
+  margin: 0 auto;
+}
+
+/* filter chip */
+.qr-root .chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  line-height: 1;
+  padding: 7px 12px;
+  border-radius: 100px;
+  background: var(--surface);
+  color: var(--dim);
+  border: 1px solid var(--line);
+}
+.qr-root .chip.is-on {
+  background: var(--accent);
+  color: var(--accent-ink);
+  border-color: transparent;
+  font-weight: 600;
+}
+
+/* week strip fade mask */
+.qr-root .week-strip {
+  -webkit-mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 6px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+  mask-image: linear-gradient(
+    to right,
+    transparent 0,
+    #000 6px,
+    #000 calc(100% - 30px),
+    transparent 100%
+  );
+}
+
+/* text selection */
+.qr-root ::selection {
+  background: var(--accent);
+  color: var(--accent-ink);
+}
+
+/* entrance animations — transform only (content never invisible under throttling) */
+@media (prefers-reduced-motion: no-preference) {
+  .qr-root .screen-enter {
+    animation: screenIn 0.34s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .qr-root .sheet-card-enter {
+    animation: cardIn 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .qr-root .detail-enter {
+    animation: detailIn 0.42s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
+  .qr-root .filter-backdrop {
+    animation: backdropIn 0.26s ease both;
+  }
+}
+@keyframes screenIn {
+  from {
+    transform: translateY(10px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes cardIn {
+  from {
+    transform: translateY(8px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes detailIn {
+  from {
+    transform: translateX(30px);
+  }
+  to {
+    transform: none;
+  }
+}
+@keyframes backdropIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* filter backdrop */
+.qr-root .filter-backdrop {
+  background: color-mix(in oklch, var(--bg) 14%, transparent);
+}
