@@ -241,8 +241,12 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
 
   const cancelled = run.status === 'CANCELLED'
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
-  const typeLabel = run.club.type ? tr(`type_${run.club.type}`) : null
-  const vibeLabel = run.club.vibe ? tr(`vibe_${run.club.vibe}`) : null
+  const typeLabel = run.club.type
+    ? tr(`type_${run.club.type.toLowerCase()}`)
+    : null
+  const vibeLabel = run.club.vibe
+    ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
+    : null
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
 
   const handleShare = () => {

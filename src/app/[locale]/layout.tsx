@@ -106,7 +106,7 @@ export default async function LocaleLayout({ children, modal, params }: Props) {
             </div>
             <ConsentBannerWrapper />
             {/* Modal overlay slot — rendered by @modal parallel route */}
-            <div className="fixed inset-0 z-50 pointer-events-none">
+            <div className="fixed inset-0 z-[1300] pointer-events-none">
               {modal}
             </div>
           </Providers>

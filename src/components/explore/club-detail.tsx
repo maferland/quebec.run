@@ -183,8 +183,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
   }, [])
 
   const pace = paceRange(club.paceMin, club.paceMax)
-  const typeLabel = club.type ? tr(`type_${club.type}`) : null
-  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe}`) : null
+  const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
+  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {})
@@ -479,7 +479,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                       {e.distance && e.type && <span>·</span>}
                       {e.type && (
                         <span style={{ textTransform: 'capitalize' }}>
-                          {tr(`type_${e.type}`)}
+                          {tr(`type_${e.type.toLowerCase()}`)}
                         </span>
                       )}
                     </div>
