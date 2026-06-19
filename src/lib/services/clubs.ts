@@ -431,6 +431,125 @@ export async function getClubsForExplore(): Promise<ExploreClub[]> {
   }))
 }
 
+export type ClubDetailScheduleEntry = {
+  time: string
+  title: string
+  days: string
+}
+
+export type ClubForDetail = ExploreClub & {
+  schedule: ClubDetailScheduleEntry[]
+}
+
+const BYDAY_FR: Record<string, string> = {
+  MO: 'Lun',
+  TU: 'Mar',
+  WE: 'Mer',
+  TH: 'Jeu',
+  FR: 'Ven',
+  SA: 'Sam',
+  SU: 'Dim',
+}
+const BYDAY_EN: Record<string, string> = {
+  MO: 'Mon',
+  TU: 'Tue',
+  WE: 'Wed',
+  TH: 'Thu',
+  FR: 'Fri',
+  SA: 'Sat',
+  SU: 'Sun',
+}
+
+function schedDays(pattern: string, locale = 'fr'): string {
+  const m = pattern.match(/BYDAY=([^;\r\n]+)/)
+  if (!m) return ''
+  const map = locale === 'fr' ? BYDAY_FR : BYDAY_EN
+  return m[1]
+    .split(',')
+    .map((d) => map[d.trim()] ?? d)
+    .join(', ')
+}
+
+// Extract HH:MM from DTSTART line in rrule pattern (Toronto local time encoded as Z)
+function schedTime(pattern: string): string {
+  // Format 1: DTSTART:YYYYMMDDTHHmm...
+  const dtstart = pattern.match(
+    /DTSTART[^:]*:(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/
+  )
+  if (dtstart) return `${dtstart[4]}:${dtstart[5]}`
+  // Format 2: BYHOUR=6;BYMINUTE=0
+  const byhour = pattern.match(/BYHOUR=(\d+)/)
+  const byminute = pattern.match(/BYMINUTE=(\d+)/)
+  if (byhour) {
+    const h = String(byhour[1]).padStart(2, '0')
+    const m = String(byminute?.[1] ?? '0').padStart(2, '0')
+    return `${h}:${m}`
+  }
+  return ''
+}
+
+export async function getClubDetailBySlug(
+  slug: string
+): Promise<ClubForDetail | null> {
+  const club = await prisma.club.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      vibe: true,
+      beginnerFriendly: true,
+      paceMin: true,
+      paceMax: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      _count: { select: { recurringEvents: { where: { isActive: true } } } },
+      addresses: {
+        where: { latitude: { not: null }, longitude: { not: null } },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
+      recurringEvents: {
+        where: { isActive: true },
+        select: { title: true, schedulePattern: true },
+      },
+    },
+  })
+
+  if (!club) return null
+
+  const schedule = club.recurringEvents
+    .map((re) => ({
+      time: schedTime(re.schedulePattern),
+      title: re.title,
+      days: schedDays(re.schedulePattern),
+    }))
+    .filter((s) => s.time)
+    .sort((a, b) => a.time.localeCompare(b.time))
+
+  return {
+    id: club.id,
+    slug: club.slug,
+    name: club.name,
+    type: club.type ?? null,
+    vibe: club.vibe ?? null,
+    beginnerFriendly: club.beginnerFriendly,
+    paceMin: club.paceMin ?? null,
+    paceMax: club.paceMax ?? null,
+    description: club.description ?? null,
+    website: club.website ?? null,
+    instagram: club.instagram ?? null,
+    facebook: club.facebook ?? null,
+    memberCount: club._count.recurringEvents,
+    lat: club.addresses[0]?.latitude ?? null,
+    lng: club.addresses[0]?.longitude ?? null,
+    schedule,
+  }
+}
+
 export const updateClubById = async ({
   user,
   data,

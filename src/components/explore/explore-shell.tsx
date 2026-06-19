@@ -1,15 +1,68 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  Suspense,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { MapView, type MapPoint } from './map-view'
 import { WeekBar, type WeekDay } from './week-bar'
 import { useTheme } from './theme-provider'
+import { RunCard } from './run-card'
+import { ClubCard } from './club-card'
+import { FilterOverlay } from './filter-overlay'
+import {
+  filterCount,
+  runMatches,
+  clubMatches,
+  type Filters,
+} from './filter-panel'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 
 const RAIL_WIDTH = 404
 
 type Mode = 'runs' | 'clubs'
+
+// ── URL param helpers ─────────────────────────────────────────────────────────
+
+function parseDay(p: URLSearchParams): number {
+  const d = parseInt(p.get('day') ?? '0')
+  return isNaN(d) || d < 0 || d > 6 ? 0 : d
+}
+
+function parseMode(p: URLSearchParams): Mode {
+  return p.get('mode') === 'clubs' ? 'clubs' : 'runs'
+}
+
+function parseFilters(p: URLSearchParams): Filters {
+  return {
+    types: p.get('types')?.split(',').filter(Boolean) ?? [],
+    vibes: p.get('vibes')?.split(',').filter(Boolean) ?? [],
+    pace: p.get('pace') ?? 'any',
+    beginner: p.get('beginner') === '1',
+    tod: p.get('tod') ?? 'all',
+  }
+}
+
+function buildQs(day: number, mode: Mode, filters: Filters): string {
+  const p = new URLSearchParams()
+  if (day !== 0) p.set('day', String(day))
+  if (mode !== 'runs') p.set('mode', mode)
+  if (filters.types.length) p.set('types', filters.types.join(','))
+  if (filters.vibes.length) p.set('vibes', filters.vibes.join(','))
+  if (filters.pace !== 'any') p.set('pace', filters.pace)
+  if (filters.beginner) p.set('beginner', '1')
+  if (filters.tod !== 'all') p.set('tod', filters.tod)
+  const s = p.toString()
+  return s ? `?${s}` : ''
+}
+
+// ── Week bar helpers ──────────────────────────────────────────────────────────
 
 function buildWeekDays(
   counts: { day: number; count: number }[],
@@ -28,10 +81,12 @@ function buildWeekDays(
     date.setHours(0, 0, 0, 0)
     date.setDate(date.getDate() + o)
 
-    let short: string
-    if (o === 0) short = tr('tonight')
-    else if (o === 1) short = tr('tomorrow')
-    else short = wdFmt.format(date).replace('.', '').toUpperCase()
+    const short =
+      o === 0
+        ? tr('tonight')
+        : o === 1
+          ? tr('tomorrow')
+          : wdFmt.format(date).replace('.', '').toUpperCase()
 
     return {
       offset: o,
@@ -49,25 +104,79 @@ function todMin(): number {
 
 function toMin(time: string): number {
   const [h, m] = time.split(':').map(Number)
-  return h * 60 + m
+  return (h ?? 0) * 60 + (m ?? 0)
 }
 
+// ── Public export wraps inner in Suspense (required for useSearchParams) ─────
+
 export function ExploreShell() {
+  return (
+    <Suspense>
+      <ExploreShellInner />
+    </Suspense>
+  )
+}
+
+// ── Inner shell ───────────────────────────────────────────────────────────────
+
+function ExploreShellInner() {
   const { theme, setTheme } = useTheme()
   const locale = useLocale()
   const t = useTranslations('explore')
   const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
 
+  const searchParams = useSearchParams()
+  const pathname = usePathname()
+  const router = useRouter()
+
+  // ── URL-derived state ───────────────────────────────────────────────────────
+  const day = parseDay(searchParams)
+  const mode = parseMode(searchParams)
+  const filters = parseFilters(searchParams)
+
+  const updateUrl = useCallback(
+    (updates: { day?: number; mode?: Mode; filters?: Filters }) => {
+      const newDay = updates.day ?? day
+      const newMode = updates.mode ?? mode
+      const newFilters = updates.filters ?? filters
+      router.replace(`${pathname}${buildQs(newDay, newMode, newFilters)}`, {
+        scroll: false,
+      })
+    },
+    [day, mode, filters, pathname, router]
+  )
+
+  const setDay = useCallback(
+    (o: number) => {
+      setSelId(null)
+      updateUrl({ day: o })
+    },
+    [updateUrl]
+  )
+
+  const setMode = useCallback(
+    (m: Mode) => {
+      setSelId(null)
+      updateUrl({ mode: m })
+    },
+    [updateUrl]
+  )
+
+  const setFilters = useCallback(
+    (fn: (prev: Filters) => Filters) => {
+      updateUrl({ filters: fn(filters) })
+    },
+    [filters, updateUrl]
+  )
+
+  // ── Local UI state ──────────────────────────────────────────────────────────
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
-
-  const [mode, setModeRaw] = useState<Mode>('runs')
-  const [day, setDayRaw] = useState(0)
   const [selId, setSelId] = useState<string | null>(null)
-  const [query, setQuery] = useState('')
+  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const [weekCounts, setWeekCounts] = useState<
     { day: number; count: number }[]
@@ -91,7 +200,8 @@ export function ExploreShell() {
     if (snaps.mid > 0 && !dragging) setSheetH(snaps.mid)
   }, [snaps.mid, dragging])
 
-  // breakpoint + height tracking
+  // ── Side effects ────────────────────────────────────────────────────────────
+
   useEffect(() => {
     const el = rootRef.current
     if (!el) return
@@ -103,7 +213,6 @@ export function ExploreShell() {
     return () => ro.disconnect()
   }, [])
 
-  // fetch week counts once
   useEffect(() => {
     fetch('/api/explore/week-counts')
       .then((r) => r.json())
@@ -111,7 +220,6 @@ export function ExploreShell() {
       .catch(() => {})
   }, [])
 
-  // fetch runs when day changes
   useEffect(() => {
     setLoadingRuns(true)
     fetch(`/api/explore/runs?day=${day}`)
@@ -124,7 +232,6 @@ export function ExploreShell() {
       .finally(() => setLoadingRuns(false))
   }, [day])
 
-  // fetch clubs once (mode switch)
   useEffect(() => {
     if (mode !== 'clubs' || clubs.length > 0) return
     fetch('/api/explore/clubs')
@@ -133,25 +240,15 @@ export function ExploreShell() {
       .catch(() => {})
   }, [mode, clubs.length])
 
+  // ── Derived values ──────────────────────────────────────────────────────────
+
   const week = useMemo(
     () => buildWeekDays(weekCounts, locale, tr),
     [weekCounts, locale, tr]
   )
 
-  const setMode = useCallback((m: Mode) => {
-    setModeRaw(m)
-    setSelId(null)
-    setQuery('')
-  }, [])
-
-  const setDay = useCallback((o: number) => {
-    setDayRaw(o)
-    setSelId(null)
-  }, [])
-
   const nowMin = todMin()
 
-  // map points
   const points = useMemo((): MapPoint[] => {
     if (mode === 'clubs') {
       return clubs
@@ -185,7 +282,21 @@ export function ExploreShell() {
     [desktop, sheetH]
   )
 
-  // grip drag
+  const filteredRuns = useMemo(
+    () => runs.filter((r) => runMatches(r, filters)),
+    [runs, filters]
+  )
+  const filteredClubs = useMemo(
+    () => clubs.filter((c) => clubMatches(c, filters)),
+    [clubs, filters]
+  )
+
+  const runCount = filteredRuns.length
+  const clubCount = filteredClubs.length
+  const activeFilterCount = filterCount(filters)
+
+  // ── Grip drag ───────────────────────────────────────────────────────────────
+
   const onGripDown = useCallback(
     (e: React.PointerEvent) => {
       dragRef.current = { y: e.clientY, h: sheetH }
@@ -217,24 +328,52 @@ export function ExploreShell() {
     })
   }, [snaps])
 
-  const q = query.trim().toLowerCase()
-  const filteredRuns = useMemo(
-    () =>
-      runs.filter((r) =>
-        q
-          ? r.title.toLowerCase().includes(q) ||
-            r.club.name.toLowerCase().includes(q)
-          : true
-      ),
-    [runs, q]
-  )
-  const filteredClubs = useMemo(
-    () => clubs.filter((c) => (q ? c.name.toLowerCase().includes(q) : true)),
-    [clubs, q]
+  // ── Controls ────────────────────────────────────────────────────────────────
+
+  const controls = (
+    <>
+      <WeekBar week={week} selected={day} onSelect={setDay} />
+      <div
+        style={{
+          marginTop: 10,
+          display: 'flex',
+          gap: 8,
+          alignItems: 'center',
+        }}
+      >
+        <ModeToggle
+          mode={mode}
+          setMode={setMode}
+          runCount={runCount}
+          clubCount={clubCount}
+          tr={tr}
+        />
+        <FilterButton
+          n={activeFilterCount}
+          onClick={() => setFiltersOpen(true)}
+          tr={tr}
+        />
+      </div>
+    </>
   )
 
-  const runCount = filteredRuns.length
-  const clubCount = filteredClubs.length
+  const list = (
+    <RunList
+      runs={filteredRuns}
+      clubs={filteredClubs}
+      mode={mode}
+      selId={selId}
+      onSelect={setSelId}
+      loading={loadingRuns}
+      tr={tr}
+      day={day}
+      week={week}
+      setDay={setDay}
+      nowMin={nowMin}
+      locale={locale}
+      router={router}
+    />
+  )
 
   return (
     <div
@@ -243,7 +382,6 @@ export function ExploreShell() {
       data-theme={theme}
       style={{ position: 'fixed', inset: 0, overflow: 'hidden' }}
     >
-      {/* Map */}
       <MapView
         points={points}
         activeId={selId}
@@ -325,7 +463,6 @@ export function ExploreShell() {
         </div>
 
         <div style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
-          {/* Theme toggle */}
           <div
             style={{
               display: 'flex',
@@ -413,10 +550,7 @@ export function ExploreShell() {
             boxShadow: '8px 0 40px rgba(0,0,0,.4)',
           }}
         >
-          {/* spacer for top bar */}
           <div style={{ height: 94, flexShrink: 0 }} />
-
-          {/* controls */}
           <div
             style={{
               padding: '4px 18px 14px',
@@ -424,36 +558,13 @@ export function ExploreShell() {
               flexShrink: 0,
             }}
           >
-            <WeekBar week={week} selected={day} onSelect={setDay} />
-            <div style={{ marginTop: 12 }}>
-              <ModeToggle
-                mode={mode}
-                setMode={setMode}
-                runCount={runCount}
-                clubCount={clubCount}
-                tr={tr}
-              />
-            </div>
+            {controls}
           </div>
-
-          {/* list */}
           <div
             ref={listRef}
             style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 26px' }}
           >
-            <RunListSimple
-              runs={filteredRuns}
-              clubs={filteredClubs}
-              mode={mode}
-              selId={selId}
-              onSelect={setSelId}
-              loading={loadingRuns}
-              tr={tr}
-              day={day}
-              week={week}
-              setDay={setDay}
-              nowMin={nowMin}
-            />
+            {list}
           </div>
         </div>
       )}
@@ -480,7 +591,6 @@ export function ExploreShell() {
             overflow: 'hidden',
           }}
         >
-          {/* grip */}
           <div
             onPointerDown={onGripDown}
             onPointerMove={onGripMove}
@@ -503,22 +613,9 @@ export function ExploreShell() {
               }}
             />
           </div>
-
-          {/* controls */}
           <div style={{ flexShrink: 0, padding: '0 16px 12px' }}>
-            <WeekBar week={week} selected={day} onSelect={setDay} />
-            <div style={{ marginTop: 10 }}>
-              <ModeToggle
-                mode={mode}
-                setMode={setMode}
-                runCount={runCount}
-                clubCount={clubCount}
-                tr={tr}
-              />
-            </div>
+            {controls}
           </div>
-
-          {/* list */}
           <div
             ref={listRef}
             style={{
@@ -527,23 +624,88 @@ export function ExploreShell() {
               padding: '4px 16px calc(22px + env(safe-area-inset-bottom))',
             }}
           >
-            <RunListSimple
-              runs={filteredRuns}
-              clubs={filteredClubs}
-              mode={mode}
-              selId={selId}
-              onSelect={setSelId}
-              loading={loadingRuns}
-              tr={tr}
-              day={day}
-              week={week}
-              setDay={setDay}
-              nowMin={nowMin}
-            />
+            {list}
           </div>
         </div>
       )}
+
+      {/* Filter overlay */}
+      {filtersOpen && (
+        <FilterOverlay
+          desktop={desktop}
+          filters={filters}
+          setFilters={setFilters}
+          onClose={() => setFiltersOpen(false)}
+          resultCount={mode === 'clubs' ? clubCount : runCount}
+          showTod={mode === 'runs'}
+          locale={locale}
+          tr={tr}
+        />
+      )}
     </div>
+  )
+}
+
+// ── Sub-components ────────────────────────────────────────────────────────────
+
+const FilterIcon = (
+  <svg
+    width="19"
+    height="19"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M3 5h18M6 12h12M10 19h4" />
+  </svg>
+)
+
+function FilterButton({
+  n,
+  onClick,
+  tr,
+}: {
+  n: number
+  onClick: () => void
+  tr: (k: string) => string
+}) {
+  const on = n > 0
+  return (
+    <button
+      aria-label={tr('filters')}
+      onClick={onClick}
+      style={{
+        width: 44,
+        height: 44,
+        flexShrink: 0,
+        display: 'grid',
+        placeItems: 'center',
+        cursor: 'pointer',
+        border: `1px solid ${on ? 'transparent' : 'var(--line)'}`,
+        background: on ? 'var(--lime-dim)' : 'var(--surface)',
+        color: on ? 'var(--accent-fg)' : 'var(--text)',
+        borderRadius: 14,
+        position: 'relative',
+      }}
+    >
+      {FilterIcon}
+      {on && (
+        <span
+          style={{
+            position: 'absolute',
+            top: 6,
+            right: 6,
+            width: 8,
+            height: 8,
+            borderRadius: 4,
+            background: 'var(--accent)',
+          }}
+        />
+      )}
+    </button>
   )
 }
 
@@ -603,6 +765,7 @@ function ModeToggle({
   return (
     <div
       style={{
+        flex: 1,
         display: 'flex',
         background: 'var(--bg-2)',
         border: '1px solid var(--line)',
@@ -617,7 +780,7 @@ function ModeToggle({
   )
 }
 
-function RunListSimple({
+function RunList({
   runs,
   clubs,
   mode,
@@ -629,18 +792,22 @@ function RunListSimple({
   week,
   setDay,
   nowMin,
+  locale,
+  router,
 }: {
   runs: ExploreRun[]
   clubs: ExploreClub[]
   mode: Mode
   selId: string | null
-  onSelect: (id: string) => void
+  onSelect: (id: string | null) => void
   loading: boolean
   tr: (k: string) => string
   day: number
   week: WeekDay[]
   setDay: (o: number) => void
   nowMin: number
+  locale: string
+  router: ReturnType<typeof useRouter>
 }) {
   if (loading) {
     return (
@@ -657,41 +824,42 @@ function RunListSimple({
   }
 
   if (mode === 'clubs') {
+    if (clubs.length === 0) {
+      return (
+        <div
+          style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            textAlign: 'center',
+            gap: 14,
+            padding: '42px 24px 30px',
+          }}
+        >
+          <h3 style={{ fontSize: 18 }}>{tr('no_match_title')}</h3>
+          <p
+            style={{
+              fontSize: 14,
+              color: 'var(--dim)',
+              maxWidth: 260,
+              lineHeight: 1.5,
+              margin: 0,
+            }}
+          >
+            {tr('no_match_body')}
+          </p>
+        </div>
+      )
+    }
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
         {clubs.map((c) => (
-          <div
+          <ClubCard
             key={c.id}
-            style={{
-              borderRadius: 'var(--r-lg)',
-              padding: '14px 15px',
-              background: 'var(--surface)',
-              border: '1px solid var(--line)',
-              cursor: 'pointer',
-            }}
-          >
-            <div
-              style={{
-                fontFamily: 'var(--font-ui)',
-                fontWeight: 700,
-                fontSize: 15,
-              }}
-            >
-              {c.name}
-            </div>
-            {c.description && (
-              <div
-                style={{
-                  fontSize: 13,
-                  color: 'var(--dim)',
-                  marginTop: 4,
-                  lineHeight: 1.45,
-                }}
-              >
-                {c.description}
-              </div>
-            )}
-          </div>
+            club={c}
+            onOpen={() => router.push(`/${locale}/club/${c.slug}`)}
+            tr={tr}
+          />
         ))}
       </div>
     )
@@ -765,71 +933,18 @@ function RunListSimple({
         </span>{' '}
         {runs.length === 1 ? tr('results_one') : tr('results_many')}
       </div>
-      {runs.map((r) => {
-        const isPast =
-          day === 0 && r.status !== 'CANCELLED' && toMin(r.time) < nowMin
-        const isSelected = r.id === selId
-        const accent =
-          r.status === 'CANCELLED' ? 'var(--coral)' : 'var(--accent)'
-        return (
-          <div
-            key={r.id}
-            onClick={() => onSelect(r.id)}
-            className="sheet-card-enter"
-            style={{
-              borderRadius: 'var(--r-lg)',
-              padding: '14px 15px',
-              background: isSelected ? 'var(--surface-2)' : 'var(--surface)',
-              border: `1px solid ${isSelected ? `color-mix(in oklch, ${accent} 55%, transparent)` : 'var(--line-2)'}`,
-              boxShadow: isSelected
-                ? `0 0 0 1px ${accent}, 0 10px 30px -12px rgba(0,0,0,.7)`
-                : 'none',
-              opacity: isPast && !isSelected ? 0.6 : 1,
-              cursor: 'pointer',
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 8,
-              transition:
-                'opacity .22s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease',
-            }}
-          >
-            <div style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
-              <div
-                style={{
-                  fontFamily: 'var(--font-mono)',
-                  fontSize: 21,
-                  fontWeight: 700,
-                  lineHeight: 1,
-                  color:
-                    r.status === 'CANCELLED' ? 'var(--faint)' : 'var(--text)',
-                  textDecoration:
-                    r.status === 'CANCELLED' ? 'line-through' : 'none',
-                  minWidth: 52,
-                }}
-              >
-                {r.time}
-              </div>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div
-                  style={{
-                    fontSize: 16,
-                    fontWeight: 600,
-                    fontFamily: 'var(--font-ui)',
-                    color: 'var(--text)',
-                  }}
-                >
-                  {r.title}
-                </div>
-                <div
-                  style={{ fontSize: 13, color: 'var(--dim)', marginTop: 3 }}
-                >
-                  {r.club.name}
-                </div>
-              </div>
-            </div>
-          </div>
-        )
-      })}
+      {runs.map((r) => (
+        <RunCard
+          key={r.id}
+          run={r}
+          selected={r.id === selId}
+          onSelect={() => onSelect(r.id === selId ? null : r.id)}
+          onOpen={() => router.push(`/${locale}/run/${r.id}`)}
+          nowMin={nowMin}
+          day={day}
+          tr={tr}
+        />
+      ))}
     </div>
   )
 }

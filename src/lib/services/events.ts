@@ -665,15 +665,33 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
 
   if (virtualMatch) {
     const [, identifier, dateKey] = virtualMatch
-    const recurringEvent = slugMatch
-      ? await prisma.recurringEvent.findFirst({
-          where: { slug: identifier },
-          include: { club: true },
-        })
-      : await prisma.recurringEvent.findUnique({
-          where: { id: identifier },
-          include: { club: true },
-        })
+
+    let recurringEvent = null
+    if (slugMatch) {
+      // New virtual IDs are `${club.slug}-${event.slug}--date`.
+      // Try all possible club/event slug splits since both contain hyphens.
+      const parts = identifier.split('-')
+      const splitCandidates = parts.slice(0, -1).map((_, i) => ({
+        clubSlug: parts.slice(0, i + 1).join('-'),
+        eventSlug: parts.slice(i + 1).join('-'),
+      }))
+      recurringEvent = await prisma.recurringEvent.findFirst({
+        where: {
+          OR: [
+            { slug: identifier },
+            ...splitCandidates.map((c) => ({
+              AND: [{ slug: c.eventSlug }, { club: { slug: c.clubSlug } }],
+            })),
+          ],
+        },
+        include: { club: true },
+      })
+    } else {
+      recurringEvent = await prisma.recurringEvent.findUnique({
+        where: { id: identifier },
+        include: { club: true },
+      })
+    }
 
     if (!recurringEvent) {
       return null

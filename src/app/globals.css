@@ -128,6 +128,9 @@ body {
   --accent-ink: oklch(0.27 0.08 300);
   --accent-dim: oklch(0.82 0.13 300 / 0.16);
   --accent-fg: var(--accent);
+  --lime: var(--accent);
+  --lime-ink: var(--accent-ink);
+  --lime-dim: var(--accent-dim);
   --coral: oklch(0.73 0.17 32);
   --coral-dim: oklch(0.73 0.17 32 / 0.16);
 

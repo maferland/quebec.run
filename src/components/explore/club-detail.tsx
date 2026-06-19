@@ -1,0 +1,500 @@
+'use client'
+import { useEffect, useState } from 'react'
+import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
+
+const ChevLIcon = (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M15 6l-6 6 6 6" />
+  </svg>
+)
+const ChevRIcon = (
+  <svg
+    width="17"
+    height="17"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M9 6l6 6-6 6" />
+  </svg>
+)
+const ShareIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="18" cy="5" r="3" />
+    <circle cx="6" cy="12" r="3" />
+    <circle cx="18" cy="19" r="3" />
+    <path d="M8.6 10.6l6.8-4M8.6 13.4l6.8 4" />
+  </svg>
+)
+const CheckIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 12l5 5L20 6" />
+  </svg>
+)
+const UsersIcon = (
+  <svg
+    width="14"
+    height="14"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="9" cy="8" r="3.2" />
+    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
+    <path d="M16 6.2a3.2 3.2 0 0 1 0 5.6M16.5 19a5.5 5.5 0 0 0-2-4.3" />
+  </svg>
+)
+const GaugeIcon = (
+  <svg
+    width="15"
+    height="15"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M5 18a8 8 0 1 1 14 0" />
+    <path d="M12 14l4-3" />
+    <circle cx="12" cy="18" r="1" />
+  </svg>
+)
+const InstagramIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <rect x="4" y="4" width="16" height="16" rx="5" />
+    <circle cx="12" cy="12" r="3.4" />
+    <circle cx="17" cy="7" r="0.6" fill="currentColor" />
+  </svg>
+)
+const WebIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <circle cx="12" cy="12" r="9" />
+    <path d="M3 12h18M12 3c2.5 2.5 2.5 15 0 18M12 3c-2.5 2.5-2.5 15 0 18" />
+  </svg>
+)
+
+export type ClubDetailData = {
+  id: string
+  slug: string
+  name: string
+  type: string | null
+  vibe: string | null
+  beginnerFriendly: boolean
+  paceMin: string | null
+  paceMax: string | null
+  description: string | null
+  instagram: string | null
+  website: string | null
+  memberCount: number
+  schedule: Array<{ time: string; title: string; days: string }>
+  upcomingRuns: Array<{
+    id: string
+    time: string
+    title: string
+    status: 'SCHEDULED' | 'CANCELLED'
+    distance: string | null
+    type: string | null
+  }>
+}
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div
+      style={{
+        fontFamily: 'var(--font-mono)',
+        fontSize: 11,
+        textTransform: 'uppercase',
+        letterSpacing: '.06em',
+        color: 'var(--faint)',
+        marginBottom: 12,
+      }}
+    >
+      {children}
+    </div>
+  )
+}
+
+type Props = {
+  club: ClubDetailData
+  onBack: () => void
+  onOpenRun: (id: string) => void
+  tr: (k: string) => string
+}
+
+export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
+  const [shared, setShared] = useState(false)
+  const [shown, setShown] = useState(false)
+
+  useEffect(() => {
+    const id = requestAnimationFrame(() => setShown(true))
+    return () => cancelAnimationFrame(id)
+  }, [])
+
+  const pace = paceRange(club.paceMin, club.paceMax)
+  const typeLabel = club.type ? tr(`type_${club.type}`) : null
+  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe}`) : null
+
+  const handleShare = () => {
+    navigator.clipboard.writeText(window.location.href).catch(() => {})
+    setShared(true)
+    setTimeout(() => setShared(false), 2000)
+  }
+
+  return (
+    <div
+      className="detail-enter"
+      style={{
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 20,
+        opacity: shown ? 1 : 0,
+        transform: shown ? 'none' : 'translateY(8px)',
+        transition: 'opacity .3s ease, transform .3s cubic-bezier(.2,.7,.3,1)',
+      }}
+    >
+      {/* header */}
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+        }}
+      >
+        <button
+          className="tap"
+          onClick={onBack}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            border: '1px solid var(--line)',
+            background: 'var(--surface)',
+            color: 'var(--text)',
+            borderRadius: 100,
+            padding: '9px 14px 9px 11px',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 600,
+            fontSize: 13.5,
+            cursor: 'pointer',
+          }}
+        >
+          {ChevLIcon} {tr('back')}
+        </button>
+        <button
+          className="tap"
+          onClick={handleShare}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 7,
+            border: `1px solid ${shared ? 'transparent' : 'var(--line)'}`,
+            background: shared ? 'var(--lime)' : 'var(--surface)',
+            color: shared ? 'var(--lime-ink)' : 'var(--text)',
+            borderRadius: 100,
+            padding: '9px 14px',
+            fontFamily: 'var(--font-ui)',
+            fontWeight: 600,
+            fontSize: 13.5,
+            cursor: 'pointer',
+          }}
+        >
+          {shared ? CheckIcon : ShareIcon} {shared ? tr('copied') : tr('share')}
+        </button>
+      </div>
+
+      {/* title */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        <h1
+          style={{
+            fontSize: 28,
+            lineHeight: 1.08,
+            letterSpacing: '-0.02em',
+            margin: 0,
+          }}
+        >
+          {club.name}
+        </h1>
+        <div
+          style={{
+            display: 'flex',
+            gap: 14,
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            fontSize: 13,
+            color: 'var(--dim)',
+          }}
+        >
+          <span
+            style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
+          >
+            {UsersIcon} {club.memberCount} {tr('members')}
+          </span>
+        </div>
+      </div>
+
+      {/* badges */}
+      <div
+        style={{
+          display: 'flex',
+          gap: 8,
+          flexWrap: 'wrap',
+          alignItems: 'center',
+        }}
+      >
+        {typeLabel && <TypeTag kind={club.type} label={typeLabel} />}
+        {vibeLabel && <VibePill label={vibeLabel} />}
+        {pace && (
+          <MetaPill icon={GaugeIcon}>
+            {pace} {tr('pace_unit')}
+          </MetaPill>
+        )}
+        {club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+      </div>
+
+      {/* description */}
+      {club.description && (
+        <div style={{ fontSize: 14.5, color: 'var(--dim)', lineHeight: 1.55 }}>
+          {club.description}
+        </div>
+      )}
+
+      {/* socials */}
+      {(club.instagram || club.website) && (
+        <div style={{ display: 'flex', gap: 9, flexWrap: 'wrap' }}>
+          {club.instagram && (
+            <a
+              href={`https://instagram.com/${club.instagram.replace('@', '')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                border: '1px solid var(--line)',
+                background: 'var(--surface)',
+                color: 'var(--dim)',
+                borderRadius: 100,
+                padding: '9px 14px',
+                fontSize: 13,
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              <span style={{ color: 'var(--text)', display: 'inline-flex' }}>
+                {InstagramIcon}
+              </span>
+              {club.instagram}
+            </a>
+          )}
+          {club.website && (
+            <a
+              href={club.website}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="tap"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                border: '1px solid var(--line)',
+                background: 'var(--surface)',
+                color: 'var(--dim)',
+                borderRadius: 100,
+                padding: '9px 14px',
+                fontSize: 13,
+                textDecoration: 'none',
+                fontFamily: 'var(--font-mono)',
+              }}
+            >
+              <span style={{ color: 'var(--text)', display: 'inline-flex' }}>
+                {WebIcon}
+              </span>
+              {tr('website') ?? 'Site web'}
+            </a>
+          )}
+        </div>
+      )}
+
+      {/* weekly schedule */}
+      {club.schedule.length > 0 && (
+        <div>
+          <SectionLabel>{tr('weekly')}</SectionLabel>
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r-lg)',
+              overflow: 'hidden',
+            }}
+          >
+            {club.schedule.map((s, i) => (
+              <div
+                key={i}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 12,
+                  padding: '13px 15px',
+                  borderTop: i ? '1px solid var(--line)' : 'none',
+                }}
+              >
+                <span
+                  style={{
+                    fontFamily: 'var(--font-mono)',
+                    fontSize: 14,
+                    fontWeight: 700,
+                    color: 'var(--accent-fg)',
+                    minWidth: 46,
+                  }}
+                >
+                  {s.time}
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div style={{ fontSize: 14.5, fontWeight: 600 }}>
+                    {s.title}
+                  </div>
+                  <div
+                    style={{
+                      fontSize: 12.5,
+                      color: 'var(--dim)',
+                      marginTop: 1,
+                    }}
+                  >
+                    {s.days}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* upcoming runs */}
+      {club.upcomingRuns.length > 0 && (
+        <div>
+          <SectionLabel>{tr('upcoming')}</SectionLabel>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+            {club.upcomingRuns.map((e) => {
+              const cancelled = e.status === 'CANCELLED'
+              return (
+                <div
+                  key={e.id}
+                  className="tap"
+                  onClick={() => onOpenRun(e.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 12,
+                    background: 'var(--surface)',
+                    border: '1px solid var(--line)',
+                    borderRadius: 'var(--r-md)',
+                    padding: '12px 14px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <span
+                    style={{
+                      fontFamily: 'var(--font-mono)',
+                      fontSize: 14,
+                      fontWeight: 700,
+                      minWidth: 44,
+                      color: cancelled ? 'var(--faint)' : 'var(--text)',
+                      textDecoration: cancelled ? 'line-through' : 'none',
+                    }}
+                  >
+                    {e.time}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div
+                      style={{
+                        fontSize: 14,
+                        fontWeight: 600,
+                        color: cancelled ? 'var(--dim)' : 'var(--text)',
+                      }}
+                    >
+                      {e.title}
+                    </div>
+                    <div
+                      style={{
+                        fontSize: 12,
+                        color: 'var(--faint)',
+                        display: 'flex',
+                        gap: 7,
+                      }}
+                    >
+                      {e.distance && <span>{e.distance} km</span>}
+                      {e.distance && e.type && <span>·</span>}
+                      {e.type && (
+                        <span style={{ textTransform: 'capitalize' }}>
+                          {tr(`type_${e.type}`)}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                  {cancelled ? (
+                    <Stamp tone="cancelled">{tr('cancelled')}</Stamp>
+                  ) : (
+                    <span style={{ color: 'var(--faint)' }}>{ChevRIcon}</span>
+                  )}
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}

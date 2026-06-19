@@ -453,6 +453,8 @@
     "no_match_body": "Ajustez vos filtres pour voir plus.",
     "reset_filters": "Réinitialiser",
     "theme_dark": "Thème sombre",
-    "theme_light": "Thème clair"
+    "theme_light": "Thème clair",
+    "today": "Aujourd'hui",
+    "website": "Site web"
   }
 }
