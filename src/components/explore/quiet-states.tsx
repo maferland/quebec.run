@@ -11,13 +11,11 @@ function useMounted() {
   return mounted
 }
 
-const motionOk =
-  typeof window !== 'undefined'
-    ? !window.matchMedia('(prefers-reduced-motion: reduce)').matches
-    : true
-
 function FadeIn({ children }: { children: React.ReactNode }) {
   const mounted = useMounted()
+  const motionOk = mounted
+    ? !window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    : true
   return (
     <div
       style={{
