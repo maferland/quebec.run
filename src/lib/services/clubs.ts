@@ -437,8 +437,18 @@ export type ClubDetailScheduleEntry = {
   days: string
 }
 
+export type ClubUpcomingRun = {
+  id: string
+  time: string
+  title: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  distance: string | null
+  type: string | null
+}
+
 export type ClubForDetail = ExploreClub & {
   schedule: ClubDetailScheduleEntry[]
+  upcomingRuns: ClubUpcomingRun[]
 }
 
 const BYDAY_FR: Record<string, string> = {
@@ -530,6 +540,21 @@ export async function getClubDetailBySlug(
     .filter((s) => s.time)
     .sort((a, b) => a.time.localeCompare(b.time))
 
+  const now = new Date()
+  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const upcoming = await getEventsInRange(now, endDate, club.id)
+  const upcomingRuns = upcoming
+    .filter((e) => e.date >= now)
+    .slice(0, 10)
+    .map((e) => ({
+      id: e.id,
+      time: e.time,
+      title: e.title,
+      status: e.status as 'SCHEDULED' | 'CANCELLED',
+      distance: e.distance ?? null,
+      type: e.club?.type ?? null,
+    }))
+
   return {
     id: club.id,
     slug: club.slug,
@@ -547,6 +572,7 @@ export async function getClubDetailBySlug(
     lat: club.addresses[0]?.latitude ?? null,
     lng: club.addresses[0]?.longitude ?? null,
     schedule,
+    upcomingRuns,
   }
 }
 

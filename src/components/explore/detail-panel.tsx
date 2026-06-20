@@ -176,7 +176,7 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
           website: data.website,
           memberCount: data.memberCount,
           schedule: data.schedule,
-          upcomingRuns: [],
+          upcomingRuns: data.upcomingRuns ?? [],
         })
       })
       .catch(() => setError(true))
