@@ -392,7 +392,15 @@ function ExploreShellInner() {
       ref={rootRef}
       className="qr-root"
       data-theme={theme}
-      style={{ position: 'fixed', inset: 0, overflow: 'hidden', zIndex: 1200 }}
+      style={{
+        position: 'fixed',
+        top: 0,
+        right: 0,
+        bottom: 0,
+        left: 0,
+        overflow: 'hidden',
+        zIndex: 1200,
+      }}
     >
       <MapView
         points={points}

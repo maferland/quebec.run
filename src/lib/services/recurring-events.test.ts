@@ -357,8 +357,11 @@ describe('Hybrid query helpers', () => {
         id: club.id,
         name: club.name,
         slug: club.slug,
+        type: club.type,
         vibe: club.vibe,
         beginnerFriendly: club.beginnerFriendly,
+        paceMin: club.paceMin,
+        paceMax: club.paceMax,
       })
     })
   })

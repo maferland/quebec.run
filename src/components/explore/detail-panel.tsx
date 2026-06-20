@@ -26,13 +26,14 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
       <div
         className="qr-root"
         data-theme={theme}
+        suppressHydrationWarning
         style={{
           position: 'fixed',
           top: 0,
           left: 0,
           bottom: 0,
           width: RAIL_WIDTH,
-          zIndex: 50,
+          zIndex: 1300,
           overflowY: 'auto',
           padding: '94px 18px 26px',
           background: 'var(--bg)',
@@ -49,13 +50,14 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
   return (
     <div
       className="qr-root"
+      data-theme={theme}
       style={{
         position: 'fixed',
         left: 0,
         right: 0,
         bottom: 0,
         top: '10%',
-        zIndex: 50,
+        zIndex: 1300,
         overflowY: 'auto',
         padding: '20px 16px calc(22px + env(safe-area-inset-bottom))',
         background: 'var(--bg)',
