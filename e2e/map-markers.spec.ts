@@ -10,10 +10,10 @@ test.describe('Map Markers', () => {
     await expect(map).toBeVisible()
   })
 
-  test.describe('events page', () => {
-    test('renders the desktop side-by-side map', async ({ page, viewport }) => {
+  test.describe('map-first home', () => {
+    test('renders the desktop map', async ({ page, viewport }) => {
       test.skip(!viewport || viewport.width < 1024, 'desktop layout only')
-      await page.goto('/en/events')
+      await page.goto('/en')
 
       const map = page.getByRole('application', {
         name: /interactive event map/i,
@@ -21,19 +21,9 @@ test.describe('Map Markers', () => {
       await expect(map).toBeVisible()
     })
 
-    test('exposes the mobile map via floating button', async ({
-      page,
-      viewport,
-    }) => {
-      test.skip(
-        !viewport || viewport.width >= 1024,
-        'mobile floating button only'
-      )
-      await page.goto('/en/events')
-
-      const openMap = page.getByRole('button', { name: /open events map/i })
-      await expect(openMap).toBeVisible()
-      await openMap.click()
+    test('renders the mobile map', async ({ page, viewport }) => {
+      test.skip(!viewport || viewport.width >= 1024, 'mobile layout only')
+      await page.goto('/en')
 
       const map = page.getByRole('application', {
         name: /interactive event map/i,

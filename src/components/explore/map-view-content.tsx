@@ -194,6 +194,8 @@ export function MapViewContent({
 
   return (
     <div
+      role="application"
+      aria-label="Interactive event map"
       ref={containerRef}
       style={{ position: 'absolute', inset: 0, zIndex: 0 }}
     />
