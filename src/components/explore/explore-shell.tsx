@@ -658,6 +658,7 @@ function ExploreShellInner() {
           onClose={() => setFiltersOpen(false)}
           resultCount={mode === 'clubs' ? clubCount : runCount}
           showTod={mode === 'runs'}
+          loading={mode === 'clubs' ? false : loadingRuns}
           locale={locale}
           tr={tr}
         />

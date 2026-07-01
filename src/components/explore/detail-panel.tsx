@@ -51,6 +51,7 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
     <div
       className="qr-root"
       data-theme={theme}
+      suppressHydrationWarning
       style={{
         position: 'fixed',
         left: 0,
@@ -156,7 +157,7 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
   const [error, setError] = useState(false)
 
   useEffect(() => {
-    fetch(`/api/explore/clubs/${slug}`)
+    fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
       .then((r) => {
         if (!r.ok) throw new Error('not found')
         return r.json()
@@ -180,7 +181,7 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
         })
       })
       .catch(() => setError(true))
-  }, [slug])
+  }, [slug, locale])
 
   if (error) return null
   if (!club) {

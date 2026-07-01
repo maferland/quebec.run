@@ -26,6 +26,7 @@ type Props = {
   onClose: () => void
   resultCount: number
   showTod: boolean
+  loading: boolean
   locale: string
   tr: (k: string) => string
 }
@@ -37,6 +38,7 @@ export function FilterOverlay({
   onClose,
   resultCount,
   showTod,
+  loading,
   locale,
   tr,
 }: Props) {
@@ -134,7 +136,7 @@ export function FilterOverlay({
             onClose={onClose}
             resultCount={resultCount}
             showTod={showTod}
-            loading={false}
+            loading={loading}
             locale={locale}
             tr={tr}
           />

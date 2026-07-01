@@ -499,7 +499,8 @@ function schedTime(pattern: string): string {
 }
 
 export async function getClubDetailBySlug(
-  slug: string
+  slug: string,
+  locale = 'fr'
 ): Promise<ClubForDetail | null> {
   const club = await prisma.club.findUnique({
     where: { slug },
@@ -535,7 +536,7 @@ export async function getClubDetailBySlug(
     .map((re) => ({
       time: schedTime(re.schedulePattern),
       title: re.title,
-      days: schedDays(re.schedulePattern),
+      days: schedDays(re.schedulePattern, locale),
     }))
     .filter((s) => s.time)
     .sort((a, b) => a.time.localeCompare(b.time))
