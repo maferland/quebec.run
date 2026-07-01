@@ -35,8 +35,12 @@ export const PACE_BUCKETS = [
 
 export function paceStr(decimal: string): string {
   const d = parseFloat(decimal)
-  const m = Math.floor(d)
-  const s = Math.round((d - m) * 60)
+  let m = Math.floor(d)
+  let s = Math.round((d - m) * 60)
+  if (s === 60) {
+    m++
+    s = 0
+  }
   return `${m}:${String(s).padStart(2, '0')}`
 }
 

@@ -887,7 +887,7 @@ function RunList({
   // Today's runs are all in the past
   const allPast =
     day === 0 &&
-    runs.every((r) => r.status !== 'CANCELLED' && toMin(r.time) < nowMin)
+    runs.every((r) => r.status === 'CANCELLED' || toMin(r.time) < nowMin)
   if (allPast) {
     return <AllDoneNote week={week} setDay={setDay} tr={tr} />
   }

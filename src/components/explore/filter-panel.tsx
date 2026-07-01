@@ -55,8 +55,9 @@ export function runMatches(
   if (filters.pace !== 'any') {
     const bucket = PACE_BUCKETS.find((b) => b.id === filters.pace)
     if (bucket) {
-      const min = parseFloat(run.club.paceMin ?? '0')
-      const max = parseFloat(run.club.paceMax ?? '99')
+      if (run.club.paceMin == null || run.club.paceMax == null) return false
+      const min = parseFloat(run.club.paceMin)
+      const max = parseFloat(run.club.paceMax)
       if (!(min < bucket.hi && max > bucket.lo)) return false
     }
   }
@@ -87,8 +88,9 @@ export function clubMatches(
   if (filters.pace !== 'any') {
     const bucket = PACE_BUCKETS.find((b) => b.id === filters.pace)
     if (bucket) {
-      const min = parseFloat(club.paceMin ?? '0')
-      const max = parseFloat(club.paceMax ?? '99')
+      if (club.paceMin == null || club.paceMax == null) return false
+      const min = parseFloat(club.paceMin)
+      const max = parseFloat(club.paceMax)
       if (!(min < bucket.hi && max > bucket.lo)) return false
     }
   }
