@@ -123,9 +123,10 @@ model RecurringEvent {
   description String?
 
   // Location
-  address   String?
-  latitude  Float?
-  longitude Float?
+  address      String?
+  latitude     Float?
+  longitude    Float?
+  neighborhood String?
 
   // Event details
   distance    String?
@@ -161,10 +162,11 @@ model Event {
   description String?
 
   // Location
-  address    String?
-  latitude   Float?
-  longitude  Float?
-  geocodedAt DateTime?
+  address      String?
+  latitude     Float?
+  longitude    Float?
+  neighborhood String?
+  geocodedAt   DateTime?
 
   // Event timing
   date DateTime

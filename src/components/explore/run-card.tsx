@@ -175,6 +175,14 @@ export function RunCard({
             >
               {run.club.name}
             </span>
+            {run.neighborhood && (
+              <>
+                <span style={{ color: 'var(--faint)' }}>·</span>
+                <span style={{ color: 'var(--dim)', whiteSpace: 'nowrap' }}>
+                  {run.neighborhood}
+                </span>
+              </>
+            )}
           </div>
         </div>
       </div>

@@ -37,6 +37,7 @@ export type ExploreRun = {
   distance: string | null
   isPast: boolean
   address: string | null
+  neighborhood: string | null
   club: {
     id: string
     slug: string
@@ -87,6 +88,7 @@ function toExploreRun(
     longitude: number | null
     distance: string | null
     address: string | null
+    neighborhood: string | null
     club: {
       id: string
       slug: string
@@ -114,6 +116,7 @@ function toExploreRun(
     distance: event.distance,
     isPast: eventMinutes < nowMinutes,
     address: event.address,
+    neighborhood: event.neighborhood,
     club: event.club,
   }
 }
@@ -151,6 +154,7 @@ export async function getEventsForDay(
       longitude: true,
       distance: true,
       address: true,
+      neighborhood: true,
       recurringEventId: true,
       club: { select: EXPLORE_CLUB_SELECT },
     },
@@ -186,6 +190,7 @@ export async function getEventsForDay(
         longitude: virt.longitude,
         distance: virt.distance,
         address: virt.address,
+        neighborhood: re.neighborhood ?? null,
         recurringEventId: re.id,
         club: {
           id: re.club.id,
