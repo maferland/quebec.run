@@ -181,6 +181,8 @@ function ExploreShellInner() {
   const [containerH, setContainerH] = useState(0)
   const [selId, setSelId] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
+  const [searchOpen, setSearchOpen] = useState(false)
+  const [searchQ, setSearchQ] = useState('')
 
   const [weekCounts, setWeekCounts] = useState<
     { day: number; count: number }[]
@@ -286,14 +288,28 @@ function ExploreShellInner() {
     [desktop, sheetH]
   )
 
-  const filteredRuns = useMemo(
-    () => runs.filter((r) => runMatches(r, filters)),
-    [runs, filters]
-  )
-  const filteredClubs = useMemo(
-    () => clubs.filter((c) => clubMatches(c, filters)),
-    [clubs, filters]
-  )
+  const filteredRuns = useMemo(() => {
+    const byFilter = runs.filter((r) => runMatches(r, filters))
+    if (!searchQ.trim()) return byFilter
+    const q = searchQ.toLowerCase()
+    return byFilter.filter(
+      (r) =>
+        r.title.toLowerCase().includes(q) ||
+        r.club.name.toLowerCase().includes(q) ||
+        (r.address?.toLowerCase().includes(q) ?? false)
+    )
+  }, [runs, filters, searchQ])
+
+  const filteredClubs = useMemo(() => {
+    const byFilter = clubs.filter((c) => clubMatches(c, filters))
+    if (!searchQ.trim()) return byFilter
+    const q = searchQ.toLowerCase()
+    return byFilter.filter(
+      (c) =>
+        c.name.toLowerCase().includes(q) ||
+        (c.description?.toLowerCase().includes(q) ?? false)
+    )
+  }, [clubs, filters, searchQ])
 
   const runCount = filteredRuns.length
   const clubCount = filteredClubs.length
@@ -345,18 +361,132 @@ function ExploreShellInner() {
           alignItems: 'center',
         }}
       >
-        <ModeToggle
-          mode={mode}
-          setMode={setMode}
-          runCount={runCount}
-          clubCount={clubCount}
-          tr={tr}
-        />
-        <FilterButton
-          n={activeFilterCount}
-          onClick={() => setFiltersOpen(true)}
-          tr={tr}
-        />
+        {searchOpen ? (
+          <>
+            <div
+              style={{
+                flex: 1,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 10,
+                background: 'var(--surface)',
+                border: '1px solid var(--line-2)',
+                borderRadius: 100,
+                padding: '0 14px',
+                height: 40,
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                style={{ color: 'var(--faint)', flexShrink: 0 }}
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+              <input
+                autoFocus
+                value={searchQ}
+                onChange={(e) => setSearchQ(e.target.value)}
+                placeholder={tr('search_placeholder')}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  background: 'transparent',
+                  color: 'var(--text)',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 14.5,
+                  outline: 'none',
+                }}
+              />
+            </div>
+            <button
+              className="tap"
+              aria-label={tr('search_close')}
+              onClick={() => {
+                setSearchOpen(false)
+                setSearchQ('')
+              }}
+              style={{
+                border: 'none',
+                background: 'var(--surface)',
+                color: 'var(--dim)',
+                width: 40,
+                height: 40,
+                borderRadius: 100,
+                display: 'grid',
+                placeItems: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M6 6l12 12M18 6L6 18" />
+              </svg>
+            </button>
+          </>
+        ) : (
+          <>
+            <ModeToggle
+              mode={mode}
+              setMode={setMode}
+              runCount={runCount}
+              clubCount={clubCount}
+              tr={tr}
+            />
+            <button
+              className="tap"
+              aria-label={tr('search_open')}
+              onClick={() => setSearchOpen(true)}
+              style={{
+                border: '1px solid var(--line-2)',
+                background: 'var(--surface)',
+                color: 'var(--dim)',
+                width: 40,
+                height: 40,
+                borderRadius: 100,
+                display: 'grid',
+                placeItems: 'center',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <svg
+                width="15"
+                height="15"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <circle cx="11" cy="11" r="8" />
+                <path d="m21 21-4.35-4.35" />
+              </svg>
+            </button>
+            <FilterButton
+              n={activeFilterCount}
+              onClick={() => setFiltersOpen(true)}
+              tr={tr}
+            />
+          </>
+        )}
       </div>
     </>
   )
@@ -546,6 +676,48 @@ function ExploreShellInner() {
                     <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
                   </svg>
                 )}
+              </button>
+            ))}
+          </div>
+          <div
+            style={{
+              display: 'flex',
+              background: 'color-mix(in oklch, var(--bg) 72%, transparent)',
+              backdropFilter: 'blur(12px)',
+              border: '1px solid var(--line)',
+              borderRadius: 100,
+              padding: 3,
+              gap: 2,
+            }}
+          >
+            {(['fr', 'en'] as const).map((l) => (
+              <button
+                key={l}
+                aria-label={l === 'fr' ? 'Français' : 'English'}
+                onClick={() => {
+                  const segments = pathname.split('/')
+                  segments[1] = l
+                  const qs = searchParams.toString()
+                  router.push(`${segments.join('/')}${qs ? '?' + qs : ''}`)
+                }}
+                style={{
+                  border: 'none',
+                  borderRadius: 100,
+                  padding: '0 8px',
+                  height: 26,
+                  display: 'grid',
+                  placeItems: 'center',
+                  cursor: 'pointer',
+                  background: locale === l ? 'var(--surface-3)' : 'transparent',
+                  color: locale === l ? 'var(--fg)' : 'var(--faint)',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 12,
+                  fontWeight: 600,
+                  letterSpacing: '0.04em',
+                  textTransform: 'uppercase',
+                }}
+              >
+                {l}
               </button>
             ))}
           </div>

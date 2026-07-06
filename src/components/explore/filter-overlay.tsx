@@ -189,7 +189,7 @@ export function FilterOverlay({
           onClose={onClose}
           resultCount={resultCount}
           showTod={showTod}
-          loading={false}
+          loading={loading}
           locale={locale}
           tr={tr}
         />

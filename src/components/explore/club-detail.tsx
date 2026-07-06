@@ -255,7 +255,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
       </div>
 
       {/* title */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
         <h1
           style={{
             fontSize: 28,
@@ -266,6 +266,17 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
         >
           {club.name}
         </h1>
+        {club.instagram && (
+          <div
+            style={{
+              fontSize: 13,
+              color: 'var(--faint)',
+              fontFamily: 'var(--font-mono)',
+            }}
+          >
+            @{club.instagram.replace('@', '')}
+          </div>
+        )}
         <div
           style={{
             display: 'flex',

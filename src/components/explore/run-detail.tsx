@@ -142,6 +142,8 @@ export type RunDetailData = {
   id: string
   title: string
   time: string
+  date: string | null
+  isPast?: boolean
   status: 'SCHEDULED' | 'CANCELLED'
   distance: string | null
   address: string | null
@@ -227,10 +229,11 @@ type Props = {
   run: RunDetailData
   onBack: () => void
   onOpenClub: (slug: string) => void
+  locale: string
   tr: (k: string) => string
 }
 
-export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
+export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(false)
 
@@ -240,6 +243,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
   }, [])
 
   const cancelled = run.status === 'CANCELLED'
+  const isPast = run.isPast ?? false
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
   const typeLabel = run.club.type
     ? tr(`type_${run.club.type.toLowerCase()}`)
@@ -248,6 +252,21 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
     ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
+
+  const dateLabel = run.date
+    ? (() => {
+        const fmt = new Intl.DateTimeFormat(
+          locale === 'fr' ? 'fr-CA' : 'en-CA',
+          {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            timeZone: 'America/Toronto',
+          }
+        ).format(new Date(run.date))
+        return `${fmt.charAt(0).toUpperCase()}${fmt.slice(1)} · ${run.time}`
+      })()
+    : run.time
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {})
@@ -336,6 +355,9 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
           {vibeLabel && <VibePill label={vibeLabel} />}
           {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
           {cancelled && <Stamp tone="cancelled">{tr('cancelled')}</Stamp>}
+          {isPast && !cancelled && (
+            <Stamp tone="past">{tr('past_badge')}</Stamp>
+          )}
         </div>
         <h1
           style={{
@@ -349,13 +371,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, tr }: Props) {
         >
           {run.title}
         </h1>
-        <div style={{ fontSize: 14.5, color: 'var(--dim)' }}>
-          <span
-            style={{ fontFamily: 'var(--font-mono)', color: 'var(--text)' }}
-          >
-            {run.time}
-          </span>
-        </div>
+        <div style={{ fontSize: 14.5, color: 'var(--dim)' }}>{dateLabel}</div>
       </div>
 
       {/* stat strip */}

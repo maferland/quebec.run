@@ -91,13 +91,23 @@ export function RunDetailOverlay({ id }: { id: string }) {
         return r.json()
       })
       .then((data) => {
-        // Map API response to RunDetailData shape
+        // Compute isPast from date + time
+        let isPast = false
+        if (data.date && data.time) {
+          const [h, m] = data.time.split(':').map(Number)
+          // data.date is the UTC day boundary; add local run time offset
+          const runEpoch =
+            new Date(data.date).getTime() + ((h ?? 0) * 60 + (m ?? 0)) * 60000
+          isPast = runEpoch < Date.now()
+        }
         setRun({
           id: data.id,
           title: data.title,
           time: data.time,
+          date: data.date ?? null,
+          isPast,
           status: data.status,
-          distance: data.distance ?? null,
+          distance: data.distance ?? data.pace ?? null,
           address: data.address ?? null,
           lat: data.latitude ?? data.lat ?? null,
           lng: data.longitude ?? data.lng ?? null,
@@ -139,6 +149,7 @@ export function RunDetailOverlay({ id }: { id: string }) {
         run={run}
         onBack={() => router.back()}
         onOpenClub={(slug) => router.push(`/${locale}/club/${slug}`)}
+        locale={locale}
         tr={tr}
       />
     </OverlayShell>
