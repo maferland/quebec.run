@@ -39,8 +39,8 @@ function parseDay(p: URLSearchParams): number {
   return isNaN(d) || d < 0 || d > 6 ? 0 : d
 }
 
-function parseMode(p: URLSearchParams): Mode {
-  return p.get('mode') === 'clubs' ? 'clubs' : 'runs'
+function parseModeFromPath(pathname: string): Mode {
+  return pathname.split('/')[2] === 'clubs' ? 'clubs' : 'runs'
 }
 
 function parseFilters(p: URLSearchParams): Filters {
@@ -53,10 +53,9 @@ function parseFilters(p: URLSearchParams): Filters {
   }
 }
 
-function buildQs(day: number, mode: Mode, filters: Filters): string {
+function buildQs(day: number, filters: Filters): string {
   const p = new URLSearchParams()
   if (day !== 0) p.set('day', String(day))
-  if (mode !== 'runs') p.set('mode', mode)
   if (filters.types.length) p.set('types', filters.types.join(','))
   if (filters.vibes.length) p.set('vibes', filters.vibes.join(','))
   if (filters.pace !== 'any') p.set('pace', filters.pace)
@@ -135,7 +134,7 @@ function ExploreShellInner() {
 
   // ── URL-derived state ───────────────────────────────────────────────────────
   const day = parseDay(searchParams)
-  const mode = parseMode(searchParams)
+  const mode = parseModeFromPath(pathname)
   const filters = parseFilters(searchParams)
 
   const updateUrl = useCallback(
@@ -143,11 +142,12 @@ function ExploreShellInner() {
       const newDay = updates.day ?? day
       const newMode = updates.mode ?? mode
       const newFilters = updates.filters ?? filters
-      router.replace(`${pathname}${buildQs(newDay, newMode, newFilters)}`, {
+      const basePath = newMode === 'clubs' ? `/${locale}/clubs` : `/${locale}`
+      router.replace(`${basePath}${buildQs(newDay, newFilters)}`, {
         scroll: false,
       })
     },
-    [day, mode, filters, pathname, router]
+    [day, mode, filters, locale, router]
   )
 
   const setDay = useCallback(

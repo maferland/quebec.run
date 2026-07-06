@@ -13,11 +13,6 @@ const nextConfig: NextConfig = {
         permanent: true,
       },
       {
-        source: '/:locale/clubs',
-        destination: '/:locale',
-        permanent: true,
-      },
-      {
         source: '/:locale/calendar',
         destination: '/:locale',
         permanent: true,
