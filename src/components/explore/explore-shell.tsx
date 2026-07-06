@@ -229,8 +229,12 @@ function ExploreShellInner() {
   useEffect(() => {
     setLoadingRuns(true)
     fetch(`/api/explore/runs?day=${day}`)
-      .then((r) => r.json())
+      .then((r) => {
+        if (!r.ok) return []
+        return r.json()
+      })
       .then((data: ExploreRun[]) => {
+        if (!Array.isArray(data)) return
         setRuns(data)
         setSelId(null)
       })
@@ -241,8 +245,13 @@ function ExploreShellInner() {
   useEffect(() => {
     if (mode !== 'clubs' || clubs.length > 0) return
     fetch('/api/explore/clubs')
-      .then((r) => r.json())
-      .then(setClubs)
+      .then((r) => {
+        if (!r.ok) return []
+        return r.json()
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setClubs(data)
+      })
       .catch(() => {})
   }, [mode, clubs.length])
 
@@ -522,6 +531,7 @@ function ExploreShellInner() {
       ref={rootRef}
       className="qr-root"
       data-theme={theme}
+      suppressHydrationWarning
       style={{
         position: 'fixed',
         top: 0,
