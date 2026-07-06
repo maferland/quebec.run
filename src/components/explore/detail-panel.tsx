@@ -186,7 +186,6 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
           description: data.description,
           instagram: data.instagram,
           website: data.website,
-          memberCount: data.memberCount,
           schedule: data.schedule,
           upcomingRuns: data.upcomingRuns ?? [],
         })

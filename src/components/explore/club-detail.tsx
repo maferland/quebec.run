@@ -61,22 +61,6 @@ const CheckIcon = (
     <path d="M5 12l5 5L20 6" />
   </svg>
 )
-const UsersIcon = (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="9" cy="8" r="3.2" />
-    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
-    <path d="M16 6.2a3.2 3.2 0 0 1 0 5.6M16.5 19a5.5 5.5 0 0 0-2-4.3" />
-  </svg>
-)
 const GaugeIcon = (
   <svg
     width="15"
@@ -137,7 +121,6 @@ export type ClubDetailData = {
   description: string | null
   instagram: string | null
   website: string | null
-  memberCount: number
   schedule: Array<{ time: string; title: string; days: string }>
   upcomingRuns: Array<{
     id: string
@@ -277,22 +260,6 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
             @{club.instagram.replace('@', '')}
           </div>
         )}
-        <div
-          style={{
-            display: 'flex',
-            gap: 14,
-            flexWrap: 'wrap',
-            alignItems: 'center',
-            fontSize: 13,
-            color: 'var(--dim)',
-          }}
-        >
-          <span
-            style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
-          >
-            {UsersIcon} {club.memberCount} {tr('members')}
-          </span>
-        </div>
       </div>
 
       {/* badges */}

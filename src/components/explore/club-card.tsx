@@ -2,22 +2,6 @@
 import type { ExploreClub } from '@/lib/services/clubs'
 import { TypeTag, VibePill, MetaPill, Flag, paceRange } from './badges'
 
-const UsersIcon = (
-  <svg
-    width="14"
-    height="14"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <circle cx="9" cy="8" r="3.2" />
-    <path d="M3.5 19a5.5 5.5 0 0 1 11 0" />
-    <path d="M16 6.2a3.2 3.2 0 0 1 0 5.6M16.5 19a5.5 5.5 0 0 0-2-4.3" />
-  </svg>
-)
 const GaugeIcon = (
   <svg
     width="14"
@@ -72,19 +56,6 @@ export function ClubCard({ club, onOpen, tr }: Props) {
         <div style={{ minWidth: 0 }}>
           <h3 style={{ fontSize: 17, margin: 0 }}>{club.name}</h3>
         </div>
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 12,
-            color: 'var(--faint)',
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 5,
-            whiteSpace: 'nowrap',
-          }}
-        >
-          {UsersIcon} {club.memberCount}
-        </span>
       </div>
 
       {club.description && (
