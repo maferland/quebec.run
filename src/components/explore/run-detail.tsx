@@ -384,7 +384,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
           overflow: 'hidden',
         }}
       >
-        <StatCol icon={ClockIcon} value={run.time} label={tr('today')} />
+        <StatCol icon={ClockIcon} value={run.time} label={tr('time')} />
         <div style={{ width: 1, background: 'var(--line)' }} />
         <StatCol
           icon={RulerIcon}
