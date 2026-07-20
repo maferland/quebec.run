@@ -106,8 +106,8 @@ export function MapViewContent({
       const icon = L.divIcon({
         html,
         className: 'pin-wrap',
-        iconSize: [16, 16],
-        iconAnchor: [8, 8],
+        iconSize: [28, 28],
+        iconAnchor: [14, 14],
       })
 
       let m = markersRef.current[p.id]
@@ -212,9 +212,7 @@ function flyOffset(
   const L = require('leaflet') as typeof import('leaflet')
   const p = map.project(L.latLng(latlng), zoom)
   const center = map.unproject(
-    p.subtract(
-      L.point(-(ins.left || 0) / 2, (ins.bottom || 0) / 2 - (ins.top || 0) / 2)
-    ),
+    p.subtract(L.point((ins.left || 0) / 2, ((ins.top || 0) - ins.bottom) / 2)),
     zoom
   )
   map.flyTo(center, zoom, { duration: 0.7, easeLinearity: 0.25 })

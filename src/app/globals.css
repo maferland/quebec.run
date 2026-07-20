@@ -283,15 +283,22 @@ body {
 }
 
 /* map pins */
+.qr-root .pin-wrap {
+  display: grid;
+  place-items: center;
+}
 .qr-root .pin {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
 }
 .qr-root .pin-dot {
   width: 14px;
   height: 14px;
+  box-sizing: border-box;
+  flex: none;
   border-radius: 50%;
   background: var(--dim);
   border: 2px solid var(--bg);
