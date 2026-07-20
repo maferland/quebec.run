@@ -489,6 +489,7 @@ export type ClubDetailScheduleEntry = {
 
 export type ClubUpcomingRun = {
   id: string
+  date: Date
   time: string
   title: string
   status: 'SCHEDULED' | 'CANCELLED'
@@ -599,6 +600,7 @@ async function getClubDetailBySlugRaw(
     .slice(0, 10)
     .map((e) => ({
       id: e.id,
+      date: e.date,
       time: e.time,
       title: e.title,
       status: e.status as 'SCHEDULED' | 'CANCELLED',

@@ -492,6 +492,9 @@ body {
   .qr-root .filter-backdrop {
     animation: backdropIn 0.26s ease both;
   }
+  .qr-root .reveal-row {
+    animation: revealRow 0.22s cubic-bezier(0.2, 0.7, 0.3, 1);
+  }
 }
 @keyframes screenIn {
   from {
@@ -523,6 +526,14 @@ body {
   }
   to {
     opacity: 1;
+  }
+}
+@keyframes revealRow {
+  from {
+    transform: translateY(-4px);
+  }
+  to {
+    transform: none;
   }
 }
 

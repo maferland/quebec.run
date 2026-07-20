@@ -187,7 +187,10 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
           instagram: data.instagram,
           website: data.website,
           schedule: data.schedule,
-          upcomingRuns: data.upcomingRuns ?? [],
+          upcomingRuns: (data.upcomingRuns ?? []).map((run) => ({
+            ...run,
+            date: run.date instanceof Date ? run.date.toISOString() : run.date,
+          })),
         })
       })
       .catch(() => setError(true))

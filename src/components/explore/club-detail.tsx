@@ -2,6 +2,9 @@
 import { useEffect, useState } from 'react'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
 
+const UPCOMING_PREVIEW_COUNT = 3
+const SCHEDULE_PREVIEW_COUNT = 4
+
 const ChevLIcon = (
   <svg
     width="17"
@@ -124,6 +127,7 @@ export type ClubDetailData = {
   schedule: Array<{ time: string; title: string; days: string }>
   upcomingRuns: Array<{
     id: string
+    date: string
     time: string
     title: string
     status: 'SCHEDULED' | 'CANCELLED'
@@ -159,6 +163,8 @@ type Props = {
 export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(false)
+  const [showAllSchedule, setShowAllSchedule] = useState(false)
+  const [showAllUpcoming, setShowAllUpcoming] = useState(false)
 
   useEffect(() => {
     const id = requestAnimationFrame(() => setShown(true))
@@ -168,6 +174,20 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
   const pace = paceRange(club.paceMin, club.paceMax)
   const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
   const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
+  const visibleSchedule = showAllSchedule
+    ? club.schedule
+    : club.schedule.slice(0, SCHEDULE_PREVIEW_COUNT)
+  const hiddenScheduleCount = Math.max(
+    0,
+    club.schedule.length - SCHEDULE_PREVIEW_COUNT
+  )
+  const visibleUpcoming = showAllUpcoming
+    ? club.upcomingRuns
+    : club.upcomingRuns.slice(0, UPCOMING_PREVIEW_COUNT)
+  const hiddenUpcomingCount = Math.max(
+    0,
+    club.upcomingRuns.length - UPCOMING_PREVIEW_COUNT
+  )
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {})
@@ -358,9 +378,14 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
               overflow: 'hidden',
             }}
           >
-            {club.schedule.map((s, i) => (
+            {visibleSchedule.map((s, i) => (
               <div
                 key={i}
+                className={
+                  showAllSchedule && i >= SCHEDULE_PREVIEW_COUNT
+                    ? 'reveal-row'
+                    : undefined
+                }
                 style={{
                   display: 'flex',
                   alignItems: 'center',
@@ -396,6 +421,28 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                 </div>
               </div>
             ))}
+            {hiddenScheduleCount > 0 && (
+              <button
+                className="tap"
+                onClick={() => setShowAllSchedule((value) => !value)}
+                style={{
+                  width: '100%',
+                  border: 'none',
+                  borderTop: '1px solid var(--line)',
+                  background: 'transparent',
+                  color: 'var(--accent-fg)',
+                  padding: '12px 15px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {showAllSchedule
+                  ? showFewerLabel(tr)
+                  : seeMoreLabel(tr, hiddenScheduleCount)}
+              </button>
+            )}
           </div>
         </div>
       )}
@@ -405,12 +452,17 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
         <div>
           <SectionLabel>{tr('upcoming')}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
-            {club.upcomingRuns.map((e) => {
+            {visibleUpcoming.map((e, i) => {
               const cancelled = e.status === 'CANCELLED'
+              const dateLabel = formatUpcomingDate(e.date)
               return (
                 <div
                   key={e.id}
-                  className="tap"
+                  className={`tap ${
+                    showAllUpcoming && i >= UPCOMING_PREVIEW_COUNT
+                      ? 'reveal-row'
+                      : ''
+                  }`}
                   onClick={() => onOpenRun(e.id)}
                   style={{
                     display: 'flex',
@@ -453,6 +505,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                         gap: 7,
                       }}
                     >
+                      {dateLabel && <span>{dateLabel}</span>}
+                      {dateLabel && (e.distance || e.type) && <span>·</span>}
                       {e.distance && <span>{e.distance} km</span>}
                       {e.distance && e.type && <span>·</span>}
                       {e.type && (
@@ -470,9 +524,51 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                 </div>
               )
             })}
+            {hiddenUpcomingCount > 0 && (
+              <button
+                className="tap"
+                onClick={() => setShowAllUpcoming((value) => !value)}
+                style={{
+                  border: '1px solid var(--line)',
+                  background: 'transparent',
+                  color: 'var(--accent-fg)',
+                  borderRadius: 'var(--r-md)',
+                  padding: '11px 14px',
+                  fontFamily: 'var(--font-ui)',
+                  fontSize: 13.5,
+                  fontWeight: 700,
+                  cursor: 'pointer',
+                }}
+              >
+                {showAllUpcoming
+                  ? showFewerLabel(tr)
+                  : seeMoreLabel(tr, hiddenUpcomingCount)}
+              </button>
+            )}
           </div>
         </div>
       )}
     </div>
   )
+}
+
+function seeMoreLabel(tr: (k: string) => string, count: number) {
+  const label = tr('see_more')
+  if (label === 'Voir plus') return `Voir ${count} de plus`
+  return `See ${count} more`
+}
+
+function showFewerLabel(tr: (k: string) => string) {
+  const label = tr('show_fewer')
+  return label.startsWith('explore.') ? 'Show fewer' : label
+}
+
+function formatUpcomingDate(value: string) {
+  const date = new Date(value)
+  if (Number.isNaN(date.getTime())) return ''
+  return new Intl.DateTimeFormat(undefined, {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+  }).format(date)
 }
