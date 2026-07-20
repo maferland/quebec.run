@@ -1,4 +1,10 @@
 import { prisma } from '@/lib/prisma'
+import {
+  cachePublicData,
+  PUBLIC_API_REVALIDATE_SECONDS,
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_PAGE_REVALIDATE_SECONDS,
+} from '@/lib/public-cache'
 import type {
   AuthPayload,
   ClubCreate,
@@ -87,12 +93,34 @@ function computeClubFacetCounts(
   return counts
 }
 
-async function fetchClubList(): Promise<NonNullable<ClubListItem>[]> {
+async function fetchClubListRaw(): Promise<NonNullable<ClubListItem>[]> {
   return prisma.club.findMany({
     orderBy: { createdAt: 'desc' },
     select: CLUB_LIST_SELECT,
   })
 }
+
+const fetchClubList = cachePublicData(fetchClubListRaw, ['club-list'], {
+  revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+  tags: [PUBLIC_CACHE_TAGS.clubs],
+})
+
+async function getActiveClubSlugsRaw(): Promise<{ slug: string }[]> {
+  return prisma.club.findMany({
+    where: { isActive: true },
+    orderBy: { slug: 'asc' },
+    select: { slug: true },
+  })
+}
+
+export const getActiveClubSlugs = cachePublicData(
+  getActiveClubSlugsRaw,
+  ['active-club-slugs'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs],
+  }
+)
 
 export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
   const { limit = 50, offset = 0 } = data
@@ -319,7 +347,7 @@ export async function getClubByIdWithParams(id: string) {
   return { ...club, events }
 }
 
-export async function getClubBySlug({ slug }: ClubSlug) {
+async function getClubBySlugRaw(slug: string) {
   const club = await prisma.club.findUnique({
     where: { slug },
     select: {
@@ -365,6 +393,19 @@ export async function getClubBySlug({ slug }: ClubSlug) {
   return { ...club, patterns }
 }
 
+const getCachedClubBySlug = cachePublicData(
+  getClubBySlugRaw,
+  ['club-by-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+export async function getClubBySlug({ slug }: ClubSlug) {
+  return getCachedClubBySlug(slug)
+}
+
 // ─── Explore data layer ───────────────────────────────────────────────────────
 
 export type ExploreClub = {
@@ -385,7 +426,7 @@ export type ExploreClub = {
   lng: number | null
 }
 
-export async function getClubsForExplore(): Promise<ExploreClub[]> {
+async function getClubsForExploreRaw(): Promise<ExploreClub[]> {
   const clubs = await prisma.club.findMany({
     select: {
       id: true,
@@ -430,6 +471,15 @@ export async function getClubsForExplore(): Promise<ExploreClub[]> {
     lng: club.addresses[0]?.longitude ?? null,
   }))
 }
+
+export const getClubsForExplore = cachePublicData(
+  getClubsForExploreRaw,
+  ['clubs-for-explore'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs],
+  }
+)
 
 export type ClubDetailScheduleEntry = {
   time: string
@@ -498,7 +548,7 @@ function schedTime(pattern: string): string {
   return ''
 }
 
-export async function getClubDetailBySlug(
+async function getClubDetailBySlugRaw(
   slug: string,
   locale = 'fr'
 ): Promise<ClubForDetail | null> {
@@ -576,6 +626,15 @@ export async function getClubDetailBySlug(
     upcomingRuns,
   }
 }
+
+export const getClubDetailBySlug = cachePublicData(
+  getClubDetailBySlugRaw,
+  ['club-detail-by-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
 export const updateClubById = async ({
   user,

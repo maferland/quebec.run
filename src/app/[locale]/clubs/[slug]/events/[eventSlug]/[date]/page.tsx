@@ -24,6 +24,8 @@ export type ClubEventDatePageProps = PageProps<{
   date: string
 }>
 
+export const revalidate = 900
+
 const ADDRESS_TOKEN =
   /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st|ch|chemin|route|rang)\b\.?/i
 

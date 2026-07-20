@@ -17,17 +17,6 @@ const nextConfig: NextConfig = {
         destination: '/:locale',
         permanent: true,
       },
-      // Old plural club/event detail URLs → new singular canonical URLs
-      {
-        source: '/:locale/clubs/:slug',
-        destination: '/:locale/club/:slug',
-        permanent: true,
-      },
-      {
-        source: '/:locale/events/:id',
-        destination: '/:locale/run/:id',
-        permanent: true,
-      },
     ]
   },
 }

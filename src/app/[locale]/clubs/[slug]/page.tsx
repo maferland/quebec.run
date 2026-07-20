@@ -8,7 +8,7 @@ import { PageContainer } from '@/components/ui/page-container'
 import { EmptyState } from '@/components/ui/empty-state'
 import { Icon } from '@/components/ui/icon'
 import { Tag } from '@/components/ui/tag'
-import { getClubBySlug } from '@/lib/services/clubs'
+import { getActiveClubSlugs, getClubBySlug } from '@/lib/services/clubs'
 import type { PageProps } from '@/lib/types/next'
 import {
   Calendar,
@@ -58,6 +58,13 @@ function SocialTag({
 }
 
 export type ClubPageProps = PageProps<{ locale: string; slug: string }>
+
+export const revalidate = 900
+
+export async function generateStaticParams() {
+  const clubs = await getActiveClubSlugs()
+  return clubs.map((club) => ({ slug: club.slug }))
+}
 
 export async function generateMetadata({
   params,

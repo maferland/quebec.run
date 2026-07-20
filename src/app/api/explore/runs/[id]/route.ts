@@ -1,4 +1,5 @@
 import { withPublic } from '@/lib/api-middleware'
+import { publicCacheHeaders } from '@/lib/public-cache'
 import { eventIdSchema } from '@/lib/schemas'
 import { getEventById } from '@/lib/services/events'
 
@@ -7,5 +8,5 @@ export const GET = withPublic(eventIdSchema)(async (data) => {
   if (!event) {
     return Response.json({ error: 'Not found' }, { status: 404 })
   }
-  return Response.json(event)
+  return Response.json(event, { headers: publicCacheHeaders() })
 })

@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/seo/metadata'
 const LOCALES = ['fr', 'en'] as const
 type Locale = (typeof LOCALES)[number]
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 
@@ -43,11 +43,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ...staticEntry('', 1.0, 'daily'),
     ...clubs.flatMap((club) =>
       LOCALES.map((locale: Locale) => ({
-        url: `${SITE_URL}/${locale}/club/${club.slug}`,
+        url: `${SITE_URL}/${locale}/clubs/${club.slug}`,
         priority: 0.7,
         changeFrequency: 'weekly' as const,
         lastModified: club.updatedAt,
-        alternates: alternates(`/club/${club.slug}`),
+        alternates: alternates(`/clubs/${club.slug}`),
       }))
     ),
   ]

@@ -1,4 +1,10 @@
 import { prisma } from '@/lib/prisma'
+import {
+  cachePublicData,
+  PUBLIC_API_REVALIDATE_SECONDS,
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_PAGE_REVALIDATE_SECONDS,
+} from '@/lib/public-cache'
 import type {
   EventsQuery,
   EventCreate,
@@ -132,9 +138,7 @@ const EXPLORE_CLUB_SELECT = {
   paceMax: true,
 } as const
 
-export async function getEventsForDay(
-  dayOffset: number
-): Promise<ExploreRun[]> {
+async function getEventsForDayRaw(dayOffset: number): Promise<ExploreRun[]> {
   const { start, end } = getTorontoDayBounds(dayOffset)
   const now = new Date()
   const isToday = dayOffset === 0
@@ -219,7 +223,16 @@ export async function getEventsForDay(
     .filter((e): e is ExploreRun => e !== null)
 }
 
-export async function getWeekEventCounts(): Promise<
+export const getEventsForDay = cachePublicData(
+  getEventsForDayRaw,
+  ['events-for-day'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+async function getWeekEventCountsRaw(): Promise<
   { day: number; count: number }[]
 > {
   const counts: { day: number; count: number }[] = []
@@ -269,6 +282,15 @@ export async function getWeekEventCounts(): Promise<
 
   return counts.sort((a, b) => a.day - b.day)
 }
+
+export const getWeekEventCounts = cachePublicData(
+  getWeekEventCountsRaw,
+  ['week-event-counts'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -658,9 +680,7 @@ function countEventFacets(
   return counts
 }
 
-export const getEventById = async ({ data }: PublicPayload<EventId>) => {
-  const { id } = data
-
+async function getEventByIdRaw(id: string) {
   // Virtual event ID formats:
   // New: slug--YYYY-MM-DD (e.g., 6am-club-beauport--2026-03-18)
   // Legacy: cuid:YYYY-MM-DD (e.g., cmj8zbj20000cpt9z:2026-03-18)
@@ -725,11 +745,20 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   })
 }
 
-export const getEventByClubAndSlug = async ({
-  data,
-}: PublicPayload<EventByClubAndSlug>) => {
-  const { clubSlug, eventSlug, date } = data
+const getCachedEventById = cachePublicData(getEventByIdRaw, ['event-by-id'], {
+  revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+  tags: [PUBLIC_CACHE_TAGS.runs],
+})
 
+export const getEventById = async ({ data }: PublicPayload<EventId>) => {
+  return getCachedEventById(data.id)
+}
+
+async function getEventByClubAndSlugRaw(
+  clubSlug: string,
+  eventSlug: string,
+  date: string
+) {
   const club = await prisma.club.findUnique({
     where: { slug: clubSlug },
     select: { id: true },
@@ -766,11 +795,23 @@ export const getEventByClubAndSlug = async ({
   return createVirtualEvent(recurringEvent, new Date(`${date}T12:00:00`))
 }
 
-export const getNextOccurrenceDate = async ({
-  data,
-}: PublicPayload<EventByClubAndSlugBare>) => {
-  const { clubSlug, eventSlug } = data
+const getCachedEventByClubAndSlug = cachePublicData(
+  getEventByClubAndSlugRaw,
+  ['event-by-club-and-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
+export const getEventByClubAndSlug = async ({
+  data,
+}: PublicPayload<EventByClubAndSlug>) => {
+  const { clubSlug, eventSlug, date } = data
+  return getCachedEventByClubAndSlug(clubSlug, eventSlug, date)
+}
+
+async function getNextOccurrenceDateRaw(clubSlug: string, eventSlug: string) {
   const club = await prisma.club.findUnique({
     where: { slug: clubSlug },
     select: { id: true },
@@ -787,6 +828,21 @@ export const getNextOccurrenceDate = async ({
   const upper = addDays(now, 365)
   const [next] = expandRRuleDates(recurringEvent.schedulePattern, now, upper)
   return next ?? null
+}
+
+const getCachedNextOccurrenceDate = cachePublicData(
+  getNextOccurrenceDateRaw,
+  ['next-occurrence-date'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+export const getNextOccurrenceDate = async ({
+  data,
+}: PublicPayload<EventByClubAndSlugBare>) => {
+  return getCachedNextOccurrenceDate(data.clubSlug, data.eventSlug)
 }
 
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {

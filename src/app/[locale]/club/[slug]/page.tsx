@@ -5,7 +5,7 @@ import { ClubDetailOverlay } from '@/components/explore/detail-panel'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 import { getClubBySlug } from '@/lib/services/clubs'
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 900
 export const dynamicParams = true
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
@@ -16,7 +16,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations({ locale, namespace: 'metadata.clubDetail' })
   return buildPageMetadata({
     locale: locale as Locale,
-    path: `/club/${slug}`,
+    path: `/clubs/${slug}`,
     title: club ? t('title', { clubName: club.name }) : slug,
     description: club
       ? t('description', { clubName: club.name })
