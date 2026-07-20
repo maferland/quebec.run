@@ -48,30 +48,30 @@
     }
   },
   "metadata": {
-    "title": "quebec.run - Trouvez votre prochaine course à Québec",
+    "title": "quebec.run | Trouvez votre prochaine course à Québec",
     "description": "Découvrez les clubs de course et événements à Québec. Connectez-vous avec d'autres coureurs et explorez de nouveaux parcours ensemble.",
     "home": {
-      "title": "quebec.run — Clubs de course et événements à Québec",
+      "title": "quebec.run | Clubs de course et événements à Québec",
       "description": "Trouvez un club de course à Québec : 6AM Club, Faux Mouvement, La Foulée, Le Coureur Nordique et plus. Tous les événements de course de la semaine."
     },
     "clubs": {
-      "title": "Clubs de course à Québec — quebec.run",
+      "title": "Clubs de course à Québec | quebec.run",
       "description": "Annuaire des clubs de course de la région de Québec. Filtrez par ambiance (social, entraînement), par type (route, sentier) ou trouvez un club pour débutants."
     },
     "clubDetail": {
-      "title": "{clubName} — Club de course à Québec",
+      "title": "{clubName} | Club de course à Québec",
       "description": "{clubName} — horaires, points de rencontre et prochains événements de course à Québec."
     },
     "events": {
-      "title": "Événements de course à Québec — quebec.run",
+      "title": "Événements de course à Québec | quebec.run",
       "description": "Toutes les sorties de course à Québec cette semaine. Filtrez par moment de la journée, club ou allure."
     },
     "eventDetail": {
-      "title": "{eventTitle} — {clubName} — quebec.run",
+      "title": "{eventTitle} | {clubName} | quebec.run",
       "description": "{eventTitle} avec {clubName} à Québec. Horaire, lieu de rencontre et détails de la sortie."
     },
     "calendar": {
-      "title": "Calendrier des courses à Québec — quebec.run",
+      "title": "Calendrier des courses à Québec | quebec.run",
       "description": "Calendrier complet des sorties de course à Québec et environs sur les 60 prochains jours."
     }
   },
