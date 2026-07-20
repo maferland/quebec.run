@@ -40,7 +40,18 @@ function parseDay(p: URLSearchParams): number {
 }
 
 function parseModeFromPath(pathname: string): Mode {
-  return pathname.split('/')[2] === 'clubs' ? 'clubs' : 'runs'
+  const section = pathname.split('/')[2]
+  return section === 'clubs' || section === 'club' ? 'clubs' : 'runs'
+}
+
+function parseRouteSelection(pathname: string) {
+  const [, , section, id] = pathname.split('/')
+  if (!id) return { runId: null, clubSlug: null }
+  if (section === 'run')
+    return { runId: decodeURIComponent(id), clubSlug: null }
+  if (section === 'club' || section === 'clubs')
+    return { runId: null, clubSlug: decodeURIComponent(id) }
+  return { runId: null, clubSlug: null }
 }
 
 function parseFilters(p: URLSearchParams): Filters {
@@ -53,7 +64,21 @@ function parseFilters(p: URLSearchParams): Filters {
   }
 }
 
-function buildQs(day: number, filters: Filters): string {
+function dayOffsetFromRunId(id: string | null): number | null {
+  const date = id?.match(/(?:--|:)(\d{4}-\d{2}-\d{2})$/)?.[1]
+  if (!date) return null
+  const today = new Date()
+  today.setHours(0, 0, 0, 0)
+  const target = new Date(`${date}T00:00:00`)
+  const offset = Math.round((target.getTime() - today.getTime()) / 86400000)
+  return offset >= 0 && offset <= 6 ? offset : null
+}
+
+function buildQs(
+  day: number,
+  filters: Filters,
+  selected: { runId?: string | null; clubSlug?: string | null } = {}
+): string {
   const p = new URLSearchParams()
   if (day !== 0) p.set('day', String(day))
   if (filters.types.length) p.set('types', filters.types.join(','))
@@ -61,6 +86,8 @@ function buildQs(day: number, filters: Filters): string {
   if (filters.pace !== 'any') p.set('pace', filters.pace)
   if (filters.beginner) p.set('beginner', '1')
   if (filters.tod !== 'all') p.set('tod', filters.tod)
+  if (selected.runId) p.set('run', selected.runId)
+  if (selected.clubSlug) p.set('club', selected.clubSlug)
   const s = p.toString()
   return s ? `?${s}` : ''
 }
@@ -131,44 +158,61 @@ function ExploreShellInner() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
+  const routeSelection = parseRouteSelection(pathname)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
-  const day = parseDay(searchParams)
   const mode = parseModeFromPath(pathname)
+  const selectedRunId = routeSelection.runId ?? searchParams.get('run')
+  const selectedClubSlug = routeSelection.clubSlug ?? searchParams.get('club')
+  const day = searchParams.has('day')
+    ? parseDay(searchParams)
+    : (dayOffsetFromRunId(selectedRunId) ?? 0)
   const filters = parseFilters(searchParams)
 
   const updateUrl = useCallback(
-    (updates: { day?: number; mode?: Mode; filters?: Filters }) => {
+    (updates: {
+      day?: number
+      mode?: Mode
+      filters?: Filters
+      runId?: string | null
+      clubSlug?: string | null
+    }) => {
       const newDay = updates.day ?? day
       const newMode = updates.mode ?? mode
       const newFilters = updates.filters ?? filters
+      const newRunId =
+        updates.runId === undefined ? selectedRunId : updates.runId
+      const newClubSlug =
+        updates.clubSlug === undefined ? selectedClubSlug : updates.clubSlug
       const basePath = newMode === 'clubs' ? `/${locale}/clubs` : `/${locale}`
-      router.replace(`${basePath}${buildQs(newDay, newFilters)}`, {
+      const selected =
+        newMode === 'clubs'
+          ? { clubSlug: newClubSlug, runId: null }
+          : { runId: newRunId, clubSlug: null }
+      router.replace(`${basePath}${buildQs(newDay, newFilters, selected)}`, {
         scroll: false,
       })
     },
-    [day, mode, filters, locale, router]
+    [day, mode, filters, selectedRunId, selectedClubSlug, locale, router]
   )
 
   const setDay = useCallback(
     (o: number) => {
-      setSelId(null)
-      updateUrl({ day: o })
+      updateUrl({ day: o, runId: null, clubSlug: null })
     },
     [updateUrl]
   )
 
   const setMode = useCallback(
     (m: Mode) => {
-      setSelId(null)
-      updateUrl({ mode: m })
+      updateUrl({ mode: m, runId: null, clubSlug: null })
     },
     [updateUrl]
   )
 
   const setFilters = useCallback(
     (fn: (prev: Filters) => Filters) => {
-      updateUrl({ filters: fn(filters) })
+      updateUrl({ filters: fn(filters), runId: null, clubSlug: null })
     },
     [filters, updateUrl]
   )
@@ -179,7 +223,6 @@ function ExploreShellInner() {
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
-  const [selId, setSelId] = useState<string | null>(null)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQ, setSearchQ] = useState('')
@@ -236,14 +279,13 @@ function ExploreShellInner() {
       .then((data: ExploreRun[]) => {
         if (!Array.isArray(data)) return
         setRuns(data)
-        setSelId(null)
       })
       .catch(() => {})
       .finally(() => setLoadingRuns(false))
   }, [day])
 
   useEffect(() => {
-    if (mode !== 'clubs' || clubs.length > 0) return
+    if (clubs.length > 0) return
     fetch('/api/explore/clubs')
       .then((r) => {
         if (!r.ok) return []
@@ -253,7 +295,7 @@ function ExploreShellInner() {
         if (Array.isArray(data)) setClubs(data)
       })
       .catch(() => {})
-  }, [mode, clubs.length])
+  }, [clubs.length])
 
   // ── Derived values ──────────────────────────────────────────────────────────
 
@@ -288,7 +330,6 @@ function ExploreShellInner() {
         past: day === 0 && r.status !== 'CANCELLED' && toMin(r.time) < nowMin,
       }))
   }, [mode, clubs, runs, day, nowMin])
-
   const insets = useMemo(
     () =>
       desktop
@@ -319,6 +360,33 @@ function ExploreShellInner() {
         (c.description?.toLowerCase().includes(q) ?? false)
     )
   }, [clubs, filters, searchQ])
+
+  const selectedClubId = useMemo(() => {
+    if (!selectedClubSlug) return null
+    return clubs.find((club) => club.slug === selectedClubSlug)?.id ?? null
+  }, [clubs, selectedClubSlug])
+
+  const selId = mode === 'clubs' ? selectedClubId : selectedRunId
+
+  const setSelectedId = useCallback(
+    (id: string | null) => {
+      if (!id) {
+        updateUrl({ runId: null, clubSlug: null })
+        return
+      }
+      if (mode === 'clubs') {
+        const club = clubs.find((candidate) => candidate.id === id)
+        updateUrl({ clubSlug: club?.slug ?? null, runId: null })
+        return
+      }
+      updateUrl({
+        runId: id,
+        clubSlug: null,
+        day: dayOffsetFromRunId(id) ?? day,
+      })
+    },
+    [clubs, day, mode, updateUrl]
+  )
 
   const runCount = filteredRuns.length
   const clubCount = filteredClubs.length
@@ -511,7 +579,7 @@ function ExploreShellInner() {
       clubs={filteredClubs}
       mode={mode}
       selId={selId}
-      onSelect={setSelId}
+      onSelect={setSelectedId}
       loading={loadingRuns}
       tr={tr}
       day={day}
@@ -545,7 +613,7 @@ function ExploreShellInner() {
       <MapView
         points={points}
         activeId={selId}
-        onSelect={setSelId}
+        onSelect={setSelectedId}
         theme={theme}
         insets={insets}
       />
@@ -1045,7 +1113,7 @@ function RunList({
           <ClubCard
             key={c.id}
             club={c}
-            onOpen={() => router.push(`/${locale}/club/${c.slug}`)}
+            onOpen={() => router.push(`/${locale}/clubs/${c.slug}`)}
             tr={tr}
           />
         ))}

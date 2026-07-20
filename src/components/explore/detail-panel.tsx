@@ -148,7 +148,7 @@ export function RunDetailOverlay({ id }: { id: string }) {
       <RunDetailPanel
         run={run}
         onBack={() => router.back()}
-        onOpenClub={(slug) => router.push(`/${locale}/club/${slug}`)}
+        onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
       />

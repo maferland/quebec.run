@@ -1,5 +1,6 @@
 'use client'
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import * as L from 'leaflet'
 import type { MapViewProps } from './map-view'
 import 'leaflet/dist/leaflet.css'
 
@@ -10,6 +11,7 @@ const TILES = {
   light:
     'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
 }
+const FIT_PADDING = 96
 
 export function MapViewContent({
   points,
@@ -23,13 +25,18 @@ export function MapViewContent({
   const tileRef = useRef<L.TileLayer | null>(null)
   const markersRef = useRef<Record<string, L.Marker>>({})
   const insetsRef = useRef(insets)
+  const pointsRef = useRef(points)
+  const activeIdRef = useRef(activeId)
+  const onSelectRef = useRef(onSelect)
   const lastFlyRef = useRef<string | null>(null)
+  const [mapReady, setMapReady] = useState(false)
   insetsRef.current = insets
+  pointsRef.current = points
+  activeIdRef.current = activeId
+  onSelectRef.current = onSelect
 
   useEffect(() => {
     if (!containerRef.current) return
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet') as typeof import('leaflet')
 
     const map = L.map(containerRef.current, {
       center: QC_CENTER,
@@ -48,6 +55,14 @@ export function MapViewContent({
 
     tileRef.current = mkLayer(theme).addTo(map)
     mapRef.current = map
+    syncMarkers(
+      map,
+      markersRef.current,
+      pointsRef.current,
+      activeIdRef.current,
+      onSelectRef.current
+    )
+    setMapReady(true)
 
     const ro = new ResizeObserver(() => map.invalidateSize({ animate: false }))
     ro.observe(containerRef.current!)
@@ -56,6 +71,8 @@ export function MapViewContent({
       ro.disconnect()
       map.remove()
       mapRef.current = null
+      markersRef.current = {}
+      setMapReady(false)
     }
     // mount once
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -66,8 +83,6 @@ export function MapViewContent({
     const map = mapRef.current
     const prev = tileRef.current
     if (!map) return
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet') as typeof import('leaflet')
     const next = L.tileLayer(TILES[theme], {
       subdomains: 'abcd',
       maxZoom: 19,
@@ -87,53 +102,8 @@ export function MapViewContent({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet') as typeof import('leaflet')
-
-    const seen = new Set<string>()
-    points.forEach((p) => {
-      seen.add(p.id)
-      const cls = [
-        'pin',
-        p.kind === 'club' ? 'is-club' : 'is-accent',
-        p.cancelled ? 'is-cancelled' : '',
-        p.past ? 'is-past' : '',
-        p.id === activeId ? 'is-active' : '',
-      ]
-        .filter(Boolean)
-        .join(' ')
-      const html = `<div class="${cls}"><div class="pin-ring"></div><div class="pin-dot"></div>${p.label ? `<div class="pin-label">${p.label}</div>` : ''}</div>`
-      const icon = L.divIcon({
-        html,
-        className: 'pin-wrap',
-        iconSize: [28, 28],
-        iconAnchor: [14, 14],
-      })
-
-      let m = markersRef.current[p.id]
-      if (!m) {
-        m = L.marker([p.lat, p.lng], {
-          icon,
-          riseOnHover: true,
-          keyboard: false,
-        })
-        m.on('click', () => onSelect(p.id))
-        m.addTo(map)
-        markersRef.current[p.id] = m
-      } else {
-        m.setIcon(icon)
-        m.setLatLng([p.lat, p.lng])
-      }
-      m.setZIndexOffset(p.id === activeId ? 1000 : 0)
-    })
-
-    Object.keys(markersRef.current).forEach((id) => {
-      if (!seen.has(id)) {
-        map.removeLayer(markersRef.current[id])
-        delete markersRef.current[id]
-      }
-    })
-  }, [points, activeId, onSelect])
+    syncMarkers(map, markersRef.current, points, activeId, onSelect)
+  }, [points, activeId, onSelect, mapReady])
 
   // fly to active
   useEffect(() => {
@@ -149,15 +119,13 @@ export function MapViewContent({
       Math.max(map.getZoom(), 14),
       insetsRef.current
     )
-  }, [activeId, points])
+  }, [activeId, points, mapReady])
 
   // fit bounds when points change and nothing active
   const sig = points.map((p) => p.id).join(',')
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const L = require('leaflet') as typeof import('leaflet')
     if (activeId) {
       lastFlyRef.current = null
       const p = points.find((x) => x.id === activeId)
@@ -184,13 +152,13 @@ export function MapViewContent({
       points.map((p) => [p.lat, p.lng] as [number, number])
     )
     map.flyToBounds(bounds, {
-      paddingTopLeft: [ins.left + 50, ins.top + 50],
-      paddingBottomRight: [50, ins.bottom + 50],
+      paddingTopLeft: [ins.left + FIT_PADDING, ins.top + FIT_PADDING],
+      paddingBottomRight: [FIT_PADDING, ins.bottom + FIT_PADDING],
       duration: 0.7,
       maxZoom: 15,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sig])
+  }, [sig, mapReady])
 
   return (
     <div
@@ -202,14 +170,65 @@ export function MapViewContent({
   )
 }
 
+function syncMarkers(
+  map: L.Map,
+  markers: Record<string, L.Marker>,
+  points: MapViewProps['points'],
+  activeId: string | null,
+  onSelect: (id: string) => void
+) {
+  const seen = new Set<string>()
+  points.forEach((p) => {
+    seen.add(p.id)
+    const cls = [
+      'pin',
+      p.kind === 'club' ? 'is-club' : 'is-accent',
+      p.cancelled ? 'is-cancelled' : '',
+      p.past ? 'is-past' : '',
+      p.id === activeId ? 'is-active' : '',
+    ]
+      .filter(Boolean)
+      .join(' ')
+    const html = `<div class="${cls}"><div class="pin-ring"></div><div class="pin-dot"></div>${p.label ? `<div class="pin-label">${p.label}</div>` : ''}</div>`
+    const icon = L.divIcon({
+      html,
+      className: 'pin-wrap',
+      iconSize: [28, 28],
+      iconAnchor: [14, 14],
+    })
+
+    let marker = markers[p.id]
+    if (!marker) {
+      marker = L.marker([p.lat, p.lng], {
+        icon,
+        riseOnHover: true,
+        keyboard: false,
+      })
+      marker.on('click', () => onSelect(p.id))
+      marker.addTo(map)
+      markers[p.id] = marker
+    } else {
+      marker.setIcon(icon)
+      marker.setLatLng([p.lat, p.lng])
+      if (!map.hasLayer(marker)) marker.addTo(map)
+    }
+    marker.setZIndexOffset(p.id === activeId ? 1000 : 0)
+  })
+
+  Object.keys(markers).forEach((id) => {
+    if (!seen.has(id)) {
+      map.removeLayer(markers[id])
+      delete markers[id]
+    }
+  })
+}
+
 function flyOffset(
   map: L.Map,
   latlng: [number, number],
   zoom: number,
   ins: { left: number; top: number; bottom: number }
 ) {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const L = require('leaflet') as typeof import('leaflet')
   const p = map.project(L.latLng(latlng), zoom)
   const center = map.unproject(
     p.subtract(L.point((ins.left || 0) / 2, ((ins.top || 0) - ins.bottom) / 2)),
