@@ -26,6 +26,20 @@ test.describe('Map Markers', () => {
     ).toBeVisible()
   })
 
+  test('canonical club route renders map-first detail view', async ({
+    page,
+  }) => {
+    await page.goto('/en/clubs/fauxmouvement')
+
+    await expect(
+      page.getByRole('application', { name: /interactive event map/i })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toBeVisible()
+    await expect(page.getByText(/weekly schedule/i)).toBeVisible()
+  })
+
   test('selected run is URL-addressable', async ({ page, request }) => {
     const response = await request.get('/api/explore/runs?day=0')
     expect(response.ok()).toBe(true)
