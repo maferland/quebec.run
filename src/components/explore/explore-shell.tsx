@@ -167,7 +167,35 @@ function ExploreShellInner() {
   const day = searchParams.has('day')
     ? parseDay(searchParams)
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
-  const filters = parseFilters(searchParams)
+  const filters = useMemo(() => parseFilters(searchParams), [searchParams])
+
+  useEffect(() => {
+    const queryMode = searchParams.get('mode')
+    const queryClubSlug = searchParams.get('club')
+    const queryRunId = searchParams.get('run')
+
+    if (!routeSelection.clubSlug && (queryMode === 'clubs' || queryClubSlug)) {
+      const path = queryClubSlug
+        ? `/${locale}/clubs/${encodeURIComponent(queryClubSlug)}`
+        : `/${locale}/clubs`
+      router.replace(`${path}${buildQs(day, filters)}`, { scroll: false })
+      return
+    }
+
+    if (!routeSelection.runId && queryRunId) {
+      router.replace(`/${locale}/run/${encodeURIComponent(queryRunId)}`, {
+        scroll: false,
+      })
+    }
+  }, [
+    day,
+    filters,
+    locale,
+    routeSelection.clubSlug,
+    routeSelection.runId,
+    router,
+    searchParams,
+  ])
 
   const updateUrl = useCallback(
     (updates: {

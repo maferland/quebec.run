@@ -158,7 +158,7 @@ export function RunDetailOverlay({ id }: { id: string }) {
             router.back()
             return
           }
-          router.replace(`/${locale}?run=${encodeURIComponent(id)}`)
+          router.replace(`/${locale}`)
         }}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
@@ -234,9 +234,7 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
             router.back()
             return
           }
-          router.replace(
-            `/${locale}?mode=clubs&club=${encodeURIComponent(slug)}`
-          )
+          router.replace(`/${locale}/clubs`)
         }}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
