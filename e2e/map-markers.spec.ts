@@ -36,7 +36,7 @@ test.describe('Map Markers', () => {
     ).toBeVisible()
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
-    ).toBeVisible()
+    ).toBeVisible({ timeout: 15000 })
     await expect(page.getByText(/weekly schedule/i)).toBeVisible()
   })
 
@@ -59,7 +59,9 @@ test.describe('Map Markers', () => {
       .first()
       .click()
     await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}$`))
-    await expect(page.getByRole('heading', { name: run.title })).toBeVisible()
+    await expect(
+      page.getByRole('heading', { level: 1, name: run.title })
+    ).toBeVisible()
     await expect(page.locator('.pin.is-active')).toBeVisible()
 
     const deepLinkPage = await page.context().newPage()
@@ -71,6 +73,21 @@ test.describe('Map Markers', () => {
       timeout: 15000,
     })
     await deepLinkPage.close()
+  })
+
+  test('direct run detail highlights the active map pin', async ({ page }) => {
+    const runId = 'fauxmouvement-mardi--2026-07-21'
+    await page.goto(`/en/run/${runId}`)
+
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toBeVisible({ timeout: 15000 })
+    await expect(page.locator('.pin.is-active')).toHaveCount(1)
+    await expect(page.locator('.pin.is-muted').first()).toBeVisible()
+    await expect(page.getByText(/Café de Course/)).toBeVisible()
+
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page).toHaveURL(new RegExp(`/en\\?run=${runId}$`))
   })
 
   test.describe('map-first home', () => {

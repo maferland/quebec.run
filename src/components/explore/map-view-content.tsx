@@ -186,6 +186,7 @@ function syncMarkers(
       p.cancelled ? 'is-cancelled' : '',
       p.past ? 'is-past' : '',
       p.id === activeId ? 'is-active' : '',
+      activeId && p.id !== activeId ? 'is-muted' : '',
     ]
       .filter(Boolean)
       .join(' ')

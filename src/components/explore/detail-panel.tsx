@@ -9,6 +9,11 @@ import type { ClubForDetail } from '@/lib/services/clubs'
 
 const RAIL_WIDTH = 404
 
+const hasAppHistory = () => {
+  const state = window.history.state as { idx?: number } | null
+  return typeof state?.idx === 'number' && state.idx > 0
+}
+
 // ── Shared overlay shell ──────────────────────────────────────────────────────
 
 function OverlayShell({ children }: { children: React.ReactNode }) {
@@ -24,7 +29,7 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
   if (desktop) {
     return (
       <div
-        className="qr-root"
+        className="qr-root qr-panel-scroll"
         data-theme={theme}
         suppressHydrationWarning
         style={{
@@ -49,7 +54,7 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="qr-root"
+      className="qr-root qr-panel-scroll"
       data-theme={theme}
       suppressHydrationWarning
       style={{
@@ -115,6 +120,7 @@ export function RunDetailOverlay({ id }: { id: string }) {
             id: data.club?.id ?? '',
             slug: data.club?.slug ?? '',
             name: data.club?.name ?? '',
+            description: data.club?.description ?? null,
             type: data.club?.type ?? null,
             vibe: data.club?.vibe ?? null,
             beginnerFriendly: data.club?.beginnerFriendly ?? false,
@@ -147,7 +153,13 @@ export function RunDetailOverlay({ id }: { id: string }) {
     <OverlayShell>
       <RunDetailPanel
         run={run}
-        onBack={() => router.back()}
+        onBack={() => {
+          if (hasAppHistory()) {
+            router.back()
+            return
+          }
+          router.replace(`/${locale}?run=${encodeURIComponent(id)}`)
+        }}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
@@ -217,7 +229,15 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
     <OverlayShell>
       <ClubDetailPanel
         club={club}
-        onBack={() => router.back()}
+        onBack={() => {
+          if (hasAppHistory()) {
+            router.back()
+            return
+          }
+          router.replace(
+            `/${locale}?mode=clubs&club=${encodeURIComponent(slug)}`
+          )
+        }}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
       />

@@ -723,7 +723,17 @@ async function getEventByIdRaw(id: string) {
     }
 
     const date = new Date(`${dateKey}T12:00:00`)
-    return createVirtualEvent(recurringEvent, date)
+    const event = createVirtualEvent(recurringEvent, date)
+    const description = recurringEvent.club.description
+      ?.replace(/\s+/g, ' ')
+      .trim()
+    return {
+      ...event,
+      club: {
+        ...event.club,
+        description: description || null,
+      },
+    }
   }
 
   return await prisma.event.findUnique({
@@ -739,16 +749,21 @@ async function getEventByIdRaw(id: string) {
           beginnerFriendly: true,
           paceMin: true,
           paceMax: true,
+          description: true,
         },
       },
     },
   })
 }
 
-const getCachedEventById = cachePublicData(getEventByIdRaw, ['event-by-id'], {
-  revalidate: PUBLIC_API_REVALIDATE_SECONDS,
-  tags: [PUBLIC_CACHE_TAGS.runs],
-})
+const getCachedEventById = cachePublicData(
+  getEventByIdRaw,
+  ['event-by-id-v3'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   return getCachedEventById(data.id)

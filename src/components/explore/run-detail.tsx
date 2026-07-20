@@ -153,6 +153,7 @@ export type RunDetailData = {
     id: string
     slug: string
     name: string
+    description: string | null
     type: string | null
     vibe: string | null
     beginnerFriendly: boolean
@@ -252,6 +253,10 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
     ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
+  const clubDescription =
+    run.club.description && run.club.description.length > 120
+      ? `${run.club.description.slice(0, 120)}…`
+      : run.club.description
 
   const dateLabel = run.date
     ? (() => {
@@ -490,6 +495,19 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
           >
             <div>
               <h3 style={{ fontSize: 16.5, margin: 0 }}>{run.club.name}</h3>
+              {clubDescription && (
+                <p
+                  style={{
+                    margin: '6px 0 0',
+                    color: 'var(--dim)',
+                    fontSize: 13,
+                    lineHeight: 1.4,
+                    fontWeight: 500,
+                  }}
+                >
+                  {clubDescription}
+                </p>
+              )}
             </div>
             <span
               style={{

@@ -195,7 +195,7 @@ body {
   font-feature-settings: 'tnum';
 }
 
-/* scrollbar suppression */
+/* scrollbars */
 .qr-root .qr-scroll::-webkit-scrollbar {
   width: 0;
   height: 0;
@@ -203,6 +203,26 @@ body {
 .qr-root .qr-scroll {
   scrollbar-width: none;
   -ms-overflow-style: none;
+}
+.qr-root.qr-panel-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: var(--surface-3) transparent;
+}
+.qr-root.qr-panel-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+.qr-root.qr-panel-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+.qr-root.qr-panel-scroll::-webkit-scrollbar-thumb {
+  background: color-mix(in oklch, var(--surface-3) 82%, transparent);
+  border: 3px solid transparent;
+  border-radius: 100px;
+  background-clip: content-box;
+}
+.qr-root.qr-panel-scroll::-webkit-scrollbar-thumb:hover {
+  background: color-mix(in oklch, var(--faint) 62%, transparent);
+  background-clip: content-box;
 }
 
 /* interactive tap target */
@@ -305,6 +325,17 @@ body {
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
   transition: all 0.2s cubic-bezier(0.2, 0.7, 0.3, 1);
 }
+.qr-root .pin.is-muted .pin-dot {
+  width: 10px;
+  height: 10px;
+  background: var(--faint);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.45);
+  opacity: 0.32;
+  filter: saturate(0.4);
+}
+.qr-root .pin.is-muted .pin-label {
+  display: none;
+}
 .qr-root .pin.is-accent .pin-dot {
   background: var(--accent);
   box-shadow:
@@ -365,6 +396,14 @@ body {
 .qr-root .pin.is-active .pin-dot {
   width: 20px;
   height: 20px;
+  background: var(--lime);
+  box-shadow:
+    0 0 0 5px var(--lime-dim),
+    0 0 18px var(--lime),
+    0 4px 12px rgba(0, 0, 0, 0.55);
+}
+.qr-root .pin.is-active.is-club .pin-dot,
+.qr-root .pin.is-active.is-past .pin-dot {
   background: var(--accent);
   box-shadow:
     0 0 0 5px var(--accent-dim),
@@ -382,8 +421,15 @@ body {
   width: 22px;
   height: 22px;
   border-radius: 50%;
-  border: 2px solid var(--accent);
+  border: 2px solid var(--lime);
   opacity: 0;
+}
+.qr-root .pin.is-club .pin-ring,
+.qr-root .pin.is-past .pin-ring {
+  border-color: var(--accent);
+}
+.qr-root .pin.is-cancelled .pin-ring {
+  border-color: var(--coral);
 }
 .qr-root .pin.is-active .pin-ring {
   animation: ping 1.8s ease-out infinite;
