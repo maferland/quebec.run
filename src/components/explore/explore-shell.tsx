@@ -832,6 +832,7 @@ function ExploreShellInner() {
           </div>
           <div
             ref={listRef}
+            className="qr-themed-scroll"
             style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 26px' }}
           >
             {list}
@@ -888,6 +889,7 @@ function ExploreShellInner() {
           </div>
           <div
             ref={listRef}
+            className="qr-themed-scroll"
             style={{
               flex: 1,
               overflowY: 'auto',
