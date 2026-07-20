@@ -75,7 +75,13 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
 
 // ── Run detail overlay ────────────────────────────────────────────────────────
 
-export function RunDetailOverlay({ id }: { id: string }) {
+export function RunDetailOverlay({
+  id,
+  backBehavior = 'route',
+}: {
+  id: string
+  backBehavior?: 'history' | 'route'
+}) {
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('explore')
@@ -148,7 +154,13 @@ export function RunDetailOverlay({ id }: { id: string }) {
     <OverlayShell>
       <RunDetailPanel
         run={run}
-        onBack={() => router.replace(`/${locale}`)}
+        onBack={() => {
+          if (backBehavior === 'history') {
+            router.back()
+            return
+          }
+          router.replace(`/${locale}`)
+        }}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
@@ -159,7 +171,13 @@ export function RunDetailOverlay({ id }: { id: string }) {
 
 // ── Club detail overlay ───────────────────────────────────────────────────────
 
-export function ClubDetailOverlay({ slug }: { slug: string }) {
+export function ClubDetailOverlay({
+  slug,
+  backBehavior = 'route',
+}: {
+  slug: string
+  backBehavior?: 'history' | 'route'
+}) {
   const router = useRouter()
   const locale = useLocale()
   const t = useTranslations('explore')
@@ -218,7 +236,13 @@ export function ClubDetailOverlay({ slug }: { slug: string }) {
     <OverlayShell>
       <ClubDetailPanel
         club={club}
-        onBack={() => router.replace(`/${locale}/clubs`)}
+        onBack={() => {
+          if (backBehavior === 'history') {
+            router.back()
+            return
+          }
+          router.replace(`/${locale}/clubs`)
+        }}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
       />
