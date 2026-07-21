@@ -206,7 +206,6 @@ function ExploreShellInner() {
   const [previousDetailOverlay, setPreviousDetailOverlay] =
     useState<DetailOverlayState | null>(null)
   const [previewRunId, setPreviewRunId] = useState<string | null>(null)
-  const [previewClubId, setPreviewClubId] = useState<string | null>(null)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
   const mode = parseModeFromPath(pathname)
@@ -420,7 +419,6 @@ function ExploreShellInner() {
   const setDay = useCallback(
     (o: number) => {
       setPreviewRunId(null)
-      setPreviewClubId(null)
       updateUrl({ day: o, runId: null, clubSlug: null })
     },
     [updateUrl]
@@ -429,7 +427,6 @@ function ExploreShellInner() {
   const setMode = useCallback(
     (m: Mode) => {
       setPreviewRunId(null)
-      setPreviewClubId(null)
       updateUrl({ mode: m, runId: null, clubSlug: null })
     },
     [updateUrl]
@@ -438,7 +435,6 @@ function ExploreShellInner() {
   const setFilters = useCallback(
     (fn: (prev: Filters) => Filters) => {
       setPreviewRunId(null)
-      setPreviewClubId(null)
       updateUrl({ filters: fn(filters), runId: null, clubSlug: null })
     },
     [filters, updateUrl]
@@ -649,22 +645,11 @@ function ExploreShellInner() {
   }, [clubs, selectedClubSlug])
 
   const selId =
-    mode === 'clubs'
-      ? (selectedClubId ?? previewClubId)
-      : (selectedRunId ?? previewRunId)
+    mode === 'clubs' ? selectedClubId : (selectedRunId ?? previewRunId)
 
-  const setSelectedId = useCallback(
-    (id: string | null) => {
-      if (mode === 'clubs') {
-        setPreviewRunId(null)
-        setPreviewClubId(id)
-        return
-      }
-      setPreviewClubId(null)
-      setPreviewRunId(id)
-    },
-    [mode]
-  )
+  const setSelectedId = useCallback((id: string | null) => {
+    setPreviewRunId(id)
+  }, [])
 
   const openRunDetail = useCallback(
     (id: string) => {
@@ -711,6 +696,17 @@ function ExploreShellInner() {
       })
     },
     [clubs, day, filters, locale, router, startTransition]
+  )
+
+  const selectMapPoint = useCallback(
+    (id: string) => {
+      if (mode === 'clubs') {
+        openClubDetail(id)
+        return
+      }
+      setSelectedId(id)
+    },
+    [mode, openClubDetail, setSelectedId]
   )
 
   const runCount = filteredRuns.length
@@ -966,7 +962,7 @@ function ExploreShellInner() {
       <MapView
         points={points}
         activeId={selId}
-        onSelect={setSelectedId}
+        onSelect={selectMapPoint}
         theme={theme}
         insets={insets}
         hideInactive={Boolean(detailOverlay && selId)}
@@ -1549,8 +1545,6 @@ function RunList({
           <ClubCard
             key={c.id}
             club={c}
-            selected={c.id === selId}
-            onSelect={() => onSelect(c.id === selId ? null : c.id)}
             onOpen={() => onOpenClub(c.id)}
             onIntent={() => onPreloadClub(c.slug)}
             tr={tr}

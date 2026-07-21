@@ -212,14 +212,7 @@ test.describe('Map Markers', () => {
   }, testInfo) => {
     await page.goto('/en/clubs')
     await page.getByText('Faux Mouvement', { exact: true }).first().click()
-    await expect(page).toHaveURL(/\/en\/clubs$/)
-    await expect(
-      page.getByRole('button', { name: /view club/i }).first()
-    ).toBeVisible()
-    await page
-      .getByRole('button', { name: /view club/i })
-      .first()
-      .click()
+    await expect(page).toHaveURL(/\/en\/clubs\/fauxmouvement$/)
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
