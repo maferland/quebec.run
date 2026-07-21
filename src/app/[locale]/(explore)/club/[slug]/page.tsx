@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { ExploreShell } from '@/components/explore/explore-shell'
 import { ClubDetailOverlay } from '@/components/explore/detail-panel'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 import { getClubBySlug } from '@/lib/services/clubs'
@@ -27,10 +26,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClubPage({ params }: Props) {
   const { slug } = await params
-  return (
-    <>
-      <ExploreShell />
-      <ClubDetailOverlay slug={slug} />
-    </>
-  )
+  return <ClubDetailOverlay slug={slug} />
 }

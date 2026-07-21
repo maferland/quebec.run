@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { ExploreShell } from '@/components/explore/explore-shell'
 import { ClubDetailOverlay } from '@/components/explore/detail-panel'
 import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
 import { getActiveClubSlugs, getClubBySlug } from '@/lib/services/clubs'
@@ -66,7 +65,6 @@ export default async function ClubPage({ params }: Props) {
           ]}
         />
       )}
-      <ExploreShell />
       <ClubDetailOverlay slug={slug} />
     </>
   )

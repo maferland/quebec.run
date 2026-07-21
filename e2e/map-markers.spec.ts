@@ -41,13 +41,13 @@ test.describe('Map Markers', () => {
   })
 
   test('selected run is URL-addressable', async ({ page, request }) => {
-    const response = await request.get('/api/explore/runs?day=0')
+    const response = await request.get('/api/explore/runs?day=1')
     expect(response.ok()).toBe(true)
     const runs = (await response.json()) as { id: string; title: string }[]
     const run = runs[0]
     expect(run).toBeTruthy()
 
-    await page.goto('/en')
+    await page.goto('/en?day=1')
     await page.getByText(run.title, { exact: false }).first().click()
     await expect(page).toHaveURL(
       new RegExp(`run=${encodeURIComponent(run.id)}`)
@@ -87,7 +87,11 @@ test.describe('Map Markers', () => {
     await expect(page.getByText(/Café de Course/)).toBeVisible()
 
     await page.getByRole('button', { name: /back/i }).click()
-    await expect(page).toHaveURL(new RegExp(`/en\\?run=${runId}$`))
+    await expect(page.locator('.qr-detail-shell.is-exiting')).toHaveCount(1)
+    await expect(page).toHaveURL(/\/en$/)
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toHaveCount(0)
   })
 
   test.describe('map-first home', () => {

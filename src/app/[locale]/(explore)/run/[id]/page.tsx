@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { ExploreShell } from '@/components/explore/explore-shell'
 import { RunDetailOverlay } from '@/components/explore/detail-panel'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 import { prisma } from '@/lib/prisma'
@@ -71,10 +70,5 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RunPage({ params }: Props) {
   const { id } = await params
-  return (
-    <>
-      <ExploreShell />
-      <RunDetailOverlay id={id} />
-    </>
-  )
+  return <RunDetailOverlay id={id} />
 }
