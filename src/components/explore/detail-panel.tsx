@@ -13,8 +13,119 @@ import { RunDetailPanel, type RunDetailData } from './run-detail'
 import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
 
-const RAIL_WIDTH = 404
 export const PANEL_EXIT_MS = 180
+
+const runDetailRequests = new Map<string, Promise<RunDetailData>>()
+const clubDetailRequests = new Map<string, Promise<ClubDetailData>>()
+
+type RunDetailResponse = {
+  id: string
+  title: string
+  time: string
+  date?: string | null
+  status: 'SCHEDULED' | 'CANCELLED'
+  distance?: string | null
+  pace?: string | null
+  address?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  lat?: number | null
+  lng?: number | null
+  club?: Partial<RunDetailData['club']>
+}
+
+function cacheRequest<T>(
+  cache: Map<string, Promise<T>>,
+  key: string,
+  request: () => Promise<T>
+) {
+  const cached = cache.get(key)
+  if (cached) return cached
+
+  const pending = request().catch((error) => {
+    cache.delete(key)
+    throw error
+  })
+  cache.set(key, pending)
+  return pending
+}
+
+function loadRunDetail(id: string) {
+  return cacheRequest(runDetailRequests, id, async () => {
+    const response = await fetch(`/api/explore/runs/${id}`)
+    if (!response.ok) throw new Error('Run not found')
+    const data = (await response.json()) as RunDetailResponse
+
+    let isPast = false
+    if (data.date && data.time) {
+      const [hour, minute] = data.time.split(':').map(Number)
+      const runEpoch =
+        new Date(data.date).getTime() +
+        ((hour ?? 0) * 60 + (minute ?? 0)) * 60000
+      isPast = runEpoch < Date.now()
+    }
+
+    return {
+      id: data.id,
+      title: data.title,
+      time: data.time,
+      date: data.date ?? null,
+      isPast,
+      status: data.status,
+      distance: data.distance ?? data.pace ?? null,
+      address: data.address ?? null,
+      lat: data.latitude ?? data.lat ?? null,
+      lng: data.longitude ?? data.lng ?? null,
+      club: {
+        id: data.club?.id ?? '',
+        slug: data.club?.slug ?? '',
+        name: data.club?.name ?? '',
+        description: data.club?.description ?? null,
+        type: data.club?.type ?? null,
+        vibe: data.club?.vibe ?? null,
+        beginnerFriendly: data.club?.beginnerFriendly ?? false,
+        paceMin: data.club?.paceMin ?? null,
+        paceMax: data.club?.paceMax ?? null,
+      },
+    }
+  })
+}
+
+function loadClubDetail(slug: string, locale: string) {
+  const key = `${locale}:${slug}`
+  return cacheRequest(clubDetailRequests, key, async () => {
+    const response = await fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
+    if (!response.ok) throw new Error('Club not found')
+    const data = (await response.json()) as ClubForDetail
+
+    return {
+      id: data.id,
+      slug: data.slug,
+      name: data.name,
+      type: data.type,
+      vibe: data.vibe,
+      beginnerFriendly: data.beginnerFriendly,
+      paceMin: data.paceMin,
+      paceMax: data.paceMax,
+      description: data.description,
+      instagram: data.instagram,
+      website: data.website,
+      schedule: data.schedule,
+      upcomingRuns: (data.upcomingRuns ?? []).map((run) => ({
+        ...run,
+        date: run.date instanceof Date ? run.date.toISOString() : run.date,
+      })),
+    }
+  })
+}
+
+export function preloadRunDetail(id: string) {
+  void loadRunDetail(id).catch(() => {})
+}
+
+export function preloadClubDetail(slug: string, locale: string) {
+  void loadClubDetail(slug, locale).catch(() => {})
+}
 
 function useAnimatedClose(close: () => void) {
   const [exiting, setExiting] = useState(false)
@@ -73,43 +184,7 @@ function OverlayShell({
   onExitComplete?: (event: AnimationEvent<HTMLDivElement>) => void
 }) {
   const { theme } = useTheme()
-  const [desktop, setDesktop] = useState(false)
   const className = `qr-root qr-panel-scroll qr-detail-shell${enter ? '' : ' is-static'}${exiting ? ' is-exiting' : ''}`
-
-  useEffect(() => {
-    const check = () => setDesktop(window.innerWidth >= 880)
-    check()
-    window.addEventListener('resize', check)
-    return () => window.removeEventListener('resize', check)
-  }, [])
-
-  if (desktop) {
-    return (
-      <div
-        className={className}
-        onAnimationEnd={onExitComplete}
-        data-theme={theme}
-        suppressHydrationWarning
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          bottom: 0,
-          width: RAIL_WIDTH,
-          zIndex: 1300,
-          overflowY: 'auto',
-          padding: '94px 18px 26px',
-          background: 'var(--bg)',
-          borderRight: '1px solid var(--line)',
-          boxShadow: '8px 0 40px rgba(0,0,0,.4)',
-          pointerEvents: 'auto',
-          willChange: 'transform',
-        }}
-      >
-        {children}
-      </div>
-    )
-  }
 
   return (
     <div
@@ -117,24 +192,63 @@ function OverlayShell({
       onAnimationEnd={onExitComplete}
       data-theme={theme}
       suppressHydrationWarning
-      style={{
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: 0,
-        top: '10%',
-        zIndex: 1300,
-        overflowY: 'auto',
-        padding: '20px 16px calc(22px + env(safe-area-inset-bottom))',
-        background: 'var(--bg)',
-        borderTop: '1px solid var(--line-2)',
-        borderRadius: 'var(--r-xl) var(--r-xl) 0 0',
-        boxShadow: '0 -12px 40px rgba(0,0,0,.5)',
-        pointerEvents: 'auto',
-        willChange: 'transform',
-      }}
     >
       {children}
+    </div>
+  )
+}
+
+function SkeletonBlock({ width, height }: { width: string; height: number }) {
+  return (
+    <div
+      className="skel"
+      style={{ width, height, borderRadius: 'var(--r-md)' }}
+    />
+  )
+}
+
+function DetailSkeleton({ kind }: { kind: 'run' | 'club' }) {
+  return (
+    <div
+      aria-busy="true"
+      style={{ display: 'flex', flexDirection: 'column', gap: 20 }}
+    >
+      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+        <SkeletonBlock width="82px" height={38} />
+        <SkeletonBlock width="88px" height={38} />
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
+        <SkeletonBlock width={kind === 'run' ? '76%' : '58%'} height={31} />
+        <SkeletonBlock width="44%" height={16} />
+      </div>
+      {kind === 'run' ? (
+        <div
+          className="skel"
+          style={{ height: 104, borderRadius: 'var(--r-lg)' }}
+        />
+      ) : (
+        <>
+          <SkeletonBlock width="100%" height={16} />
+          <SkeletonBlock width="84%" height={16} />
+        </>
+      )}
+      <div style={{ display: 'flex', gap: 8 }}>
+        <SkeletonBlock width="82px" height={28} />
+        <SkeletonBlock width="96px" height={28} />
+      </div>
+      <SkeletonBlock width="38%" height={12} />
+      <div
+        className="skel"
+        style={{
+          height: kind === 'run' ? 116 : 188,
+          borderRadius: 'var(--r-lg)',
+        }}
+      />
+      <SkeletonBlock width="42%" height={12} />
+      <div
+        className="skel"
+        style={{ height: 78, borderRadius: 'var(--r-lg)' }}
+      />
     </div>
   )
 }
@@ -191,46 +305,17 @@ export function RunDetailOverlay({
   )
 
   useEffect(() => {
-    fetch(`/api/explore/runs/${id}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('not found')
-        return r.json()
-      })
+    let active = true
+    loadRunDetail(id)
       .then((data) => {
-        // Compute isPast from date + time
-        let isPast = false
-        if (data.date && data.time) {
-          const [h, m] = data.time.split(':').map(Number)
-          // data.date is the UTC day boundary; add local run time offset
-          const runEpoch =
-            new Date(data.date).getTime() + ((h ?? 0) * 60 + (m ?? 0)) * 60000
-          isPast = runEpoch < Date.now()
-        }
-        setRun({
-          id: data.id,
-          title: data.title,
-          time: data.time,
-          date: data.date ?? null,
-          isPast,
-          status: data.status,
-          distance: data.distance ?? data.pace ?? null,
-          address: data.address ?? null,
-          lat: data.latitude ?? data.lat ?? null,
-          lng: data.longitude ?? data.lng ?? null,
-          club: {
-            id: data.club?.id ?? '',
-            slug: data.club?.slug ?? '',
-            name: data.club?.name ?? '',
-            description: data.club?.description ?? null,
-            type: data.club?.type ?? null,
-            vibe: data.club?.vibe ?? null,
-            beginnerFriendly: data.club?.beginnerFriendly ?? false,
-            paceMin: data.club?.paceMin ?? null,
-            paceMax: data.club?.paceMax ?? null,
-          },
-        })
+        if (active) setRun(data)
       })
-      .catch(() => setError(true))
+      .catch(() => {
+        if (active) setError(true)
+      })
+    return () => {
+      active = false
+    }
   }, [id])
 
   if (error) return null
@@ -241,15 +326,7 @@ export function RunDetailOverlay({
         exiting={isExiting}
         onExitComplete={handlePanelAnimationEnd}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="skel"
-              style={{ height: 60, borderRadius: 'var(--r-lg)' }}
-            />
-          ))}
-        </div>
+        <DetailSkeleton kind="run" />
       </OverlayShell>
     )
   }
@@ -323,32 +400,17 @@ export function ClubDetailOverlay({
   )
 
   useEffect(() => {
-    fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
-      .then((r) => {
-        if (!r.ok) throw new Error('not found')
-        return r.json()
+    let active = true
+    loadClubDetail(slug, locale)
+      .then((data) => {
+        if (active) setClub(data)
       })
-      .then((data: ClubForDetail) => {
-        setClub({
-          id: data.id,
-          slug: data.slug,
-          name: data.name,
-          type: data.type,
-          vibe: data.vibe,
-          beginnerFriendly: data.beginnerFriendly,
-          paceMin: data.paceMin,
-          paceMax: data.paceMax,
-          description: data.description,
-          instagram: data.instagram,
-          website: data.website,
-          schedule: data.schedule,
-          upcomingRuns: (data.upcomingRuns ?? []).map((run) => ({
-            ...run,
-            date: run.date instanceof Date ? run.date.toISOString() : run.date,
-          })),
-        })
+      .catch(() => {
+        if (active) setError(true)
       })
-      .catch(() => setError(true))
+    return () => {
+      active = false
+    }
   }, [slug, locale])
 
   if (error) return null
@@ -359,15 +421,7 @@ export function ClubDetailOverlay({
         exiting={isExiting}
         onExitComplete={handlePanelAnimationEnd}
       >
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-          {[1, 2, 3].map((i) => (
-            <div
-              key={i}
-              className="skel"
-              style={{ height: 60, borderRadius: 'var(--r-lg)' }}
-            />
-          ))}
-        </div>
+        <DetailSkeleton kind="club" />
       </OverlayShell>
     )
   }

@@ -62,7 +62,7 @@ test.describe('Map Markers', () => {
         .first()
         .click()
     }
-    await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}$`))
+    await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}(?:\\?.*)?$`))
     await expect(
       page.getByRole('heading', { level: 1, name: run.title })
     ).toBeVisible()
@@ -77,6 +77,42 @@ test.describe('Map Markers', () => {
       timeout: 15000,
     })
     await deepLinkPage.close()
+  })
+
+  test('opens a shaped detail skeleton while prefetched data loads', async ({
+    page,
+    request,
+  }) => {
+    const response = await request.get('/api/explore/runs?day=1')
+    expect(response.ok()).toBe(true)
+    const runs = (await response.json()) as { id: string; title: string }[]
+    const run = runs[0]
+    expect(run).toBeTruthy()
+
+    let detailRequests = 0
+    await page.route(`**/api/explore/runs/${run.id}`, async (route) => {
+      detailRequests += 1
+      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await route.continue()
+    })
+
+    await page.goto('/en?day=1')
+    const runTitle = page.getByText(run.title, { exact: false }).first()
+    await runTitle.hover()
+    await expect.poll(() => detailRequests).toBe(1)
+    await runTitle.hover()
+    expect(detailRequests).toBe(1)
+
+    await runTitle.click()
+    await expect(page.locator('.qr-detail-shell')).toBeVisible()
+    await expect(
+      page.locator('.qr-detail-shell [aria-busy="true"]')
+    ).toBeVisible()
+    await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}`))
+    await expect(
+      page.getByRole('heading', { level: 1, name: run.title })
+    ).toBeVisible({ timeout: 15000 })
+    expect(detailRequests).toBe(1)
   })
 
   test('direct run detail highlights the active map pin', async ({ page }) => {

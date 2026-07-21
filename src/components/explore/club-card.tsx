@@ -22,10 +22,11 @@ const GaugeIcon = (
 type Props = {
   club: ExploreClub
   onOpen: () => void
+  onIntent: () => void
   tr: (k: string) => string
 }
 
-export function ClubCard({ club, onOpen, tr }: Props) {
+export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
   const pace = paceRange(club.paceMin, club.paceMax)
   const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
   const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
@@ -34,6 +35,8 @@ export function ClubCard({ club, onOpen, tr }: Props) {
     <div
       className="tap sheet-card-enter"
       onClick={onOpen}
+      onPointerEnter={onIntent}
+      onFocusCapture={onIntent}
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '15px',

@@ -67,6 +67,7 @@ type Props = {
   selected: boolean
   onSelect: () => void
   onOpen: () => void
+  onIntent: () => void
   nowMin: number
   day: number
   tr: (k: string) => string
@@ -77,6 +78,7 @@ export function RunCard({
   selected,
   onSelect,
   onOpen,
+  onIntent,
   nowMin,
   day,
   tr,
@@ -99,6 +101,8 @@ export function RunCard({
     <div
       className="tap sheet-card-enter"
       onClick={onSelect}
+      onPointerEnter={onIntent}
+      onFocusCapture={onIntent}
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '14px 15px',

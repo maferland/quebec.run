@@ -18,6 +18,8 @@ import { ClubCard } from './club-card'
 import {
   ClubDetailOverlay,
   PANEL_EXIT_MS,
+  preloadClubDetail,
+  preloadRunDetail,
   RunDetailOverlay,
 } from './detail-panel'
 import { FilterOverlay } from './filter-overlay'
@@ -187,6 +189,7 @@ function ExploreShellInner() {
   const currentDetailKey = detailKey(currentDetail)
   const hydratedRef = useRef(false)
   const pendingCloseRef = useRef<'history' | 'route' | null>(null)
+  const pendingOpenRef = useRef<string | null>(null)
   const exitFallbackRef = useRef<number | null>(null)
   const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
     () =>
@@ -248,6 +251,7 @@ function ExploreShellInner() {
 
   useEffect(() => {
     if (currentDetail) {
+      pendingOpenRef.current = null
       const existingKey = detailKey(detailOverlay)
       const closeMode = hydratedRef.current ? 'history' : 'route'
       if (currentDetailKey !== existingKey) {
@@ -265,6 +269,12 @@ function ExploreShellInner() {
     }
 
     hydratedRef.current = true
+    if (
+      pendingOpenRef.current &&
+      pendingOpenRef.current === detailKey(detailOverlay)
+    ) {
+      return
+    }
     if (!detailOverlay || detailOverlay.exiting) return
     startDetailExit()
   }, [
@@ -537,6 +547,15 @@ function ExploreShellInner() {
       if (mode === 'clubs') {
         const club = clubs.find((candidate) => candidate.id === id)
         if (!club) return
+        const detail: DetailRoute = { kind: 'club', slug: club.slug }
+        pendingOpenRef.current = detailKey(detail)
+        preloadClubDetail(club.slug, locale)
+        setDetailOverlay({
+          ...detail,
+          exiting: false,
+          enter: true,
+          closeMode: 'history',
+        })
         startTransition(() => {
           router.push(
             `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
@@ -546,6 +565,15 @@ function ExploreShellInner() {
         return
       }
       const runDay = dayOffsetFromRunId(id) ?? day
+      const detail: DetailRoute = { kind: 'run', id }
+      pendingOpenRef.current = detailKey(detail)
+      preloadRunDetail(id)
+      setDetailOverlay({
+        ...detail,
+        exiting: false,
+        enter: true,
+        closeMode: 'history',
+      })
       startTransition(() => {
         router.push(
           `/${locale}/run/${encodeURIComponent(id)}${buildQs(runDay, filters)}`,
@@ -559,6 +587,22 @@ function ExploreShellInner() {
   const runCount = filteredRuns.length
   const clubCount = filteredClubs.length
   const activeFilterCount = filterCount(filters)
+
+  const preloadRun = useCallback(
+    (id: string) => {
+      preloadRunDetail(id)
+      router.prefetch(`/${locale}/run/${encodeURIComponent(id)}`)
+    },
+    [locale, router]
+  )
+
+  const preloadClub = useCallback(
+    (slug: string) => {
+      preloadClubDetail(slug, locale)
+      router.prefetch(`/${locale}/clubs/${encodeURIComponent(slug)}`)
+    },
+    [locale, router]
+  )
 
   // ── Grip drag ───────────────────────────────────────────────────────────────
 
@@ -757,11 +801,11 @@ function ExploreShellInner() {
       week={week}
       setDay={setDay}
       nowMin={nowMin}
-      locale={locale}
-      router={router}
       hasActiveFilters={activeFilterCount > 0}
       onClearFilters={clearFilters}
       allRuns={runs}
+      onPreloadRun={preloadRun}
+      onPreloadClub={preloadClub}
     />
   )
 
@@ -1260,11 +1304,11 @@ function RunList({
   week,
   setDay,
   nowMin,
-  locale,
-  router,
   hasActiveFilters,
   onClearFilters,
   allRuns,
+  onPreloadRun,
+  onPreloadClub,
 }: {
   runs: ExploreRun[]
   clubs: ExploreClub[]
@@ -1278,11 +1322,11 @@ function RunList({
   week: WeekDay[]
   setDay: (o: number) => void
   nowMin: number
-  locale: string
-  router: ReturnType<typeof useRouter>
   hasActiveFilters: boolean
   onClearFilters: () => void
   allRuns: ExploreRun[]
+  onPreloadRun: (id: string) => void
+  onPreloadClub: (slug: string) => void
 }) {
   if (loading) {
     return (
@@ -1311,7 +1355,8 @@ function RunList({
           <ClubCard
             key={c.id}
             club={c}
-            onOpen={() => router.push(`/${locale}/clubs/${c.slug}`)}
+            onOpen={() => onSelect(c.id)}
+            onIntent={() => onPreloadClub(c.slug)}
             tr={tr}
           />
         ))}
@@ -1367,7 +1412,8 @@ function RunList({
           run={r}
           selected={r.id === selId}
           onSelect={() => onSelect(r.id === selId ? null : r.id)}
-          onOpen={() => router.push(`/${locale}/run/${r.id}`)}
+          onOpen={() => onSelect(r.id)}
+          onIntent={() => onPreloadRun(r.id)}
           nowMin={nowMin}
           day={day}
           tr={tr}
