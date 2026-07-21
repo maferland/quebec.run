@@ -1,4 +1,4 @@
-import { notFound, redirect, permanentRedirect } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { LEGACY_VIRTUAL_SLUG_MAP } from '@/lib/utils/legacy-event-slugs'
 import type { PageProps } from '@/lib/types/next'
@@ -45,24 +45,5 @@ export default async function LegacyEventPage({
     notFound()
   }
 
-  // Concrete event by cuid — keep on this page for now (rare). Could redirect
-  // to a nested URL when concrete events grow their own slug column.
-  const concrete = await prisma.event
-    .findUnique({
-      where: { id },
-      select: {
-        date: true,
-        recurringEvent: { select: { slug: true } },
-        club: { select: { slug: true } },
-      },
-    })
-    .catch(() => null)
-  if (!concrete?.club || !concrete.recurringEvent) {
-    notFound()
-  }
-
-  const date = concrete.date.toISOString().slice(0, 10)
-  redirect(
-    `/clubs/${concrete.club.slug}/events/${concrete.recurringEvent.slug}/${date}`
-  )
+  notFound()
 }

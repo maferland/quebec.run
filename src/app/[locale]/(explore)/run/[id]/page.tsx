@@ -51,7 +51,10 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, id } = await params
   const t = await getTranslations({ locale, namespace: 'metadata.eventDetail' })
 
-  const { title, clubName } = await getRunMetadata(id)
+  const { title, clubName } = await getRunMetadata(id).catch(() => ({
+    title: null,
+    clubName: null,
+  }))
 
   return buildPageMetadata({
     locale: locale as Locale,

@@ -1,7 +1,7 @@
 import { unstable_cache } from 'next/cache'
 
-export const PUBLIC_PAGE_REVALIDATE_SECONDS = 900
-export const PUBLIC_API_REVALIDATE_SECONDS = 300
+export const PUBLIC_PAGE_REVALIDATE_SECONDS = 3600
+export const PUBLIC_API_REVALIDATE_SECONDS = 900
 
 export const PUBLIC_CACHE_TAGS = {
   clubs: 'public:clubs',
