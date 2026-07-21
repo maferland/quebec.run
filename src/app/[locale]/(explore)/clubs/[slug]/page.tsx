@@ -15,13 +15,13 @@ export const dynamicParams = true
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
 export async function generateStaticParams() {
-  const clubs = await getActiveClubSlugs()
+  const clubs = await getActiveClubSlugs().catch(() => [])
   return clubs.map((club) => ({ slug: club.slug }))
 }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params
-  const club = await getClubBySlug({ slug })
+  const club = await getClubBySlug({ slug }).catch(() => null)
   const t = await getTranslations({ locale, namespace: 'metadata.clubDetail' })
 
   return buildPageMetadata({
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClubPage({ params }: Props) {
   const { locale, slug } = await params
-  const club = await getClubBySlug({ slug })
+  const club = await getClubBySlug({ slug }).catch(() => null)
   const tEvents = await getTranslations('events')
 
   return (

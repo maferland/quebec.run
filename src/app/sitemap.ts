@@ -34,10 +34,12 @@ function staticEntry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const clubs = await prisma.club.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
-  })
+  const clubs = await prisma.club
+    .findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+    })
+    .catch(() => [])
 
   return [
     ...staticEntry('', 1.0, 'daily'),

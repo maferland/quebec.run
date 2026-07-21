@@ -33,10 +33,12 @@ export default async function LegacyEventPage({
   const cuidMatch = id.match(/^(.+):(\d{4}-\d{2}-\d{2})$/)
   if (cuidMatch) {
     const [, recurringId, date] = cuidMatch
-    const re = await prisma.recurringEvent.findUnique({
-      where: { id: recurringId },
-      select: { slug: true, club: { select: { slug: true } } },
-    })
+    const re = await prisma.recurringEvent
+      .findUnique({
+        where: { id: recurringId },
+        select: { slug: true, club: { select: { slug: true } } },
+      })
+      .catch(() => null)
     if (re) {
       permanentRedirect(`/clubs/${re.club.slug}/events/${re.slug}/${date}`)
     }
@@ -45,14 +47,16 @@ export default async function LegacyEventPage({
 
   // Concrete event by cuid — keep on this page for now (rare). Could redirect
   // to a nested URL when concrete events grow their own slug column.
-  const concrete = await prisma.event.findUnique({
-    where: { id },
-    select: {
-      date: true,
-      recurringEvent: { select: { slug: true } },
-      club: { select: { slug: true } },
-    },
-  })
+  const concrete = await prisma.event
+    .findUnique({
+      where: { id },
+      select: {
+        date: true,
+        recurringEvent: { select: { slug: true } },
+        club: { select: { slug: true } },
+      },
+    })
+    .catch(() => null)
   if (!concrete?.club || !concrete.recurringEvent) {
     notFound()
   }
