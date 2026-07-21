@@ -531,14 +531,17 @@ body {
 
 /* entrance animations — transform only (content never invisible under throttling) */
 @media (prefers-reduced-motion: no-preference) {
+  .qr-root.qr-detail-shell {
+    animation: detailPanelIn 0.24s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+  }
+  .qr-root.qr-detail-shell.is-exiting {
+    animation: detailPanelOut 0.18s cubic-bezier(0.4, 0, 0.8, 0.3) both;
+  }
   .qr-root .screen-enter {
     animation: screenIn 0.34s cubic-bezier(0.2, 0.7, 0.3, 1);
   }
   .qr-root .sheet-card-enter {
     animation: cardIn 0.4s cubic-bezier(0.2, 0.7, 0.3, 1);
-  }
-  .qr-root .detail-enter {
-    animation: detailIn 0.42s cubic-bezier(0.2, 0.7, 0.3, 1);
   }
   .qr-root .filter-backdrop {
     animation: backdropIn 0.26s ease both;
@@ -563,12 +566,38 @@ body {
     transform: none;
   }
 }
-@keyframes detailIn {
+@keyframes detailPanelIn {
   from {
-    transform: translateX(30px);
+    transform: translateX(-18px);
   }
   to {
     transform: none;
+  }
+}
+@keyframes detailPanelOut {
+  from {
+    transform: none;
+  }
+  to {
+    transform: translateX(-18px);
+  }
+}
+@media (max-width: 879px) {
+  @keyframes detailPanelIn {
+    from {
+      transform: translateY(18px);
+    }
+    to {
+      transform: none;
+    }
+  }
+  @keyframes detailPanelOut {
+    from {
+      transform: none;
+    }
+    to {
+      transform: translateY(18px);
+    }
   }
 }
 @keyframes backdropIn {

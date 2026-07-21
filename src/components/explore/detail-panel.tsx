@@ -8,12 +8,21 @@ import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
 
 const RAIL_WIDTH = 404
+const PANEL_EXIT_MS = 180
 
 // ── Shared overlay shell ──────────────────────────────────────────────────────
 
-function OverlayShell({ children }: { children: React.ReactNode }) {
+function OverlayShell({
+  children,
+  exiting = false,
+}: {
+  children: React.ReactNode
+  exiting?: boolean
+}) {
   const { theme } = useTheme()
   const [desktop, setDesktop] = useState(false)
+  const className = `qr-root qr-panel-scroll qr-detail-shell${exiting ? ' is-exiting' : ''}`
+
   useEffect(() => {
     const check = () => setDesktop(window.innerWidth >= 880)
     check()
@@ -24,7 +33,7 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
   if (desktop) {
     return (
       <div
-        className="qr-root qr-panel-scroll"
+        className={className}
         data-theme={theme}
         suppressHydrationWarning
         style={{
@@ -49,7 +58,7 @@ function OverlayShell({ children }: { children: React.ReactNode }) {
 
   return (
     <div
-      className="qr-root qr-panel-scroll"
+      className={className}
       data-theme={theme}
       suppressHydrationWarning
       style={{
@@ -89,6 +98,18 @@ export function RunDetailOverlay({
 
   const [run, setRun] = useState<RunDetailData | null>(null)
   const [error, setError] = useState(false)
+  const [exiting, setExiting] = useState(false)
+
+  const closeDetail = useCallback(() => {
+    setExiting(true)
+    window.setTimeout(() => {
+      if (backBehavior === 'history') {
+        router.back()
+        return
+      }
+      router.replace(`/${locale}`)
+    }, PANEL_EXIT_MS)
+  }, [backBehavior, locale, router])
 
   useEffect(() => {
     fetch(`/api/explore/runs/${id}`)
@@ -136,7 +157,7 @@ export function RunDetailOverlay({
   if (error) return null
   if (!run) {
     return (
-      <OverlayShell>
+      <OverlayShell exiting={exiting}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -151,16 +172,10 @@ export function RunDetailOverlay({
   }
 
   return (
-    <OverlayShell>
+    <OverlayShell exiting={exiting}>
       <RunDetailPanel
         run={run}
-        onBack={() => {
-          if (backBehavior === 'history') {
-            router.back()
-            return
-          }
-          router.replace(`/${locale}`)
-        }}
+        onBack={closeDetail}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
@@ -185,6 +200,18 @@ export function ClubDetailOverlay({
 
   const [club, setClub] = useState<ClubDetailData | null>(null)
   const [error, setError] = useState(false)
+  const [exiting, setExiting] = useState(false)
+
+  const closeDetail = useCallback(() => {
+    setExiting(true)
+    window.setTimeout(() => {
+      if (backBehavior === 'history') {
+        router.back()
+        return
+      }
+      router.replace(`/${locale}/clubs`)
+    }, PANEL_EXIT_MS)
+  }, [backBehavior, locale, router])
 
   useEffect(() => {
     fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
@@ -218,7 +245,7 @@ export function ClubDetailOverlay({
   if (error) return null
   if (!club) {
     return (
-      <OverlayShell>
+      <OverlayShell exiting={exiting}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -233,16 +260,10 @@ export function ClubDetailOverlay({
   }
 
   return (
-    <OverlayShell>
+    <OverlayShell exiting={exiting}>
       <ClubDetailPanel
         club={club}
-        onBack={() => {
-          if (backBehavior === 'history') {
-            router.back()
-            return
-          }
-          router.replace(`/${locale}/clubs`)
-        }}
+        onBack={closeDetail}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
       />
