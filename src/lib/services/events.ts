@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import {
   cachePublicData,
+  invalidatePublicCache,
   PUBLIC_API_REVALIDATE_SECONDS,
   PUBLIC_CACHE_TAGS,
   PUBLIC_PAGE_REVALIDATE_SECONDS,
@@ -57,30 +58,73 @@ export type ExploreRun = {
 }
 
 // Returns {start, end} UTC boundaries for a Toronto calendar day offset from today.
-function getTorontoDayBounds(dayOffset: number): { start: Date; end: Date } {
-  const target = new Date()
-  target.setDate(target.getDate() + dayOffset)
+const TORONTO_TIME_ZONE = 'America/Toronto'
 
-  // Get Toronto date string (sv-SE locale returns "YYYY-MM-DD")
-  const dateStr = new Intl.DateTimeFormat('sv-SE', {
-    timeZone: 'America/Toronto',
-  }).format(target)
-  const [ty, tm, td] = dateStr.split('-').map(Number)
+function getTorontoDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TIME_ZONE,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+  return { year: value('year'), month: value('month'), day: value('day') }
+}
 
-  // Find Toronto's UTC offset by checking what hour noon UTC is in Toronto.
-  const noonUTC = new Date(Date.UTC(ty, tm - 1, td, 12, 0, 0))
-  const noonTorontoHour = parseInt(
-    new Intl.DateTimeFormat('en-US', {
-      timeZone: 'America/Toronto',
-      hour: 'numeric',
-      hour12: false,
-    }).format(noonUTC),
-    10
+function getTorontoOffset(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TIME_ZONE,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+  return (
+    Date.UTC(
+      value('year'),
+      value('month') - 1,
+      value('day'),
+      value('hour'),
+      value('minute'),
+      value('second')
+    ) - date.getTime()
   )
-  const offsetHours = 12 - noonTorontoHour // 4 (EDT) or 5 (EST)
+}
 
-  const start = new Date(Date.UTC(ty, tm - 1, td, offsetHours, 0, 0))
-  const end = new Date(start.getTime() + 24 * 60 * 60 * 1000 - 1)
+function torontoMidnight(year: number, month: number, day: number) {
+  const utcGuess = Date.UTC(year, month - 1, day)
+  const first = new Date(utcGuess - getTorontoOffset(new Date(utcGuess)))
+  return new Date(utcGuess - getTorontoOffset(first))
+}
+
+export function getTorontoDayBounds(
+  dayOffset: number,
+  now = new Date()
+): { start: Date; end: Date } {
+  const today = getTorontoDateParts(now)
+  const target = new Date(
+    Date.UTC(today.year, today.month - 1, today.day + dayOffset)
+  )
+  const next = new Date(
+    Date.UTC(today.year, today.month - 1, today.day + dayOffset + 1)
+  )
+  const start = torontoMidnight(
+    target.getUTCFullYear(),
+    target.getUTCMonth() + 1,
+    target.getUTCDate()
+  )
+  const nextStart = torontoMidnight(
+    next.getUTCFullYear(),
+    next.getUTCMonth() + 1,
+    next.getUTCDate()
+  )
+  const end = new Date(nextStart.getTime() - 1)
   return { start, end }
 }
 
@@ -235,52 +279,52 @@ export const getEventsForDay = cachePublicData(
 async function getWeekEventCountsRaw(): Promise<
   { day: number; count: number }[]
 > {
-  const counts: { day: number; count: number }[] = []
+  const days = Array.from({ length: 7 }, (_, day) => ({
+    day,
+    ...getTorontoDayBounds(day),
+  }))
+  const weekStart = days[0].start
+  const weekEnd = days[days.length - 1].end
 
-  await Promise.all(
-    Array.from({ length: 7 }, async (_, dayOffset) => {
-      const { start, end } = getTorontoDayBounds(dayOffset)
+  const [concreteEvents, recurringEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: {
+        date: { gte: weekStart, lte: weekEnd },
+        OR: [
+          { recurringEventId: null },
+          { recurringEvent: { isActive: true } },
+        ],
+      },
+      select: { date: true, status: true, recurringEventId: true },
+    }),
+    prisma.recurringEvent.findMany({
+      where: { isActive: true },
+      select: { id: true, schedulePattern: true },
+    }),
+  ])
 
-      // Count concrete scheduled events
-      const concreteCount = await prisma.event.count({
-        where: {
-          date: { gte: start, lte: end },
-          status: 'SCHEDULED',
-          OR: [
-            { recurringEventId: null },
-            { recurringEvent: { isActive: true } },
-          ],
-        },
-      })
+  return days.map(({ day, start, end }) => {
+    const eventsForDay = concreteEvents.filter(
+      (event) => event.date >= start && event.date <= end
+    )
+    const materializedRecurringIds = new Set(
+      eventsForDay.flatMap((event) =>
+        event.recurringEventId ? [event.recurringEventId] : []
+      )
+    )
+    const concreteCount = eventsForDay.filter(
+      (event) => event.status === 'SCHEDULED'
+    ).length
+    const virtualCount = recurringEvents.reduce((count, recurringEvent) => {
+      if (materializedRecurringIds.has(recurringEvent.id)) return count
+      return (
+        count +
+        expandRRuleDates(recurringEvent.schedulePattern, start, end).length
+      )
+    }, 0)
 
-      // Count virtual (recurring) events for this day that don't have concrete counterparts
-      const recurringEvents = await prisma.recurringEvent.findMany({
-        where: { isActive: true },
-        select: { id: true, schedulePattern: true },
-      })
-      const concreteRecurringIds = await prisma.event
-        .findMany({
-          where: {
-            date: { gte: start, lte: end },
-            status: 'SCHEDULED',
-            recurringEventId: { not: null },
-          },
-          select: { recurringEventId: true },
-        })
-        .then((rows) => new Set(rows.map((r) => r.recurringEventId)))
-
-      let virtualCount = 0
-      for (const re of recurringEvents) {
-        if (concreteRecurringIds.has(re.id)) continue
-        const occurrences = expandRRuleDates(re.schedulePattern, start, end)
-        virtualCount += occurrences.length
-      }
-
-      counts.push({ day: dayOffset, count: concreteCount + virtualCount })
-    })
-  )
-
-  return counts.sort((a, b) => a.day - b.day)
+    return { day, count: concreteCount + virtualCount }
+  })
 }
 
 export const getWeekEventCounts = cachePublicData(
@@ -893,6 +937,8 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
     },
   })
 
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+
   return event
 }
 
@@ -947,7 +993,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     }
   }
 
-  return await prisma.event.update({
+  const updatedEvent = await prisma.event.update({
     where: { id },
     data: {
       ...updateData,
@@ -963,6 +1009,9 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
       },
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  return updatedEvent
 }
 
 export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
@@ -991,7 +1040,10 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
     throw new UnauthorizedError('Unauthorized')
   }
 
-  return await prisma.event.delete({
+  const deletedEvent = await prisma.event.delete({
     where: { id },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  return deletedEvent
 }

@@ -45,5 +45,11 @@ export default async function LegacyEventPage({
     notFound()
   }
 
+  const event = await prisma.event.findUnique({
+    where: { id },
+    select: { id: true },
+  })
+  if (event) permanentRedirect(`/run/${event.id}`)
+
   notFound()
 }

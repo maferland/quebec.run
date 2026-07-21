@@ -94,6 +94,9 @@ export default async function LocaleLayout({ children, modal, params }: Props) {
 
   return (
     <html lang={locale} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+      </head>
       <body
         className={`${montserrat.variable} ${inter.variable} ${spaceGrotesk.variable} ${hankenGrotesk.variable} ${spaceMono.variable} font-body antialiased bg-surface-variant overflow-x-hidden`}
       >

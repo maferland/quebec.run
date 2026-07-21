@@ -4,11 +4,6 @@ import { z } from 'zod'
 import { getWeekEventCounts } from '@/lib/services/events'
 
 export const GET = withPublic(z.object({}))(async () => {
-  let counts: Awaited<ReturnType<typeof getWeekEventCounts>> = []
-  try {
-    counts = await getWeekEventCounts()
-  } catch (error) {
-    console.error('Explore week counts unavailable:', error)
-  }
+  const counts = await getWeekEventCounts()
   return Response.json(counts, { headers: publicCacheHeaders() })
 })

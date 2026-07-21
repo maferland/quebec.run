@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import {
   cachePublicData,
+  invalidatePublicCache,
   PUBLIC_API_REVALIDATE_SECONDS,
   PUBLIC_CACHE_TAGS,
   PUBLIC_PAGE_REVALIDATE_SECONDS,
@@ -224,7 +225,7 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
 
   // Create Organization and Club in a transaction
   // Every Club gets a hidden Organization (isVisible=false)
-  return await prisma.$transaction(async (tx) => {
+  const club = await prisma.$transaction(async (tx) => {
     // Create hidden organization for this club
     const org = await tx.organization.create({
       data: {
@@ -259,6 +260,13 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
       },
     })
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return club
 }
 
 export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
@@ -281,6 +289,11 @@ export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
     data: updateData,
   })
 
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
   return club
 }
 
@@ -298,7 +311,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   }
 
   // Delete club and potentially orphaned organization in transaction
-  return await prisma.$transaction(async (tx) => {
+  const deletedClub = await prisma.$transaction(async (tx) => {
     const deletedClub = await tx.club.delete({
       where: { id },
     })
@@ -319,6 +332,13 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
 
     return deletedClub
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return deletedClub
 }
 
 // Helper functions that take ID/slug from route params
@@ -449,6 +469,15 @@ async function getClubsForExploreRaw(): Promise<ExploreClub[]> {
         select: { latitude: true, longitude: true },
         take: 1,
       },
+      recurringEvents: {
+        where: {
+          isActive: true,
+          latitude: { not: null },
+          longitude: { not: null },
+        },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
     },
     orderBy: { createdAt: 'asc' },
   })
@@ -467,8 +496,12 @@ async function getClubsForExploreRaw(): Promise<ExploreClub[]> {
     instagram: club.instagram ?? null,
     facebook: club.facebook ?? null,
     memberCount: club._count.recurringEvents,
-    lat: club.addresses[0]?.latitude ?? null,
-    lng: club.addresses[0]?.longitude ?? null,
+    lat:
+      club.addresses[0]?.latitude ?? club.recurringEvents[0]?.latitude ?? null,
+    lng:
+      club.addresses[0]?.longitude ??
+      club.recurringEvents[0]?.longitude ??
+      null,
   }))
 }
 
@@ -576,7 +609,12 @@ async function getClubDetailBySlugRaw(
       },
       recurringEvents: {
         where: { isActive: true },
-        select: { title: true, schedulePattern: true },
+        select: {
+          title: true,
+          schedulePattern: true,
+          latitude: true,
+          longitude: true,
+        },
       },
     },
   })
@@ -607,6 +645,9 @@ async function getClubDetailBySlugRaw(
       distance: e.distance ?? null,
       type: e.club?.type ?? null,
     }))
+  const mapEvent = club.recurringEvents.find(
+    (event) => event.latitude !== null && event.longitude !== null
+  )
 
   return {
     id: club.id,
@@ -622,8 +663,8 @@ async function getClubDetailBySlugRaw(
     instagram: club.instagram ?? null,
     facebook: club.facebook ?? null,
     memberCount: club._count.recurringEvents,
-    lat: club.addresses[0]?.latitude ?? null,
-    lng: club.addresses[0]?.longitude ?? null,
+    lat: club.addresses[0]?.latitude ?? mapEvent?.latitude ?? null,
+    lng: club.addresses[0]?.longitude ?? mapEvent?.longitude ?? null,
     schedule,
     upcomingRuns,
   }
@@ -657,8 +698,15 @@ export const updateClubById = async ({
 
   const { id, ...updateData } = data
 
-  return await prisma.club.update({
+  const updatedClub = await prisma.club.update({
     where: { id },
     data: updateData,
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return updatedClub
 }

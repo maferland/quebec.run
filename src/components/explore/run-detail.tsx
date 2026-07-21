@@ -472,10 +472,12 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
       {/* club */}
       <div>
         <SectionLabel>{tr('about_club')}</SectionLabel>
-        <div
+        <button
+          type="button"
           className="tap"
           onClick={() => onOpenClub(run.club.slug)}
           style={{
+            width: '100%',
             display: 'flex',
             flexDirection: 'column',
             gap: 11,
@@ -484,9 +486,12 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
             borderRadius: 'var(--r-lg)',
             padding: '15px',
             cursor: 'pointer',
+            color: 'inherit',
+            fontFamily: 'inherit',
+            textAlign: 'left',
           }}
         >
-          <div
+          <span
             style={{
               display: 'flex',
               justifyContent: 'space-between',
@@ -494,12 +499,17 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
               gap: 10,
             }}
           >
-            <div>
-              <h3 style={{ fontSize: 16.5, margin: 0 }}>{run.club.name}</h3>
+            <span style={{ display: 'block' }}>
+              <span
+                style={{ display: 'block', fontSize: 16.5, fontWeight: 700 }}
+              >
+                {run.club.name}
+              </span>
               {clubDescription && (
-                <p
+                <span
                   style={{
-                    margin: '6px 0 0',
+                    display: 'block',
+                    marginTop: 6,
                     color: 'var(--dim)',
                     fontSize: 13,
                     lineHeight: 1.4,
@@ -507,9 +517,9 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
                   }}
                 >
                   {clubDescription}
-                </p>
+                </span>
               )}
-            </div>
+            </span>
             <span
               style={{
                 color: 'var(--faint)',
@@ -523,8 +533,8 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
             >
               {tr('view_club')} {ChevRIcon}
             </span>
-          </div>
-        </div>
+          </span>
+        </button>
       </div>
     </div>
   )

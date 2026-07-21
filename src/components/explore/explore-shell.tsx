@@ -9,13 +9,10 @@ import {
   useTransition,
 } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
-import Link from 'next/link'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { MapView, type MapPoint } from './map-view'
-import { WeekBar, type WeekDay } from './week-bar'
+import type { WeekDay } from './week-bar'
 import { useTheme } from './theme-provider'
-import { RunCard } from './run-card'
-import { ClubCard } from './club-card'
 import {
   ClubDetailOverlay,
   PANEL_ENTER_MS,
@@ -32,86 +29,31 @@ import {
   DEFAULT_FILTERS,
   type Filters,
 } from './filter-panel'
-import { EmptyDay, NoMatch, AllDoneNote } from './quiet-states'
 import { PassportFAB } from './passport/passport-fab'
+import { ExploreTopBar } from './explore-top-bar'
+import { RunList } from './explore-list'
+import { ExploreControls } from './explore-controls'
+import {
+  buildQs,
+  dayOffsetFromRunId,
+  detailKey,
+  parseDay,
+  parseFilters,
+  parseModeFromPath,
+  parseRouteSelection,
+  type DetailRoute,
+  type Mode,
+} from './explore-route'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 
-const PASSPORT_ENABLED = Boolean(process.env.NEXT_PUBLIC_PASSPORT_ENABLED)
+const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
 const RAIL_WIDTH = 404
-
-type Mode = 'runs' | 'clubs'
-type DetailRoute = { kind: 'run'; id: string } | { kind: 'club'; slug: string }
 
 type DetailOverlayState = DetailRoute & {
   exiting: boolean
   enter: boolean
   closeMode: 'history' | 'route'
-}
-
-// ── URL param helpers ─────────────────────────────────────────────────────────
-
-function parseDay(p: URLSearchParams): number {
-  const d = parseInt(p.get('day') ?? '0')
-  return isNaN(d) || d < 0 || d > 6 ? 0 : d
-}
-
-function parseModeFromPath(pathname: string): Mode {
-  const section = pathname.split('/')[2]
-  return section === 'clubs' || section === 'club' ? 'clubs' : 'runs'
-}
-
-function parseRouteSelection(pathname: string) {
-  const [, , section, id] = pathname.split('/')
-  if (!id) return { runId: null, clubSlug: null }
-  if (section === 'run')
-    return { runId: decodeURIComponent(id), clubSlug: null }
-  if (section === 'club' || section === 'clubs')
-    return { runId: null, clubSlug: decodeURIComponent(id) }
-  return { runId: null, clubSlug: null }
-}
-
-function detailKey(detail: DetailRoute | null): string | null {
-  if (!detail) return null
-  return detail.kind === 'run' ? `run:${detail.id}` : `club:${detail.slug}`
-}
-
-function parseFilters(p: URLSearchParams): Filters {
-  return {
-    types: p.get('types')?.split(',').filter(Boolean) ?? [],
-    vibes: p.get('vibes')?.split(',').filter(Boolean) ?? [],
-    pace: p.get('pace') ?? 'any',
-    beginner: p.get('beginner') === '1',
-    tod: p.get('tod') ?? 'all',
-  }
-}
-
-function dayOffsetFromRunId(id: string | null): number | null {
-  const date = id?.match(/(?:--|:)(\d{4}-\d{2}-\d{2})$/)?.[1]
-  if (!date) return null
-  const today = new Date()
-  today.setHours(0, 0, 0, 0)
-  const target = new Date(`${date}T00:00:00`)
-  const offset = Math.round((target.getTime() - today.getTime()) / 86400000)
-  return offset >= 0 && offset <= 6 ? offset : null
-}
-
-function buildQs(
-  day: number,
-  filters: Filters,
-  selected: { runId?: string | null; clubSlug?: string | null } = {}
-): string {
-  const p = new URLSearchParams()
-  if (day !== 0) p.set('day', String(day))
-  if (filters.types.length) p.set('types', filters.types.join(','))
-  if (filters.vibes.length) p.set('vibes', filters.vibes.join(','))
-  if (filters.pace !== 'any') p.set('pace', filters.pace)
-  if (filters.beginner) p.set('beginner', '1')
-  if (filters.tod !== 'all') p.set('tod', filters.tod)
-  if (selected.runId) p.set('run', selected.runId)
-  if (selected.clubSlug) p.set('club', selected.clubSlug)
-  const s = p.toString()
-  return s ? `?${s}` : ''
 }
 
 // ── Week bar helpers ──────────────────────────────────────────────────────────
@@ -193,8 +135,9 @@ function ExploreShellInner() {
   const pendingCloseRef = useRef<'history' | 'route' | null>(null)
   const pendingOpenRef = useRef<string | null>(null)
   const closingDetailKeyRef = useRef<string | null>(null)
-  const detailHistoryRef = useRef<DetailRoute[]>([])
+  const detailHistoryRef = useRef<DetailOverlayState[]>([])
   const pendingDetailBackRef = useRef<string | null>(null)
+  const pendingDetailBackCloseModeRef = useRef<'history' | 'route' | null>(null)
   const exitFallbackRef = useRef<number | null>(null)
   const enterFallbackRef = useRef<number | null>(null)
   const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
@@ -261,6 +204,8 @@ function ExploreShellInner() {
       if (closeMode === 'history' && detailHistoryRef.current.length > 0) {
         const previousDetail = detailHistoryRef.current.pop() ?? null
         pendingDetailBackRef.current = detailKey(previousDetail)
+        pendingDetailBackCloseModeRef.current =
+          previousDetail?.closeMode ?? 'history'
         pendingCloseRef.current = null
         clearExitFallback()
         router.back()
@@ -283,8 +228,16 @@ function ExploreShellInner() {
     if (currentDetail) {
       if (closingDetailKeyRef.current === currentDetailKey) return
       closingDetailKeyRef.current = null
-      pendingOpenRef.current = null
       const existingKey = detailKey(detailOverlay)
+      const isPendingOpen = pendingOpenRef.current === currentDetailKey
+      if (isPendingOpen) pendingOpenRef.current = null
+      if (currentDetailKey === existingKey && isPendingOpen) {
+        setDetailOverlay((overlay) =>
+          overlay ? { ...overlay, closeMode: 'history' } : overlay
+        )
+        hydratedRef.current = true
+        return
+      }
       const closeMode = hydratedRef.current ? 'history' : 'route'
       if (currentDetailKey !== existingKey) {
         clearExitFallback()
@@ -292,6 +245,8 @@ function ExploreShellInner() {
         pendingCloseRef.current = null
         const isDetailBack = pendingDetailBackRef.current === currentDetailKey
         pendingDetailBackRef.current = null
+        const detailBackCloseMode = pendingDetailBackCloseModeRef.current
+        pendingDetailBackCloseModeRef.current = null
         if (detailOverlay) {
           if (!isDetailBack) {
             detailHistoryRef.current.push(detailOverlay)
@@ -312,7 +267,9 @@ function ExploreShellInner() {
           ...currentDetail,
           exiting: false,
           enter: hydratedRef.current,
-          closeMode,
+          closeMode: isDetailBack
+            ? (detailBackCloseMode ?? 'route')
+            : closeMode,
         })
       }
       hydratedRef.current = true
@@ -323,6 +280,7 @@ function ExploreShellInner() {
     closingDetailKeyRef.current = null
     detailHistoryRef.current = []
     pendingDetailBackRef.current = null
+    pendingDetailBackCloseModeRef.current = null
     clearEnterFallback()
     setPreviousDetailOverlay(null)
     if (
@@ -575,30 +533,6 @@ function ExploreShellInner() {
 
   const nowMin = todMin()
 
-  const points = useMemo((): MapPoint[] => {
-    if (mode === 'clubs') {
-      return clubs
-        .filter((c) => c.lat !== null && c.lng !== null)
-        .map((c) => ({
-          id: c.id,
-          lat: c.lat!,
-          lng: c.lng!,
-          kind: 'club' as const,
-          label: c.name,
-        }))
-    }
-    return runs
-      .filter((r) => r.lat !== null && r.lng !== null)
-      .map((r) => ({
-        id: r.id,
-        lat: r.lat!,
-        lng: r.lng!,
-        kind: 'run' as const,
-        label: r.time,
-        cancelled: r.status === 'CANCELLED',
-        past: day === 0 && r.status !== 'CANCELLED' && toMin(r.time) < nowMin,
-      }))
-  }, [mode, clubs, runs, day, nowMin])
   const insets = useMemo(
     () =>
       desktop
@@ -638,6 +572,32 @@ function ExploreShellInner() {
         (c.description?.toLowerCase().includes(q) ?? false)
     )
   }, [clubs, filters, searchQ])
+
+  const points = useMemo((): MapPoint[] => {
+    if (mode === 'clubs') {
+      return filteredClubs
+        .filter((club) => club.lat !== null && club.lng !== null)
+        .map((club) => ({
+          id: club.id,
+          lat: club.lat!,
+          lng: club.lng!,
+          kind: 'club' as const,
+          label: club.name,
+        }))
+    }
+    return filteredRuns
+      .filter((run) => run.lat !== null && run.lng !== null)
+      .map((run) => ({
+        id: run.id,
+        lat: run.lat!,
+        lng: run.lng!,
+        kind: 'run' as const,
+        label: run.time,
+        cancelled: run.status === 'CANCELLED',
+        past:
+          day === 0 && run.status !== 'CANCELLED' && toMin(run.time) < nowMin,
+      }))
+  }, [day, filteredClubs, filteredRuns, mode, nowMin])
 
   const selectedClubId = useMemo(() => {
     if (!selectedClubSlug) return null
@@ -762,151 +722,24 @@ function ExploreShellInner() {
     })
   }, [snaps])
 
-  // ── Controls ────────────────────────────────────────────────────────────────
-
   const controls = (
-    <>
-      <div
-        className={`qr-week-slot${mode === 'clubs' ? ' is-inactive' : ''}`}
-        aria-hidden={mode === 'clubs'}
-        inert={mode === 'clubs'}
-      >
-        <WeekBar week={week} selected={day} onSelect={setDay} />
-      </div>
-      <div className="qr-search-toolbar">
-        <div
-          className={`qr-search-layer${searchOpen ? ' is-open' : ''}`}
-          aria-hidden={!searchOpen}
-          inert={!searchOpen}
-        >
-          <div
-            style={{
-              flex: 1,
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              background: 'var(--surface)',
-              border: '1px solid var(--line-2)',
-              borderRadius: 100,
-              padding: '0 14px',
-              height: 40,
-            }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              style={{ color: 'var(--faint)', flexShrink: 0 }}
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-            <input
-              ref={searchInputRef}
-              value={searchQ}
-              onChange={(e) => setSearchQ(e.target.value)}
-              placeholder={tr('search_placeholder')}
-              style={{
-                flex: 1,
-                border: 'none',
-                background: 'transparent',
-                color: 'var(--text)',
-                fontFamily: 'var(--font-ui)',
-                fontSize: 14.5,
-                outline: 'none',
-              }}
-            />
-          </div>
-          <button
-            className="tap"
-            aria-label={tr('search_close')}
-            onClick={() => {
-              setSearchOpen(false)
-              setSearchQ('')
-            }}
-            style={{
-              border: 'none',
-              background: 'var(--surface)',
-              color: 'var(--dim)',
-              width: 40,
-              height: 40,
-              borderRadius: 100,
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <path d="M6 6l12 12M18 6L6 18" />
-            </svg>
-          </button>
-        </div>
-        <div
-          className={`qr-toolbar-layer${searchOpen ? ' is-hidden' : ''}`}
-          aria-hidden={searchOpen}
-          inert={searchOpen}
-        >
-          <ModeToggle
-            mode={mode}
-            setMode={setMode}
-            runCount={runCount}
-            clubCount={clubCount}
-            tr={tr}
-          />
-          <button
-            className="tap"
-            aria-label={tr('search_open')}
-            onClick={() => setSearchOpen(true)}
-            style={{
-              border: '1px solid var(--line-2)',
-              background: 'var(--surface)',
-              color: 'var(--dim)',
-              width: 40,
-              height: 40,
-              borderRadius: 100,
-              display: 'grid',
-              placeItems: 'center',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              width="15"
-              height="15"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle cx="11" cy="11" r="8" />
-              <path d="m21 21-4.35-4.35" />
-            </svg>
-          </button>
-          <FilterButton
-            n={activeFilterCount}
-            onClick={() => setFiltersOpen(true)}
-            tr={tr}
-          />
-        </div>
-      </div>
-    </>
+    <ExploreControls
+      mode={mode}
+      setMode={setMode}
+      runCount={runCount}
+      clubCount={clubCount}
+      week={week}
+      day={day}
+      setDay={setDay}
+      searchOpen={searchOpen}
+      setSearchOpen={setSearchOpen}
+      searchQuery={searchQ}
+      setSearchQuery={setSearchQ}
+      searchInputRef={searchInputRef}
+      activeFilterCount={activeFilterCount}
+      onOpenFilters={() => setFiltersOpen(true)}
+      tr={tr}
+    />
   )
 
   const clearFilters = useCallback(
@@ -968,193 +801,19 @@ function ExploreShellInner() {
         hideInactive={Boolean(detailOverlay && selId)}
       />
 
-      {/* Top bar */}
-      <div
-        style={{
-          position: 'absolute',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 40,
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          padding: desktop ? '18px 22px' : '16px 16px',
-          pointerEvents: 'none',
+      <ExploreTopBar
+        desktop={desktop}
+        locale={locale}
+        theme={theme}
+        onThemeChange={setTheme}
+        onLocaleChange={(nextLocale) => {
+          const segments = pathname.split('/')
+          segments[1] = nextLocale
+          const query = searchParams.toString()
+          router.push(`${segments.join('/')}${query ? `?${query}` : ''}`)
         }}
-      >
-        <Link
-          href={`/${locale}`}
-          style={{
-            pointerEvents: 'auto',
-            background: 'color-mix(in oklch, var(--bg) 72%, transparent)',
-            backdropFilter: 'blur(12px)',
-            border: '1px solid var(--line)',
-            borderRadius: 100,
-            padding: desktop ? '8px 14px' : '7px 12px',
-            boxShadow: '0 2px 8px rgba(0,0,0,.18)',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 10,
-            color: 'inherit',
-            textDecoration: 'none',
-          }}
-        >
-          <div
-            style={{
-              width: 28,
-              height: 28,
-              borderRadius: 8,
-              background: 'var(--accent)',
-              display: 'grid',
-              placeItems: 'center',
-              flexShrink: 0,
-            }}
-          >
-            <svg
-              width="17"
-              height="17"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="var(--accent-ink)"
-              strokeWidth="2.2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <circle
-                cx="14"
-                cy="5"
-                r="1.8"
-                fill="currentColor"
-                stroke="none"
-              />
-              <path d="M6 21l3-5 3 1 1-4-4-2 1-3 4 2 2 3" />
-            </svg>
-          </div>
-          <span
-            style={{
-              fontFamily: 'var(--font-display)',
-              fontSize: 16,
-              fontWeight: 700,
-              letterSpacing: '-0.02em',
-            }}
-          >
-            quebec<span style={{ color: 'var(--accent)' }}>.run</span>
-          </span>
-        </Link>
-
-        <div style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
-          <div
-            style={{
-              display: 'flex',
-              background: 'color-mix(in oklch, var(--bg) 72%, transparent)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid var(--line)',
-              borderRadius: 100,
-              padding: 3,
-              gap: 2,
-            }}
-          >
-            {(['dark', 'light'] as const).map((v) => (
-              <button
-                key={v}
-                aria-label={v === 'dark' ? tr('theme_dark') : tr('theme_light')}
-                onClick={() => setTheme(v)}
-                style={{
-                  border: 'none',
-                  borderRadius: 100,
-                  width: 30,
-                  height: 26,
-                  display: 'grid',
-                  placeItems: 'center',
-                  cursor: 'pointer',
-                  background: theme === v ? 'var(--surface-3)' : 'transparent',
-                  color: theme === v ? 'var(--accent)' : 'var(--faint)',
-                }}
-              >
-                {v === 'dark' ? (
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
-                  </svg>
-                ) : (
-                  <svg
-                    width="14"
-                    height="14"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <circle cx="12" cy="12" r="5" />
-                    <line x1="12" y1="1" x2="12" y2="3" />
-                    <line x1="12" y1="21" x2="12" y2="23" />
-                    <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" />
-                    <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" />
-                    <line x1="1" y1="12" x2="3" y2="12" />
-                    <line x1="21" y1="12" x2="23" y2="12" />
-                    <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" />
-                    <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" />
-                  </svg>
-                )}
-              </button>
-            ))}
-          </div>
-          <div
-            style={{
-              display: 'flex',
-              background: 'color-mix(in oklch, var(--bg) 72%, transparent)',
-              backdropFilter: 'blur(12px)',
-              border: '1px solid var(--line)',
-              borderRadius: 100,
-              padding: 3,
-              gap: 2,
-            }}
-          >
-            {(['fr', 'en'] as const).map((l) => (
-              <button
-                key={l}
-                aria-label={l === 'fr' ? 'Français' : 'English'}
-                onClick={() => {
-                  const segments = pathname.split('/')
-                  segments[1] = l
-                  const qs = searchParams.toString()
-                  router.push(`${segments.join('/')}${qs ? '?' + qs : ''}`)
-                }}
-                style={{
-                  border: 'none',
-                  borderRadius: 100,
-                  padding: '0 8px',
-                  height: 26,
-                  display: 'grid',
-                  placeItems: 'center',
-                  cursor: 'pointer',
-                  background: locale === l ? 'var(--surface-3)' : 'transparent',
-                  color: locale === l ? 'var(--fg)' : 'var(--faint)',
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: 12,
-                  fontWeight: 600,
-                  letterSpacing: '0.04em',
-                  textTransform: 'uppercase',
-                }}
-              >
-                {l}
-              </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
+        tr={tr}
+      />
       {/* Desktop rail */}
       {desktop && (
         <div
@@ -1201,7 +860,7 @@ function ExploreShellInner() {
             left: 0,
             right: 0,
             bottom: 0,
-            height: sheetH,
+            height: sheetH || '60dvh',
             zIndex: 35,
             display: 'flex',
             flexDirection: 'column',
@@ -1311,292 +970,6 @@ function ExploreShellInner() {
 
       {/* Passport FAB */}
       {PASSPORT_ENABLED && <PassportFAB tr={tr} />}
-    </div>
-  )
-}
-
-// ── Sub-components ────────────────────────────────────────────────────────────
-
-const FilterIcon = (
-  <svg
-    width="19"
-    height="19"
-    viewBox="0 0 24 24"
-    fill="none"
-    stroke="currentColor"
-    strokeWidth="2"
-    strokeLinecap="round"
-    strokeLinejoin="round"
-  >
-    <path d="M3 5h18M6 12h12M10 19h4" />
-  </svg>
-)
-
-function FilterButton({
-  n,
-  onClick,
-  tr,
-}: {
-  n: number
-  onClick: () => void
-  tr: (k: string) => string
-}) {
-  const on = n > 0
-  return (
-    <button
-      aria-label={tr('filters')}
-      onClick={onClick}
-      style={{
-        width: 44,
-        height: 44,
-        flexShrink: 0,
-        display: 'grid',
-        placeItems: 'center',
-        cursor: 'pointer',
-        border: `1px solid ${on ? 'transparent' : 'var(--line)'}`,
-        background: on ? 'var(--lime-dim)' : 'var(--surface)',
-        color: on ? 'var(--accent-fg)' : 'var(--text)',
-        borderRadius: 14,
-        position: 'relative',
-      }}
-    >
-      {FilterIcon}
-      {on && (
-        <span
-          style={{
-            position: 'absolute',
-            top: 6,
-            right: 6,
-            width: 8,
-            height: 8,
-            borderRadius: 4,
-            background: 'var(--accent)',
-          }}
-        />
-      )}
-    </button>
-  )
-}
-
-function ModeToggle({
-  mode,
-  setMode,
-  runCount,
-  clubCount,
-  tr,
-}: {
-  mode: Mode
-  setMode: (m: Mode) => void
-  runCount: number
-  clubCount: number
-  tr: (k: string) => string
-}) {
-  const opt = (id: Mode, label: string, count: number) => {
-    const on = mode === id
-    return (
-      <button
-        key={id}
-        onClick={() => setMode(id)}
-        style={{
-          flex: 1,
-          border: 'none',
-          borderRadius: 12,
-          padding: '9px 12px',
-          fontFamily: 'var(--font-ui)',
-          fontWeight: 700,
-          fontSize: 14,
-          cursor: 'pointer',
-          display: 'inline-flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          gap: 7,
-          background: on ? 'var(--surface-3)' : 'transparent',
-          color: on ? 'var(--text)' : 'var(--faint)',
-          boxShadow: on
-            ? '0 1px 0 rgba(255,255,255,.04) inset, 0 1px 3px rgba(0,0,0,.3)'
-            : 'none',
-        }}
-      >
-        {label}
-        <span
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 11,
-            color: on ? 'var(--accent-fg)' : 'var(--faint)',
-          }}
-        >
-          {count}
-        </span>
-      </button>
-    )
-  }
-
-  return (
-    <div
-      style={{
-        flex: 1,
-        display: 'flex',
-        background: 'var(--bg-2)',
-        border: '1px solid var(--line)',
-        borderRadius: 14,
-        padding: 4,
-        gap: 3,
-      }}
-    >
-      {opt('runs', tr('runs'), runCount)}
-      {opt('clubs', tr('clubs'), clubCount)}
-    </div>
-  )
-}
-
-function RunList({
-  runs,
-  clubs,
-  mode,
-  selId,
-  onSelect,
-  onOpenRun,
-  onOpenClub,
-  loading,
-  refreshing,
-  tr,
-  day,
-  week,
-  setDay,
-  nowMin,
-  hasActiveFilters,
-  hasSearchQuery,
-  onClearFilters,
-  allRuns,
-  onPreloadRun,
-  onPreloadClub,
-}: {
-  runs: ExploreRun[]
-  clubs: ExploreClub[]
-  mode: Mode
-  selId: string | null
-  onSelect: (id: string | null) => void
-  onOpenRun: (id: string) => void
-  onOpenClub: (id: string) => void
-  loading: boolean
-  refreshing: boolean
-  tr: (k: string) => string
-  day: number
-  week: WeekDay[]
-  setDay: (o: number) => void
-  nowMin: number
-  hasActiveFilters: boolean
-  hasSearchQuery: boolean
-  onClearFilters: () => void
-  allRuns: ExploreRun[]
-  onPreloadRun: (id: string) => void
-  onPreloadClub: (slug: string) => void
-}) {
-  const resultCount = mode === 'clubs' ? clubs.length : runs.length
-  const resultLabel =
-    mode === 'clubs'
-      ? tr(resultCount === 1 ? 'clubs_count_one' : 'clubs_count_many')
-      : tr(resultCount === 1 ? 'results_one' : 'results_many')
-  const resultSummary = (
-    <div style={{ fontSize: 13, color: 'var(--faint)', padding: '0 2px 2px' }}>
-      <span
-        style={{
-          fontFamily: 'var(--font-display)',
-          fontWeight: 700,
-          color: 'var(--text)',
-          fontSize: 15,
-        }}
-      >
-        {resultCount}
-      </span>{' '}
-      {resultLabel}
-    </div>
-  )
-
-  if (loading) {
-    return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-        {[1, 2, 3].map((i) => (
-          <div
-            key={i}
-            className="skel"
-            style={{ height: 80, borderRadius: 'var(--r-lg)' }}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  if (mode === 'clubs') {
-    if (clubs.length === 0) {
-      return hasActiveFilters ? (
-        <NoMatch onClearFilters={onClearFilters} tr={tr} />
-      ) : (
-        <NoMatch variant="search" tr={tr} />
-      )
-    }
-    return (
-      <div
-        className={refreshing ? 'is-refreshing' : undefined}
-        style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
-      >
-        {resultSummary}
-        {clubs.map((c) => (
-          <ClubCard
-            key={c.id}
-            club={c}
-            onOpen={() => onOpenClub(c.id)}
-            onIntent={() => onPreloadClub(c.slug)}
-            tr={tr}
-          />
-        ))}
-      </div>
-    )
-  }
-
-  // No runs on this day at all (no filters applied)
-  if (allRuns.length === 0) {
-    return <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
-  }
-
-  // Filters excluded all runs
-  if (runs.length === 0) {
-    return hasActiveFilters ? (
-      <NoMatch onClearFilters={onClearFilters} tr={tr} />
-    ) : hasSearchQuery ? (
-      <NoMatch variant="search" tr={tr} />
-    ) : (
-      <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
-    )
-  }
-
-  // Today's runs are all in the past
-  const allPast =
-    day === 0 &&
-    runs.every((r) => r.status === 'CANCELLED' || toMin(r.time) < nowMin)
-  if (allPast) {
-    return <AllDoneNote week={week} setDay={setDay} tr={tr} />
-  }
-
-  return (
-    <div
-      className={refreshing ? 'is-refreshing' : undefined}
-      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
-    >
-      {resultSummary}
-      {runs.map((r) => (
-        <RunCard
-          key={r.id}
-          run={r}
-          selected={r.id === selId}
-          onSelect={() => onSelect(r.id === selId ? null : r.id)}
-          onOpen={() => onOpenRun(r.id)}
-          onIntent={() => onPreloadRun(r.id)}
-          nowMin={nowMin}
-          day={day}
-          tr={tr}
-        />
-      ))}
     </div>
   )
 }

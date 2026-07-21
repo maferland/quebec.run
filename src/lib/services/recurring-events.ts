@@ -3,6 +3,7 @@ import { RRule } from 'rrule'
 import { addDays, min, format } from 'date-fns'
 import type { RecurringEvent, Club, Prisma } from '@client'
 import { createSlug } from '@/lib/utils/slug'
+import { invalidatePublicCache, PUBLIC_CACHE_TAGS } from '@/lib/public-cache'
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -87,6 +88,7 @@ export async function generateEventsFromRecurring(
   }))
 
   await prisma.event.createMany({ data: events })
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
 
   return events.length
 }
@@ -300,7 +302,7 @@ export async function createRecurringEvent(
     slug?: string
   }
 ) {
-  return await prisma.recurringEvent.create({
+  const recurringEvent = await prisma.recurringEvent.create({
     data: {
       ...data,
       slug: data.slug || createSlug(data.title),
@@ -308,6 +310,9 @@ export async function createRecurringEvent(
       isActive: data.isActive ?? true,
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  return recurringEvent
 }
 
 /**
@@ -321,20 +326,26 @@ export async function updateRecurringEvent(
   if (typeof data.title === 'string') {
     updateData.slug = createSlug(data.title)
   }
-  return await prisma.recurringEvent.update({
+  const recurringEvent = await prisma.recurringEvent.update({
     where: { id },
     data: updateData,
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  return recurringEvent
 }
 
 /**
  * Soft delete recurring event (set isActive = false)
  */
 export async function deleteRecurringEvent(id: string) {
-  return await prisma.recurringEvent.update({
+  const recurringEvent = await prisma.recurringEvent.update({
     where: { id },
     data: { isActive: false },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  return recurringEvent
 }
 
 /**

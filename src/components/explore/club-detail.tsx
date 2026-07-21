@@ -457,7 +457,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
               const cancelled = e.status === 'CANCELLED'
               const dateLabel = formatUpcomingDate(e.date)
               return (
-                <div
+                <button
+                  type="button"
                   key={e.id}
                   className={`tap ${
                     showAllUpcoming && i >= UPCOMING_PREVIEW_COUNT
@@ -466,6 +467,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                   }`}
                   onClick={() => onOpenRun(e.id)}
                   style={{
+                    width: '100%',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 12,
@@ -474,6 +476,9 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                     borderRadius: 'var(--r-md)',
                     padding: '12px 14px',
                     cursor: 'pointer',
+                    color: 'inherit',
+                    fontFamily: 'inherit',
+                    textAlign: 'left',
                   }}
                 >
                   <span
@@ -488,17 +493,18 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                   >
                     {e.time}
                   </span>
-                  <div style={{ flex: 1, minWidth: 0 }}>
-                    <div
+                  <span style={{ display: 'block', flex: 1, minWidth: 0 }}>
+                    <span
                       style={{
+                        display: 'block',
                         fontSize: 14,
                         fontWeight: 600,
                         color: cancelled ? 'var(--dim)' : 'var(--text)',
                       }}
                     >
                       {e.title}
-                    </div>
-                    <div
+                    </span>
+                    <span
                       style={{
                         fontSize: 12,
                         color: 'var(--faint)',
@@ -515,14 +521,14 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                           {tr(`type_${e.type.toLowerCase()}`)}
                         </span>
                       )}
-                    </div>
-                  </div>
+                    </span>
+                  </span>
                   {cancelled ? (
                     <Stamp tone="cancelled">{tr('cancelled')}</Stamp>
                   ) : (
                     <span style={{ color: 'var(--faint)' }}>{ChevRIcon}</span>
                   )}
-                </div>
+                </button>
               )
             })}
             {hiddenUpcomingCount > 0 && (

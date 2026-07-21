@@ -7,9 +7,8 @@ import 'leaflet/dist/leaflet.css'
 const QC_CENTER: [number, number] = [46.8123, -71.208]
 
 const TILES = {
-  dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
-  light:
-    'https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png',
+  dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+  light: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
 }
 const FIT_PADDING = 96
 
@@ -190,9 +189,8 @@ function syncMarkers(
     ]
       .filter(Boolean)
       .join(' ')
-    const html = `<div class="${cls}"><div class="pin-ring"></div><div class="pin-dot"></div>${p.label ? `<div class="pin-label">${p.label}</div>` : ''}</div>`
     const icon = L.divIcon({
-      html,
+      html: createMarkerContent(cls, p.label),
       className: `pin-wrap${hideInactive && activeId && p.id !== activeId ? ' is-hidden' : ''}`,
       iconSize: [28, 28],
       iconAnchor: [14, 14],
@@ -222,6 +220,28 @@ function syncMarkers(
       delete markers[id]
     }
   })
+}
+
+export function createMarkerContent(className: string, label?: string) {
+  const root = document.createElement('div')
+  root.className = className
+
+  const ring = document.createElement('div')
+  ring.className = 'pin-ring'
+  root.appendChild(ring)
+
+  const dot = document.createElement('div')
+  dot.className = 'pin-dot'
+  root.appendChild(dot)
+
+  if (label) {
+    const labelElement = document.createElement('div')
+    labelElement.className = 'pin-label'
+    labelElement.textContent = label
+    root.appendChild(labelElement)
+  }
+
+  return root
 }
 
 function flyOffset(

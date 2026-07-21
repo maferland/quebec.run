@@ -1,4 +1,4 @@
-import { unstable_cache } from 'next/cache'
+import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 
 export const PUBLIC_PAGE_REVALIDATE_SECONDS = 3600
 export const PUBLIC_API_REVALIDATE_SECONDS = 900
@@ -24,4 +24,18 @@ export function cachePublicData<Args extends unknown[], Result>(
 ) {
   if (process.env.NODE_ENV === 'test') return fn
   return unstable_cache(fn, keyParts, options)
+}
+
+type PublicCacheTag = (typeof PUBLIC_CACHE_TAGS)[keyof typeof PUBLIC_CACHE_TAGS]
+
+export function invalidatePublicCache(...tags: PublicCacheTag[]) {
+  if (process.env.NODE_ENV === 'test') return
+
+  new Set(tags).forEach((tag) => {
+    if (tag === PUBLIC_CACHE_TAGS.sitemap) {
+      revalidatePath('/sitemap.xml')
+      return
+    }
+    revalidateTag(tag)
+  })
 }

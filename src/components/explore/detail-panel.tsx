@@ -57,14 +57,9 @@ function loadRunDetail(id: string) {
     if (!response.ok) throw new Error('Run not found')
     const data = (await response.json()) as RunDetailResponse
 
-    let isPast = false
-    if (data.date && data.time) {
-      const [hour, minute] = data.time.split(':').map(Number)
-      const runEpoch =
-        new Date(data.date).getTime() +
-        ((hour ?? 0) * 60 + (minute ?? 0)) * 60000
-      isPast = runEpoch < Date.now()
-    }
+    const isPast = data.date
+      ? isRunPast(data.date, data.time, new Date())
+      : false
 
     return {
       id: data.id,
@@ -90,6 +85,35 @@ function loadRunDetail(id: string) {
       },
     }
   })
+}
+
+const TORONTO_TIME_ZONE = 'America/Toronto'
+
+function torontoDateTimeParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TIME_ZONE,
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
+    hourCycle: 'h23',
+  }).formatToParts(date)
+
+  return Object.fromEntries(parts.map(({ type, value }) => [type, value]))
+}
+
+export function isRunPast(date: string, time: string, now: Date) {
+  const runDate = new Date(date)
+  const timeMatch = /^(\d{2}):(\d{2})$/.exec(time)
+  if (Number.isNaN(runDate.getTime()) || !timeMatch) return false
+  if (Number(timeMatch[1]) > 23 || Number(timeMatch[2]) > 59) return false
+
+  const run = torontoDateTimeParts(runDate)
+  const current = torontoDateTimeParts(now)
+  const runKey = `${run.year}-${run.month}-${run.day}T${time.slice(0, 5)}`
+  const currentKey = `${current.year}-${current.month}-${current.day}T${current.hour}:${current.minute}`
+  return runKey < currentKey
 }
 
 function loadClubDetail(slug: string, locale: string) {
@@ -268,6 +292,75 @@ function DetailSkeleton({ kind }: { kind: 'run' | 'club' }) {
   )
 }
 
+function DetailError({
+  kind,
+  locale,
+  onBack,
+  onRetry,
+}: {
+  kind: 'run' | 'club'
+  locale: string
+  onBack: () => void
+  onRetry: () => void
+}) {
+  const french = locale === 'fr'
+  const subject = french
+    ? kind === 'run'
+      ? 'la sortie'
+      : 'le club'
+    : `the ${kind}`
+
+  return (
+    <div
+      role="alert"
+      style={{
+        minHeight: '60vh',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        gap: 14,
+        textAlign: 'center',
+      }}
+    >
+      <h1 style={{ margin: 0, fontSize: 24 }}>
+        {french
+          ? `Impossible de charger ${subject}`
+          : `Could not load ${subject}`}
+      </h1>
+      <div style={{ display: 'flex', gap: 9 }}>
+        <button className="tap" onClick={onBack} style={errorButtonStyle}>
+          {french ? 'Retour' : 'Back'}
+        </button>
+        <button
+          className="tap"
+          onClick={onRetry}
+          style={{
+            ...errorButtonStyle,
+            borderColor: 'transparent',
+            background: 'var(--lime)',
+            color: 'var(--lime-ink)',
+          }}
+        >
+          {french ? 'Réessayer' : 'Retry'}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+const errorButtonStyle = {
+  border: '1px solid var(--line)',
+  background: 'var(--surface)',
+  color: 'var(--text)',
+  borderRadius: 100,
+  padding: '10px 16px',
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 700,
+  fontSize: 14,
+  cursor: 'pointer',
+} as const
+
 // ── Run detail overlay ────────────────────────────────────────────────────────
 
 export function RunDetailOverlay({
@@ -296,6 +389,7 @@ export function RunDetailOverlay({
 
   const [run, setRun] = useState<RunDetailData | null>(null)
   const [error, setError] = useState(false)
+  const [requestVersion, setRequestVersion] = useState(0)
 
   const closeDetail = useCallback(() => {
     if (backBehavior === 'history') {
@@ -325,6 +419,8 @@ export function RunDetailOverlay({
 
   useEffect(() => {
     let active = true
+    setError(false)
+    setRun(null)
     loadRunDetail(id)
       .then((data) => {
         if (active) setRun(data)
@@ -335,9 +431,29 @@ export function RunDetailOverlay({
     return () => {
       active = false
     }
-  }, [id])
+  }, [id, requestVersion])
 
-  if (error) return null
+  if (error) {
+    return (
+      <OverlayShell
+        enter={enter}
+        exiting={isExiting}
+        inactive={inactive}
+        onEnterComplete={onEntered}
+        onExitComplete={handlePanelAnimationEnd}
+      >
+        <DetailError
+          kind="run"
+          locale={locale}
+          onBack={requestPanelClose}
+          onRetry={() => {
+            setError(false)
+            setRequestVersion((version) => version + 1)
+          }}
+        />
+      </OverlayShell>
+    )
+  }
   if (!run) {
     return (
       <OverlayShell
@@ -399,6 +515,7 @@ export function ClubDetailOverlay({
 
   const [club, setClub] = useState<ClubDetailData | null>(null)
   const [error, setError] = useState(false)
+  const [requestVersion, setRequestVersion] = useState(0)
 
   const closeDetail = useCallback(() => {
     if (backBehavior === 'history') {
@@ -428,6 +545,8 @@ export function ClubDetailOverlay({
 
   useEffect(() => {
     let active = true
+    setError(false)
+    setClub(null)
     loadClubDetail(slug, locale)
       .then((data) => {
         if (active) setClub(data)
@@ -438,9 +557,29 @@ export function ClubDetailOverlay({
     return () => {
       active = false
     }
-  }, [slug, locale])
+  }, [slug, locale, requestVersion])
 
-  if (error) return null
+  if (error) {
+    return (
+      <OverlayShell
+        enter={enter}
+        exiting={isExiting}
+        inactive={inactive}
+        onEnterComplete={onEntered}
+        onExitComplete={handlePanelAnimationEnd}
+      >
+        <DetailError
+          kind="club"
+          locale={locale}
+          onBack={requestPanelClose}
+          onRetry={() => {
+            setError(false)
+            setRequestVersion((version) => version + 1)
+          }}
+        />
+      </OverlayShell>
+    )
+  }
   if (!club) {
     return (
       <OverlayShell

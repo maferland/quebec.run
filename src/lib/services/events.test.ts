@@ -12,6 +12,7 @@ import {
   deleteEvent,
   getEventsForDay,
   getWeekEventCounts,
+  getTorontoDayBounds,
 } from './events'
 import { geocodeAddress } from './geocoding'
 import { addDays } from 'date-fns'
@@ -1206,6 +1207,36 @@ describe('Events Service Integration Tests', () => {
       expect(day1Titles).not.toContain('Evening Test Run')
       expect(day2Titles).toContain('Evening Test Run')
     })
+  })
+
+  describe('getTorontoDayBounds', () => {
+    it.each([
+      {
+        name: 'spring DST transition',
+        now: '2026-03-08T12:00:00Z',
+        start: '2026-03-08T05:00:00.000Z',
+        end: '2026-03-09T03:59:59.999Z',
+        hours: 23,
+      },
+      {
+        name: 'fall DST transition',
+        now: '2026-11-01T12:00:00Z',
+        start: '2026-11-01T04:00:00.000Z',
+        end: '2026-11-02T04:59:59.999Z',
+        hours: 25,
+      },
+    ])(
+      'returns the full $hours-hour $name day',
+      ({ now, start, end, hours }) => {
+        const bounds = getTorontoDayBounds(0, new Date(now))
+
+        expect(bounds.start.toISOString()).toBe(start)
+        expect(bounds.end.toISOString()).toBe(end)
+        expect(bounds.end.getTime() - bounds.start.getTime() + 1).toBe(
+          hours * 60 * 60 * 1000
+        )
+      }
+    )
   })
 
   describe('getWeekEventCounts', () => {

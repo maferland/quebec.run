@@ -53,7 +53,7 @@ test.describe('Map Markers', () => {
     await page.goto('/en/clubs')
     await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page
-      .getByPlaceholder('Search a run or club…')
+      .locator('input[placeholder="Search a run or club…"]:visible')
       .fill('definitely-no-such-club')
 
     await expect(
@@ -66,7 +66,7 @@ test.describe('Map Markers', () => {
     await page.goto('/en?day=1')
     await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page
-      .getByPlaceholder('Search a run or club…')
+      .locator('input[placeholder="Search a run or club…"]:visible')
       .fill('definitely-no-such-run')
 
     await expect(
@@ -139,6 +139,7 @@ test.describe('Map Markers', () => {
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
     await expect(page.getByText(/weekly schedule/i)).toBeVisible()
+    await expect(page.locator('.pin.is-active')).toHaveCount(1)
   })
 
   test('event detail swipes over its club detail without a close gap', async ({
@@ -205,14 +206,23 @@ test.describe('Map Markers', () => {
       page.locator('.qr-root:not(.qr-detail-shell)')
     ).toHaveAttribute('data-detail-handoff', 'true')
     await expect(panels).toHaveCount(1)
+
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)
+    await expect(panels).toHaveCount(0)
   })
 
   test('club Back does not remount the closing detail panel', async ({
     page,
   }, testInfo) => {
     await page.goto('/en/clubs')
-    await page.getByText('Faux Mouvement', { exact: true }).first().click()
-    await expect(page).toHaveURL(/\/en\/clubs\/fauxmouvement$/)
+    await Promise.all([
+      page.waitForURL(/\/en\/clubs\/fauxmouvement$/, { timeout: 15000 }),
+      page
+        .getByRole('button', { name: /Faux Mouvement/ })
+        .first()
+        .click(),
+    ])
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
@@ -254,6 +264,12 @@ test.describe('Map Markers', () => {
     await expect(
       page.locator('.qr-root:not(.qr-detail-shell)')
     ).toHaveAttribute('data-detail-panel-mounts', '0')
+
+    await page.goForward()
+    await expect(page).toHaveURL(/\/en\/clubs\/fauxmouvement$/)
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toBeVisible()
   })
 
   test('club tab preserves the inactive day-strip footprint', async ({

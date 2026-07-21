@@ -12,10 +12,10 @@ test.describe('Auth Sign In', () => {
   test('clicking sign in link redirects to custom page', async ({ page }) => {
     await page.goto('/en')
 
-    await expect(page.getByRole('link', { name: /sign in/i })).toHaveAttribute(
-      'href',
-      '/en/auth/signin'
-    )
+    await page.getByRole('link', { name: /sign in/i }).click()
+
+    await expect(page).toHaveURL('/en/auth/signin')
+    await expect(page.getByRole('heading', { name: /sign in/i })).toBeVisible()
   })
 
   test('validates email format', async ({ page }) => {
