@@ -32,23 +32,28 @@ export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
   const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
 
   return (
-    <div
-      className="tap sheet-card-enter"
+    <button
+      type="button"
+      className="tap sheet-card-enter qr-card-action"
       onClick={onOpen}
       onPointerEnter={onIntent}
-      onFocusCapture={onIntent}
+      onFocus={onIntent}
       style={{
+        width: '100%',
         borderRadius: 'var(--r-lg)',
         padding: '15px',
         background: 'var(--surface)',
         border: '1px solid var(--line-2)',
+        color: 'var(--text)',
+        fontFamily: 'var(--font-ui)',
+        textAlign: 'left',
         display: 'flex',
         flexDirection: 'column',
         gap: 11,
         cursor: 'pointer',
       }}
     >
-      <div
+      <span
         style={{
           display: 'flex',
           justifyContent: 'space-between',
@@ -56,14 +61,17 @@ export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
           gap: 10,
         }}
       >
-        <div style={{ minWidth: 0 }}>
-          <h3 style={{ fontSize: 17, margin: 0 }}>{club.name}</h3>
-        </div>
-      </div>
+        <span style={{ minWidth: 0 }}>
+          <span style={{ display: 'block', fontSize: 17, fontWeight: 700 }}>
+            {club.name}
+          </span>
+        </span>
+      </span>
 
       {club.description && (
-        <div
+        <span
           style={{
+            display: 'block',
             fontSize: 13.5,
             color: 'var(--dim)',
             lineHeight: 1.5,
@@ -72,10 +80,10 @@ export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
           {club.description.length > 100
             ? club.description.slice(0, 100) + '…'
             : club.description}
-        </div>
+        </span>
       )}
 
-      <div
+      <span
         style={{
           display: 'flex',
           gap: 7,
@@ -86,15 +94,15 @@ export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
         {typeLabel && <TypeTag kind={club.type} label={typeLabel} />}
         {vibeLabel && <VibePill label={vibeLabel} />}
         {club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
-      </div>
+      </span>
 
       {pace && (
-        <div style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
+        <span style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <MetaPill icon={GaugeIcon}>
             {pace} {tr('pace_unit')}
           </MetaPill>
-        </div>
+        </span>
       )}
-    </div>
+    </button>
   )
 }

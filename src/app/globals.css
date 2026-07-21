@@ -246,6 +246,18 @@ body {
 .qr-root .tap:active {
   transform: scale(0.965);
 }
+.qr-root .qr-card-action:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+.qr-root .qr-interactive-card:has(> .qr-card-summary:focus-visible) {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  opacity: 1 !important;
+}
+.qr-root .qr-interactive-card > .qr-card-summary:focus-visible {
+  outline: none;
+}
 @media (hover: hover) {
   .qr-root .tap:not(.sheet-card-enter):hover {
     filter: brightness(1.08);

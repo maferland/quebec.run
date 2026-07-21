@@ -99,10 +99,7 @@ export function RunCard({
 
   return (
     <div
-      className="tap sheet-card-enter"
-      onClick={onSelect}
-      onPointerEnter={onIntent}
-      onFocusCapture={onIntent}
+      className="tap sheet-card-enter qr-interactive-card"
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '14px 15px',
@@ -115,116 +112,140 @@ export function RunCard({
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',
-        gap: selected ? 12 : 9,
+        gap: selected ? 12 : 0,
         transition:
           'opacity .22s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease',
       }}
     >
-      {/* top row */}
-      <div style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
-        <div
-          style={{
-            fontFamily: 'var(--font-mono)',
-            fontSize: 21,
-            fontWeight: 700,
-            lineHeight: 1,
-            minWidth: 52,
-            color: cancelled ? 'var(--faint)' : 'var(--text)',
-            textDecoration: cancelled ? 'line-through' : 'none',
-          }}
-        >
-          {run.time}
-        </div>
-        <div style={{ flex: 1, minWidth: 0 }}>
-          <div
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 8,
-              flexWrap: 'wrap',
-            }}
-          >
-            <h3
-              style={{
-                fontSize: 16.5,
-                color: cancelled ? 'var(--dim)' : 'var(--text)',
-                margin: 0,
-              }}
-            >
-              {run.title}
-            </h3>
-            {cancelled && <Stamp tone="cancelled">{tr('cancelled')}</Stamp>}
-            {isPast && !cancelled && (
-              <Stamp tone="past">{tr('past_badge')}</Stamp>
-            )}
-          </div>
-          <div
-            style={{
-              fontSize: 13.5,
-              color: 'var(--dim)',
-              marginTop: 3,
-              display: 'flex',
-              gap: 7,
-              alignItems: 'baseline',
-              flexWrap: 'wrap',
-              rowGap: 2,
-            }}
-          >
-            <span
-              style={{
-                color: 'var(--text)',
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
-            >
-              {run.club.name}
-            </span>
-            {run.neighborhood && (
-              <>
-                <span style={{ color: 'var(--faint)' }}>·</span>
-                <span style={{ color: 'var(--dim)', whiteSpace: 'nowrap' }}>
-                  {run.neighborhood}
-                </span>
-              </>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* tags */}
-      <div
+      <button
+        type="button"
+        className="qr-card-action qr-card-summary"
+        aria-expanded={selected}
+        onClick={onSelect}
+        onPointerEnter={onIntent}
+        onFocus={onIntent}
         style={{
+          width: '100%',
+          padding: 0,
+          border: 0,
+          background: 'transparent',
+          color: 'inherit',
+          fontFamily: 'var(--font-ui)',
+          textAlign: 'left',
           display: 'flex',
-          gap: 7,
-          alignItems: 'center',
-          flexWrap: 'wrap',
+          flexDirection: 'column',
+          gap: selected ? 12 : 9,
+          cursor: 'pointer',
         }}
       >
-        {typeLabel && <TypeTag kind={run.club.type} label={typeLabel} />}
-        {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
-        {vibeLabel && <VibePill label={vibeLabel} />}
-      </div>
+        {/* top row */}
+        <span style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
+          <span
+            style={{
+              display: 'block',
+              fontFamily: 'var(--font-mono)',
+              fontSize: 21,
+              fontWeight: 700,
+              lineHeight: 1,
+              minWidth: 52,
+              color: cancelled ? 'var(--faint)' : 'var(--text)',
+              textDecoration: cancelled ? 'line-through' : 'none',
+            }}
+          >
+            {run.time}
+          </span>
+          <span style={{ display: 'block', flex: 1, minWidth: 0 }}>
+            <span
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: 8,
+                flexWrap: 'wrap',
+              }}
+            >
+              <span
+                style={{
+                  display: 'block',
+                  fontSize: 16.5,
+                  fontWeight: 700,
+                  color: cancelled ? 'var(--dim)' : 'var(--text)',
+                }}
+              >
+                {run.title}
+              </span>
+              {cancelled && <Stamp tone="cancelled">{tr('cancelled')}</Stamp>}
+              {isPast && !cancelled && (
+                <Stamp tone="past">{tr('past_badge')}</Stamp>
+              )}
+            </span>
+            <span
+              style={{
+                fontSize: 13.5,
+                color: 'var(--dim)',
+                marginTop: 3,
+                display: 'flex',
+                gap: 7,
+                alignItems: 'baseline',
+                flexWrap: 'wrap',
+                rowGap: 2,
+              }}
+            >
+              <span
+                style={{
+                  color: 'var(--text)',
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {run.club.name}
+              </span>
+              {run.neighborhood && (
+                <>
+                  <span style={{ color: 'var(--faint)' }}>·</span>
+                  <span style={{ color: 'var(--dim)', whiteSpace: 'nowrap' }}>
+                    {run.neighborhood}
+                  </span>
+                </>
+              )}
+            </span>
+          </span>
+        </span>
 
-      {/* meta */}
-      {(run.distance || pace) && (
-        <div
+        {/* tags */}
+        <span
           style={{
             display: 'flex',
-            gap: 14,
+            gap: 7,
             alignItems: 'center',
             flexWrap: 'wrap',
           }}
         >
-          {run.distance && (
-            <MetaPill icon={RulerIcon}>{run.distance} km</MetaPill>
-          )}
-          {pace && (
-            <MetaPill icon={GaugeIcon}>
-              {pace} {tr('pace_unit')}
-            </MetaPill>
-          )}
-        </div>
-      )}
+          {typeLabel && <TypeTag kind={run.club.type} label={typeLabel} />}
+          {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+          {vibeLabel && <VibePill label={vibeLabel} />}
+        </span>
+
+        {/* meta */}
+        {(run.distance || pace) && (
+          <span
+            style={{
+              display: 'flex',
+              gap: 14,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+            }}
+          >
+            {run.distance && (
+              <MetaPill icon={RulerIcon}>{run.distance} km</MetaPill>
+            )}
+            {pace && (
+              <MetaPill icon={GaugeIcon}>
+                {pace} {tr('pace_unit')}
+              </MetaPill>
+            )}
+          </span>
+        )}
+      </button>
 
       {/* expanded reveal */}
       {selected && (
