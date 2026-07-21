@@ -152,7 +152,7 @@ test.describe('Map Markers', () => {
   test('opens a shaped detail skeleton while prefetched data loads', async ({
     page,
     request,
-  }) => {
+  }, testInfo) => {
     const response = await request.get('/api/explore/runs?day=1')
     expect(response.ok()).toBe(true)
     const runs = (await response.json()) as { id: string; title: string }[]
@@ -175,6 +175,15 @@ test.describe('Map Markers', () => {
 
     await runTitle.click()
     await expect(page.locator('.qr-detail-shell')).toBeVisible()
+    if (testInfo.project.name === 'Desktop Chrome') {
+      await page.waitForTimeout(60)
+      const enterX = await page
+        .locator('.qr-detail-shell')
+        .evaluate((panel) => {
+          return new DOMMatrix(getComputedStyle(panel).transform).m41
+        })
+      expect(enterX).toBeLessThan(0)
+    }
     await expect(
       page.locator('.qr-detail-shell [aria-busy="true"]')
     ).toBeVisible()

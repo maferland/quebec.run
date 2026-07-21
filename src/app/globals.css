@@ -615,10 +615,12 @@ body {
 }
 @keyframes detailPanelIn {
   from {
-    transform: translateX(100%);
+    transform: translateX(-100%);
+    opacity: 0.92;
   }
   to {
     transform: none;
+    opacity: 1;
   }
 }
 @keyframes detailPanelOut {
