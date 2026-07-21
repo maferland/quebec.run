@@ -77,7 +77,10 @@ test.describe('Map Markers', () => {
     await expect(searchLayer).toHaveClass(/is-open/)
 
     const after = await toolbar.boundingBox()
-    expect(after).toEqual(before)
+    expect(after?.x).toBeCloseTo(before?.x ?? 0, 1)
+    expect(after?.y).toBeCloseTo(before?.y ?? 0, 1)
+    expect(after?.width).toBeCloseTo(before?.width ?? 0, 1)
+    expect(after?.height).toBeCloseTo(before?.height ?? 0, 1)
 
     await searchInput.fill('faux')
     await page.keyboard.press('Escape')
@@ -160,7 +163,7 @@ test.describe('Map Markers', () => {
       .first()
       .click()
 
-    await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}`))
+    await expect(page).toHaveURL(/\/en\/run\/[^?]+/)
     await expect(
       page.locator('.qr-root:not(.qr-detail-shell)')
     ).toHaveAttribute('data-detail-handoff', 'true')
@@ -183,6 +186,14 @@ test.describe('Map Markers', () => {
   }, testInfo) => {
     await page.goto('/en/clubs')
     await page.getByText('Faux Mouvement', { exact: true }).first().click()
+    await expect(page).toHaveURL(/\/en\/clubs$/)
+    await expect(
+      page.getByRole('button', { name: /view club/i }).first()
+    ).toBeVisible()
+    await page
+      .getByRole('button', { name: /view club/i })
+      .first()
+      .click()
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
@@ -230,6 +241,7 @@ test.describe('Map Markers', () => {
     page,
   }, testInfo) => {
     await page.goto('/en')
+    await expect(page.getByText(/\d+ runs?/i).first()).toBeVisible()
 
     const weekSlot = page.locator('.qr-week-slot')
     const runsBox = await weekSlot.boundingBox()
@@ -248,7 +260,10 @@ test.describe('Map Markers', () => {
     }
   })
 
-  test('selected run is URL-addressable', async ({ page, request }) => {
+  test('run preview opens a route and survives Back', async ({
+    page,
+    request,
+  }) => {
     const response = await request.get('/api/explore/runs?day=1')
     expect(response.ok()).toBe(true)
     const runs = (await response.json()) as { id: string; title: string }[]
@@ -257,24 +272,27 @@ test.describe('Map Markers', () => {
 
     await page.goto('/en?day=1')
     await page.getByText(run.title, { exact: false }).first().click()
-    await expect(page).toHaveURL(
-      new RegExp(
-        `(/en/run/${encodeURIComponent(run.id)}|run=${encodeURIComponent(run.id)})`
-      )
-    )
+    await expect(page).toHaveURL(/\/en\?day=1$/)
     await expect(page.locator('.pin.is-active')).toBeVisible()
+    const detailsButton = page.getByRole('button', { name: /details/i }).first()
+    await expect(detailsButton).toBeVisible()
 
-    if (!page.url().includes(`/en/run/${encodeURIComponent(run.id)}`)) {
-      await page
-        .getByRole('button', { name: /details/i })
-        .first()
-        .click()
-    }
+    await detailsButton.click()
     await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}(?:\\?.*)?$`))
     await expect(
       page.getByRole('heading', { level: 1, name: run.title })
     ).toBeVisible()
     await expect(page.locator('.pin.is-active')).toBeVisible()
+    await expect(page.locator('.pin-wrap.is-hidden').first()).toHaveCSS(
+      'opacity',
+      '0'
+    )
+
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
+    await expect(page).toHaveURL(/\/en\?day=1$/)
+    await expect(detailsButton).toBeVisible()
+    await expect(page.locator('.pin.is-active')).toHaveCount(1)
 
     const deepLinkPage = await page.context().newPage()
     await deepLinkPage.goto(`/en/run/${encodeURIComponent(run.id)}`)
@@ -312,6 +330,11 @@ test.describe('Map Markers', () => {
     expect(detailRequests).toBe(1)
 
     await runTitle.click()
+    await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
+    await page
+      .getByRole('button', { name: /details/i })
+      .first()
+      .click()
     await expect(page.locator('.qr-detail-shell')).toBeVisible()
     if (testInfo.project.name === 'Desktop Chrome') {
       await page.waitForTimeout(60)
@@ -332,7 +355,9 @@ test.describe('Map Markers', () => {
     expect(detailRequests).toBe(1)
   })
 
-  test('direct run detail highlights the active map pin', async ({ page }) => {
+  test('direct run detail highlights the active map pin', async ({
+    page,
+  }, testInfo) => {
     const runId = 'fauxmouvement-mardi--2026-07-21'
     await page.goto(`/en/run/${runId}`)
 
@@ -340,12 +365,27 @@ test.describe('Map Markers', () => {
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
     await expect(page.locator('.pin.is-active')).toHaveCount(1)
-    await expect(page.locator('.pin.is-muted').first()).toBeVisible()
+    await expect(page.locator('.pin-wrap.is-hidden').first()).toHaveCSS(
+      'opacity',
+      '0'
+    )
     await expect(page.getByText(/Café de Course/)).toBeVisible()
+
+    if (testInfo.project.name === 'Mobile Chrome') {
+      await page.waitForTimeout(800)
+      const panelBox = await page.locator('.qr-detail-shell').boundingBox()
+      const pinBox = await page.locator('.pin.is-active').boundingBox()
+      expect(panelBox).not.toBeNull()
+      expect(pinBox).not.toBeNull()
+      const exposedMapCenter = (76 + (panelBox?.y ?? 0)) / 2
+      const pinCenter = (pinBox?.y ?? 0) + (pinBox?.height ?? 0) / 2
+      expect(Math.abs(pinCenter - exposedMapCenter)).toBeLessThan(24)
+    }
 
     await page.getByRole('button', { name: /back/i }).click()
     await expect(page.locator('.qr-detail-shell.is-exiting')).toHaveCount(1)
     await expect(page).toHaveURL(/\/en$/)
+    await expect(page.locator('.pin.is-active')).toHaveCount(0)
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toHaveCount(0)

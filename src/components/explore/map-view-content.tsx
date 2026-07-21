@@ -19,6 +19,7 @@ export function MapViewContent({
   onSelect,
   theme,
   insets,
+  hideInactive = false,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -60,7 +61,8 @@ export function MapViewContent({
       markersRef.current,
       pointsRef.current,
       activeIdRef.current,
-      onSelectRef.current
+      onSelectRef.current,
+      hideInactive
     )
     setMapReady(true)
 
@@ -102,42 +104,39 @@ export function MapViewContent({
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    syncMarkers(map, markersRef.current, points, activeId, onSelect)
-  }, [points, activeId, onSelect, mapReady])
+    syncMarkers(
+      map,
+      markersRef.current,
+      points,
+      activeId,
+      onSelect,
+      hideInactive
+    )
+  }, [points, activeId, onSelect, hideInactive, mapReady])
 
   // fly to active
   useEffect(() => {
     const map = mapRef.current
     if (!map || !activeId) return
-    if (lastFlyRef.current === activeId) return
+    const flyKey = `${activeId}:${insets.left}:${insets.top}:${insets.bottom}`
+    if (lastFlyRef.current === flyKey) return
     const p = points.find((x) => x.id === activeId)
     if (!p) return
-    lastFlyRef.current = activeId
+    lastFlyRef.current = flyKey
     flyOffset(
       map,
       [p.lat, p.lng],
       Math.max(map.getZoom(), 14),
       insetsRef.current
     )
-  }, [activeId, points, mapReady])
+  }, [activeId, points, insets, mapReady])
 
   // fit bounds when points change and nothing active
   const sig = points.map((p) => p.id).join(',')
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
-    if (activeId) {
-      lastFlyRef.current = null
-      const p = points.find((x) => x.id === activeId)
-      if (p)
-        flyOffset(
-          map,
-          [p.lat, p.lng],
-          Math.max(map.getZoom(), 14),
-          insetsRef.current
-        )
-      return
-    }
+    if (activeId) return
     lastFlyRef.current = null
     const ins = insetsRef.current
     if (points.length === 0) {
@@ -158,7 +157,7 @@ export function MapViewContent({
       maxZoom: 15,
     })
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [sig, mapReady])
+  }, [sig, activeId, mapReady])
 
   return (
     <div
@@ -175,7 +174,8 @@ function syncMarkers(
   markers: Record<string, L.Marker>,
   points: MapViewProps['points'],
   activeId: string | null,
-  onSelect: (id: string) => void
+  onSelect: (id: string) => void,
+  hideInactive: boolean
 ) {
   const seen = new Set<string>()
   points.forEach((p) => {
@@ -193,7 +193,7 @@ function syncMarkers(
     const html = `<div class="${cls}"><div class="pin-ring"></div><div class="pin-dot"></div>${p.label ? `<div class="pin-label">${p.label}</div>` : ''}</div>`
     const icon = L.divIcon({
       html,
-      className: 'pin-wrap',
+      className: `pin-wrap${hideInactive && activeId && p.id !== activeId ? ' is-hidden' : ''}`,
       iconSize: [28, 28],
       iconAnchor: [14, 14],
     })

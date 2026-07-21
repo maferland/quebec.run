@@ -205,6 +205,8 @@ function ExploreShellInner() {
   )
   const [previousDetailOverlay, setPreviousDetailOverlay] =
     useState<DetailOverlayState | null>(null)
+  const [previewRunId, setPreviewRunId] = useState<string | null>(null)
+  const [previewClubId, setPreviewClubId] = useState<string | null>(null)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
   const mode = parseModeFromPath(pathname)
@@ -417,6 +419,8 @@ function ExploreShellInner() {
 
   const setDay = useCallback(
     (o: number) => {
+      setPreviewRunId(null)
+      setPreviewClubId(null)
       updateUrl({ day: o, runId: null, clubSlug: null })
     },
     [updateUrl]
@@ -424,6 +428,8 @@ function ExploreShellInner() {
 
   const setMode = useCallback(
     (m: Mode) => {
+      setPreviewRunId(null)
+      setPreviewClubId(null)
       updateUrl({ mode: m, runId: null, clubSlug: null })
     },
     [updateUrl]
@@ -431,6 +437,8 @@ function ExploreShellInner() {
 
   const setFilters = useCallback(
     (fn: (prev: Filters) => Filters) => {
+      setPreviewRunId(null)
+      setPreviewClubId(null)
       updateUrl({ filters: fn(filters), runId: null, clubSlug: null })
     },
     [filters, updateUrl]
@@ -599,8 +607,17 @@ function ExploreShellInner() {
     () =>
       desktop
         ? { left: RAIL_WIDTH + 24, top: 24, bottom: 24 }
-        : { left: 0, top: 76, bottom: sheetH },
-    [desktop, sheetH]
+        : detailOverlay
+          ? {
+              left: 0,
+              top: 76,
+              bottom: Math.max(
+                0,
+                containerH - Math.min(300, Math.max(220, containerH * 0.3))
+              ),
+            }
+          : { left: 0, top: 76, bottom: sheetH },
+    [containerH, desktop, detailOverlay, sheetH]
   )
 
   const filteredRuns = useMemo(() => {
@@ -631,35 +648,26 @@ function ExploreShellInner() {
     return clubs.find((club) => club.slug === selectedClubSlug)?.id ?? null
   }, [clubs, selectedClubSlug])
 
-  const selId = mode === 'clubs' ? selectedClubId : selectedRunId
+  const selId =
+    mode === 'clubs'
+      ? (selectedClubId ?? previewClubId)
+      : (selectedRunId ?? previewRunId)
 
   const setSelectedId = useCallback(
     (id: string | null) => {
-      if (!id) {
-        updateUrl({ runId: null, clubSlug: null })
-        return
-      }
       if (mode === 'clubs') {
-        const club = clubs.find((candidate) => candidate.id === id)
-        if (!club) return
-        const detail: DetailRoute = { kind: 'club', slug: club.slug }
-        closingDetailKeyRef.current = null
-        pendingOpenRef.current = detailKey(detail)
-        preloadClubDetail(club.slug, locale)
-        setDetailOverlay({
-          ...detail,
-          exiting: false,
-          enter: true,
-          closeMode: 'history',
-        })
-        startTransition(() => {
-          router.push(
-            `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
-            { scroll: false }
-          )
-        })
+        setPreviewRunId(null)
+        setPreviewClubId(id)
         return
       }
+      setPreviewClubId(null)
+      setPreviewRunId(id)
+    },
+    [mode]
+  )
+
+  const openRunDetail = useCallback(
+    (id: string) => {
       const runDay = dayOffsetFromRunId(id) ?? day
       const detail: DetailRoute = { kind: 'run', id }
       closingDetailKeyRef.current = null
@@ -669,7 +677,7 @@ function ExploreShellInner() {
         ...detail,
         exiting: false,
         enter: true,
-        closeMode: 'history',
+        closeMode: 'route',
       })
       startTransition(() => {
         router.push(
@@ -678,7 +686,31 @@ function ExploreShellInner() {
         )
       })
     },
-    [clubs, day, filters, locale, mode, router, startTransition, updateUrl]
+    [day, filters, locale, router, startTransition]
+  )
+
+  const openClubDetail = useCallback(
+    (id: string) => {
+      const club = clubs.find((candidate) => candidate.id === id)
+      if (!club) return
+      const detail: DetailRoute = { kind: 'club', slug: club.slug }
+      closingDetailKeyRef.current = null
+      pendingOpenRef.current = detailKey(detail)
+      preloadClubDetail(club.slug, locale)
+      setDetailOverlay({
+        ...detail,
+        exiting: false,
+        enter: true,
+        closeMode: 'route',
+      })
+      startTransition(() => {
+        router.push(
+          `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
+          { scroll: false }
+        )
+      })
+    },
+    [clubs, day, filters, locale, router, startTransition]
   )
 
   const runCount = filteredRuns.length
@@ -893,6 +925,8 @@ function ExploreShellInner() {
       mode={mode}
       selId={selId}
       onSelect={setSelectedId}
+      onOpenRun={openRunDetail}
+      onOpenClub={openClubDetail}
       loading={
         mode === 'clubs'
           ? loadingClubs && clubs.length === 0
@@ -935,6 +969,7 @@ function ExploreShellInner() {
         onSelect={setSelectedId}
         theme={theme}
         insets={insets}
+        hideInactive={Boolean(detailOverlay && selId)}
       />
 
       {/* Top bar */}
@@ -1424,6 +1459,8 @@ function RunList({
   mode,
   selId,
   onSelect,
+  onOpenRun,
+  onOpenClub,
   loading,
   refreshing,
   tr,
@@ -1443,6 +1480,8 @@ function RunList({
   mode: Mode
   selId: string | null
   onSelect: (id: string | null) => void
+  onOpenRun: (id: string) => void
+  onOpenClub: (id: string) => void
   loading: boolean
   refreshing: boolean
   tr: (k: string) => string
@@ -1510,7 +1549,9 @@ function RunList({
           <ClubCard
             key={c.id}
             club={c}
-            onOpen={() => onSelect(c.id)}
+            selected={c.id === selId}
+            onSelect={() => onSelect(c.id === selId ? null : c.id)}
+            onOpen={() => onOpenClub(c.id)}
             onIntent={() => onPreloadClub(c.slug)}
             tr={tr}
           />
@@ -1555,7 +1596,7 @@ function RunList({
           run={r}
           selected={r.id === selId}
           onSelect={() => onSelect(r.id === selId ? null : r.id)}
-          onOpen={() => onSelect(r.id)}
+          onOpen={() => onOpenRun(r.id)}
           onIntent={() => onPreloadRun(r.id)}
           nowMin={nowMin}
           day={day}

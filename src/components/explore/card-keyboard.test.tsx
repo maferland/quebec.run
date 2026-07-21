@@ -56,7 +56,16 @@ describe.each([
   it('opens a focused club card', async () => {
     const user = userEvent.setup()
     const onOpen = vi.fn()
-    render(<ClubCard club={club} onOpen={onOpen} onIntent={vi.fn()} tr={tr} />)
+    render(
+      <ClubCard
+        club={club}
+        selected={false}
+        onSelect={onOpen}
+        onOpen={vi.fn()}
+        onIntent={vi.fn()}
+        tr={tr}
+      />
+    )
 
     await user.tab()
     expect(
@@ -115,4 +124,26 @@ it('tabs from an expanded run summary to its details action', async () => {
   await user.tab()
 
   expect(screen.getByRole('button', { name: /open_run/ })).toHaveFocus()
+})
+
+it('tabs from an expanded club summary to its details action', async () => {
+  const user = userEvent.setup()
+  render(
+    <ClubCard
+      club={club}
+      selected
+      onSelect={vi.fn()}
+      onOpen={vi.fn()}
+      onIntent={vi.fn()}
+      tr={tr}
+    />
+  )
+
+  await user.tab()
+  expect(
+    screen.getByRole('button', { name: /Quebec Track Club/ })
+  ).toHaveFocus()
+  await user.tab()
+
+  expect(screen.getByRole('button', { name: /view_club/ })).toHaveFocus()
 })
