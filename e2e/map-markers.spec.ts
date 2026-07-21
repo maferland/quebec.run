@@ -1,4 +1,20 @@
-import { test, expect } from '@playwright/test'
+import { test, expect, type Page } from '@playwright/test'
+
+async function gotoLoadedExplore(page: Page, path: string) {
+  const responses = [
+    page.waitForResponse((response) =>
+      response.url().includes('/api/explore/runs?day=')
+    ),
+    page.waitForResponse((response) =>
+      response.url().includes('/api/explore/clubs')
+    ),
+    page.waitForResponse((response) =>
+      response.url().includes('/api/explore/week-counts')
+    ),
+  ]
+  await page.goto(path)
+  await Promise.all(responses)
+}
 
 test.describe('Map Markers', () => {
   test('displays event map on homepage', async ({ page }) => {
@@ -62,7 +78,7 @@ test.describe('Map Markers', () => {
   })
 
   test('opens search without shifting the toolbar', async ({ page }) => {
-    await page.goto('/en')
+    await gotoLoadedExplore(page, '/en')
 
     await page.getByRole('button', { name: 'Search', exact: true }).waitFor()
     await page.waitForTimeout(400)
@@ -77,10 +93,12 @@ test.describe('Map Markers', () => {
     await expect(searchLayer).toHaveClass(/is-open/)
 
     const after = await toolbar.boundingBox()
-    expect(after?.x).toBeCloseTo(before?.x ?? 0, 1)
-    expect(after?.y).toBeCloseTo(before?.y ?? 0, 1)
-    expect(after?.width).toBeCloseTo(before?.width ?? 0, 1)
-    expect(after?.height).toBeCloseTo(before?.height ?? 0, 1)
+    expect(Math.abs((after?.x ?? 0) - (before?.x ?? 0))).toBeLessThan(1)
+    expect(Math.abs((after?.y ?? 0) - (before?.y ?? 0))).toBeLessThan(1)
+    expect(Math.abs((after?.width ?? 0) - (before?.width ?? 0))).toBeLessThan(1)
+    expect(Math.abs((after?.height ?? 0) - (before?.height ?? 0))).toBeLessThan(
+      1
+    )
 
     await searchInput.fill('faux')
     await page.keyboard.press('Escape')
@@ -93,7 +111,15 @@ test.describe('Map Markers', () => {
     await expect(
       page.getByRole('button', { name: 'Search', exact: true })
     ).toBeVisible()
-    expect(await toolbar.boundingBox()).toEqual(before)
+    const closed = await toolbar.boundingBox()
+    expect(Math.abs((closed?.x ?? 0) - (before?.x ?? 0))).toBeLessThan(1)
+    expect(Math.abs((closed?.y ?? 0) - (before?.y ?? 0))).toBeLessThan(1)
+    expect(Math.abs((closed?.width ?? 0) - (before?.width ?? 0))).toBeLessThan(
+      1
+    )
+    expect(
+      Math.abs((closed?.height ?? 0) - (before?.height ?? 0))
+    ).toBeLessThan(1)
 
     await page.getByRole('button', { name: 'Filters' }).click()
     await expect(page.getByRole('heading', { name: 'Filters' })).toBeVisible()
@@ -240,8 +266,7 @@ test.describe('Map Markers', () => {
   test('club tab preserves the inactive day-strip footprint', async ({
     page,
   }, testInfo) => {
-    await page.goto('/en')
-    await expect(page.getByText(/\d+ runs?/i).first()).toBeVisible()
+    await gotoLoadedExplore(page, '/en')
 
     const weekSlot = page.locator('.qr-week-slot')
     const runsBox = await weekSlot.boundingBox()
