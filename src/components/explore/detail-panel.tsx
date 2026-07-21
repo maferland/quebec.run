@@ -13,6 +13,7 @@ import { RunDetailPanel, type RunDetailData } from './run-detail'
 import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
 
+export const PANEL_ENTER_MS = 280
 export const PANEL_EXIT_MS = 220
 
 const runDetailRequests = new Map<string, Promise<RunDetailData>>()
@@ -176,20 +177,34 @@ function OverlayShell({
   children,
   enter = true,
   exiting = false,
+  inactive = false,
+  onEnterComplete,
   onExitComplete,
 }: {
   children: React.ReactNode
   enter?: boolean
   exiting?: boolean
+  inactive?: boolean
+  onEnterComplete?: () => void
   onExitComplete?: (event: AnimationEvent<HTMLDivElement>) => void
 }) {
   const { theme } = useTheme()
-  const className = `qr-root qr-panel-scroll qr-detail-shell${enter ? '' : ' is-static'}${exiting ? ' is-exiting' : ''}`
+  const className = `qr-root qr-panel-scroll qr-detail-shell${enter ? '' : ' is-static'}${exiting ? ' is-exiting' : ''}${inactive ? ' is-underlay' : ''}`
 
   return (
     <div
       className={className}
-      onAnimationEnd={onExitComplete}
+      aria-hidden={inactive}
+      inert={inactive}
+      onAnimationEnd={(event) => {
+        if (
+          event.target === event.currentTarget &&
+          event.animationName === 'detailPanelIn'
+        ) {
+          onEnterComplete?.()
+        }
+        onExitComplete?.(event)
+      }}
       data-theme={theme}
       suppressHydrationWarning
     >
@@ -259,14 +274,18 @@ export function RunDetailOverlay({
   id,
   enter = true,
   exiting: controlledExiting,
+  inactive = false,
   onClose,
+  onEntered,
   onExited,
   backBehavior = 'route',
 }: {
   id: string
   enter?: boolean
   exiting?: boolean
+  inactive?: boolean
   onClose?: () => void
+  onEntered?: () => void
   onExited?: () => void
   backBehavior?: 'history' | 'route'
 }) {
@@ -324,6 +343,8 @@ export function RunDetailOverlay({
       <OverlayShell
         enter={enter}
         exiting={isExiting}
+        inactive={inactive}
+        onEnterComplete={onEntered}
         onExitComplete={handlePanelAnimationEnd}
       >
         <DetailSkeleton kind="run" />
@@ -335,6 +356,8 @@ export function RunDetailOverlay({
     <OverlayShell
       enter={enter}
       exiting={isExiting}
+      inactive={inactive}
+      onEnterComplete={onEntered}
       onExitComplete={handlePanelAnimationEnd}
     >
       <RunDetailPanel
@@ -354,14 +377,18 @@ export function ClubDetailOverlay({
   slug,
   enter = true,
   exiting: controlledExiting,
+  inactive = false,
   onClose,
+  onEntered,
   onExited,
   backBehavior = 'route',
 }: {
   slug: string
   enter?: boolean
   exiting?: boolean
+  inactive?: boolean
   onClose?: () => void
+  onEntered?: () => void
   onExited?: () => void
   backBehavior?: 'history' | 'route'
 }) {
@@ -419,6 +446,8 @@ export function ClubDetailOverlay({
       <OverlayShell
         enter={enter}
         exiting={isExiting}
+        inactive={inactive}
+        onEnterComplete={onEntered}
         onExitComplete={handlePanelAnimationEnd}
       >
         <DetailSkeleton kind="club" />
@@ -430,6 +459,8 @@ export function ClubDetailOverlay({
     <OverlayShell
       enter={enter}
       exiting={isExiting}
+      inactive={inactive}
+      onEnterComplete={onEntered}
       onExitComplete={handlePanelAnimationEnd}
     >
       <ClubDetailPanel

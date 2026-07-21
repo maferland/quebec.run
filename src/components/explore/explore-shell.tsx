@@ -17,6 +17,7 @@ import { RunCard } from './run-card'
 import { ClubCard } from './club-card'
 import {
   ClubDetailOverlay,
+  PANEL_ENTER_MS,
   PANEL_EXIT_MS,
   preloadClubDetail,
   preloadRunDetail,
@@ -191,13 +192,18 @@ function ExploreShellInner() {
   const pendingCloseRef = useRef<'history' | 'route' | null>(null)
   const pendingOpenRef = useRef<string | null>(null)
   const closingDetailKeyRef = useRef<string | null>(null)
+  const detailHistoryRef = useRef<DetailRoute[]>([])
+  const pendingDetailBackRef = useRef<string | null>(null)
   const exitFallbackRef = useRef<number | null>(null)
+  const enterFallbackRef = useRef<number | null>(null)
   const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
     () =>
       currentDetail
         ? { ...currentDetail, exiting: false, enter: false, closeMode: 'route' }
         : null
   )
+  const [previousDetailOverlay, setPreviousDetailOverlay] =
+    useState<DetailOverlayState | null>(null)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
   const mode = parseModeFromPath(pathname)
@@ -213,6 +219,17 @@ function ExploreShellInner() {
     window.clearTimeout(exitFallbackRef.current)
     exitFallbackRef.current = null
   }, [])
+
+  const clearEnterFallback = useCallback(() => {
+    if (!enterFallbackRef.current) return
+    window.clearTimeout(enterFallbackRef.current)
+    enterFallbackRef.current = null
+  }, [])
+
+  const completeDetailEnter = useCallback(() => {
+    clearEnterFallback()
+    setPreviousDetailOverlay(null)
+  }, [clearEnterFallback])
 
   const completeDetailExit = useCallback(() => {
     clearExitFallback()
@@ -239,6 +256,14 @@ function ExploreShellInner() {
 
   const startDetailExit = useCallback(
     (closeMode?: 'history' | 'route') => {
+      if (closeMode === 'history' && detailHistoryRef.current.length > 0) {
+        const previousDetail = detailHistoryRef.current.pop() ?? null
+        pendingDetailBackRef.current = detailKey(previousDetail)
+        pendingCloseRef.current = null
+        clearExitFallback()
+        router.back()
+        return
+      }
       if (closeMode) pendingCloseRef.current = closeMode
       setDetailOverlay((overlay) =>
         overlay ? { ...overlay, exiting: true } : overlay
@@ -249,7 +274,7 @@ function ExploreShellInner() {
         PANEL_EXIT_MS + 100
       )
     },
-    [clearExitFallback, completeDetailExit]
+    [clearExitFallback, completeDetailExit, router]
   )
 
   useEffect(() => {
@@ -261,7 +286,26 @@ function ExploreShellInner() {
       const closeMode = hydratedRef.current ? 'history' : 'route'
       if (currentDetailKey !== existingKey) {
         clearExitFallback()
+        clearEnterFallback()
         pendingCloseRef.current = null
+        const isDetailBack = pendingDetailBackRef.current === currentDetailKey
+        pendingDetailBackRef.current = null
+        if (detailOverlay) {
+          if (!isDetailBack) {
+            detailHistoryRef.current.push(detailOverlay)
+          }
+          setPreviousDetailOverlay({
+            ...detailOverlay,
+            enter: false,
+            exiting: false,
+          })
+          enterFallbackRef.current = window.setTimeout(
+            completeDetailEnter,
+            PANEL_ENTER_MS + 100
+          )
+        } else {
+          setPreviousDetailOverlay(null)
+        }
         setDetailOverlay({
           ...currentDetail,
           exiting: false,
@@ -275,6 +319,10 @@ function ExploreShellInner() {
 
     hydratedRef.current = true
     closingDetailKeyRef.current = null
+    detailHistoryRef.current = []
+    pendingDetailBackRef.current = null
+    clearEnterFallback()
+    setPreviousDetailOverlay(null)
     if (
       pendingOpenRef.current &&
       pendingOpenRef.current === detailKey(detailOverlay)
@@ -285,6 +333,8 @@ function ExploreShellInner() {
     startDetailExit()
   }, [
     clearExitFallback,
+    clearEnterFallback,
+    completeDetailEnter,
     currentDetail,
     currentDetailKey,
     detailOverlay,
@@ -292,8 +342,11 @@ function ExploreShellInner() {
   ])
 
   useEffect(() => {
-    return () => clearExitFallback()
-  }, [clearExitFallback])
+    return () => {
+      clearEnterFallback()
+      clearExitFallback()
+    }
+  }, [clearEnterFallback, clearExitFallback])
 
   useEffect(() => {
     const queryMode = searchParams.get('mode')
@@ -1144,21 +1197,41 @@ function ExploreShellInner() {
       )}
 
       {/* Route-owned detail panel */}
+      {previousDetailOverlay?.kind === 'run' && (
+        <RunDetailOverlay
+          key={detailKey(previousDetailOverlay)}
+          id={previousDetailOverlay.id}
+          enter={false}
+          inactive
+        />
+      )}
+      {previousDetailOverlay?.kind === 'club' && (
+        <ClubDetailOverlay
+          key={detailKey(previousDetailOverlay)}
+          slug={previousDetailOverlay.slug}
+          enter={false}
+          inactive
+        />
+      )}
       {detailOverlay?.kind === 'run' && (
         <RunDetailOverlay
+          key={detailKey(detailOverlay)}
           id={detailOverlay.id}
           enter={detailOverlay.enter}
           exiting={detailOverlay.exiting}
           onClose={() => startDetailExit(detailOverlay.closeMode)}
+          onEntered={completeDetailEnter}
           onExited={completeDetailExit}
         />
       )}
       {detailOverlay?.kind === 'club' && (
         <ClubDetailOverlay
+          key={detailKey(detailOverlay)}
           slug={detailOverlay.slug}
           enter={detailOverlay.enter}
           exiting={detailOverlay.exiting}
           onClose={() => startDetailExit(detailOverlay.closeMode)}
+          onEntered={completeDetailEnter}
           onExited={completeDetailExit}
         />
       )}

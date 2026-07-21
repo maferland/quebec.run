@@ -562,6 +562,11 @@ body {
   pointer-events: auto;
   will-change: transform;
 }
+.qr-root.qr-detail-shell.is-underlay {
+  z-index: 1299;
+  pointer-events: none;
+  will-change: auto;
+}
 @media (min-width: 880px) {
   .qr-root.qr-detail-shell {
     inset: 0 auto 0 0;

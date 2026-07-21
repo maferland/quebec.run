@@ -40,6 +40,72 @@ test.describe('Map Markers', () => {
     await expect(page.getByText(/weekly schedule/i)).toBeVisible()
   })
 
+  test('event detail swipes over its club detail without a close gap', async ({
+    page,
+    request,
+  }) => {
+    const response = await request.get(
+      '/api/explore/clubs/fauxmouvement?locale=en'
+    )
+    expect(response.ok()).toBe(true)
+    const club = (await response.json()) as {
+      upcomingRuns: { id: string; title: string; time: string }[]
+    }
+    const run = club.upcomingRuns[0]
+    expect(run).toBeTruthy()
+
+    await page.goto('/en/clubs/fauxmouvement')
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toBeVisible({ timeout: 15000 })
+
+    await page.evaluate(() => {
+      const shell = document.querySelector('.qr-root:not(.qr-detail-shell)')
+      if (!shell) throw new Error('Explore shell not found')
+      shell.setAttribute('data-detail-handoff', 'false')
+      const recordHandoff = () => {
+        const panels = document.querySelectorAll('.qr-detail-shell')
+        if (
+          panels.length === 2 &&
+          panels[0]?.classList.contains('is-underlay') &&
+          !panels[0]?.classList.contains('is-exiting')
+        ) {
+          shell.setAttribute('data-detail-handoff', 'true')
+        }
+      }
+      new MutationObserver(recordHandoff).observe(shell, {
+        attributes: true,
+        childList: true,
+        subtree: true,
+        attributeFilter: ['class'],
+      })
+    })
+
+    await page
+      .locator('.qr-detail-shell .tap')
+      .filter({ hasText: run.title })
+      .filter({ hasText: run.time })
+      .first()
+      .click()
+
+    await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}`))
+    await expect(
+      page.locator('.qr-root:not(.qr-detail-shell)')
+    ).toHaveAttribute('data-detail-handoff', 'true')
+    const panels = page.locator('.qr-detail-shell')
+    await expect(panels).toHaveCount(1)
+
+    await page
+      .locator('.qr-root:not(.qr-detail-shell)')
+      .evaluate((shell) => shell.setAttribute('data-detail-handoff', 'false'))
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page).toHaveURL('/en/clubs/fauxmouvement')
+    await expect(
+      page.locator('.qr-root:not(.qr-detail-shell)')
+    ).toHaveAttribute('data-detail-handoff', 'true')
+    await expect(panels).toHaveCount(1)
+  })
+
   test('club Back does not remount the closing detail panel', async ({
     page,
   }, testInfo) => {
