@@ -9,6 +9,7 @@ import {
   useTransition,
 } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
+import Link from 'next/link'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { MapView, type MapPoint } from './map-view'
 import { WeekBar, type WeekDay } from './week-bar'
@@ -951,7 +952,8 @@ function ExploreShellInner() {
           pointerEvents: 'none',
         }}
       >
-        <div
+        <Link
+          href={`/${locale}`}
           style={{
             pointerEvents: 'auto',
             background: 'color-mix(in oklch, var(--bg) 72%, transparent)',
@@ -963,6 +965,8 @@ function ExploreShellInner() {
             display: 'flex',
             alignItems: 'center',
             gap: 10,
+            color: 'inherit',
+            textDecoration: 'none',
           }}
         >
           <div
@@ -1006,7 +1010,7 @@ function ExploreShellInner() {
           >
             quebec<span style={{ color: 'var(--accent)' }}>.run</span>
           </span>
-        </div>
+        </Link>
 
         <div style={{ pointerEvents: 'auto', display: 'flex', gap: 8 }}>
           <div
