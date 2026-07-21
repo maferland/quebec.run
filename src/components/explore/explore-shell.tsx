@@ -452,6 +452,7 @@ function ExploreShellInner() {
   const [runs, setRuns] = useState<ExploreRun[]>([])
   const [clubs, setClubs] = useState<ExploreClub[]>([])
   const [loadingRuns, setLoadingRuns] = useState(false)
+  const [loadingClubs, setLoadingClubs] = useState(true)
 
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef<{ y: number; h: number } | null>(null)
@@ -523,8 +524,12 @@ function ExploreShellInner() {
   }, [day])
 
   useEffect(() => {
-    if (clubs.length > 0) return
-    fetch('/api/explore/clubs')
+    if (clubs.length > 0) {
+      setLoadingClubs(false)
+      return
+    }
+    const controller = new AbortController()
+    fetch('/api/explore/clubs', { signal: controller.signal })
       .then((r) => {
         if (!r.ok) return []
         return r.json()
@@ -532,7 +537,13 @@ function ExploreShellInner() {
       .then((data) => {
         if (Array.isArray(data)) setClubs(data)
       })
-      .catch(() => {})
+      .catch((error) => {
+        if (error?.name !== 'AbortError') return
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingClubs(false)
+      })
+    return () => controller.abort()
   }, [clubs.length])
 
   // ── Derived values ──────────────────────────────────────────────────────────
@@ -866,7 +877,11 @@ function ExploreShellInner() {
       mode={mode}
       selId={selId}
       onSelect={setSelectedId}
-      loading={mode === 'runs' && loadingRuns && runs.length === 0}
+      loading={
+        mode === 'clubs'
+          ? loadingClubs && clubs.length === 0
+          : loadingRuns && runs.length === 0
+      }
       refreshing={mode === 'runs' && loadingRuns && runs.length > 0}
       tr={tr}
       day={day}
@@ -874,6 +889,7 @@ function ExploreShellInner() {
       setDay={setDay}
       nowMin={nowMin}
       hasActiveFilters={activeFilterCount > 0}
+      hasSearchQuery={searchQ.trim().length > 0}
       onClearFilters={clearFilters}
       allRuns={runs}
       onPreloadRun={preloadRun}
@@ -1397,6 +1413,7 @@ function RunList({
   setDay,
   nowMin,
   hasActiveFilters,
+  hasSearchQuery,
   onClearFilters,
   allRuns,
   onPreloadRun,
@@ -1415,11 +1432,33 @@ function RunList({
   setDay: (o: number) => void
   nowMin: number
   hasActiveFilters: boolean
+  hasSearchQuery: boolean
   onClearFilters: () => void
   allRuns: ExploreRun[]
   onPreloadRun: (id: string) => void
   onPreloadClub: (slug: string) => void
 }) {
+  const resultCount = mode === 'clubs' ? clubs.length : runs.length
+  const resultLabel =
+    mode === 'clubs'
+      ? tr(resultCount === 1 ? 'clubs_count_one' : 'clubs_count_many')
+      : tr(resultCount === 1 ? 'results_one' : 'results_many')
+  const resultSummary = (
+    <div style={{ fontSize: 13, color: 'var(--faint)', padding: '0 2px 2px' }}>
+      <span
+        style={{
+          fontFamily: 'var(--font-display)',
+          fontWeight: 700,
+          color: 'var(--text)',
+          fontSize: 15,
+        }}
+      >
+        {resultCount}
+      </span>{' '}
+      {resultLabel}
+    </div>
+  )
+
   if (loading) {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -1436,13 +1475,18 @@ function RunList({
 
   if (mode === 'clubs') {
     if (clubs.length === 0) {
-      return <NoMatch onClearFilters={onClearFilters} tr={tr} />
+      return hasActiveFilters ? (
+        <NoMatch onClearFilters={onClearFilters} tr={tr} />
+      ) : (
+        <NoMatch variant="search" tr={tr} />
+      )
     }
     return (
       <div
         className={refreshing ? 'is-refreshing' : undefined}
         style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
       >
+        {resultSummary}
         {clubs.map((c) => (
           <ClubCard
             key={c.id}
@@ -1465,6 +1509,8 @@ function RunList({
   if (runs.length === 0) {
     return hasActiveFilters ? (
       <NoMatch onClearFilters={onClearFilters} tr={tr} />
+    ) : hasSearchQuery ? (
+      <NoMatch variant="search" tr={tr} />
     ) : (
       <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
     )
@@ -1483,21 +1529,7 @@ function RunList({
       className={refreshing ? 'is-refreshing' : undefined}
       style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
     >
-      <div
-        style={{ fontSize: 13, color: 'var(--faint)', padding: '0 2px 2px' }}
-      >
-        <span
-          style={{
-            fontFamily: 'var(--font-display)',
-            fontWeight: 700,
-            color: 'var(--text)',
-            fontSize: 15,
-          }}
-        >
-          {runs.length}
-        </span>{' '}
-        {runs.length === 1 ? tr('results_one') : tr('results_many')}
-      </div>
+      {resultSummary}
       {runs.map((r) => (
         <RunCard
           key={r.id}

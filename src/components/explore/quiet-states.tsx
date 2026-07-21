@@ -139,12 +139,17 @@ export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
   )
 }
 
-type NoMatchProps = {
-  onClearFilters: () => void
-  tr: (k: string) => string
-}
+type NoMatchProps = { tr: (k: string) => string } & (
+  | { variant: 'search'; onClearFilters?: never }
+  | { variant?: 'filters'; onClearFilters: () => void }
+)
 
-export function NoMatch({ onClearFilters, tr }: NoMatchProps) {
+export function NoMatch({
+  onClearFilters,
+  tr,
+  variant = 'filters',
+}: NoMatchProps) {
+  const isSearch = variant === 'search'
   return (
     <FadeIn>
       <div
@@ -158,7 +163,9 @@ export function NoMatch({ onClearFilters, tr }: NoMatchProps) {
         }}
       >
         <span style={{ color: 'var(--faint)' }}>{SearchIcon}</span>
-        <h3 style={{ fontSize: 18, margin: 0 }}>{tr('no_match_title')}</h3>
+        <h3 style={{ fontSize: 18, margin: 0 }}>
+          {tr(isSearch ? 'no_search' : 'no_match_title')}
+        </h3>
         <p
           style={{
             fontSize: 14,
@@ -168,25 +175,27 @@ export function NoMatch({ onClearFilters, tr }: NoMatchProps) {
             margin: 0,
           }}
         >
-          {tr('no_match_body')}
+          {tr(isSearch ? 'no_search_sub' : 'no_match_body')}
         </p>
-        <button
-          onClick={onClearFilters}
-          style={{
-            marginTop: 4,
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            borderRadius: 100,
-            padding: '11px 20px',
-            fontFamily: 'var(--font-ui)',
-            fontWeight: 700,
-            fontSize: 14,
-            cursor: 'pointer',
-          }}
-        >
-          {tr('clear_filters')}
-        </button>
+        {!isSearch && (
+          <button
+            onClick={onClearFilters}
+            style={{
+              marginTop: 4,
+              border: '1px solid var(--line)',
+              background: 'var(--surface)',
+              color: 'var(--text)',
+              borderRadius: 100,
+              padding: '11px 20px',
+              fontFamily: 'var(--font-ui)',
+              fontWeight: 700,
+              fontSize: 14,
+              cursor: 'pointer',
+            }}
+          >
+            {tr('clear_filters')}
+          </button>
+        )}
       </div>
     </FadeIn>
   )

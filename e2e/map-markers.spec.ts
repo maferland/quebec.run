@@ -24,6 +24,41 @@ test.describe('Map Markers', () => {
     await expect(
       page.getByRole('button', { name: new RegExp(`Clubs\\s+${clubs.length}`) })
     ).toBeVisible()
+
+    await page.getByRole('button', { name: /clubs/i }).click()
+    await expect(
+      page.getByText(`${clubs.length} clubs`, { exact: true })
+    ).toBeVisible()
+  })
+
+  test('shows a search empty state without a clear-filters action', async ({
+    page,
+  }) => {
+    await page.goto('/en/clubs')
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
+    await page
+      .getByPlaceholder('Search a run or club…')
+      .fill('definitely-no-such-club')
+
+    await expect(
+      page.getByRole('heading', { name: 'No results' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Clear filters' })
+    ).toHaveCount(0)
+
+    await page.goto('/en?day=1')
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
+    await page
+      .getByPlaceholder('Search a run or club…')
+      .fill('definitely-no-such-run')
+
+    await expect(
+      page.getByRole('heading', { name: 'No results' })
+    ).toBeVisible()
+    await expect(
+      page.getByRole('button', { name: 'Clear filters' })
+    ).toHaveCount(0)
   })
 
   test('opens search without shifting the toolbar', async ({ page }) => {
