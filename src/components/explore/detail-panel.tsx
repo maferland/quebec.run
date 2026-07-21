@@ -14,7 +14,7 @@ import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
 
 const RAIL_WIDTH = 404
-const PANEL_EXIT_MS = 180
+export const PANEL_EXIT_MS = 180
 
 function useAnimatedClose(close: () => void) {
   const [exiting, setExiting] = useState(false)
@@ -63,16 +63,18 @@ function useAnimatedClose(close: () => void) {
 
 function OverlayShell({
   children,
+  enter = true,
   exiting = false,
   onExitComplete,
 }: {
   children: React.ReactNode
+  enter?: boolean
   exiting?: boolean
   onExitComplete?: (event: AnimationEvent<HTMLDivElement>) => void
 }) {
   const { theme } = useTheme()
   const [desktop, setDesktop] = useState(false)
-  const className = `qr-root qr-panel-scroll qr-detail-shell${exiting ? ' is-exiting' : ''}`
+  const className = `qr-root qr-panel-scroll qr-detail-shell${enter ? '' : ' is-static'}${exiting ? ' is-exiting' : ''}`
 
   useEffect(() => {
     const check = () => setDesktop(window.innerWidth >= 880)
@@ -141,9 +143,17 @@ function OverlayShell({
 
 export function RunDetailOverlay({
   id,
+  enter = true,
+  exiting: controlledExiting,
+  onClose,
+  onExited,
   backBehavior = 'route',
 }: {
   id: string
+  enter?: boolean
+  exiting?: boolean
+  onClose?: () => void
+  onExited?: () => void
   backBehavior?: 'history' | 'route'
 }) {
   const router = useRouter()
@@ -163,6 +173,22 @@ export function RunDetailOverlay({
   }, [backBehavior, locale, router])
   const { exiting, requestClose, handleAnimationEnd } =
     useAnimatedClose(closeDetail)
+  const isControlled = onClose !== undefined
+  const isExiting = controlledExiting ?? exiting
+  const requestPanelClose = onClose ?? requestClose
+  const handlePanelAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (!isControlled) {
+        handleAnimationEnd(event)
+        return
+      }
+      if (!isExiting) return
+      if (event.target !== event.currentTarget) return
+      if (event.animationName !== 'detailPanelOut') return
+      onExited?.()
+    },
+    [handleAnimationEnd, isControlled, isExiting, onExited]
+  )
 
   useEffect(() => {
     fetch(`/api/explore/runs/${id}`)
@@ -210,7 +236,11 @@ export function RunDetailOverlay({
   if (error) return null
   if (!run) {
     return (
-      <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
+      <OverlayShell
+        enter={enter}
+        exiting={isExiting}
+        onExitComplete={handlePanelAnimationEnd}
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -225,10 +255,14 @@ export function RunDetailOverlay({
   }
 
   return (
-    <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
+    <OverlayShell
+      enter={enter}
+      exiting={isExiting}
+      onExitComplete={handlePanelAnimationEnd}
+    >
       <RunDetailPanel
         run={run}
-        onBack={requestClose}
+        onBack={requestPanelClose}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
@@ -241,9 +275,17 @@ export function RunDetailOverlay({
 
 export function ClubDetailOverlay({
   slug,
+  enter = true,
+  exiting: controlledExiting,
+  onClose,
+  onExited,
   backBehavior = 'route',
 }: {
   slug: string
+  enter?: boolean
+  exiting?: boolean
+  onClose?: () => void
+  onExited?: () => void
   backBehavior?: 'history' | 'route'
 }) {
   const router = useRouter()
@@ -263,6 +305,22 @@ export function ClubDetailOverlay({
   }, [backBehavior, locale, router])
   const { exiting, requestClose, handleAnimationEnd } =
     useAnimatedClose(closeDetail)
+  const isControlled = onClose !== undefined
+  const isExiting = controlledExiting ?? exiting
+  const requestPanelClose = onClose ?? requestClose
+  const handlePanelAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (!isControlled) {
+        handleAnimationEnd(event)
+        return
+      }
+      if (!isExiting) return
+      if (event.target !== event.currentTarget) return
+      if (event.animationName !== 'detailPanelOut') return
+      onExited?.()
+    },
+    [handleAnimationEnd, isControlled, isExiting, onExited]
+  )
 
   useEffect(() => {
     fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
@@ -296,7 +354,11 @@ export function ClubDetailOverlay({
   if (error) return null
   if (!club) {
     return (
-      <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
+      <OverlayShell
+        enter={enter}
+        exiting={isExiting}
+        onExitComplete={handlePanelAnimationEnd}
+      >
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -311,10 +373,14 @@ export function ClubDetailOverlay({
   }
 
   return (
-    <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
+    <OverlayShell
+      enter={enter}
+      exiting={isExiting}
+      onExitComplete={handlePanelAnimationEnd}
+    >
       <ClubDetailPanel
         club={club}
-        onBack={requestClose}
+        onBack={requestPanelClose}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
       />

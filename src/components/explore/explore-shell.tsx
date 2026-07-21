@@ -15,6 +15,11 @@ import { WeekBar, type WeekDay } from './week-bar'
 import { useTheme } from './theme-provider'
 import { RunCard } from './run-card'
 import { ClubCard } from './club-card'
+import {
+  ClubDetailOverlay,
+  PANEL_EXIT_MS,
+  RunDetailOverlay,
+} from './detail-panel'
 import { FilterOverlay } from './filter-overlay'
 import {
   filterCount,
@@ -32,6 +37,13 @@ const PASSPORT_ENABLED = Boolean(process.env.NEXT_PUBLIC_PASSPORT_ENABLED)
 const RAIL_WIDTH = 404
 
 type Mode = 'runs' | 'clubs'
+type DetailRoute = { kind: 'run'; id: string } | { kind: 'club'; slug: string }
+
+type DetailOverlayState = DetailRoute & {
+  exiting: boolean
+  enter: boolean
+  closeMode: 'history' | 'route'
+}
 
 // ── URL param helpers ─────────────────────────────────────────────────────────
 
@@ -53,6 +65,11 @@ function parseRouteSelection(pathname: string) {
   if (section === 'club' || section === 'clubs')
     return { runId: null, clubSlug: decodeURIComponent(id) }
   return { runId: null, clubSlug: null }
+}
+
+function detailKey(detail: DetailRoute | null): string | null {
+  if (!detail) return null
+  return detail.kind === 'run' ? `run:${detail.id}` : `club:${detail.slug}`
 }
 
 function parseFilters(p: URLSearchParams): Filters {
@@ -161,6 +178,22 @@ function ExploreShellInner() {
   const router = useRouter()
   const [, startTransition] = useTransition()
   const routeSelection = parseRouteSelection(pathname)
+  const currentDetail = useMemo<DetailRoute | null>(() => {
+    if (routeSelection.runId) return { kind: 'run', id: routeSelection.runId }
+    if (routeSelection.clubSlug)
+      return { kind: 'club', slug: routeSelection.clubSlug }
+    return null
+  }, [routeSelection.clubSlug, routeSelection.runId])
+  const currentDetailKey = detailKey(currentDetail)
+  const hydratedRef = useRef(false)
+  const pendingCloseRef = useRef<'history' | 'route' | null>(null)
+  const exitFallbackRef = useRef<number | null>(null)
+  const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
+    () =>
+      currentDetail
+        ? { ...currentDetail, exiting: false, enter: false, closeMode: 'route' }
+        : null
+  )
 
   // ── URL-derived state ───────────────────────────────────────────────────────
   const mode = parseModeFromPath(pathname)
@@ -170,6 +203,81 @@ function ExploreShellInner() {
     ? parseDay(searchParams)
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
+
+  const clearExitFallback = useCallback(() => {
+    if (!exitFallbackRef.current) return
+    window.clearTimeout(exitFallbackRef.current)
+    exitFallbackRef.current = null
+  }, [])
+
+  const completeDetailExit = useCallback(() => {
+    clearExitFallback()
+    const pendingClose = pendingCloseRef.current
+    pendingCloseRef.current = null
+    if (pendingClose === 'history') {
+      setDetailOverlay(null)
+      router.back()
+      return
+    }
+    if (pendingClose === 'route') {
+      const fallback =
+        detailOverlay?.kind === 'club'
+          ? `/${locale}/clubs${buildQs(day, filters)}`
+          : `/${locale}${buildQs(day, filters)}`
+      setDetailOverlay(null)
+      router.replace(fallback, { scroll: false })
+      return
+    }
+    setDetailOverlay(null)
+  }, [clearExitFallback, day, detailOverlay, filters, locale, router])
+
+  const startDetailExit = useCallback(
+    (closeMode?: 'history' | 'route') => {
+      if (closeMode) pendingCloseRef.current = closeMode
+      setDetailOverlay((overlay) =>
+        overlay ? { ...overlay, exiting: true } : overlay
+      )
+      clearExitFallback()
+      exitFallbackRef.current = window.setTimeout(
+        completeDetailExit,
+        PANEL_EXIT_MS + 100
+      )
+    },
+    [clearExitFallback, completeDetailExit]
+  )
+
+  useEffect(() => {
+    if (currentDetail) {
+      const existingKey = detailKey(detailOverlay)
+      const closeMode = hydratedRef.current ? 'history' : 'route'
+      if (currentDetailKey !== existingKey) {
+        clearExitFallback()
+        pendingCloseRef.current = null
+        setDetailOverlay({
+          ...currentDetail,
+          exiting: false,
+          enter: hydratedRef.current,
+          closeMode,
+        })
+      }
+      hydratedRef.current = true
+      return
+    }
+
+    hydratedRef.current = true
+    if (!detailOverlay || detailOverlay.exiting) return
+    startDetailExit()
+  }, [
+    clearExitFallback,
+    currentDetail,
+    currentDetailKey,
+    detailOverlay,
+    startDetailExit,
+  ])
+
+  useEffect(() => {
+    return () => clearExitFallback()
+  }, [clearExitFallback])
 
   useEffect(() => {
     const queryMode = searchParams.get('mode')
@@ -428,16 +536,24 @@ function ExploreShellInner() {
       }
       if (mode === 'clubs') {
         const club = clubs.find((candidate) => candidate.id === id)
-        updateUrl({ clubSlug: club?.slug ?? null, runId: null })
+        if (!club) return
+        startTransition(() => {
+          router.push(
+            `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
+            { scroll: false }
+          )
+        })
         return
       }
-      updateUrl({
-        runId: id,
-        clubSlug: null,
-        day: dayOffsetFromRunId(id) ?? day,
+      const runDay = dayOffsetFromRunId(id) ?? day
+      startTransition(() => {
+        router.push(
+          `/${locale}/run/${encodeURIComponent(id)}${buildQs(runDay, filters)}`,
+          { scroll: false }
+        )
       })
     },
-    [clubs, day, mode, updateUrl]
+    [clubs, day, filters, locale, mode, router, startTransition, updateUrl]
   )
 
   const runCount = filteredRuns.length
@@ -968,6 +1084,26 @@ function ExploreShellInner() {
           loading={mode === 'clubs' ? false : loadingRuns}
           locale={locale}
           tr={tr}
+        />
+      )}
+
+      {/* Route-owned detail panel */}
+      {detailOverlay?.kind === 'run' && (
+        <RunDetailOverlay
+          id={detailOverlay.id}
+          enter={detailOverlay.enter}
+          exiting={detailOverlay.exiting}
+          onClose={() => startDetailExit(detailOverlay.closeMode)}
+          onExited={completeDetailExit}
+        />
+      )}
+      {detailOverlay?.kind === 'club' && (
+        <ClubDetailOverlay
+          slug={detailOverlay.slug}
+          enter={detailOverlay.enter}
+          exiting={detailOverlay.exiting}
+          onClose={() => startDetailExit(detailOverlay.closeMode)}
+          onExited={completeDetailExit}
         />
       )}
 

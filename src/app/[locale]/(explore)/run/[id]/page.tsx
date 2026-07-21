@@ -1,6 +1,5 @@
 import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
-import { RunDetailOverlay } from '@/components/explore/detail-panel'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 import { prisma } from '@/lib/prisma'
 import { unstable_cache } from 'next/cache'
@@ -72,6 +71,6 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 }
 
 export default async function RunPage({ params }: Props) {
-  const { id } = await params
-  return <RunDetailOverlay id={id} />
+  await params
+  return null
 }
