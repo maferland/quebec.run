@@ -1,5 +1,11 @@
 'use client'
-import { useCallback, useEffect, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useRef,
+  useState,
+  type AnimationEvent,
+} from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTheme } from './theme-provider'
@@ -10,14 +16,59 @@ import type { ClubForDetail } from '@/lib/services/clubs'
 const RAIL_WIDTH = 404
 const PANEL_EXIT_MS = 180
 
+function useAnimatedClose(close: () => void) {
+  const [exiting, setExiting] = useState(false)
+  const closeRef = useRef(close)
+  const fallbackRef = useRef<number | null>(null)
+
+  useEffect(() => {
+    closeRef.current = close
+  }, [close])
+
+  useEffect(() => {
+    return () => {
+      if (fallbackRef.current) window.clearTimeout(fallbackRef.current)
+    }
+  }, [])
+
+  const requestClose = useCallback(() => {
+    setExiting((alreadyExiting) => {
+      if (alreadyExiting) return true
+      fallbackRef.current = window.setTimeout(() => {
+        fallbackRef.current = null
+        closeRef.current()
+      }, PANEL_EXIT_MS + 80)
+      return true
+    })
+  }, [])
+
+  const handleAnimationEnd = useCallback(
+    (event: AnimationEvent<HTMLDivElement>) => {
+      if (!exiting) return
+      if (event.target !== event.currentTarget) return
+      if (event.animationName !== 'detailPanelOut') return
+      if (fallbackRef.current) {
+        window.clearTimeout(fallbackRef.current)
+        fallbackRef.current = null
+      }
+      closeRef.current()
+    },
+    [exiting]
+  )
+
+  return { exiting, requestClose, handleAnimationEnd }
+}
+
 // ── Shared overlay shell ──────────────────────────────────────────────────────
 
 function OverlayShell({
   children,
   exiting = false,
+  onExitComplete,
 }: {
   children: React.ReactNode
   exiting?: boolean
+  onExitComplete?: (event: AnimationEvent<HTMLDivElement>) => void
 }) {
   const { theme } = useTheme()
   const [desktop, setDesktop] = useState(false)
@@ -34,6 +85,7 @@ function OverlayShell({
     return (
       <div
         className={className}
+        onAnimationEnd={onExitComplete}
         data-theme={theme}
         suppressHydrationWarning
         style={{
@@ -49,6 +101,7 @@ function OverlayShell({
           borderRight: '1px solid var(--line)',
           boxShadow: '8px 0 40px rgba(0,0,0,.4)',
           pointerEvents: 'auto',
+          willChange: 'transform',
         }}
       >
         {children}
@@ -59,6 +112,7 @@ function OverlayShell({
   return (
     <div
       className={className}
+      onAnimationEnd={onExitComplete}
       data-theme={theme}
       suppressHydrationWarning
       style={{
@@ -75,6 +129,7 @@ function OverlayShell({
         borderRadius: 'var(--r-xl) var(--r-xl) 0 0',
         boxShadow: '0 -12px 40px rgba(0,0,0,.5)',
         pointerEvents: 'auto',
+        willChange: 'transform',
       }}
     >
       {children}
@@ -98,18 +153,16 @@ export function RunDetailOverlay({
 
   const [run, setRun] = useState<RunDetailData | null>(null)
   const [error, setError] = useState(false)
-  const [exiting, setExiting] = useState(false)
 
   const closeDetail = useCallback(() => {
-    setExiting(true)
-    window.setTimeout(() => {
-      if (backBehavior === 'history') {
-        router.back()
-        return
-      }
-      router.replace(`/${locale}`)
-    }, PANEL_EXIT_MS)
+    if (backBehavior === 'history') {
+      router.back()
+      return
+    }
+    router.replace(`/${locale}`)
   }, [backBehavior, locale, router])
+  const { exiting, requestClose, handleAnimationEnd } =
+    useAnimatedClose(closeDetail)
 
   useEffect(() => {
     fetch(`/api/explore/runs/${id}`)
@@ -157,7 +210,7 @@ export function RunDetailOverlay({
   if (error) return null
   if (!run) {
     return (
-      <OverlayShell exiting={exiting}>
+      <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -172,10 +225,10 @@ export function RunDetailOverlay({
   }
 
   return (
-    <OverlayShell exiting={exiting}>
+    <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
       <RunDetailPanel
         run={run}
-        onBack={closeDetail}
+        onBack={requestClose}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
         tr={tr}
@@ -200,18 +253,16 @@ export function ClubDetailOverlay({
 
   const [club, setClub] = useState<ClubDetailData | null>(null)
   const [error, setError] = useState(false)
-  const [exiting, setExiting] = useState(false)
 
   const closeDetail = useCallback(() => {
-    setExiting(true)
-    window.setTimeout(() => {
-      if (backBehavior === 'history') {
-        router.back()
-        return
-      }
-      router.replace(`/${locale}/clubs`)
-    }, PANEL_EXIT_MS)
+    if (backBehavior === 'history') {
+      router.back()
+      return
+    }
+    router.replace(`/${locale}/clubs`)
   }, [backBehavior, locale, router])
+  const { exiting, requestClose, handleAnimationEnd } =
+    useAnimatedClose(closeDetail)
 
   useEffect(() => {
     fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
@@ -245,7 +296,7 @@ export function ClubDetailOverlay({
   if (error) return null
   if (!club) {
     return (
-      <OverlayShell exiting={exiting}>
+      <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           {[1, 2, 3].map((i) => (
             <div
@@ -260,10 +311,10 @@ export function ClubDetailOverlay({
   }
 
   return (
-    <OverlayShell exiting={exiting}>
+    <OverlayShell exiting={exiting} onExitComplete={handleAnimationEnd}>
       <ClubDetailPanel
         club={club}
-        onBack={closeDetail}
+        onBack={requestClose}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
         tr={tr}
       />

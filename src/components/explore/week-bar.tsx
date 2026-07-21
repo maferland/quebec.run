@@ -125,6 +125,9 @@ export function WeekBar({ week, selected, onSelect }: Props) {
               gap: 2,
               fontFamily: 'var(--font-ui)',
               cursor: 'pointer',
+              transform: on ? 'translateY(-1px)' : 'none',
+              transition:
+                'background .2s ease, border-color .2s ease, color .2s ease, transform .18s cubic-bezier(.2,.7,.3,1)',
             }}
           >
             <span

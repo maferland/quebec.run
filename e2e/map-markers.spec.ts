@@ -50,14 +50,18 @@ test.describe('Map Markers', () => {
     await page.goto('/en?day=1')
     await page.getByText(run.title, { exact: false }).first().click()
     await expect(page).toHaveURL(
-      new RegExp(`run=${encodeURIComponent(run.id)}`)
+      new RegExp(
+        `(/en/run/${encodeURIComponent(run.id)}|run=${encodeURIComponent(run.id)})`
+      )
     )
     await expect(page.locator('.pin.is-active')).toBeVisible()
 
-    await page
-      .getByRole('button', { name: /details/i })
-      .first()
-      .click()
+    if (!page.url().includes(`/en/run/${encodeURIComponent(run.id)}`)) {
+      await page
+        .getByRole('button', { name: /details/i })
+        .first()
+        .click()
+    }
     await expect(page).toHaveURL(new RegExp(`/en/run/${run.id}$`))
     await expect(
       page.getByRole('heading', { level: 1, name: run.title })

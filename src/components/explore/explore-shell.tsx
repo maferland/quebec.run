@@ -6,6 +6,7 @@ import {
   useMemo,
   useRef,
   useState,
+  useTransition,
 } from 'react'
 import { useLocale, useTranslations } from 'next-intl'
 import { useSearchParams, usePathname, useRouter } from 'next/navigation'
@@ -158,6 +159,7 @@ function ExploreShellInner() {
   const searchParams = useSearchParams()
   const pathname = usePathname()
   const router = useRouter()
+  const [, startTransition] = useTransition()
   const routeSelection = parseRouteSelection(pathname)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
@@ -217,11 +219,22 @@ function ExploreShellInner() {
         newMode === 'clubs'
           ? { clubSlug: newClubSlug, runId: null }
           : { runId: newRunId, clubSlug: null }
-      router.replace(`${basePath}${buildQs(newDay, newFilters, selected)}`, {
-        scroll: false,
+      startTransition(() => {
+        router.replace(`${basePath}${buildQs(newDay, newFilters, selected)}`, {
+          scroll: false,
+        })
       })
     },
-    [day, mode, filters, selectedRunId, selectedClubSlug, locale, router]
+    [
+      day,
+      mode,
+      filters,
+      selectedRunId,
+      selectedClubSlug,
+      locale,
+      router,
+      startTransition,
+    ]
   )
 
   const setDay = useCallback(
@@ -298,8 +311,9 @@ function ExploreShellInner() {
   }, [])
 
   useEffect(() => {
+    const controller = new AbortController()
     setLoadingRuns(true)
-    fetch(`/api/explore/runs?day=${day}`)
+    fetch(`/api/explore/runs?day=${day}`, { signal: controller.signal })
       .then((r) => {
         if (!r.ok) return []
         return r.json()
@@ -308,8 +322,13 @@ function ExploreShellInner() {
         if (!Array.isArray(data)) return
         setRuns(data)
       })
-      .catch(() => {})
-      .finally(() => setLoadingRuns(false))
+      .catch((error) => {
+        if (error?.name !== 'AbortError') return
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoadingRuns(false)
+      })
+    return () => controller.abort()
   }, [day])
 
   useEffect(() => {
@@ -608,7 +627,8 @@ function ExploreShellInner() {
       mode={mode}
       selId={selId}
       onSelect={setSelectedId}
-      loading={loadingRuns}
+      loading={mode === 'runs' && loadingRuns && runs.length === 0}
+      refreshing={mode === 'runs' && loadingRuns && runs.length > 0}
       tr={tr}
       day={day}
       week={week}
@@ -1091,6 +1111,7 @@ function RunList({
   selId,
   onSelect,
   loading,
+  refreshing,
   tr,
   day,
   week,
@@ -1108,6 +1129,7 @@ function RunList({
   selId: string | null
   onSelect: (id: string | null) => void
   loading: boolean
+  refreshing: boolean
   tr: (k: string) => string
   day: number
   week: WeekDay[]
@@ -1138,7 +1160,10 @@ function RunList({
       return <NoMatch onClearFilters={onClearFilters} tr={tr} />
     }
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div
+        className={refreshing ? 'is-refreshing' : undefined}
+        style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+      >
         {clubs.map((c) => (
           <ClubCard
             key={c.id}
@@ -1174,7 +1199,10 @@ function RunList({
   }
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div
+      className={refreshing ? 'is-refreshing' : undefined}
+      style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
+    >
       <div
         style={{ fontSize: 13, color: 'var(--faint)', padding: '0 2px 2px' }}
       >

@@ -272,6 +272,13 @@ body {
     border-color 0.15s ease,
     background 0.15s ease;
 }
+.qr-root .is-refreshing {
+  opacity: 0.62;
+  transform: translateY(2px);
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1);
+}
 
 /* Leaflet overrides */
 .qr-root .leaflet-container {
