@@ -416,6 +416,55 @@ test.describe('Map Markers', () => {
     ).toHaveCount(0)
   })
 
+  test('mobile club detail reaches its end with sticky actions', async ({
+    page,
+  }, testInfo) => {
+    test.skip(testInfo.project.name !== 'Mobile Chrome', 'mobile layout only')
+    await page.goto('/en/clubs/6am-club')
+    await expect(
+      page.getByRole('heading', { level: 1, name: '6AM Club' })
+    ).toBeVisible({ timeout: 15000 })
+
+    const panel = page.locator('.qr-detail-shell')
+    const actions = panel.locator('.qr-detail-actions')
+    const panelBox = await panel.boundingBox()
+    expect(panelBox).not.toBeNull()
+    expect(panelBox?.y).toBeGreaterThan(0)
+    expect((panelBox?.y ?? 0) + (panelBox?.height ?? 0)).toBeLessThanOrEqual(
+      (page.viewportSize()?.height ?? 0) + 1
+    )
+
+    await panel.evaluate((element) =>
+      element.scrollTo({ top: element.scrollHeight, behavior: 'instant' })
+    )
+    await expect
+      .poll(() =>
+        panel.evaluate((element) =>
+          Math.round(
+            element.scrollHeight - element.clientHeight - element.scrollTop
+          )
+        )
+      )
+      .toBe(0)
+
+    const actionBox = await actions.boundingBox()
+    const lastContentBottom = await panel.evaluate((element) => {
+      const content = element.querySelector('.detail-enter')
+      return content?.lastElementChild?.getBoundingClientRect().bottom ?? 0
+    })
+    expect(actionBox?.y).toBeLessThan((panelBox?.y ?? 0) + 50)
+    await panel.evaluate((element) =>
+      element.scrollTo({
+        top: element.scrollHeight - element.clientHeight - 100,
+        behavior: 'instant',
+      })
+    )
+    expect((await actions.boundingBox())?.y).toBeCloseTo(actionBox?.y ?? 0, 0)
+    expect(lastContentBottom).toBeLessThanOrEqual(
+      (panelBox?.y ?? 0) + (panelBox?.height ?? 0)
+    )
+  })
+
   test.describe('map-first home', () => {
     test('renders the desktop map', async ({ page, viewport }) => {
       test.skip(!viewport || viewport.width < 1024, 'desktop layout only')

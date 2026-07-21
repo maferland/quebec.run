@@ -613,16 +613,27 @@ body {
 .qr-root.qr-detail-shell {
   position: fixed;
   inset: clamp(220px, 30dvh, 300px) 0 0;
+  height: auto;
   z-index: 1300;
   box-sizing: border-box;
   overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
   padding: 20px 16px calc(22px + env(safe-area-inset-bottom));
   background: var(--bg);
   border-top: 1px solid var(--line-2);
   border-radius: var(--r-xl) var(--r-xl) 0 0;
   box-shadow: 0 -12px 40px rgba(0, 0, 0, 0.5);
   pointer-events: auto;
-  will-change: transform;
+}
+@media (max-width: 879px) {
+  .qr-root .qr-detail-actions {
+    position: sticky;
+    top: -8px;
+    z-index: 3;
+    background: var(--bg);
+    box-shadow: 0 0 0 12px var(--bg);
+  }
 }
 .qr-root.qr-detail-shell.is-underlay {
   z-index: 1299;

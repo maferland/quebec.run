@@ -298,6 +298,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
     >
       {/* header */}
       <div
+        className="qr-detail-actions"
         style={{
           display: 'flex',
           justifyContent: 'space-between',
