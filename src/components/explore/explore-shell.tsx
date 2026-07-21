@@ -438,6 +438,7 @@ function ExploreShellInner() {
   // ── Local UI state ──────────────────────────────────────────────────────────
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
+  const searchInputRef = useRef<HTMLInputElement>(null)
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
@@ -468,6 +469,14 @@ function ExploreShellInner() {
   }, [snaps.mid, dragging])
 
   // ── Side effects ────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    if (!searchOpen) return
+    const frame = window.requestAnimationFrame(() => {
+      searchInputRef.current?.focus()
+    })
+    return () => window.cancelAnimationFrame(frame)
+  }, [searchOpen])
 
   useEffect(() => {
     const el = rootRef.current
@@ -709,140 +718,138 @@ function ExploreShellInner() {
       >
         <WeekBar week={week} selected={day} onSelect={setDay} />
       </div>
-      <div
-        style={{
-          marginTop: 10,
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-        }}
-      >
-        {searchOpen ? (
-          <>
-            <div
+      <div className="qr-search-toolbar">
+        <div
+          className={`qr-search-layer${searchOpen ? ' is-open' : ''}`}
+          aria-hidden={!searchOpen}
+          inert={!searchOpen}
+        >
+          <div
+            style={{
+              flex: 1,
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              background: 'var(--surface)',
+              border: '1px solid var(--line-2)',
+              borderRadius: 100,
+              padding: '0 14px',
+              height: 40,
+            }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              style={{ color: 'var(--faint)', flexShrink: 0 }}
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+            <input
+              ref={searchInputRef}
+              value={searchQ}
+              onChange={(e) => setSearchQ(e.target.value)}
+              placeholder={tr('search_placeholder')}
               style={{
                 flex: 1,
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                background: 'var(--surface)',
-                border: '1px solid var(--line-2)',
-                borderRadius: 100,
-                padding: '0 14px',
-                height: 40,
-              }}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                style={{ color: 'var(--faint)', flexShrink: 0 }}
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-              <input
-                autoFocus
-                value={searchQ}
-                onChange={(e) => setSearchQ(e.target.value)}
-                placeholder={tr('search_placeholder')}
-                style={{
-                  flex: 1,
-                  border: 'none',
-                  background: 'transparent',
-                  color: 'var(--text)',
-                  fontFamily: 'var(--font-ui)',
-                  fontSize: 14.5,
-                  outline: 'none',
-                }}
-              />
-            </div>
-            <button
-              className="tap"
-              aria-label={tr('search_close')}
-              onClick={() => {
-                setSearchOpen(false)
-                setSearchQ('')
-              }}
-              style={{
                 border: 'none',
-                background: 'var(--surface)',
-                color: 'var(--dim)',
-                width: 40,
-                height: 40,
-                borderRadius: 100,
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
+                background: 'transparent',
+                color: 'var(--text)',
+                fontFamily: 'var(--font-ui)',
+                fontSize: 14.5,
+                outline: 'none',
               }}
-            >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M6 6l12 12M18 6L6 18" />
-              </svg>
-            </button>
-          </>
-        ) : (
-          <>
-            <ModeToggle
-              mode={mode}
-              setMode={setMode}
-              runCount={runCount}
-              clubCount={clubCount}
-              tr={tr}
             />
-            <button
-              className="tap"
-              aria-label={tr('search_open')}
-              onClick={() => setSearchOpen(true)}
-              style={{
-                border: '1px solid var(--line-2)',
-                background: 'var(--surface)',
-                color: 'var(--dim)',
-                width: 40,
-                height: 40,
-                borderRadius: 100,
-                display: 'grid',
-                placeItems: 'center',
-                cursor: 'pointer',
-                flexShrink: 0,
-              }}
+          </div>
+          <button
+            className="tap"
+            aria-label={tr('search_close')}
+            onClick={() => {
+              setSearchOpen(false)
+              setSearchQ('')
+            }}
+            style={{
+              border: 'none',
+              background: 'var(--surface)',
+              color: 'var(--dim)',
+              width: 40,
+              height: 40,
+              borderRadius: 100,
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <svg
-                width="15"
-                height="15"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <circle cx="11" cy="11" r="8" />
-                <path d="m21 21-4.35-4.35" />
-              </svg>
-            </button>
-            <FilterButton
-              n={activeFilterCount}
-              onClick={() => setFiltersOpen(true)}
-              tr={tr}
-            />
-          </>
-        )}
+              <path d="M6 6l12 12M18 6L6 18" />
+            </svg>
+          </button>
+        </div>
+        <div
+          className={`qr-toolbar-layer${searchOpen ? ' is-hidden' : ''}`}
+          aria-hidden={searchOpen}
+          inert={searchOpen}
+        >
+          <ModeToggle
+            mode={mode}
+            setMode={setMode}
+            runCount={runCount}
+            clubCount={clubCount}
+            tr={tr}
+          />
+          <button
+            className="tap"
+            aria-label={tr('search_open')}
+            onClick={() => setSearchOpen(true)}
+            style={{
+              border: '1px solid var(--line-2)',
+              background: 'var(--surface)',
+              color: 'var(--dim)',
+              width: 40,
+              height: 40,
+              borderRadius: 100,
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+              flexShrink: 0,
+            }}
+          >
+            <svg
+              width="15"
+              height="15"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="m21 21-4.35-4.35" />
+            </svg>
+          </button>
+          <FilterButton
+            n={activeFilterCount}
+            onClick={() => setFiltersOpen(true)}
+            tr={tr}
+          />
+        </div>
       </div>
     </>
   )

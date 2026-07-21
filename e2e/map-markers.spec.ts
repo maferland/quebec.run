@@ -26,6 +26,32 @@ test.describe('Map Markers', () => {
     ).toBeVisible()
   })
 
+  test('opens search without shifting the toolbar', async ({ page }) => {
+    await page.goto('/en')
+
+    await page.getByRole('button', { name: 'Search', exact: true }).waitFor()
+    await page.waitForTimeout(400)
+    const toolbar = page.locator('.qr-search-toolbar:visible')
+    const searchLayer = page.locator('.qr-search-layer:visible')
+    const before = await toolbar.boundingBox()
+    expect(before).toBeTruthy()
+
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
+    const searchInput = page.getByPlaceholder('Search a run or club…')
+    await expect(searchInput).toBeFocused()
+    await expect(searchLayer).toHaveClass(/is-open/)
+
+    const after = await toolbar.boundingBox()
+    expect(after).toEqual(before)
+
+    await page.getByRole('button', { name: 'Close search' }).click()
+    await expect(searchLayer).not.toHaveClass(/is-open/)
+    await expect(
+      page.getByRole('button', { name: 'Search', exact: true })
+    ).toBeVisible()
+    expect(await toolbar.boundingBox()).toEqual(before)
+  })
+
   test('canonical club route renders map-first detail view', async ({
     page,
   }) => {
