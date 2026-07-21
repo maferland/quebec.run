@@ -305,8 +305,13 @@ function ExploreShellInner() {
 
   useEffect(() => {
     fetch('/api/explore/week-counts')
-      .then((r) => r.json())
-      .then(setWeekCounts)
+      .then((r) => {
+        if (!r.ok) return []
+        return r.json()
+      })
+      .then((data) => {
+        if (Array.isArray(data)) setWeekCounts(data)
+      })
       .catch(() => {})
   }, [])
 
