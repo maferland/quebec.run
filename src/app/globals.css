@@ -111,17 +111,17 @@ body {
 .qr-root {
   /* surfaces — cool charcoal (dark default) */
   --bg: oklch(0.165 0.012 264);
-  --bg-2: oklch(0.205 0.014 264);
-  --surface: oklch(0.225 0.015 264);
-  --surface-2: oklch(0.265 0.016 264);
-  --surface-3: oklch(0.31 0.017 264);
-  --line: oklch(1 0 0 / 0.08);
-  --line-2: oklch(1 0 0 / 0.14);
+  --bg-2: oklch(0.22 0.014 264);
+  --surface: oklch(0.245 0.015 264);
+  --surface-2: oklch(0.285 0.016 264);
+  --surface-3: oklch(0.34 0.017 264);
+  --line: oklch(1 0 0 / 0.11);
+  --line-2: oklch(1 0 0 / 0.18);
 
   /* text */
   --text: oklch(0.965 0.004 100);
-  --dim: oklch(0.74 0.012 264);
-  --faint: oklch(0.56 0.013 264);
+  --dim: oklch(0.79 0.012 264);
+  --faint: oklch(0.64 0.013 264);
 
   /* accents */
   --accent: oklch(0.82 0.13 300);
