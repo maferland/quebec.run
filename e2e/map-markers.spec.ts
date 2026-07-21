@@ -79,12 +79,23 @@ test.describe('Map Markers', () => {
     const after = await toolbar.boundingBox()
     expect(after).toEqual(before)
 
+    await searchInput.fill('faux')
+    await page.keyboard.press('Escape')
+    await expect(searchLayer).not.toHaveClass(/is-open/)
+    await expect(searchInput).toHaveValue('')
+
+    await page.getByRole('button', { name: 'Search', exact: true }).click()
     await page.getByRole('button', { name: 'Close search' }).click()
     await expect(searchLayer).not.toHaveClass(/is-open/)
     await expect(
       page.getByRole('button', { name: 'Search', exact: true })
     ).toBeVisible()
     expect(await toolbar.boundingBox()).toEqual(before)
+
+    await page.getByRole('button', { name: 'Filters' }).click()
+    await expect(page.getByRole('heading', { name: 'Filters' })).toBeVisible()
+    await page.keyboard.press('Escape')
+    await expect(page.getByRole('heading', { name: 'Filters' })).toHaveCount(0)
   })
 
   test('canonical club route renders map-first detail view', async ({

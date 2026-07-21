@@ -480,6 +480,21 @@ function ExploreShellInner() {
   }, [searchOpen])
 
   useEffect(() => {
+    if (!filtersOpen && !searchOpen) return
+    const closeOpenSurface = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (filtersOpen) {
+        setFiltersOpen(false)
+        return
+      }
+      setSearchOpen(false)
+      setSearchQ('')
+    }
+    window.addEventListener('keydown', closeOpenSurface)
+    return () => window.removeEventListener('keydown', closeOpenSurface)
+  }, [filtersOpen, searchOpen])
+
+  useEffect(() => {
     const el = rootRef.current
     if (!el) return
     const ro = new ResizeObserver(() => {
