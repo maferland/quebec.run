@@ -190,6 +190,7 @@ function ExploreShellInner() {
   const hydratedRef = useRef(false)
   const pendingCloseRef = useRef<'history' | 'route' | null>(null)
   const pendingOpenRef = useRef<string | null>(null)
+  const closingDetailKeyRef = useRef<string | null>(null)
   const exitFallbackRef = useRef<number | null>(null)
   const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
     () =>
@@ -218,6 +219,7 @@ function ExploreShellInner() {
     const pendingClose = pendingCloseRef.current
     pendingCloseRef.current = null
     if (pendingClose === 'history') {
+      closingDetailKeyRef.current = detailKey(detailOverlay)
       setDetailOverlay(null)
       router.back()
       return
@@ -227,6 +229,7 @@ function ExploreShellInner() {
         detailOverlay?.kind === 'club'
           ? `/${locale}/clubs${buildQs(day, filters)}`
           : `/${locale}${buildQs(day, filters)}`
+      closingDetailKeyRef.current = detailKey(detailOverlay)
       setDetailOverlay(null)
       router.replace(fallback, { scroll: false })
       return
@@ -251,6 +254,8 @@ function ExploreShellInner() {
 
   useEffect(() => {
     if (currentDetail) {
+      if (closingDetailKeyRef.current === currentDetailKey) return
+      closingDetailKeyRef.current = null
       pendingOpenRef.current = null
       const existingKey = detailKey(detailOverlay)
       const closeMode = hydratedRef.current ? 'history' : 'route'
@@ -269,6 +274,7 @@ function ExploreShellInner() {
     }
 
     hydratedRef.current = true
+    closingDetailKeyRef.current = null
     if (
       pendingOpenRef.current &&
       pendingOpenRef.current === detailKey(detailOverlay)
@@ -548,6 +554,7 @@ function ExploreShellInner() {
         const club = clubs.find((candidate) => candidate.id === id)
         if (!club) return
         const detail: DetailRoute = { kind: 'club', slug: club.slug }
+        closingDetailKeyRef.current = null
         pendingOpenRef.current = detailKey(detail)
         preloadClubDetail(club.slug, locale)
         setDetailOverlay({
@@ -566,6 +573,7 @@ function ExploreShellInner() {
       }
       const runDay = dayOffsetFromRunId(id) ?? day
       const detail: DetailRoute = { kind: 'run', id }
+      closingDetailKeyRef.current = null
       pendingOpenRef.current = detailKey(detail)
       preloadRunDetail(id)
       setDetailOverlay({

@@ -13,7 +13,7 @@ import { RunDetailPanel, type RunDetailData } from './run-detail'
 import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
 
-export const PANEL_EXIT_MS = 180
+export const PANEL_EXIT_MS = 220
 
 const runDetailRequests = new Map<string, Promise<RunDetailData>>()
 const clubDetailRequests = new Map<string, Promise<ClubDetailData>>()

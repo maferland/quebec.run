@@ -565,13 +565,13 @@ body {
 
 @media (prefers-reduced-motion: no-preference) {
   .qr-root.qr-detail-shell {
-    animation: detailPanelIn 0.24s cubic-bezier(0.2, 0.7, 0.3, 1) both;
+    animation: detailPanelIn 0.28s cubic-bezier(0.2, 0.7, 0.3, 1) both;
   }
   .qr-root.qr-detail-shell.is-static {
     animation: none;
   }
   .qr-root.qr-detail-shell.is-exiting {
-    animation: detailPanelOut 0.18s cubic-bezier(0.4, 0, 0.8, 0.3) both;
+    animation: detailPanelOut 0.22s cubic-bezier(0.4, 0, 0.6, 1) both;
   }
   .qr-root .screen-enter {
     animation: screenIn 0.34s cubic-bezier(0.2, 0.7, 0.3, 1);
@@ -604,7 +604,7 @@ body {
 }
 @keyframes detailPanelIn {
   from {
-    transform: translateX(-18px);
+    transform: translateX(100%);
   }
   to {
     transform: none;
@@ -615,13 +615,13 @@ body {
     transform: none;
   }
   to {
-    transform: translateX(-18px);
+    transform: translateX(100%);
   }
 }
 @media (max-width: 879px) {
   @keyframes detailPanelIn {
     from {
-      transform: translateY(18px);
+      transform: translateY(100%);
     }
     to {
       transform: none;
@@ -632,7 +632,7 @@ body {
       transform: none;
     }
     to {
-      transform: translateY(18px);
+      transform: translateY(100%);
     }
   }
 }

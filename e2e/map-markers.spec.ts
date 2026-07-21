@@ -40,6 +40,47 @@ test.describe('Map Markers', () => {
     await expect(page.getByText(/weekly schedule/i)).toBeVisible()
   })
 
+  test('club Back does not remount the closing detail panel', async ({
+    page,
+  }) => {
+    await page.goto('/en/clubs')
+    await page.getByText('Faux Mouvement', { exact: true }).first().click()
+    await expect(
+      page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
+    ).toBeVisible({ timeout: 15000 })
+
+    await page.evaluate(() => {
+      const root = document.querySelector('.qr-root:not(.qr-detail-shell)')
+      if (!root) throw new Error('Explore shell not found')
+      root.setAttribute('data-detail-panel-mounts', '0')
+      const observer = new MutationObserver((records) => {
+        for (const record of records) {
+          for (const node of record.addedNodes) {
+            if (
+              node instanceof Element &&
+              (node.matches('.qr-detail-shell') ||
+                node.querySelector('.qr-detail-shell'))
+            ) {
+              const mounts = Number(
+                root.getAttribute('data-detail-panel-mounts')
+              )
+              root.setAttribute('data-detail-panel-mounts', String(mounts + 1))
+            }
+          }
+        }
+      })
+      observer.observe(root, { childList: true, subtree: true })
+    })
+
+    await page.getByRole('button', { name: /back/i }).click()
+    await expect(page.locator('.qr-detail-shell.is-exiting')).toHaveCount(1)
+    await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
+    await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)
+    await expect(
+      page.locator('.qr-root:not(.qr-detail-shell)')
+    ).toHaveAttribute('data-detail-panel-mounts', '0')
+  })
+
   test('selected run is URL-addressable', async ({ page, request }) => {
     const response = await request.get('/api/explore/runs?day=1')
     expect(response.ok()).toBe(true)
