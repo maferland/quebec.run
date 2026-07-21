@@ -116,3 +116,40 @@ it('tabs from an expanded run summary to its details action', async () => {
 
   expect(screen.getByRole('button', { name: /open_run/ })).toHaveFocus()
 })
+
+it('keeps the collapsed run action out of the tab order', () => {
+  const { rerender } = render(
+    <RunCard
+      run={run}
+      selected={false}
+      onSelect={vi.fn()}
+      onOpen={vi.fn()}
+      onIntent={vi.fn()}
+      nowMin={0}
+      day={1}
+      tr={tr}
+    />
+  )
+  const detailsAction = screen.getByRole('button', {
+    name: /open_run/,
+    hidden: true,
+  })
+
+  expect(detailsAction).toHaveAttribute('tabindex', '-1')
+
+  rerender(
+    <RunCard
+      run={run}
+      selected
+      onSelect={vi.fn()}
+      onOpen={vi.fn()}
+      onIntent={vi.fn()}
+      nowMin={0}
+      day={1}
+      tr={tr}
+    />
+  )
+
+  expect(screen.getByRole('button', { name: /open_run/ })).toBe(detailsAction)
+  expect(detailsAction).toHaveAttribute('tabindex', '0')
+})

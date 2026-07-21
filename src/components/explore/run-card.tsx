@@ -99,7 +99,7 @@ export function RunCard({
 
   return (
     <div
-      className="tap sheet-card-enter qr-interactive-card"
+      className="tap sheet-card-enter qr-interactive-card qr-run-card"
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '14px 15px',
@@ -114,7 +114,7 @@ export function RunCard({
         flexDirection: 'column',
         gap: selected ? 12 : 0,
         transition:
-          'opacity .22s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease',
+          'opacity .22s ease, box-shadow .18s ease, border-color .15s ease, background .15s ease, gap .24s cubic-bezier(.2,.7,.3,1)',
       }}
     >
       <button
@@ -136,6 +136,7 @@ export function RunCard({
           flexDirection: 'column',
           gap: selected ? 12 : 9,
           cursor: 'pointer',
+          transition: 'gap .24s cubic-bezier(.2,.7,.3,1)',
         }}
       >
         {/* top row */}
@@ -248,67 +249,73 @@ export function RunCard({
       </button>
 
       {/* expanded reveal */}
-      {selected && (
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 11,
-            paddingTop: 12,
-            borderTop: '1px solid var(--line)',
-          }}
-        >
-          {run.address && (
-            <div
-              style={{
-                display: 'flex',
-                alignItems: 'flex-start',
-                gap: 9,
-                fontSize: 13.5,
-                color: 'var(--dim)',
-              }}
-            >
-              <span
+      <div
+        className={`qr-run-reveal${selected ? ' is-open' : ''}`}
+        aria-hidden={!selected}
+      >
+        <div className="qr-run-reveal-inner">
+          <div
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 11,
+              paddingTop: 12,
+              borderTop: '1px solid var(--line)',
+            }}
+          >
+            {run.address && (
+              <div
                 style={{
-                  color: accent,
-                  display: 'inline-flex',
-                  marginTop: 1,
+                  display: 'flex',
+                  alignItems: 'flex-start',
+                  gap: 9,
+                  fontSize: 13.5,
+                  color: 'var(--dim)',
                 }}
               >
-                {PinIcon}
-              </span>
-              <span>{run.address}</span>
+                <span
+                  style={{
+                    color: accent,
+                    display: 'inline-flex',
+                    marginTop: 1,
+                  }}
+                >
+                  {PinIcon}
+                </span>
+                <span>{run.address}</span>
+              </div>
+            )}
+            <div style={{ display: 'flex', gap: 9 }}>
+              <button
+                className="tap"
+                tabIndex={selected ? 0 : -1}
+                onClick={(e) => {
+                  e.stopPropagation()
+                  onOpen()
+                }}
+                style={{
+                  flex: 1,
+                  border: 'none',
+                  borderRadius: 100,
+                  padding: '11px 14px',
+                  fontFamily: 'var(--font-ui)',
+                  fontWeight: 700,
+                  fontSize: 14,
+                  background: 'var(--lime)',
+                  color: 'var(--lime-ink)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: 7,
+                  cursor: 'pointer',
+                }}
+              >
+                {tr('open_run')} {ArrowIcon}
+              </button>
             </div>
-          )}
-          <div style={{ display: 'flex', gap: 9 }}>
-            <button
-              className="tap"
-              onClick={(e) => {
-                e.stopPropagation()
-                onOpen()
-              }}
-              style={{
-                flex: 1,
-                border: 'none',
-                borderRadius: 100,
-                padding: '11px 14px',
-                fontFamily: 'var(--font-ui)',
-                fontWeight: 700,
-                fontSize: 14,
-                background: 'var(--lime)',
-                color: 'var(--lime-ink)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                gap: 7,
-                cursor: 'pointer',
-              }}
-            >
-              {tr('open_run')} {ArrowIcon}
-            </button>
           </div>
         </div>
-      )}
+      </div>
     </div>
   )
 }

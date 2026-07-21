@@ -258,6 +258,28 @@ body {
 .qr-root .qr-interactive-card > .qr-card-summary:focus-visible {
   outline: none;
 }
+.qr-root .qr-run-reveal {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition:
+    grid-template-rows 0.24s cubic-bezier(0.2, 0.7, 0.3, 1),
+    opacity 0.24s ease,
+    visibility 0s linear 0.24s;
+}
+.qr-root .qr-run-reveal.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+  transition-delay: 0s;
+}
+.qr-root .qr-run-reveal-inner {
+  min-height: 0;
+  overflow: hidden;
+}
 @media (hover: hover) {
   .qr-root .tap:not(.sheet-card-enter):hover {
     filter: brightness(1.08);
@@ -598,7 +620,10 @@ body {
 
 @media (prefers-reduced-motion: reduce) {
   .qr-root .qr-toolbar-layer,
-  .qr-root .qr-search-layer {
+  .qr-root .qr-search-layer,
+  .qr-root .qr-run-card,
+  .qr-root .qr-run-card > .qr-card-summary,
+  .qr-root .qr-run-reveal {
     transition: none;
   }
 }
