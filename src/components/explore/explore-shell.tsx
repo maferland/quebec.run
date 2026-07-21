@@ -476,10 +476,12 @@ function ExploreShellInner() {
 
   const controls = (
     <>
-      <WeekBar week={week} selected={day} onSelect={setDay} />
+      {mode === 'runs' && (
+        <WeekBar week={week} selected={day} onSelect={setDay} />
+      )}
       <div
         style={{
-          marginTop: 10,
+          marginTop: mode === 'runs' ? 10 : 0,
           display: 'flex',
           gap: 8,
           alignItems: 'center',
