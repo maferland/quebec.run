@@ -529,6 +529,17 @@ body {
     transparent 100%
   );
 }
+.qr-root .qr-week-slot {
+  transition:
+    opacity 0.2s ease,
+    filter 0.2s ease;
+}
+.qr-root .qr-week-slot.is-inactive {
+  opacity: 0.28;
+  filter: blur(1.5px) saturate(0.35);
+  pointer-events: none;
+  user-select: none;
+}
 
 /* text selection */
 .qr-root ::selection {
@@ -615,7 +626,7 @@ body {
     transform: none;
   }
   to {
-    transform: translateX(100%);
+    transform: translateX(-100%);
   }
 }
 @media (max-width: 879px) {

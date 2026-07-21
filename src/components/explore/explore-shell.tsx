@@ -649,12 +649,16 @@ function ExploreShellInner() {
 
   const controls = (
     <>
-      {mode === 'runs' && (
+      <div
+        className={`qr-week-slot${mode === 'clubs' ? ' is-inactive' : ''}`}
+        aria-hidden={mode === 'clubs'}
+        inert={mode === 'clubs'}
+      >
         <WeekBar week={week} selected={day} onSelect={setDay} />
-      )}
+      </div>
       <div
         style={{
-          marginTop: mode === 'runs' ? 10 : 0,
+          marginTop: 10,
           display: 'flex',
           gap: 8,
           alignItems: 'center',

@@ -42,7 +42,7 @@ test.describe('Map Markers', () => {
 
   test('club Back does not remount the closing detail panel', async ({
     page,
-  }) => {
+  }, testInfo) => {
     await page.goto('/en/clubs')
     await page.getByText('Faux Mouvement', { exact: true }).first().click()
     await expect(
@@ -74,11 +74,40 @@ test.describe('Map Markers', () => {
 
     await page.getByRole('button', { name: /back/i }).click()
     await expect(page.locator('.qr-detail-shell.is-exiting')).toHaveCount(1)
+    if (testInfo.project.name === 'Desktop Chrome') {
+      await page.waitForTimeout(80)
+      const exitX = await page.locator('.qr-detail-shell').evaluate((panel) => {
+        return new DOMMatrix(getComputedStyle(panel).transform).m41
+      })
+      expect(exitX).toBeLessThan(0)
+    }
     await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
     await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)
     await expect(
       page.locator('.qr-root:not(.qr-detail-shell)')
     ).toHaveAttribute('data-detail-panel-mounts', '0')
+  })
+
+  test('club tab preserves the inactive day-strip footprint', async ({
+    page,
+  }, testInfo) => {
+    await page.goto('/en')
+
+    const weekSlot = page.locator('.qr-week-slot')
+    const runsBox = await weekSlot.boundingBox()
+    expect(runsBox).not.toBeNull()
+
+    await page.getByRole('button', { name: /clubs/i }).click()
+    await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)
+    await expect(weekSlot).toHaveClass(/is-inactive/)
+    await expect(weekSlot).toHaveAttribute('aria-hidden', 'true')
+
+    const clubsBox = await weekSlot.boundingBox()
+    expect(clubsBox).not.toBeNull()
+    expect(clubsBox?.height).toBe(runsBox?.height)
+    if (testInfo.project.name === 'Desktop Chrome') {
+      expect(clubsBox?.y).toBe(runsBox?.y)
+    }
   })
 
   test('selected run is URL-addressable', async ({ page, request }) => {
