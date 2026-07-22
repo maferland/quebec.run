@@ -108,7 +108,7 @@ export function RunCard({
         boxShadow: selected
           ? `0 0 0 1px ${accent}, 0 10px 30px -12px rgba(0,0,0,.7)`
           : 'none',
-        opacity: dimmed ? 0.6 : 1,
+        opacity: dimmed ? 0.75 : 1,
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',

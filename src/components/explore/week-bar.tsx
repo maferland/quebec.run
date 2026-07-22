@@ -137,7 +137,7 @@ export function WeekBar({ week, selected, onSelect }: Props) {
                 fontWeight: 700,
                 letterSpacing: '.03em',
                 textTransform: 'uppercase',
-                opacity: on ? 0.7 : 0.62,
+                opacity: on ? 0.78 : 0.76,
               }}
             >
               {d.short}
@@ -161,7 +161,7 @@ export function WeekBar({ week, selected, onSelect }: Props) {
               style={{
                 fontSize: 9.5,
                 fontWeight: 600,
-                opacity: on ? 0.75 : 0.5,
+                opacity: on ? 0.82 : 0.72,
                 color: on ? 'var(--accent-ink)' : 'var(--dim)',
               }}
             >
