@@ -420,6 +420,8 @@ function ExploreShellInner({
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const autoScrolledDayRef = useRef<number | null>(null)
+  const autoScrolledListRef = useRef<HTMLDivElement | null>(null)
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
@@ -653,6 +655,39 @@ function ExploreShellInner({
         (c.description?.toLowerCase().includes(q) ?? false)
     )
   }, [clubs, filters, searchQ])
+
+  useEffect(() => {
+    if (mode !== 'runs' || day !== 0 || loadingRuns) return
+    const nextRun = filteredRuns.find(
+      (run) => run.status !== 'CANCELLED' && !isRunTimePast(run.time, nowMin)
+    )
+    const list = listRef.current
+    if (!nextRun || !list) return
+    if (
+      autoScrolledDayRef.current === day &&
+      autoScrolledListRef.current === list
+    )
+      return
+
+    const target = list.querySelector<HTMLElement>(
+      `[data-run-id="${nextRun.id}"]`
+    )
+    if (!target) return
+
+    const top =
+      list.scrollTop +
+      target.getBoundingClientRect().top -
+      list.getBoundingClientRect().top -
+      4
+    list.scrollTo({
+      top,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+    })
+    autoScrolledDayRef.current = day
+    autoScrolledListRef.current = list
+  }, [day, desktop, filteredRuns, loadingRuns, mode, nowMin])
 
   const points = useMemo((): MapPoint[] => {
     if (mode === 'clubs') {

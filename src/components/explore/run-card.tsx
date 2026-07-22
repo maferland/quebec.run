@@ -100,6 +100,7 @@ export function RunCard({
   return (
     <div
       className="tap sheet-card-enter qr-interactive-card qr-run-card"
+      data-run-id={run.id}
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '14px 15px',
