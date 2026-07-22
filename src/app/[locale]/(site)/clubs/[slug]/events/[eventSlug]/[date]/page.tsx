@@ -13,7 +13,7 @@ import { PageContainer } from '@/components/ui/page-container'
 import { Icon } from '@/components/ui/icon'
 import { EventMap } from '@/components/map/event-map'
 import { RecurringPatternCard } from '@/components/clubs/recurring-pattern-card'
-import { formatEventDateFr } from '@/lib/utils/date-formatting'
+import { formatEventDate } from '@/lib/utils/date-formatting'
 import type { PageProps } from '@/lib/types/next'
 import { MapPin, Route, Gauge, ChevronRight, UserCheck } from 'lucide-react'
 
@@ -112,10 +112,15 @@ export default async function ClubEventDatePage({
   const venueHeading = venueIsProse
     ? t('details.meetingLocation')
     : cleanedDescription || t('details.meetingLocation')
-  const formattedDate = capitalize(formatEventDateFr(event.date, 'full'))
+  const dateLocale = locale === 'fr' ? 'fr-CA' : 'en-CA'
+  const formattedDate = capitalize(
+    formatEventDate(event.date, 'full', { locale: dateLocale })
+  )
   const titleIsClubName = event.title === event.club?.name
   const breadcrumbTail = titleIsClubName
-    ? capitalize(formatEventDateFr(event.date, 'abbreviated'))
+    ? capitalize(
+        formatEventDate(event.date, 'abbreviated', { locale: dateLocale })
+      )
     : event.title
 
   const hasCoords = event.latitude !== null && event.longitude !== null
@@ -135,11 +140,13 @@ export default async function ClubEventDatePage({
               title: event.title,
               description: event.description,
               startDate: event.date,
+              startTime: event.time,
               address: event.address,
               latitude: event.latitude,
               longitude: event.longitude,
               clubName: event.club.name,
               clubUrl,
+              status: event.status,
             }),
             breadcrumbList([
               {

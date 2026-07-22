@@ -73,8 +73,8 @@
   --color-disabled-text: #9ca3af;
 
   /* Font families */
-  --font-heading: 'Montserrat', system-ui, sans-serif;
-  --font-body: 'Inter', system-ui, sans-serif;
+  --font-heading: var(--font-space-grotesk), system-ui, sans-serif;
+  --font-body: var(--font-hanken-grotesk), system-ui, sans-serif;
 
   /* Custom animations */
   --animate-shimmer: shimmer 2s infinite;

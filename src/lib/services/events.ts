@@ -182,109 +182,17 @@ const EXPLORE_CLUB_SELECT = {
   paceMax: true,
 } as const
 
-async function getEventsForDayRaw(dayOffset: number): Promise<ExploreRun[]> {
-  const { start, end } = getTorontoDayBounds(dayOffset)
-  const now = new Date()
-  const isToday = dayOffset === 0
-
-  // Concrete events (including CANCELLED) — exclude those whose recurring parent is inactive
-  const concreteEvents = await prisma.event.findMany({
-    where: {
-      date: { gte: start, lte: end },
-      OR: [{ recurringEventId: null }, { recurringEvent: { isActive: true } }],
-    },
-    select: {
-      id: true,
-      title: true,
-      time: true,
-      status: true,
-      latitude: true,
-      longitude: true,
-      distance: true,
-      address: true,
-      neighborhood: true,
-      recurringEventId: true,
-      club: { select: EXPLORE_CLUB_SELECT },
-    },
-    orderBy: { time: 'asc' },
-  })
-
-  // Keys of dates that have concrete events (to skip virtual expansion)
-  const materializedKeys = new Set(
-    concreteEvents.map((e) => `${e.recurringEventId}`)
-  )
-
-  // Expand active recurring events for this day, skipping materialized dates
-  const recurringEvents = await prisma.recurringEvent.findMany({
-    where: { isActive: true },
-    include: { club: true },
-  })
-
-  const virtualEvents = recurringEvents.flatMap((re) => {
-    const occurrences = expandRRuleDates(re.schedulePattern, start, end)
-    // Check if this pattern has a concrete event on this day
-    const hasConcreteOnDay = concreteEvents.some(
-      (e) => e.recurringEventId === re.id
-    )
-    if (hasConcreteOnDay) return []
-    return occurrences.map((date) => {
-      const virt = createVirtualEvent(re, date)
-      return {
-        id: virt.id,
-        title: virt.title,
-        time: virt.time,
-        status: 'SCHEDULED' as const,
-        latitude: virt.latitude,
-        longitude: virt.longitude,
-        distance: virt.distance,
-        address: virt.address,
-        neighborhood: re.neighborhood ?? null,
-        recurringEventId: re.id,
-        club: {
-          id: re.club.id,
-          slug: re.club.slug,
-          name: re.club.name,
-          type: re.club.type ?? null,
-          vibe: re.club.vibe ?? null,
-          beginnerFriendly: re.club.beginnerFriendly,
-          paceMin: re.club.paceMin ?? null,
-          paceMax: re.club.paceMax ?? null,
-        },
-      }
-    })
-  })
-
-  void materializedKeys // used implicitly above
-
-  const all = [...concreteEvents, ...virtualEvents].sort((a, b) =>
-    a.time.localeCompare(b.time)
-  )
-
-  // isPast only applies to today's runs
-  const effectiveNow = isToday ? now : new Date(0)
-  return all
-    .map((e) => toExploreRun(e, effectiveNow))
-    .filter((e): e is ExploreRun => e !== null)
-}
-
-export const getEventsForDay = cachePublicData(
-  getEventsForDayRaw,
-  ['events-for-day'],
-  {
-    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.runs],
-  }
-)
-
-async function getWeekEventCountsRaw(): Promise<
-  { day: number; count: number }[]
-> {
+async function getExploreWeekRaw(): Promise<{
+  runsByDay: ExploreRun[][]
+  counts: { day: number; count: number }[]
+}> {
   const days = Array.from({ length: 7 }, (_, day) => ({
     day,
     ...getTorontoDayBounds(day),
   }))
   const weekStart = days[0].start
   const weekEnd = days[days.length - 1].end
+  const now = new Date()
 
   const [concreteEvents, recurringEvents] = await Promise.all([
     prisma.event.findMany({
@@ -295,46 +203,80 @@ async function getWeekEventCountsRaw(): Promise<
           { recurringEvent: { isActive: true } },
         ],
       },
-      select: { date: true, status: true, recurringEventId: true },
+      select: {
+        id: true,
+        title: true,
+        time: true,
+        status: true,
+        date: true,
+        latitude: true,
+        longitude: true,
+        distance: true,
+        address: true,
+        neighborhood: true,
+        recurringEventId: true,
+        club: { select: EXPLORE_CLUB_SELECT },
+      },
+      orderBy: { time: 'asc' },
     }),
     prisma.recurringEvent.findMany({
       where: { isActive: true },
-      select: { id: true, schedulePattern: true },
+      include: { club: true },
     }),
   ])
 
-  return days.map(({ day, start, end }) => {
-    const eventsForDay = concreteEvents.filter(
+  const runsByDay = days.map(({ day, start, end }) => {
+    const concreteForDay = concreteEvents.filter(
       (event) => event.date >= start && event.date <= end
     )
     const materializedRecurringIds = new Set(
-      eventsForDay.flatMap((event) =>
+      concreteForDay.flatMap((event) =>
         event.recurringEventId ? [event.recurringEventId] : []
       )
     )
-    const concreteCount = eventsForDay.filter(
-      (event) => event.status === 'SCHEDULED'
-    ).length
-    const virtualCount = recurringEvents.reduce((count, recurringEvent) => {
-      if (materializedRecurringIds.has(recurringEvent.id)) return count
-      return (
-        count +
-        expandRRuleDates(recurringEvent.schedulePattern, start, end).length
+    const virtualEvents = recurringEvents.flatMap((recurringEvent) => {
+      if (materializedRecurringIds.has(recurringEvent.id)) return []
+      return expandRRuleDates(recurringEvent.schedulePattern, start, end).map(
+        (date) => ({
+          ...createVirtualEvent(recurringEvent, date),
+          neighborhood: recurringEvent.neighborhood ?? null,
+        })
       )
-    }, 0)
-
-    return { day, count: concreteCount + virtualCount }
+    })
+    const effectiveNow = day === 0 ? now : new Date(0)
+    return [...concreteForDay, ...virtualEvents]
+      .sort((first, second) => first.time.localeCompare(second.time))
+      .map((event) => toExploreRun(event, effectiveNow))
+      .filter((event): event is ExploreRun => event !== null)
   })
+
+  return {
+    runsByDay,
+    counts: runsByDay.map((runs, day) => ({
+      day,
+      count: runs.filter((run) => run.status === 'SCHEDULED').length,
+    })),
+  }
 }
 
-export const getWeekEventCounts = cachePublicData(
-  getWeekEventCountsRaw,
-  ['week-event-counts'],
+const getCachedExploreWeek = cachePublicData(
+  getExploreWeekRaw,
+  ['explore-week'],
   {
     revalidate: PUBLIC_API_REVALIDATE_SECONDS,
     tags: [PUBLIC_CACHE_TAGS.runs],
   }
 )
+
+export async function getEventsForDay(dayOffset: number) {
+  const week = await getCachedExploreWeek()
+  return week.runsByDay[dayOffset] ?? []
+}
+
+export async function getWeekEventCounts() {
+  const week = await getCachedExploreWeek()
+  return week.counts
+}
 
 // Pure business logic functions - let TypeScript infer return types
 

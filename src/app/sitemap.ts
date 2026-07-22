@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next'
 import { prisma } from '@/lib/prisma'
 import { SITE_URL } from '@/lib/seo/metadata'
+import { expandRRuleDates } from '@/lib/services/recurring-events'
+import { addDays, format } from 'date-fns'
 
 const LOCALES = ['fr', 'en'] as const
 type Locale = (typeof LOCALES)[number]
@@ -28,21 +30,58 @@ function staticEntry(
     url: `${SITE_URL}/${locale}${path}`,
     priority,
     changeFrequency,
-    lastModified: new Date(),
     alternates: alternates(path),
   }))
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const clubs = await prisma.club
-    .findMany({
+  const now = new Date()
+  const horizon = addDays(now, 90)
+  const [clubs, recurringEvents, oneOffEvents] = await Promise.all([
+    prisma.club.findMany({
       where: { isActive: true },
       select: { slug: true, updatedAt: true },
-    })
-    .catch(() => [])
+    }),
+    prisma.recurringEvent.findMany({
+      where: { isActive: true, club: { isActive: true } },
+      select: {
+        slug: true,
+        schedulePattern: true,
+        updatedAt: true,
+        club: { select: { slug: true } },
+      },
+    }),
+    prisma.event.findMany({
+      where: {
+        recurringEventId: null,
+        status: 'SCHEDULED',
+        date: { gte: now, lte: horizon },
+        club: { isActive: true },
+      },
+      select: { id: true, updatedAt: true },
+    }),
+  ])
+
+  const recurringEntries = recurringEvents.flatMap((event) => {
+    const [nextOccurrence] = expandRRuleDates(
+      event.schedulePattern,
+      now,
+      horizon
+    )
+    if (!nextOccurrence) return []
+    const path = `/clubs/${event.club.slug}/events/${event.slug}/${format(nextOccurrence, 'yyyy-MM-dd')}`
+    return LOCALES.map((locale: Locale) => ({
+      url: `${SITE_URL}/${locale}${path}`,
+      priority: 0.6,
+      changeFrequency: 'weekly' as const,
+      lastModified: event.updatedAt,
+      alternates: alternates(path),
+    }))
+  })
 
   return [
     ...staticEntry('', 1.0, 'daily'),
+    ...staticEntry('/clubs', 0.8, 'weekly'),
     ...clubs.flatMap((club) =>
       LOCALES.map((locale: Locale) => ({
         url: `${SITE_URL}/${locale}/clubs/${club.slug}`,
@@ -52,5 +91,16 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         alternates: alternates(`/clubs/${club.slug}`),
       }))
     ),
+    ...recurringEntries,
+    ...oneOffEvents.flatMap((event) => {
+      const path = `/run/${event.id}`
+      return LOCALES.map((locale: Locale) => ({
+        url: `${SITE_URL}/${locale}${path}`,
+        priority: 0.5,
+        changeFrequency: 'weekly' as const,
+        lastModified: event.updatedAt,
+        alternates: alternates(path),
+      }))
+    }),
   ]
 }

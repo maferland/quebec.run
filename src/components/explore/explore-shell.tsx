@@ -175,6 +175,11 @@ function ExploreShellInner({
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
   const initialRuns = initialData?.day === day ? initialData.runs : undefined
   const hasInitialRuns = initialRuns !== undefined
+  const runsByDayRef = useRef(
+    new Map<number, ExploreRun[]>(
+      initialData?.runs ? [[initialData.day, initialData.runs]] : []
+    )
+  )
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
 
   const clearExitFallback = useCallback(() => {
@@ -374,10 +379,13 @@ function ExploreShellInner({
         newMode === 'clubs'
           ? { clubSlug: newClubSlug, runId: null }
           : { runId: newRunId, clubSlug: null }
+      const url = `${basePath}${buildQs(newDay, newFilters, selected)}`
+      if (newMode === mode && !currentDetail && !newRunId && !newClubSlug) {
+        window.history.replaceState(null, '', url)
+        return
+      }
       startTransition(() => {
-        router.replace(`${basePath}${buildQs(newDay, newFilters, selected)}`, {
-          scroll: false,
-        })
+        router.replace(url, { scroll: false })
       })
     },
     [
@@ -386,6 +394,7 @@ function ExploreShellInner({
       filters,
       selectedRunId,
       selectedClubSlug,
+      currentDetail,
       locale,
       router,
       startTransition,
@@ -514,6 +523,12 @@ function ExploreShellInner({
       setLoadingRuns(false)
       return
     }
+    const cachedRuns = runsByDayRef.current.get(day)
+    if (cachedRuns) {
+      setRuns(cachedRuns)
+      setLoadingRuns(false)
+      return
+    }
     const controller = new AbortController()
     setLoadingRuns(true)
     fetch(`/api/explore/runs?day=${day}`, { signal: controller.signal })
@@ -523,6 +538,7 @@ function ExploreShellInner({
       })
       .then((data: ExploreRun[]) => {
         if (!Array.isArray(data)) return
+        runsByDayRef.current.set(day, data)
         setRuns(data)
       })
       .catch((error) => {

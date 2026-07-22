@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { LogIn, LogOut, Shield, User } from 'lucide-react'
-import { signOut, useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
+import { useEffect, useState } from 'react'
 
 type ExploreTopBarProps = {
   desktop: boolean
@@ -143,10 +143,34 @@ function ThemeIcon({ theme }: { theme: 'dark' | 'light' }) {
 }
 
 function ExploreAccountMenu({ locale }: { locale: string }) {
-  const { data: session, status } = useSession()
+  const [session, setSession] = useState<{
+    user?: { name?: string | null; isStaff?: boolean }
+  } | null>()
   const t = useTranslations('navigation')
 
-  if (status === 'loading') {
+  useEffect(() => {
+    let active = true
+    const loadSession = () => {
+      fetch('/api/auth/session')
+        .then((response) => (response.ok ? response.json() : null))
+        .then((data) => {
+          if (active) setSession(data?.user ? data : null)
+        })
+        .catch(() => {
+          if (active) setSession(null)
+        })
+    }
+    const idleCallback = window.requestIdleCallback?.(loadSession)
+    const timeout =
+      idleCallback === undefined ? window.setTimeout(loadSession) : null
+    return () => {
+      active = false
+      if (idleCallback !== undefined) window.cancelIdleCallback(idleCallback)
+      if (timeout !== null) window.clearTimeout(timeout)
+    }
+  }, [])
+
+  if (session === undefined) {
     return <span className="qr-account-button skel" aria-hidden="true" />
   }
 
@@ -182,7 +206,12 @@ function ExploreAccountMenu({ locale }: { locale: string }) {
             {t('admin')}
           </Link>
         )}
-        <button type="button" onClick={() => signOut()}>
+        <button
+          type="button"
+          onClick={() =>
+            import('next-auth/react').then(({ signOut }) => signOut())
+          }
+        >
           <LogOut size={15} />
           {t('signOut')}
         </button>

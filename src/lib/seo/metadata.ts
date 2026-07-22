@@ -1,8 +1,8 @@
 import type { Metadata } from 'next'
 
-export const SITE_URL = 'https://quebec.run'
+export const SITE_URL = 'https://www.quebec.run'
 export const SITE_NAME = 'quebec.run'
-export const DEFAULT_OG_IMAGE = `${SITE_URL}/og-default.jpg`
+export const DEFAULT_OG_IMAGE = `${SITE_URL}/opengraph-image`
 
 export type Locale = 'fr' | 'en'
 
