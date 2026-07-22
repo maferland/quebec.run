@@ -47,6 +47,7 @@ import {
 } from './explore-route'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
+import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
 const RAIL_WIDTH = 404
@@ -97,16 +98,6 @@ function buildWeekDays(
       count: countMap[o] ?? 0,
     }
   })
-}
-
-function todMin(): number {
-  const d = new Date()
-  return d.getHours() * 60 + d.getMinutes()
-}
-
-function toMin(time: string): number {
-  const [h, m] = time.split(':').map(Number)
-  return (h ?? 0) * 60 + (m ?? 0)
 }
 
 // ── Public export wraps inner in Suspense (required for useSearchParams) ─────
@@ -613,7 +604,14 @@ function ExploreShellInner({
     [weekCounts, locale, tr]
   )
 
-  const nowMin = todMin()
+  const [nowMin, setNowMin] = useState(() => getTorontoMinutes())
+
+  useEffect(() => {
+    const updateNow = () => setNowMin(getTorontoMinutes())
+    updateNow()
+    const interval = window.setInterval(updateNow, 60_000)
+    return () => window.clearInterval(interval)
+  }, [])
 
   const insets = useMemo(
     () =>
@@ -677,7 +675,9 @@ function ExploreShellInner({
         label: run.time,
         cancelled: run.status === 'CANCELLED',
         past:
-          day === 0 && run.status !== 'CANCELLED' && toMin(run.time) < nowMin,
+          day === 0 &&
+          run.status !== 'CANCELLED' &&
+          isRunTimePast(run.time, nowMin),
       }))
     if (
       selectedRunPoint &&

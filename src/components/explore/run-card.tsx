@@ -1,5 +1,6 @@
 'use client'
 import type { ExploreRun } from '@/lib/services/events'
+import { isRunTimePast } from '@/lib/utils/run-time'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
 
 const RulerIcon = (
@@ -84,8 +85,7 @@ export function RunCard({
   tr,
 }: Props) {
   const cancelled = run.status === 'CANCELLED'
-  const [h, m] = run.time.split(':').map(Number)
-  const isPast = day === 0 && !cancelled && (h ?? 0) * 60 + (m ?? 0) < nowMin
+  const isPast = day === 0 && !cancelled && isRunTimePast(run.time, nowMin)
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
   const dimmed = isPast && !selected
 
@@ -140,7 +140,14 @@ export function RunCard({
         }}
       >
         {/* top row */}
-        <span style={{ display: 'flex', gap: 13, alignItems: 'flex-start' }}>
+        <span
+          style={{
+            display: 'grid',
+            gridTemplateColumns: '64px minmax(0, 1fr) auto',
+            columnGap: 10,
+            alignItems: 'start',
+          }}
+        >
           <span
             style={{
               display: 'block',
@@ -148,7 +155,6 @@ export function RunCard({
               fontSize: 21,
               fontWeight: 700,
               lineHeight: 1,
-              minWidth: 52,
               color: cancelled ? 'var(--faint)' : 'var(--text)',
               textDecoration: cancelled ? 'line-through' : 'none',
             }}
@@ -158,26 +164,13 @@ export function RunCard({
           <span style={{ display: 'block', flex: 1, minWidth: 0 }}>
             <span
               style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: 8,
-                flexWrap: 'wrap',
+                display: 'block',
+                fontSize: 16.5,
+                fontWeight: 700,
+                color: cancelled ? 'var(--dim)' : 'var(--text)',
               }}
             >
-              <span
-                style={{
-                  display: 'block',
-                  fontSize: 16.5,
-                  fontWeight: 700,
-                  color: cancelled ? 'var(--dim)' : 'var(--text)',
-                }}
-              >
-                {run.title}
-              </span>
-              {cancelled && <Stamp tone="cancelled">{tr('cancelled')}</Stamp>}
-              {isPast && !cancelled && (
-                <Stamp tone="past">{tr('past_badge')}</Stamp>
-              )}
+              {run.title}
             </span>
             <span
               style={{
@@ -210,6 +203,11 @@ export function RunCard({
               )}
             </span>
           </span>
+          {cancelled ? (
+            <Stamp tone="cancelled">{tr('cancelled')}</Stamp>
+          ) : isPast ? (
+            <Stamp tone="past">{tr('past_badge')}</Stamp>
+          ) : null}
         </span>
 
         {/* tags */}

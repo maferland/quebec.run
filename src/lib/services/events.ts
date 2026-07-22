@@ -31,6 +31,7 @@ import {
 } from '@/lib/facets'
 
 import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
+import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
 
 // ─── Explore data layer ───────────────────────────────────────────────────────
 
@@ -150,12 +151,9 @@ function toExploreRun(
       paceMax: string | null
     } | null
   },
-  now: Date
+  nowMinutes: number | null
 ): ExploreRun | null {
   if (!event.club) return null
-  const [h, m] = event.time.split(':').map(Number)
-  const eventMinutes = (h ?? 0) * 60 + (m ?? 0)
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
   return {
     id: event.id,
     title: event.title,
@@ -164,7 +162,7 @@ function toExploreRun(
     lat: event.latitude,
     lng: event.longitude,
     distance: event.distance,
-    isPast: eventMinutes < nowMinutes,
+    isPast: nowMinutes !== null && isRunTimePast(event.time, nowMinutes),
     address: event.address,
     neighborhood: event.neighborhood,
     club: event.club,
@@ -193,6 +191,7 @@ async function getExploreWeekRaw(): Promise<{
   const weekStart = days[0].start
   const weekEnd = days[days.length - 1].end
   const now = new Date()
+  const nowMinutes = getTorontoMinutes(now)
 
   const [concreteEvents, recurringEvents] = await Promise.all([
     prisma.event.findMany({
@@ -243,10 +242,9 @@ async function getExploreWeekRaw(): Promise<{
         })
       )
     })
-    const effectiveNow = day === 0 ? now : new Date(0)
     return [...concreteForDay, ...virtualEvents]
       .sort((first, second) => first.time.localeCompare(second.time))
-      .map((event) => toExploreRun(event, effectiveNow))
+      .map((event) => toExploreRun(event, day === 0 ? nowMinutes : null))
       .filter((event): event is ExploreRun => event !== null)
   })
 
