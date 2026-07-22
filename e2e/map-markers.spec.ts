@@ -253,11 +253,29 @@ test.describe('Map Markers', () => {
     await page.getByRole('button', { name: /back/i }).click()
     await expect(page.locator('.qr-detail-shell.is-exiting')).toHaveCount(1)
     if (testInfo.project.name === 'Desktop Chrome') {
-      await page.waitForTimeout(80)
-      const exitX = await page.locator('.qr-detail-shell').evaluate((panel) => {
-        return new DOMMatrix(getComputedStyle(panel).transform).m41
+      const exitAnimation = await page
+        .locator('.qr-detail-shell')
+        .evaluate((panel) => {
+          const animation = panel
+            .getAnimations()
+            .find(
+              (candidate) =>
+                candidate instanceof CSSAnimation &&
+                candidate.animationName === 'detailPanelOut'
+            )
+          const finalKeyframe = (animation?.effect as KeyframeEffect | null)
+            ?.getKeyframes()
+            .at(-1)
+          return {
+            name:
+              animation instanceof CSSAnimation ? animation.animationName : '',
+            transform: String(finalKeyframe?.transform ?? ''),
+          }
+        })
+      expect(exitAnimation).toEqual({
+        name: 'detailPanelOut',
+        transform: 'translateX(-100%)',
       })
-      expect(exitX).toBeLessThan(0)
     }
     await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
     await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)
