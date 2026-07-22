@@ -51,7 +51,7 @@ function cacheRequest<T>(
   return pending
 }
 
-function loadRunDetail(id: string) {
+export function loadRunDetail(id: string) {
   return cacheRequest(runDetailRequests, id, async () => {
     const response = await fetch(`/api/explore/runs/${id}`)
     if (!response.ok) throw new Error('Run not found')

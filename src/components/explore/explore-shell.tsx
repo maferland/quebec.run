@@ -17,6 +17,7 @@ import {
   ClubDetailOverlay,
   PANEL_ENTER_MS,
   PANEL_EXIT_MS,
+  loadRunDetail,
   preloadClubDetail,
   preloadRunDetail,
   RunDetailOverlay,
@@ -414,6 +415,9 @@ function ExploreShellInner() {
   >([])
   const [runs, setRuns] = useState<ExploreRun[]>([])
   const [clubs, setClubs] = useState<ExploreClub[]>([])
+  const [selectedRunPoint, setSelectedRunPoint] = useState<
+    (MapPoint & { kind: 'run' }) | null
+  >(null)
   const [loadingRuns, setLoadingRuns] = useState(false)
   const [loadingClubs, setLoadingClubs] = useState(true)
 
@@ -502,6 +506,39 @@ function ExploreShellInner() {
   }, [day])
 
   useEffect(() => {
+    let active = true
+    if (!selectedRunId) {
+      setSelectedRunPoint(null)
+      return
+    }
+
+    loadRunDetail(selectedRunId)
+      .then((run) => {
+        if (!active) return
+        setSelectedRunPoint(
+          run.lat === null || run.lng === null
+            ? null
+            : {
+                id: run.id,
+                lat: run.lat,
+                lng: run.lng,
+                kind: 'run',
+                label: run.time,
+                cancelled: run.status === 'CANCELLED',
+                past: run.isPast,
+              }
+        )
+      })
+      .catch(() => {
+        if (active) setSelectedRunPoint(null)
+      })
+
+    return () => {
+      active = false
+    }
+  }, [selectedRunId])
+
+  useEffect(() => {
     if (clubs.length > 0) {
       setLoadingClubs(false)
       return
@@ -585,7 +622,7 @@ function ExploreShellInner() {
           label: club.name,
         }))
     }
-    return filteredRuns
+    const runPoints: MapPoint[] = filteredRuns
       .filter((run) => run.lat !== null && run.lng !== null)
       .map((run) => ({
         id: run.id,
@@ -597,7 +634,14 @@ function ExploreShellInner() {
         past:
           day === 0 && run.status !== 'CANCELLED' && toMin(run.time) < nowMin,
       }))
-  }, [day, filteredClubs, filteredRuns, mode, nowMin])
+    if (
+      selectedRunPoint &&
+      !runPoints.some((point) => point.id === selectedRunPoint.id)
+    ) {
+      runPoints.push(selectedRunPoint)
+    }
+    return runPoints
+  }, [day, filteredClubs, filteredRuns, mode, nowMin, selectedRunPoint])
 
   const selectedClubId = useMemo(() => {
     if (!selectedClubSlug) return null
