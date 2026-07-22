@@ -423,6 +423,7 @@ function ExploreShellInner({
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
+  const [mapReady, setMapReady] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQ, setSearchQ] = useState('')
@@ -881,6 +882,17 @@ function ExploreShellInner({
         zIndex: 1200,
       }}
     >
+      <picture className={`qr-map-preview${mapReady ? ' is-loaded' : ''}`}>
+        <source media="(max-width: 767px)" srcSet="/map-preview-mobile.webp" />
+        <img
+          src="/map-preview-desktop.webp"
+          alt=""
+          width={1440}
+          height={900}
+          fetchPriority="high"
+        />
+      </picture>
+
       {hasMeasuredMapLayout && (
         <MapView
           points={points}
@@ -889,6 +901,7 @@ function ExploreShellInner({
           theme={theme}
           insets={insets}
           hideInactive={Boolean(detailOverlay && selId)}
+          onReady={() => setMapReady(true)}
         />
       )}
 

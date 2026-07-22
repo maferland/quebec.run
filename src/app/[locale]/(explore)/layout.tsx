@@ -21,6 +21,20 @@ export default async function ExploreLayout({
   return (
     <ExploreProviders>
       <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
+      <link
+        rel="preload"
+        as="image"
+        href="/map-preview-mobile.webp"
+        media="(max-width: 767px)"
+        fetchPriority="high"
+      />
+      <link
+        rel="preload"
+        as="image"
+        href="/map-preview-desktop.webp"
+        media="(min-width: 768px)"
+        fetchPriority="high"
+      />
       <ExploreShell initialData={{ day: 0, weekCounts, runs, clubs }} />
       {children}
       <div className="fixed inset-0 z-[1300] pointer-events-none">{modal}</div>

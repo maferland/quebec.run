@@ -24,6 +24,7 @@ export type MapViewProps = {
   theme: 'dark' | 'light'
   insets: MapInsets
   hideInactive?: boolean
+  onReady?: () => void
 }
 
 const MapViewContent = dynamic(

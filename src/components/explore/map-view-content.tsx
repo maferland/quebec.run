@@ -30,6 +30,7 @@ export function MapViewContent({
   theme,
   insets,
   hideInactive = false,
+  onReady,
 }: MapViewProps) {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
@@ -96,7 +97,9 @@ export function MapViewContent({
     }
 
     tileThemeRef.current = theme
-    tileRef.current = createTileLayer(theme).addTo(map)
+    const initialTileLayer = createTileLayer(theme)
+    if (onReady) initialTileLayer.once('tileload', onReady)
+    tileRef.current = initialTileLayer.addTo(map)
     mapRef.current = map
     syncMarkers(
       map,

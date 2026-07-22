@@ -464,8 +464,40 @@ body:has(.qr-root) .site-footer {
 }
 
 /* Leaflet overrides */
+.qr-root .qr-map-preview {
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 404px;
+  z-index: 1;
+  overflow: hidden;
+  opacity: 1;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
+}
+.qr-root .qr-map-preview.is-loaded {
+  opacity: 0;
+}
+.qr-root .qr-map-preview img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+@media (max-width: 767px) {
+  .qr-root .qr-map-preview {
+    right: 0;
+    bottom: auto;
+    left: 0;
+    height: 40vh;
+  }
+
+  .qr-root .qr-map-preview img {
+    object-position: top;
+  }
+}
 .qr-root .leaflet-container {
-  background: var(--bg) !important;
+  background: transparent !important;
   font-family: var(--font-ui) !important;
   outline: none;
 }
