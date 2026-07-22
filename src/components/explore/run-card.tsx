@@ -103,12 +103,16 @@ export function RunCard({
       style={{
         borderRadius: 'var(--r-lg)',
         padding: '14px 15px',
-        background: selected ? 'var(--surface-2)' : 'var(--surface)',
+        background: selected
+          ? 'var(--surface-2)'
+          : dimmed
+            ? 'var(--past-surface)'
+            : 'var(--surface)',
         border: `1px solid ${selected ? `color-mix(in oklch, ${accent} 55%, transparent)` : 'var(--line-2)'}`,
         boxShadow: selected
           ? `0 0 0 1px ${accent}, 0 10px 30px -12px rgba(0,0,0,.7)`
           : 'none',
-        opacity: dimmed ? 0.75 : 1,
+        opacity: dimmed ? 'var(--past-opacity)' : 1,
         cursor: 'pointer',
         display: 'flex',
         flexDirection: 'column',

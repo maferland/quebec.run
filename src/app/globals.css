@@ -115,6 +115,8 @@ body {
   --surface: oklch(0.275 0.015 264);
   --surface-2: oklch(0.32 0.016 264);
   --surface-3: oklch(0.37 0.017 264);
+  --past-surface: color-mix(in oklch, var(--surface) 82%, var(--bg));
+  --past-opacity: 0.78;
   --line: oklch(1 0 0 / 0.14);
   --line-2: oklch(1 0 0 / 0.22);
 
@@ -316,6 +318,8 @@ body:has(.qr-root) .site-footer {
   --surface: oklch(0.995 0.002 100);
   --surface-2: oklch(0.965 0.005 100);
   --surface-3: oklch(0.915 0.008 100);
+  --past-surface: oklch(0.955 0.005 100);
+  --past-opacity: 1;
   --line: oklch(0.2 0.02 264 / 0.1);
   --line-2: oklch(0.2 0.02 264 / 0.18);
   --text: oklch(0.24 0.012 264);
