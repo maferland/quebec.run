@@ -1,5 +1,10 @@
 import { z } from 'zod'
 
+// Explore API schemas
+export const exploreDaySchema = z.object({
+  day: z.coerce.number().int().min(0).max(6).default(0),
+})
+
 // Base schemas
 export const paginationQuerySchema = z.object({
   limit: z

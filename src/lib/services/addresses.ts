@@ -1,6 +1,7 @@
 import { prisma } from '@/lib/prisma'
 import type { AuthPayload } from '@/lib/schemas'
 import { geocodeAddress } from './geocoding'
+import { invalidatePublicCache, PUBLIC_CACHE_TAGS } from '@/lib/public-cache'
 import type {
   AddressCreate,
   AddressUpdate,
@@ -140,7 +141,7 @@ export const createAddress = async ({
   // Geocode the address
   const coords = await geocodeAddress(address)
 
-  return await prisma.address.create({
+  const savedAddress = await prisma.address.create({
     data: {
       label,
       address,
@@ -150,6 +151,9 @@ export const createAddress = async ({
       organizationId: organizationId ?? null,
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  return savedAddress
 }
 
 /**
@@ -190,13 +194,16 @@ export const updateAddress = async ({
     coords = await geocodeAddress(updateData.address)
   }
 
-  return await prisma.address.update({
+  const savedAddress = await prisma.address.update({
     where: { id },
     data: {
       ...updateData,
       ...(coords && { latitude: coords.lat, longitude: coords.lng }),
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  return savedAddress
 }
 
 /**
@@ -227,7 +234,10 @@ export const deleteAddress = async ({
     throw new Error('Unauthorized to delete this address')
   }
 
-  return await prisma.address.delete({
+  const deletedAddress = await prisma.address.delete({
     where: { id },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  return deletedAddress
 }

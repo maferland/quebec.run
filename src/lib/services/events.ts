@@ -1,4 +1,11 @@
 import { prisma } from '@/lib/prisma'
+import {
+  cachePublicData,
+  invalidatePublicCache,
+  PUBLIC_API_REVALIDATE_SECONDS,
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_PAGE_REVALIDATE_SECONDS,
+} from '@/lib/public-cache'
 import type {
   EventsQuery,
   EventCreate,
@@ -24,6 +31,310 @@ import {
 } from '@/lib/facets'
 
 import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
+
+// ─── Explore data layer ───────────────────────────────────────────────────────
+
+export type ExploreRun = {
+  id: string
+  title: string
+  time: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  lat: number | null
+  lng: number | null
+  distance: string | null
+  isPast: boolean
+  address: string | null
+  neighborhood: string | null
+  club: {
+    id: string
+    slug: string
+    name: string
+    type: string | null
+    vibe: string | null
+    beginnerFriendly: boolean
+    paceMin: string | null
+    paceMax: string | null
+  }
+}
+
+// Returns {start, end} UTC boundaries for a Toronto calendar day offset from today.
+const TORONTO_TIME_ZONE = 'America/Toronto'
+
+function getTorontoDateParts(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TIME_ZONE,
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+  return { year: value('year'), month: value('month'), day: value('day') }
+}
+
+function getTorontoOffset(date: Date) {
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: TORONTO_TIME_ZONE,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+    second: 'numeric',
+  }).formatToParts(date)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    Number(parts.find((part) => part.type === type)?.value)
+  return (
+    Date.UTC(
+      value('year'),
+      value('month') - 1,
+      value('day'),
+      value('hour'),
+      value('minute'),
+      value('second')
+    ) - date.getTime()
+  )
+}
+
+function torontoMidnight(year: number, month: number, day: number) {
+  const utcGuess = Date.UTC(year, month - 1, day)
+  const first = new Date(utcGuess - getTorontoOffset(new Date(utcGuess)))
+  return new Date(utcGuess - getTorontoOffset(first))
+}
+
+export function getTorontoDayBounds(
+  dayOffset: number,
+  now = new Date()
+): { start: Date; end: Date } {
+  const today = getTorontoDateParts(now)
+  const target = new Date(
+    Date.UTC(today.year, today.month - 1, today.day + dayOffset)
+  )
+  const next = new Date(
+    Date.UTC(today.year, today.month - 1, today.day + dayOffset + 1)
+  )
+  const start = torontoMidnight(
+    target.getUTCFullYear(),
+    target.getUTCMonth() + 1,
+    target.getUTCDate()
+  )
+  const nextStart = torontoMidnight(
+    next.getUTCFullYear(),
+    next.getUTCMonth() + 1,
+    next.getUTCDate()
+  )
+  const end = new Date(nextStart.getTime() - 1)
+  return { start, end }
+}
+
+function toExploreRun(
+  event: {
+    id: string
+    title: string
+    time: string
+    status: 'SCHEDULED' | 'CANCELLED'
+    latitude: number | null
+    longitude: number | null
+    distance: string | null
+    address: string | null
+    neighborhood: string | null
+    club: {
+      id: string
+      slug: string
+      name: string
+      type: string | null
+      vibe: string | null
+      beginnerFriendly: boolean
+      paceMin: string | null
+      paceMax: string | null
+    } | null
+  },
+  now: Date
+): ExploreRun | null {
+  if (!event.club) return null
+  const [h, m] = event.time.split(':').map(Number)
+  const eventMinutes = (h ?? 0) * 60 + (m ?? 0)
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+  return {
+    id: event.id,
+    title: event.title,
+    time: event.time,
+    status: event.status,
+    lat: event.latitude,
+    lng: event.longitude,
+    distance: event.distance,
+    isPast: eventMinutes < nowMinutes,
+    address: event.address,
+    neighborhood: event.neighborhood,
+    club: event.club,
+  }
+}
+
+const EXPLORE_CLUB_SELECT = {
+  id: true,
+  slug: true,
+  name: true,
+  type: true,
+  vibe: true,
+  beginnerFriendly: true,
+  paceMin: true,
+  paceMax: true,
+} as const
+
+async function getEventsForDayRaw(dayOffset: number): Promise<ExploreRun[]> {
+  const { start, end } = getTorontoDayBounds(dayOffset)
+  const now = new Date()
+  const isToday = dayOffset === 0
+
+  // Concrete events (including CANCELLED) — exclude those whose recurring parent is inactive
+  const concreteEvents = await prisma.event.findMany({
+    where: {
+      date: { gte: start, lte: end },
+      OR: [{ recurringEventId: null }, { recurringEvent: { isActive: true } }],
+    },
+    select: {
+      id: true,
+      title: true,
+      time: true,
+      status: true,
+      latitude: true,
+      longitude: true,
+      distance: true,
+      address: true,
+      neighborhood: true,
+      recurringEventId: true,
+      club: { select: EXPLORE_CLUB_SELECT },
+    },
+    orderBy: { time: 'asc' },
+  })
+
+  // Keys of dates that have concrete events (to skip virtual expansion)
+  const materializedKeys = new Set(
+    concreteEvents.map((e) => `${e.recurringEventId}`)
+  )
+
+  // Expand active recurring events for this day, skipping materialized dates
+  const recurringEvents = await prisma.recurringEvent.findMany({
+    where: { isActive: true },
+    include: { club: true },
+  })
+
+  const virtualEvents = recurringEvents.flatMap((re) => {
+    const occurrences = expandRRuleDates(re.schedulePattern, start, end)
+    // Check if this pattern has a concrete event on this day
+    const hasConcreteOnDay = concreteEvents.some(
+      (e) => e.recurringEventId === re.id
+    )
+    if (hasConcreteOnDay) return []
+    return occurrences.map((date) => {
+      const virt = createVirtualEvent(re, date)
+      return {
+        id: virt.id,
+        title: virt.title,
+        time: virt.time,
+        status: 'SCHEDULED' as const,
+        latitude: virt.latitude,
+        longitude: virt.longitude,
+        distance: virt.distance,
+        address: virt.address,
+        neighborhood: re.neighborhood ?? null,
+        recurringEventId: re.id,
+        club: {
+          id: re.club.id,
+          slug: re.club.slug,
+          name: re.club.name,
+          type: re.club.type ?? null,
+          vibe: re.club.vibe ?? null,
+          beginnerFriendly: re.club.beginnerFriendly,
+          paceMin: re.club.paceMin ?? null,
+          paceMax: re.club.paceMax ?? null,
+        },
+      }
+    })
+  })
+
+  void materializedKeys // used implicitly above
+
+  const all = [...concreteEvents, ...virtualEvents].sort((a, b) =>
+    a.time.localeCompare(b.time)
+  )
+
+  // isPast only applies to today's runs
+  const effectiveNow = isToday ? now : new Date(0)
+  return all
+    .map((e) => toExploreRun(e, effectiveNow))
+    .filter((e): e is ExploreRun => e !== null)
+}
+
+export const getEventsForDay = cachePublicData(
+  getEventsForDayRaw,
+  ['events-for-day'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+async function getWeekEventCountsRaw(): Promise<
+  { day: number; count: number }[]
+> {
+  const days = Array.from({ length: 7 }, (_, day) => ({
+    day,
+    ...getTorontoDayBounds(day),
+  }))
+  const weekStart = days[0].start
+  const weekEnd = days[days.length - 1].end
+
+  const [concreteEvents, recurringEvents] = await Promise.all([
+    prisma.event.findMany({
+      where: {
+        date: { gte: weekStart, lte: weekEnd },
+        OR: [
+          { recurringEventId: null },
+          { recurringEvent: { isActive: true } },
+        ],
+      },
+      select: { date: true, status: true, recurringEventId: true },
+    }),
+    prisma.recurringEvent.findMany({
+      where: { isActive: true },
+      select: { id: true, schedulePattern: true },
+    }),
+  ])
+
+  return days.map(({ day, start, end }) => {
+    const eventsForDay = concreteEvents.filter(
+      (event) => event.date >= start && event.date <= end
+    )
+    const materializedRecurringIds = new Set(
+      eventsForDay.flatMap((event) =>
+        event.recurringEventId ? [event.recurringEventId] : []
+      )
+    )
+    const concreteCount = eventsForDay.filter(
+      (event) => event.status === 'SCHEDULED'
+    ).length
+    const virtualCount = recurringEvents.reduce((count, recurringEvent) => {
+      if (materializedRecurringIds.has(recurringEvent.id)) return count
+      return (
+        count +
+        expandRRuleDates(recurringEvent.schedulePattern, start, end).length
+      )
+    }, 0)
+
+    return { day, count: concreteCount + virtualCount }
+  })
+}
+
+export const getWeekEventCounts = cachePublicData(
+  getWeekEventCountsRaw,
+  ['week-event-counts'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -413,9 +724,7 @@ function countEventFacets(
   return counts
 }
 
-export const getEventById = async ({ data }: PublicPayload<EventId>) => {
-  const { id } = data
-
+async function getEventByIdRaw(id: string) {
   // Virtual event ID formats:
   // New: slug--YYYY-MM-DD (e.g., 6am-club-beauport--2026-03-18)
   // Legacy: cuid:YYYY-MM-DD (e.g., cmj8zbj20000cpt9z:2026-03-18)
@@ -425,22 +734,50 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
 
   if (virtualMatch) {
     const [, identifier, dateKey] = virtualMatch
-    const recurringEvent = slugMatch
-      ? await prisma.recurringEvent.findFirst({
-          where: { slug: identifier },
-          include: { club: true },
-        })
-      : await prisma.recurringEvent.findUnique({
-          where: { id: identifier },
-          include: { club: true },
-        })
+
+    let recurringEvent = null
+    if (slugMatch) {
+      // New virtual IDs are `${club.slug}-${event.slug}--date`.
+      // Try all possible club/event slug splits since both contain hyphens.
+      const parts = identifier.split('-')
+      const splitCandidates = parts.slice(0, -1).map((_, i) => ({
+        clubSlug: parts.slice(0, i + 1).join('-'),
+        eventSlug: parts.slice(i + 1).join('-'),
+      }))
+      recurringEvent = await prisma.recurringEvent.findFirst({
+        where: {
+          OR: [
+            { slug: identifier },
+            ...splitCandidates.map((c) => ({
+              AND: [{ slug: c.eventSlug }, { club: { slug: c.clubSlug } }],
+            })),
+          ],
+        },
+        include: { club: true },
+      })
+    } else {
+      recurringEvent = await prisma.recurringEvent.findUnique({
+        where: { id: identifier },
+        include: { club: true },
+      })
+    }
 
     if (!recurringEvent) {
       return null
     }
 
     const date = new Date(`${dateKey}T12:00:00`)
-    return createVirtualEvent(recurringEvent, date)
+    const event = createVirtualEvent(recurringEvent, date)
+    const description = recurringEvent.club.description
+      ?.replace(/\s+/g, ' ')
+      .trim()
+    return {
+      ...event,
+      club: {
+        ...event.club,
+        description: description || null,
+      },
+    }
   }
 
   return await prisma.event.findUnique({
@@ -451,17 +788,36 @@ export const getEventById = async ({ data }: PublicPayload<EventId>) => {
           id: true,
           name: true,
           slug: true,
+          type: true,
+          vibe: true,
+          beginnerFriendly: true,
+          paceMin: true,
+          paceMax: true,
+          description: true,
         },
       },
     },
   })
 }
 
-export const getEventByClubAndSlug = async ({
-  data,
-}: PublicPayload<EventByClubAndSlug>) => {
-  const { clubSlug, eventSlug, date } = data
+const getCachedEventById = cachePublicData(
+  getEventByIdRaw,
+  ['event-by-id-v3'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
+export const getEventById = async ({ data }: PublicPayload<EventId>) => {
+  return getCachedEventById(data.id)
+}
+
+async function getEventByClubAndSlugRaw(
+  clubSlug: string,
+  eventSlug: string,
+  date: string
+) {
   const club = await prisma.club.findUnique({
     where: { slug: clubSlug },
     select: { id: true },
@@ -498,11 +854,23 @@ export const getEventByClubAndSlug = async ({
   return createVirtualEvent(recurringEvent, new Date(`${date}T12:00:00`))
 }
 
-export const getNextOccurrenceDate = async ({
-  data,
-}: PublicPayload<EventByClubAndSlugBare>) => {
-  const { clubSlug, eventSlug } = data
+const getCachedEventByClubAndSlug = cachePublicData(
+  getEventByClubAndSlugRaw,
+  ['event-by-club-and-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
 
+export const getEventByClubAndSlug = async ({
+  data,
+}: PublicPayload<EventByClubAndSlug>) => {
+  const { clubSlug, eventSlug, date } = data
+  return getCachedEventByClubAndSlug(clubSlug, eventSlug, date)
+}
+
+async function getNextOccurrenceDateRaw(clubSlug: string, eventSlug: string) {
   const club = await prisma.club.findUnique({
     where: { slug: clubSlug },
     select: { id: true },
@@ -519,6 +887,21 @@ export const getNextOccurrenceDate = async ({
   const upper = addDays(now, 365)
   const [next] = expandRRuleDates(recurringEvent.schedulePattern, now, upper)
   return next ?? null
+}
+
+const getCachedNextOccurrenceDate = cachePublicData(
+  getNextOccurrenceDateRaw,
+  ['next-occurrence-date'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+export const getNextOccurrenceDate = async ({
+  data,
+}: PublicPayload<EventByClubAndSlugBare>) => {
+  return getCachedNextOccurrenceDate(data.clubSlug, data.eventSlug)
 }
 
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
@@ -553,6 +936,8 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
       },
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
 
   return event
 }
@@ -608,7 +993,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     }
   }
 
-  return await prisma.event.update({
+  const updatedEvent = await prisma.event.update({
     where: { id },
     data: {
       ...updateData,
@@ -624,6 +1009,9 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
       },
     },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  return updatedEvent
 }
 
 export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
@@ -652,7 +1040,10 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
     throw new UnauthorizedError('Unauthorized')
   }
 
-  return await prisma.event.delete({
+  const deletedEvent = await prisma.event.delete({
     where: { id },
   })
+
+  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  return deletedEvent
 }

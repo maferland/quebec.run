@@ -23,8 +23,11 @@ const mockEventWithClub: GetAllEventsReturn = {
     id: 'club-1',
     name: 'Quebec Running Club',
     slug: 'quebec-running-club',
+    type: null,
     vibe: null,
     beginnerFriendly: false,
+    paceMin: null,
+    paceMax: null,
   },
 }
 
@@ -386,8 +389,11 @@ describe('EventCard Component', () => {
           id: 'club-1',
           name: 'Test Club',
           slug: 'test-club',
+          type: null,
           vibe: null,
           beginnerFriendly: false,
+          paceMin: null,
+          paceMax: null,
         },
       }
 

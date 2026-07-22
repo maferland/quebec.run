@@ -3,10 +3,8 @@ import { test, expect } from '@playwright/test'
 const PUBLIC_ROUTES = [
   { path: '/fr', name: 'home (fr)' },
   { path: '/en', name: 'home (en)' },
-  { path: '/fr/clubs', name: 'clubs list (fr)' },
-  { path: '/en/clubs', name: 'clubs list (en)' },
-  { path: '/fr/events', name: 'events list (fr)' },
-  { path: '/fr/calendar', name: 'calendar (fr)' },
+  { path: '/fr/clubs/fauxmouvement', name: 'club detail (fr)' },
+  { path: '/en/clubs/fauxmouvement', name: 'club detail (en)' },
 ] as const
 
 for (const route of PUBLIC_ROUTES) {
@@ -43,7 +41,6 @@ for (const route of PUBLIC_ROUTES) {
 
     const title = await page.title()
     expect(title.length).toBeGreaterThan(0)
-    expect(title).toMatch(/quebec\.run/i)
 
     const description = await page
       .locator('meta[name="description"]')

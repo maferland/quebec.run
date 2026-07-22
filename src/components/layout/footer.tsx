@@ -13,7 +13,7 @@ export function Footer() {
   const { data: session } = useSession()
 
   return (
-    <footer className="bg-surface border-t border-border mt-auto">
+    <footer className="site-footer bg-surface border-t border-border mt-auto">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-8 pb-6">
         <div className="flex flex-col md:flex-row md:justify-between items-center space-y-6 md:space-y-0">
           {/* Logo and Description - Left aligned */}

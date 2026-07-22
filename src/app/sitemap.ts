@@ -5,7 +5,7 @@ import { SITE_URL } from '@/lib/seo/metadata'
 const LOCALES = ['fr', 'en'] as const
 type Locale = (typeof LOCALES)[number]
 
-export const dynamic = 'force-dynamic'
+export const revalidate = 3600
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 
@@ -34,16 +34,15 @@ function staticEntry(
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const clubs = await prisma.club.findMany({
-    where: { isActive: true },
-    select: { slug: true, updatedAt: true },
-  })
+  const clubs = await prisma.club
+    .findMany({
+      where: { isActive: true },
+      select: { slug: true, updatedAt: true },
+    })
+    .catch(() => [])
 
   return [
     ...staticEntry('', 1.0, 'daily'),
-    ...staticEntry('/clubs', 0.9, 'daily'),
-    ...staticEntry('/events', 0.8, 'daily'),
-    ...staticEntry('/calendar', 0.8, 'daily'),
     ...clubs.flatMap((club) =>
       LOCALES.map((locale: Locale) => ({
         url: `${SITE_URL}/${locale}/clubs/${club.slug}`,

@@ -24,6 +24,8 @@ export type ClubEventDatePageProps = PageProps<{
   date: string
 }>
 
+export const revalidate = 900
+
 const ADDRESS_TOKEN =
   /\b\d+\s+(rue|bd|boulevard|av|avenue|street|st|ch|chemin|route|rang)\b\.?/i
 
@@ -94,8 +96,10 @@ export default async function ClubEventDatePage({
   const { locale, slug, eventSlug, date } = await params
   const t = await getTranslations('events')
   const [event, club] = await Promise.all([
-    getEventByClubAndSlug({ data: { clubSlug: slug, eventSlug, date } }),
-    getClubBySlug({ slug }),
+    getEventByClubAndSlug({ data: { clubSlug: slug, eventSlug, date } }).catch(
+      () => null
+    ),
+    getClubBySlug({ slug }).catch(() => null),
   ])
 
   if (!event) {

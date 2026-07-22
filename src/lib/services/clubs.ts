@@ -1,4 +1,11 @@
 import { prisma } from '@/lib/prisma'
+import {
+  cachePublicData,
+  invalidatePublicCache,
+  PUBLIC_API_REVALIDATE_SECONDS,
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_PAGE_REVALIDATE_SECONDS,
+} from '@/lib/public-cache'
 import type {
   AuthPayload,
   ClubCreate,
@@ -87,12 +94,34 @@ function computeClubFacetCounts(
   return counts
 }
 
-async function fetchClubList(): Promise<NonNullable<ClubListItem>[]> {
+async function fetchClubListRaw(): Promise<NonNullable<ClubListItem>[]> {
   return prisma.club.findMany({
     orderBy: { createdAt: 'desc' },
     select: CLUB_LIST_SELECT,
   })
 }
+
+const fetchClubList = cachePublicData(fetchClubListRaw, ['club-list'], {
+  revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+  tags: [PUBLIC_CACHE_TAGS.clubs],
+})
+
+async function getActiveClubSlugsRaw(): Promise<{ slug: string }[]> {
+  return prisma.club.findMany({
+    where: { isActive: true },
+    orderBy: { slug: 'asc' },
+    select: { slug: true },
+  })
+}
+
+export const getActiveClubSlugs = cachePublicData(
+  getActiveClubSlugsRaw,
+  ['active-club-slugs'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs],
+  }
+)
 
 export const getAllClubs = async ({ data }: PublicPayload<ClubsQuery>) => {
   const { limit = 50, offset = 0 } = data
@@ -196,7 +225,7 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
 
   // Create Organization and Club in a transaction
   // Every Club gets a hidden Organization (isVisible=false)
-  return await prisma.$transaction(async (tx) => {
+  const club = await prisma.$transaction(async (tx) => {
     // Create hidden organization for this club
     const org = await tx.organization.create({
       data: {
@@ -231,6 +260,13 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
       },
     })
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return club
 }
 
 export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
@@ -253,6 +289,11 @@ export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
     data: updateData,
   })
 
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
   return club
 }
 
@@ -270,7 +311,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   }
 
   // Delete club and potentially orphaned organization in transaction
-  return await prisma.$transaction(async (tx) => {
+  const deletedClub = await prisma.$transaction(async (tx) => {
     const deletedClub = await tx.club.delete({
       where: { id },
     })
@@ -291,6 +332,13 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
 
     return deletedClub
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return deletedClub
 }
 
 // Helper functions that take ID/slug from route params
@@ -319,7 +367,7 @@ export async function getClubByIdWithParams(id: string) {
   return { ...club, events }
 }
 
-export async function getClubBySlug({ slug }: ClubSlug) {
+async function getClubBySlugRaw(slug: string) {
   const club = await prisma.club.findUnique({
     where: { slug },
     select: {
@@ -365,6 +413,272 @@ export async function getClubBySlug({ slug }: ClubSlug) {
   return { ...club, patterns }
 }
 
+const getCachedClubBySlug = cachePublicData(
+  getClubBySlugRaw,
+  ['club-by-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
+export async function getClubBySlug({ slug }: ClubSlug) {
+  return getCachedClubBySlug(slug)
+}
+
+// ─── Explore data layer ───────────────────────────────────────────────────────
+
+export type ExploreClub = {
+  id: string
+  slug: string
+  name: string
+  type: string | null
+  vibe: string | null
+  beginnerFriendly: boolean
+  paceMin: string | null
+  paceMax: string | null
+  description: string | null
+  website: string | null
+  instagram: string | null
+  facebook: string | null
+  memberCount: number
+  lat: number | null
+  lng: number | null
+}
+
+async function getClubsForExploreRaw(): Promise<ExploreClub[]> {
+  const clubs = await prisma.club.findMany({
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      vibe: true,
+      beginnerFriendly: true,
+      paceMin: true,
+      paceMax: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      _count: {
+        select: { recurringEvents: { where: { isActive: true } } },
+      },
+      addresses: {
+        where: { latitude: { not: null }, longitude: { not: null } },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
+      recurringEvents: {
+        where: {
+          isActive: true,
+          latitude: { not: null },
+          longitude: { not: null },
+        },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
+    },
+    orderBy: { createdAt: 'asc' },
+  })
+
+  return clubs.map((club) => ({
+    id: club.id,
+    slug: club.slug,
+    name: club.name,
+    type: club.type ?? null,
+    vibe: club.vibe ?? null,
+    beginnerFriendly: club.beginnerFriendly,
+    paceMin: club.paceMin ?? null,
+    paceMax: club.paceMax ?? null,
+    description: club.description ?? null,
+    website: club.website ?? null,
+    instagram: club.instagram ?? null,
+    facebook: club.facebook ?? null,
+    memberCount: club._count.recurringEvents,
+    lat:
+      club.addresses[0]?.latitude ?? club.recurringEvents[0]?.latitude ?? null,
+    lng:
+      club.addresses[0]?.longitude ??
+      club.recurringEvents[0]?.longitude ??
+      null,
+  }))
+}
+
+export const getClubsForExplore = cachePublicData(
+  getClubsForExploreRaw,
+  ['clubs-for-explore'],
+  {
+    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs],
+  }
+)
+
+export type ClubDetailScheduleEntry = {
+  time: string
+  title: string
+  days: string
+}
+
+export type ClubUpcomingRun = {
+  id: string
+  date: Date
+  time: string
+  title: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  distance: string | null
+  type: string | null
+}
+
+export type ClubForDetail = ExploreClub & {
+  schedule: ClubDetailScheduleEntry[]
+  upcomingRuns: ClubUpcomingRun[]
+}
+
+const BYDAY_FR: Record<string, string> = {
+  MO: 'Lun',
+  TU: 'Mar',
+  WE: 'Mer',
+  TH: 'Jeu',
+  FR: 'Ven',
+  SA: 'Sam',
+  SU: 'Dim',
+}
+const BYDAY_EN: Record<string, string> = {
+  MO: 'Mon',
+  TU: 'Tue',
+  WE: 'Wed',
+  TH: 'Thu',
+  FR: 'Fri',
+  SA: 'Sat',
+  SU: 'Sun',
+}
+
+function schedDays(pattern: string, locale = 'fr'): string {
+  const m = pattern.match(/BYDAY=([^;\r\n]+)/)
+  if (!m) return ''
+  const map = locale === 'fr' ? BYDAY_FR : BYDAY_EN
+  return m[1]
+    .split(',')
+    .map((d) => map[d.trim()] ?? d)
+    .join(', ')
+}
+
+// Extract HH:MM from DTSTART line in rrule pattern (Toronto local time encoded as Z)
+function schedTime(pattern: string): string {
+  // Format 1: DTSTART:YYYYMMDDTHHmm...
+  const dtstart = pattern.match(
+    /DTSTART[^:]*:(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})/
+  )
+  if (dtstart) return `${dtstart[4]}:${dtstart[5]}`
+  // Format 2: BYHOUR=6;BYMINUTE=0
+  const byhour = pattern.match(/BYHOUR=(\d+)/)
+  const byminute = pattern.match(/BYMINUTE=(\d+)/)
+  if (byhour) {
+    const h = String(byhour[1]).padStart(2, '0')
+    const m = String(byminute?.[1] ?? '0').padStart(2, '0')
+    return `${h}:${m}`
+  }
+  return ''
+}
+
+async function getClubDetailBySlugRaw(
+  slug: string,
+  locale = 'fr'
+): Promise<ClubForDetail | null> {
+  const club = await prisma.club.findUnique({
+    where: { slug },
+    select: {
+      id: true,
+      slug: true,
+      name: true,
+      type: true,
+      vibe: true,
+      beginnerFriendly: true,
+      paceMin: true,
+      paceMax: true,
+      description: true,
+      website: true,
+      instagram: true,
+      facebook: true,
+      _count: { select: { recurringEvents: { where: { isActive: true } } } },
+      addresses: {
+        where: { latitude: { not: null }, longitude: { not: null } },
+        select: { latitude: true, longitude: true },
+        take: 1,
+      },
+      recurringEvents: {
+        where: { isActive: true },
+        select: {
+          title: true,
+          schedulePattern: true,
+          latitude: true,
+          longitude: true,
+        },
+      },
+    },
+  })
+
+  if (!club) return null
+
+  const schedule = club.recurringEvents
+    .map((re) => ({
+      time: schedTime(re.schedulePattern),
+      title: re.title,
+      days: schedDays(re.schedulePattern, locale),
+    }))
+    .filter((s) => s.time)
+    .sort((a, b) => a.time.localeCompare(b.time))
+
+  const now = new Date()
+  const endDate = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const upcoming = await getEventsInRange(now, endDate, club.id)
+  const upcomingRuns = upcoming
+    .filter((e) => e.date >= now)
+    .slice(0, 10)
+    .map((e) => ({
+      id: e.id,
+      date: e.date,
+      time: e.time,
+      title: e.title,
+      status: e.status as 'SCHEDULED' | 'CANCELLED',
+      distance: e.distance ?? null,
+      type: e.club?.type ?? null,
+    }))
+  const mapEvent = club.recurringEvents.find(
+    (event) => event.latitude !== null && event.longitude !== null
+  )
+
+  return {
+    id: club.id,
+    slug: club.slug,
+    name: club.name,
+    type: club.type ?? null,
+    vibe: club.vibe ?? null,
+    beginnerFriendly: club.beginnerFriendly,
+    paceMin: club.paceMin ?? null,
+    paceMax: club.paceMax ?? null,
+    description: club.description ?? null,
+    website: club.website ?? null,
+    instagram: club.instagram ?? null,
+    facebook: club.facebook ?? null,
+    memberCount: club._count.recurringEvents,
+    lat: club.addresses[0]?.latitude ?? mapEvent?.latitude ?? null,
+    lng: club.addresses[0]?.longitude ?? mapEvent?.longitude ?? null,
+    schedule,
+    upcomingRuns,
+  }
+}
+
+export const getClubDetailBySlug = cachePublicData(
+  getClubDetailBySlugRaw,
+  ['club-detail-by-slug'],
+  {
+    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
+  }
+)
+
 export const updateClubById = async ({
   user,
   data,
@@ -384,8 +698,15 @@ export const updateClubById = async ({
 
   const { id, ...updateData } = data
 
-  return await prisma.club.update({
+  const updatedClub = await prisma.club.update({
     where: { id },
     data: updateData,
   })
+
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+  return updatedClub
 }
