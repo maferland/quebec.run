@@ -1,19 +1,18 @@
-import { test, expect, type Page } from '@playwright/test'
+import { test, expect, type Page, type Request } from '@playwright/test'
 
 async function gotoLoadedExplore(page: Page, path: string) {
-  const responses = [
-    page.waitForResponse((response) =>
-      response.url().includes('/api/explore/runs?day=')
-    ),
-    page.waitForResponse((response) =>
-      response.url().includes('/api/explore/clubs')
-    ),
-    page.waitForResponse((response) =>
-      response.url().includes('/api/explore/week-counts')
-    ),
-  ]
+  const exploreRequests: string[] = []
+  const trackExploreRequest = (request: Request) => {
+    if (request.url().includes('/api/explore/')) {
+      exploreRequests.push(request.url())
+    }
+  }
+  page.on('request', trackExploreRequest)
   await page.goto(path)
-  await Promise.all(responses)
+  await page.getByRole('button', { name: 'Search', exact: true }).waitFor()
+  await page.waitForTimeout(500)
+  page.off('request', trackExploreRequest)
+  expect(exploreRequests).toEqual([])
 }
 
 test.describe('Map Markers', () => {

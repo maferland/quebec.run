@@ -44,7 +44,6 @@ export function organization() {
     '@type': 'Organization',
     name: SITE_NAME,
     url: SITE_URL,
-    logo: `${SITE_URL}/icon.svg`,
   }
 }
 
@@ -115,12 +114,14 @@ export type EventJsonLdInput = {
   title: string
   description: string | null
   startDate: Date | string
+  startTime?: string
   endDate?: Date | string
   address: string | null
   latitude: number | null
   longitude: number | null
   clubName: string
   clubUrl: string
+  status?: 'SCHEDULED' | 'CANCELLED'
 }
 
 export function eventJsonLd({
@@ -128,15 +129,21 @@ export function eventJsonLd({
   title,
   description,
   startDate,
+  startTime,
   endDate,
   address,
   latitude,
   longitude,
   clubName,
   clubUrl,
+  locale,
+  status = 'SCHEDULED',
 }: EventJsonLdInput) {
-  const start =
-    typeof startDate === 'string' ? startDate : startDate.toISOString()
+  const start = startTime
+    ? eventDateTime(startDate, startTime)
+    : typeof startDate === 'string'
+      ? startDate
+      : startDate.toISOString()
   const end = endDate
     ? typeof endDate === 'string'
       ? endDate
@@ -148,11 +155,14 @@ export function eventJsonLd({
     '@type': 'Event',
     name: title,
     description: description ?? undefined,
+    inLanguage: locale === 'fr' ? 'fr-CA' : 'en-CA',
     startDate: start,
     ...(end && { endDate: end }),
-    eventStatus: 'https://schema.org/EventScheduled',
+    eventStatus:
+      status === 'CANCELLED'
+        ? 'https://schema.org/EventCancelled'
+        : 'https://schema.org/EventScheduled',
     eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
-    isAccessibleForFree: true,
     url,
     location: {
       '@type': 'Place',
@@ -181,4 +191,19 @@ export function eventJsonLd({
       url: clubUrl,
     },
   }
+}
+
+function eventDateTime(date: Date | string, time: string) {
+  const dateValue = typeof date === 'string' ? new Date(date) : date
+  const parts = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'America/Toronto',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
+    timeZoneName: 'longOffset',
+  }).formatToParts(dateValue)
+  const value = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((part) => part.type === type)?.value ?? ''
+  const offset = value('timeZoneName').replace('GMT', '') || 'Z'
+  return `${value('year')}-${value('month')}-${value('day')}T${time}:00${offset}`
 }

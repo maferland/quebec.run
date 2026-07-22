@@ -47,6 +47,7 @@ import {
 } from './explore-route'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
+import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
 const RAIL_WIDTH = 404
@@ -55,6 +56,13 @@ type DetailOverlayState = DetailRoute & {
   exiting: boolean
   enter: boolean
   closeMode: 'history' | 'route'
+}
+
+export type InitialExploreData = {
+  day: number
+  weekCounts?: { day: number; count: number }[]
+  runs?: ExploreRun[]
+  clubs?: ExploreClub[]
 }
 
 // ── Week bar helpers ──────────────────────────────────────────────────────────
@@ -92,29 +100,27 @@ function buildWeekDays(
   })
 }
 
-function todMin(): number {
-  const d = new Date()
-  return d.getHours() * 60 + d.getMinutes()
-}
-
-function toMin(time: string): number {
-  const [h, m] = time.split(':').map(Number)
-  return (h ?? 0) * 60 + (m ?? 0)
-}
-
 // ── Public export wraps inner in Suspense (required for useSearchParams) ─────
 
-export function ExploreShell() {
+export function ExploreShell({
+  initialData,
+}: {
+  initialData?: InitialExploreData
+}) {
   return (
     <Suspense>
-      <ExploreShellInner />
+      <ExploreShellInner initialData={initialData} />
     </Suspense>
   )
 }
 
 // ── Inner shell ───────────────────────────────────────────────────────────────
 
-function ExploreShellInner() {
+function ExploreShellInner({
+  initialData,
+}: {
+  initialData?: InitialExploreData
+}) {
   const { theme, setTheme } = useTheme()
   const locale = useLocale()
   const t = useTranslations('explore')
@@ -158,6 +164,13 @@ function ExploreShellInner() {
   const day = searchParams.has('day')
     ? parseDay(searchParams)
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
+  const initialRuns = initialData?.day === day ? initialData.runs : undefined
+  const hasInitialRuns = initialRuns !== undefined
+  const runsByDayRef = useRef(
+    new Map<number, ExploreRun[]>(
+      initialData?.runs ? [[initialData.day, initialData.runs]] : []
+    )
+  )
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
 
   const clearExitFallback = useCallback(() => {
@@ -357,10 +370,13 @@ function ExploreShellInner() {
         newMode === 'clubs'
           ? { clubSlug: newClubSlug, runId: null }
           : { runId: newRunId, clubSlug: null }
+      const url = `${basePath}${buildQs(newDay, newFilters, selected)}`
+      if (newMode === mode && !currentDetail && !newRunId && !newClubSlug) {
+        window.history.replaceState(null, '', url)
+        return
+      }
       startTransition(() => {
-        router.replace(`${basePath}${buildQs(newDay, newFilters, selected)}`, {
-          scroll: false,
-        })
+        router.replace(url, { scroll: false })
       })
     },
     [
@@ -369,6 +385,7 @@ function ExploreShellInner() {
       filters,
       selectedRunId,
       selectedClubSlug,
+      currentDetail,
       locale,
       router,
       startTransition,
@@ -403,23 +420,31 @@ function ExploreShellInner() {
   const rootRef = useRef<HTMLDivElement>(null)
   const listRef = useRef<HTMLDivElement>(null)
   const searchInputRef = useRef<HTMLInputElement>(null)
+  const autoScrolledDayRef = useRef<number | null>(null)
+  const autoScrolledListRef = useRef<HTMLDivElement | null>(null)
 
   const [desktop, setDesktop] = useState(false)
   const [containerH, setContainerH] = useState(0)
+  const [mapReady, setMapReady] = useState(false)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQ, setSearchQ] = useState('')
 
   const [weekCounts, setWeekCounts] = useState<
     { day: number; count: number }[]
-  >([])
-  const [runs, setRuns] = useState<ExploreRun[]>([])
-  const [clubs, setClubs] = useState<ExploreClub[]>([])
+  >(() => initialData?.weekCounts ?? [])
+  const [runs, setRuns] = useState<ExploreRun[]>(() => initialRuns ?? [])
+  const [clubs, setClubs] = useState<ExploreClub[]>(
+    () => initialData?.clubs ?? []
+  )
+  const initialRunsDayRef = useRef(hasInitialRuns ? day : null)
   const [selectedRunPoint, setSelectedRunPoint] = useState<
     (MapPoint & { kind: 'run' }) | null
   >(null)
-  const [loadingRuns, setLoadingRuns] = useState(false)
-  const [loadingClubs, setLoadingClubs] = useState(true)
+  const [loadingRuns, setLoadingRuns] = useState(!hasInitialRuns)
+  const [loadingClubs, setLoadingClubs] = useState(
+    initialData?.clubs === undefined
+  )
 
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef<{ y: number; h: number } | null>(null)
@@ -432,6 +457,7 @@ function ExploreShellInner() {
     [containerH]
   )
   const [sheetH, setSheetH] = useState(0)
+  const hasMeasuredMapLayout = containerH > 0 && (desktop || sheetH > 0)
   useEffect(() => {
     if (snaps.mid > 0 && !dragging) setSheetH(snaps.mid)
   }, [snaps.mid, dragging])
@@ -473,6 +499,7 @@ function ExploreShellInner() {
   }, [])
 
   useEffect(() => {
+    if (weekCounts.length > 0) return
     fetch('/api/explore/week-counts')
       .then((r) => {
         if (!r.ok) return []
@@ -482,9 +509,20 @@ function ExploreShellInner() {
         if (Array.isArray(data)) setWeekCounts(data)
       })
       .catch(() => {})
-  }, [])
+  }, [weekCounts.length])
 
   useEffect(() => {
+    if (initialRunsDayRef.current === day) {
+      initialRunsDayRef.current = null
+      setLoadingRuns(false)
+      return
+    }
+    const cachedRuns = runsByDayRef.current.get(day)
+    if (cachedRuns) {
+      setRuns(cachedRuns)
+      setLoadingRuns(false)
+      return
+    }
     const controller = new AbortController()
     setLoadingRuns(true)
     fetch(`/api/explore/runs?day=${day}`, { signal: controller.signal })
@@ -494,6 +532,7 @@ function ExploreShellInner() {
       })
       .then((data: ExploreRun[]) => {
         if (!Array.isArray(data)) return
+        runsByDayRef.current.set(day, data)
         setRuns(data)
       })
       .catch((error) => {
@@ -568,7 +607,14 @@ function ExploreShellInner() {
     [weekCounts, locale, tr]
   )
 
-  const nowMin = todMin()
+  const [nowMin, setNowMin] = useState(() => getTorontoMinutes())
+
+  useEffect(() => {
+    const updateNow = () => setNowMin(getTorontoMinutes())
+    updateNow()
+    const interval = window.setInterval(updateNow, 60_000)
+    return () => window.clearInterval(interval)
+  }, [])
 
   const insets = useMemo(
     () =>
@@ -610,6 +656,39 @@ function ExploreShellInner() {
     )
   }, [clubs, filters, searchQ])
 
+  useEffect(() => {
+    if (mode !== 'runs' || day !== 0 || loadingRuns) return
+    const nextRun = filteredRuns.find(
+      (run) => run.status !== 'CANCELLED' && !isRunTimePast(run.time, nowMin)
+    )
+    const list = listRef.current
+    if (!nextRun || !list) return
+    if (
+      autoScrolledDayRef.current === day &&
+      autoScrolledListRef.current === list
+    )
+      return
+
+    const target = list.querySelector<HTMLElement>(
+      `[data-run-id="${nextRun.id}"]`
+    )
+    if (!target) return
+
+    const top =
+      list.scrollTop +
+      target.getBoundingClientRect().top -
+      list.getBoundingClientRect().top -
+      4
+    list.scrollTo({
+      top,
+      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
+        ? 'auto'
+        : 'smooth',
+    })
+    autoScrolledDayRef.current = day
+    autoScrolledListRef.current = list
+  }, [day, desktop, filteredRuns, loadingRuns, mode, nowMin])
+
   const points = useMemo((): MapPoint[] => {
     if (mode === 'clubs') {
       return filteredClubs
@@ -632,7 +711,9 @@ function ExploreShellInner() {
         label: run.time,
         cancelled: run.status === 'CANCELLED',
         past:
-          day === 0 && run.status !== 'CANCELLED' && toMin(run.time) < nowMin,
+          day === 0 &&
+          run.status !== 'CANCELLED' &&
+          isRunTimePast(run.time, nowMin),
       }))
     if (
       selectedRunPoint &&
@@ -836,14 +917,28 @@ function ExploreShellInner() {
         zIndex: 1200,
       }}
     >
-      <MapView
-        points={points}
-        activeId={selId}
-        onSelect={selectMapPoint}
-        theme={theme}
-        insets={insets}
-        hideInactive={Boolean(detailOverlay && selId)}
-      />
+      <picture className={`qr-map-preview${mapReady ? ' is-loaded' : ''}`}>
+        <source media="(max-width: 767px)" srcSet="/map-preview-mobile.webp" />
+        <img
+          src="/map-preview-desktop.webp"
+          alt=""
+          width={1440}
+          height={900}
+          fetchPriority="high"
+        />
+      </picture>
+
+      {hasMeasuredMapLayout && (
+        <MapView
+          points={points}
+          activeId={selId}
+          onSelect={selectMapPoint}
+          theme={theme}
+          insets={insets}
+          hideInactive={Boolean(detailOverlay && selId)}
+          onReady={() => setMapReady(true)}
+        />
+      )}
 
       <ExploreTopBar
         desktop={desktop}

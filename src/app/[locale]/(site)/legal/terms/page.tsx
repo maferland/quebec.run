@@ -2,6 +2,7 @@ import { readFile } from 'fs/promises'
 import { join } from 'path'
 import Markdown from 'react-markdown'
 import { getTranslations } from 'next-intl/server'
+import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 
 export async function generateMetadata({
   params,
@@ -9,20 +10,26 @@ export async function generateMetadata({
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const t = await getTranslations({ locale, namespace: 'legal.privacy' })
+  const t = await getTranslations({ locale, namespace: 'legal.terms' })
 
-  return {
+  return buildPageMetadata({
+    locale: locale as Locale,
+    path: '/legal/terms',
     title: t('title'),
-  }
+    description:
+      locale === 'fr'
+        ? "Conditions d'utilisation de quebec.run."
+        : 'quebec.run terms of service.',
+  })
 }
 
-export default async function PrivacyPage({
+export default async function TermsPage({
   params,
 }: {
   params: Promise<{ locale: string }>
 }) {
   const { locale } = await params
-  const filePath = join(process.cwd(), 'messages', locale, 'privacy.md')
+  const filePath = join(process.cwd(), 'messages', locale, 'terms.md')
   const content = await readFile(filePath, 'utf-8')
 
   return (

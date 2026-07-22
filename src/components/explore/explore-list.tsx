@@ -4,13 +4,9 @@ import { AllDoneNote, EmptyDay, NoMatch } from './quiet-states'
 import type { WeekDay } from './week-bar'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
+import { isRunTimePast } from '@/lib/utils/run-time'
 
 type Mode = 'runs' | 'clubs'
-
-function toMin(time: string): number {
-  const [hours, minutes] = time.split(':').map(Number)
-  return (hours ?? 0) * 60 + (minutes ?? 0)
-}
 
 // ── Sub-components ────────────────────────────────────────────────────────────
 
@@ -270,7 +266,9 @@ export function RunList({
   // Today's runs are all in the past
   const allPast =
     day === 0 &&
-    runs.every((r) => r.status === 'CANCELLED' || toMin(r.time) < nowMin)
+    runs.every(
+      (run) => run.status === 'CANCELLED' || isRunTimePast(run.time, nowMin)
+    )
   if (allPast) {
     return <AllDoneNote week={week} setDay={setDay} tr={tr} />
   }

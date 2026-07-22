@@ -16,7 +16,8 @@ it('uses canonical event resolution for virtual run metadata', async () => {
   vi.mocked(getEventById).mockResolvedValue({
     id: 'club-slug-run-slug--2026-03-08',
     title: 'Sunday Run',
-    club: { name: 'Test Club' },
+    recurringSlug: 'run-slug',
+    club: { name: 'Test Club', slug: 'club-slug' },
   } as Awaited<ReturnType<typeof getEventById>>)
 
   const metadata = await generateMetadata({
@@ -30,5 +31,8 @@ it('uses canonical event resolution for virtual run metadata', async () => {
     data: { id: 'club-slug-run-slug--2026-03-08' },
   })
   expect(metadata.title).toBe('title: Sunday Run | Test Club')
+  expect(metadata.alternates?.canonical).toBe(
+    'https://www.quebec.run/en/clubs/club-slug/events/run-slug/2026-03-08'
+  )
   expect(metadata.robots).toBeUndefined()
 })

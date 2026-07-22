@@ -12,6 +12,7 @@ import { useTheme } from './theme-provider'
 import { RunDetailPanel, type RunDetailData } from './run-detail'
 import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import type { ClubForDetail } from '@/lib/services/clubs'
+import { isRunPast } from '@/lib/utils/run-time'
 
 export const PANEL_ENTER_MS = 280
 export const PANEL_EXIT_MS = 220
@@ -85,35 +86,6 @@ export function loadRunDetail(id: string) {
       },
     }
   })
-}
-
-const TORONTO_TIME_ZONE = 'America/Toronto'
-
-function torontoDateTimeParts(date: Date) {
-  const parts = new Intl.DateTimeFormat('en-CA', {
-    timeZone: TORONTO_TIME_ZONE,
-    year: 'numeric',
-    month: '2-digit',
-    day: '2-digit',
-    hour: '2-digit',
-    minute: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(date)
-
-  return Object.fromEntries(parts.map(({ type, value }) => [type, value]))
-}
-
-export function isRunPast(date: string, time: string, now: Date) {
-  const runDate = new Date(date)
-  const timeMatch = /^(\d{2}):(\d{2})$/.exec(time)
-  if (Number.isNaN(runDate.getTime()) || !timeMatch) return false
-  if (Number(timeMatch[1]) > 23 || Number(timeMatch[2]) > 59) return false
-
-  const run = torontoDateTimeParts(runDate)
-  const current = torontoDateTimeParts(now)
-  const runKey = `${run.year}-${run.month}-${run.day}T${time.slice(0, 5)}`
-  const currentKey = `${current.year}-${current.month}-${current.day}T${current.hour}:${current.minute}`
-  return runKey < currentKey
 }
 
 function loadClubDetail(slug: string, locale: string) {

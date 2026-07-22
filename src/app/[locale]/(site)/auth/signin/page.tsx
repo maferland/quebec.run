@@ -8,9 +8,17 @@ import { useAuthGuard } from '@/lib/hooks/use-auth-guard'
 import { signIn } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { useSearchParams } from 'next/navigation'
-import { useState } from 'react'
+import { Suspense, useState } from 'react'
 
 export default function SignInPage() {
+  return (
+    <Suspense>
+      <SignInContent />
+    </Suspense>
+  )
+}
+
+function SignInContent() {
   const t = useTranslations('auth')
   const searchParams = useSearchParams()
   const callbackUrl = searchParams.get('callbackUrl') || '/'

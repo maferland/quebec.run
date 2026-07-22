@@ -33,7 +33,7 @@ describe('legacy concrete event route', () => {
 
     await expect(
       LegacyEventPage({
-        params: Promise.resolve({ id: 'event-id' }),
+        params: Promise.resolve({ locale: 'en', id: 'event-id' }),
         searchParams: Promise.resolve({}),
       })
     ).rejects.toThrow('REDIRECT')
@@ -42,7 +42,7 @@ describe('legacy concrete event route', () => {
       where: { id: 'event-id' },
       select: { id: true },
     })
-    expect(permanentRedirect).toHaveBeenCalledWith('/run/event-id')
+    expect(permanentRedirect).toHaveBeenCalledWith('/en/run/event-id')
   })
 
   it('returns not found when the concrete event does not exist', async () => {
@@ -50,7 +50,7 @@ describe('legacy concrete event route', () => {
 
     await expect(
       LegacyEventPage({
-        params: Promise.resolve({ id: 'missing' }),
+        params: Promise.resolve({ locale: 'en', id: 'missing' }),
         searchParams: Promise.resolve({}),
       })
     ).rejects.toThrow('NOT_FOUND')

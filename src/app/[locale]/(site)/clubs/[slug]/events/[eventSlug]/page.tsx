@@ -4,6 +4,7 @@ import type { PageProps } from '@/lib/types/next'
 import { format } from 'date-fns'
 
 export type ClubEventBarePageProps = PageProps<{
+  locale: string
   slug: string
   eventSlug: string
 }>
@@ -11,7 +12,7 @@ export type ClubEventBarePageProps = PageProps<{
 export default async function ClubEventBarePage({
   params,
 }: ClubEventBarePageProps) {
-  const { slug, eventSlug } = await params
+  const { locale, slug, eventSlug } = await params
   const next = await getNextOccurrenceDate({
     data: { clubSlug: slug, eventSlug },
   })
@@ -20,5 +21,7 @@ export default async function ClubEventBarePage({
     notFound()
   }
 
-  redirect(`/clubs/${slug}/events/${eventSlug}/${format(next, 'yyyy-MM-dd')}`)
+  redirect(
+    `/${locale}/clubs/${slug}/events/${eventSlug}/${format(next, 'yyyy-MM-dd')}`
+  )
 }

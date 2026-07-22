@@ -3,7 +3,7 @@ import { prisma } from '@/lib/prisma'
 import { LEGACY_VIRTUAL_SLUG_MAP } from '@/lib/utils/legacy-event-slugs'
 import type { PageProps } from '@/lib/types/next'
 
-export type LegacyEventPageProps = PageProps<{ id: string }>
+export type LegacyEventPageProps = PageProps<{ locale: string; id: string }>
 
 /**
  * Legacy /events/[id] is a permanent redirect to the canonical nested URL
@@ -16,7 +16,7 @@ export type LegacyEventPageProps = PageProps<{ id: string }>
 export default async function LegacyEventPage({
   params,
 }: LegacyEventPageProps) {
-  const { id } = await params
+  const { locale, id } = await params
 
   const slugMatch = id.match(/^(.+)--(\d{4}-\d{2}-\d{2})$/)
   if (slugMatch) {
@@ -24,7 +24,7 @@ export default async function LegacyEventPage({
     const mapped = LEGACY_VIRTUAL_SLUG_MAP[legacySlug]
     if (mapped) {
       permanentRedirect(
-        `/clubs/${mapped.clubSlug}/events/${mapped.eventSlug}/${date}`
+        `/${locale}/clubs/${mapped.clubSlug}/events/${mapped.eventSlug}/${date}`
       )
     }
     notFound()
@@ -40,7 +40,9 @@ export default async function LegacyEventPage({
       })
       .catch(() => null)
     if (re) {
-      permanentRedirect(`/clubs/${re.club.slug}/events/${re.slug}/${date}`)
+      permanentRedirect(
+        `/${locale}/clubs/${re.club.slug}/events/${re.slug}/${date}`
+      )
     }
     notFound()
   }
@@ -49,7 +51,7 @@ export default async function LegacyEventPage({
     where: { id },
     select: { id: true },
   })
-  if (event) permanentRedirect(`/run/${event.id}`)
+  if (event) permanentRedirect(`/${locale}/run/${event.id}`)
 
   notFound()
 }
