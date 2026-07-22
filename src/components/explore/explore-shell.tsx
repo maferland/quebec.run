@@ -57,6 +57,13 @@ type DetailOverlayState = DetailRoute & {
   closeMode: 'history' | 'route'
 }
 
+export type InitialExploreData = {
+  day: number
+  weekCounts?: { day: number; count: number }[]
+  runs?: ExploreRun[]
+  clubs?: ExploreClub[]
+}
+
 // ── Week bar helpers ──────────────────────────────────────────────────────────
 
 function buildWeekDays(
@@ -104,17 +111,25 @@ function toMin(time: string): number {
 
 // ── Public export wraps inner in Suspense (required for useSearchParams) ─────
 
-export function ExploreShell() {
+export function ExploreShell({
+  initialData,
+}: {
+  initialData?: InitialExploreData
+}) {
   return (
     <Suspense>
-      <ExploreShellInner />
+      <ExploreShellInner initialData={initialData} />
     </Suspense>
   )
 }
 
 // ── Inner shell ───────────────────────────────────────────────────────────────
 
-function ExploreShellInner() {
+function ExploreShellInner({
+  initialData,
+}: {
+  initialData?: InitialExploreData
+}) {
   const { theme, setTheme } = useTheme()
   const locale = useLocale()
   const t = useTranslations('explore')
@@ -158,6 +173,8 @@ function ExploreShellInner() {
   const day = searchParams.has('day')
     ? parseDay(searchParams)
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
+  const initialRuns = initialData?.day === day ? initialData.runs : undefined
+  const hasInitialRuns = initialRuns !== undefined
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
 
   const clearExitFallback = useCallback(() => {
@@ -412,14 +429,19 @@ function ExploreShellInner() {
 
   const [weekCounts, setWeekCounts] = useState<
     { day: number; count: number }[]
-  >([])
-  const [runs, setRuns] = useState<ExploreRun[]>([])
-  const [clubs, setClubs] = useState<ExploreClub[]>([])
+  >(() => initialData?.weekCounts ?? [])
+  const [runs, setRuns] = useState<ExploreRun[]>(() => initialRuns ?? [])
+  const [clubs, setClubs] = useState<ExploreClub[]>(
+    () => initialData?.clubs ?? []
+  )
+  const initialRunsDayRef = useRef(hasInitialRuns ? day : null)
   const [selectedRunPoint, setSelectedRunPoint] = useState<
     (MapPoint & { kind: 'run' }) | null
   >(null)
-  const [loadingRuns, setLoadingRuns] = useState(false)
-  const [loadingClubs, setLoadingClubs] = useState(true)
+  const [loadingRuns, setLoadingRuns] = useState(!hasInitialRuns)
+  const [loadingClubs, setLoadingClubs] = useState(
+    initialData?.clubs === undefined
+  )
 
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef<{ y: number; h: number } | null>(null)
@@ -432,6 +454,7 @@ function ExploreShellInner() {
     [containerH]
   )
   const [sheetH, setSheetH] = useState(0)
+  const hasMeasuredMapLayout = containerH > 0 && (desktop || sheetH > 0)
   useEffect(() => {
     if (snaps.mid > 0 && !dragging) setSheetH(snaps.mid)
   }, [snaps.mid, dragging])
@@ -473,6 +496,7 @@ function ExploreShellInner() {
   }, [])
 
   useEffect(() => {
+    if (weekCounts.length > 0) return
     fetch('/api/explore/week-counts')
       .then((r) => {
         if (!r.ok) return []
@@ -482,9 +506,14 @@ function ExploreShellInner() {
         if (Array.isArray(data)) setWeekCounts(data)
       })
       .catch(() => {})
-  }, [])
+  }, [weekCounts.length])
 
   useEffect(() => {
+    if (initialRunsDayRef.current === day) {
+      initialRunsDayRef.current = null
+      setLoadingRuns(false)
+      return
+    }
     const controller = new AbortController()
     setLoadingRuns(true)
     fetch(`/api/explore/runs?day=${day}`, { signal: controller.signal })
@@ -836,14 +865,16 @@ function ExploreShellInner() {
         zIndex: 1200,
       }}
     >
-      <MapView
-        points={points}
-        activeId={selId}
-        onSelect={selectMapPoint}
-        theme={theme}
-        insets={insets}
-        hideInactive={Boolean(detailOverlay && selId)}
-      />
+      {hasMeasuredMapLayout && (
+        <MapView
+          points={points}
+          activeId={selId}
+          onSelect={selectMapPoint}
+          theme={theme}
+          insets={insets}
+          hideInactive={Boolean(detailOverlay && selId)}
+        />
+      )}
 
       <ExploreTopBar
         desktop={desktop}

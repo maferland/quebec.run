@@ -5,12 +5,23 @@ import type { MapViewProps } from './map-view'
 import 'leaflet/dist/leaflet.css'
 
 const QC_CENTER: [number, number] = [46.8123, -71.208]
+const INITIAL_ZOOM = 10
 
 const TILES = {
   dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
   light: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
 }
 const FIT_PADDING = 96
+
+function createTileLayer(theme: 'dark' | 'light') {
+  return L.tileLayer(TILES[theme], {
+    subdomains: 'abcd',
+    maxZoom: 19,
+    updateWhenZooming: false,
+    keepBuffer: 1,
+    attribution: '&copy; OpenStreetMap &copy; CARTO',
+  })
+}
 
 export function MapViewContent({
   points,
@@ -23,12 +34,15 @@ export function MapViewContent({
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<L.Map | null>(null)
   const tileRef = useRef<L.TileLayer | null>(null)
+  const tileThemeRef = useRef(theme)
   const markersRef = useRef<Record<string, L.Marker>>({})
   const insetsRef = useRef(insets)
   const pointsRef = useRef(points)
   const activeIdRef = useRef(activeId)
   const onSelectRef = useRef(onSelect)
   const lastFlyRef = useRef<string | null>(null)
+  const lastFitRef = useRef<string | null>(null)
+  const hasPositionedRef = useRef(false)
   const [mapReady, setMapReady] = useState(false)
   insetsRef.current = insets
   pointsRef.current = points
@@ -40,20 +54,49 @@ export function MapViewContent({
 
     const map = L.map(containerRef.current, {
       center: QC_CENTER,
-      zoom: 13,
+      zoom: INITIAL_ZOOM,
       zoomControl: false,
       attributionControl: true,
       zoomSnap: 0.25,
     })
 
-    const mkLayer = (variant: 'dark' | 'light') =>
-      L.tileLayer(TILES[variant], {
-        subdomains: 'abcd',
-        maxZoom: 19,
-        attribution: '&copy; OpenStreetMap &copy; CARTO',
+    const initialPoints = pointsRef.current
+    const initialActiveId = activeIdRef.current
+    const initialInsets = insetsRef.current
+    const activePoint = initialPoints.find(
+      (point) => point.id === initialActiveId
+    )
+    if (activePoint) {
+      positionOffset(
+        map,
+        [activePoint.lat, activePoint.lng],
+        14,
+        initialInsets,
+        { animate: false }
+      )
+      lastFlyRef.current = flyKey(activePoint.id, initialInsets)
+      hasPositionedRef.current = true
+    } else if (initialPoints.length === 1) {
+      positionOffset(
+        map,
+        [initialPoints[0].lat, initialPoints[0].lng],
+        14,
+        initialInsets,
+        { animate: false }
+      )
+      lastFitRef.current = pointSignature(initialPoints)
+      hasPositionedRef.current = true
+    } else if (initialPoints.length > 1) {
+      map.fitBounds(createBounds(initialPoints), {
+        ...fitBoundsOptions(initialInsets),
+        animate: false,
       })
+      lastFitRef.current = pointSignature(initialPoints)
+      hasPositionedRef.current = true
+    }
 
-    tileRef.current = mkLayer(theme).addTo(map)
+    tileThemeRef.current = theme
+    tileRef.current = createTileLayer(theme).addTo(map)
     mapRef.current = map
     syncMarkers(
       map,
@@ -83,12 +126,8 @@ export function MapViewContent({
   useEffect(() => {
     const map = mapRef.current
     const prev = tileRef.current
-    if (!map) return
-    const next = L.tileLayer(TILES[theme], {
-      subdomains: 'abcd',
-      maxZoom: 19,
-      attribution: '&copy; OpenStreetMap &copy; CARTO',
-    }).addTo(map)
+    if (!map || tileThemeRef.current === theme) return
+    const next = createTileLayer(theme).addTo(map)
     const drop = () => {
       try {
         if (prev && prev !== next) map.removeLayer(prev)
@@ -97,6 +136,7 @@ export function MapViewContent({
     next.on('load', drop)
     setTimeout(drop, 900)
     tileRef.current = next
+    tileThemeRef.current = theme
   }, [theme])
 
   // sync markers
@@ -117,44 +157,49 @@ export function MapViewContent({
   useEffect(() => {
     const map = mapRef.current
     if (!map || !activeId) return
-    const flyKey = `${activeId}:${insets.left}:${insets.top}:${insets.bottom}`
-    if (lastFlyRef.current === flyKey) return
+    const nextFlyKey = flyKey(activeId, insets)
+    if (lastFlyRef.current === nextFlyKey) return
     const p = points.find((x) => x.id === activeId)
     if (!p) return
-    lastFlyRef.current = flyKey
-    flyOffset(
-      map,
-      [p.lat, p.lng],
-      Math.max(map.getZoom(), 14),
-      insetsRef.current
-    )
+    lastFlyRef.current = nextFlyKey
+    lastFitRef.current = null
+    positionOffset(map, [p.lat, p.lng], 14, insetsRef.current, {
+      animate: hasPositionedRef.current,
+    })
+    hasPositionedRef.current = true
   }, [activeId, points, insets, mapReady])
 
   // fit bounds when points change and nothing active
-  const sig = points.map((p) => p.id).join(',')
+  const sig = pointSignature(points)
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
     if (activeId) return
     lastFlyRef.current = null
+    if (lastFitRef.current === sig) return
+    lastFitRef.current = sig
     const ins = insetsRef.current
     if (points.length === 0) {
-      map.flyTo(QC_CENTER, 12.5, { duration: 0.6 })
+      if (hasPositionedRef.current) {
+        map.flyTo(QC_CENTER, 12.5, { duration: 0.6 })
+      }
       return
     }
     if (points.length === 1) {
-      flyOffset(map, [points[0].lat, points[0].lng], 14, ins)
+      positionOffset(map, [points[0].lat, points[0].lng], 14, ins, {
+        animate: hasPositionedRef.current,
+      })
+      hasPositionedRef.current = true
       return
     }
-    const bounds = L.latLngBounds(
-      points.map((p) => [p.lat, p.lng] as [number, number])
-    )
-    map.flyToBounds(bounds, {
-      paddingTopLeft: [ins.left + FIT_PADDING, ins.top + FIT_PADDING],
-      paddingBottomRight: [FIT_PADDING, ins.bottom + FIT_PADDING],
-      duration: 0.7,
-      maxZoom: 15,
-    })
+    const bounds = createBounds(points)
+    const options = fitBoundsOptions(ins)
+    if (hasPositionedRef.current) {
+      map.flyToBounds(bounds, { ...options, duration: 0.7 })
+    } else {
+      map.fitBounds(bounds, { ...options, animate: false })
+    }
+    hasPositionedRef.current = true
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [sig, activeId, mapReady])
 
@@ -166,6 +211,28 @@ export function MapViewContent({
       style={{ position: 'absolute', inset: 0, zIndex: 0 }}
     />
   )
+}
+
+function pointSignature(points: MapViewProps['points']) {
+  return points.map((point) => point.id).join(',')
+}
+
+function flyKey(activeId: string, insets: MapViewProps['insets']) {
+  return `${activeId}:${insets.left}:${insets.top}:${insets.bottom}`
+}
+
+function createBounds(points: MapViewProps['points']) {
+  return L.latLngBounds(
+    points.map((point) => [point.lat, point.lng] as [number, number])
+  )
+}
+
+function fitBoundsOptions(insets: MapViewProps['insets']): L.FitBoundsOptions {
+  return {
+    paddingTopLeft: [insets.left + FIT_PADDING, insets.top + FIT_PADDING],
+    paddingBottomRight: [FIT_PADDING, insets.bottom + FIT_PADDING],
+    maxZoom: 15,
+  }
 }
 
 function syncMarkers(
@@ -244,16 +311,21 @@ export function createMarkerContent(className: string, label?: string) {
   return root
 }
 
-function flyOffset(
+function positionOffset(
   map: L.Map,
   latlng: [number, number],
   zoom: number,
-  ins: { left: number; top: number; bottom: number }
+  ins: { left: number; top: number; bottom: number },
+  options: { animate: boolean }
 ) {
   const p = map.project(L.latLng(latlng), zoom)
   const center = map.unproject(
     p.subtract(L.point((ins.left || 0) / 2, ((ins.top || 0) - ins.bottom) / 2)),
     zoom
   )
-  map.flyTo(center, zoom, { duration: 0.7, easeLinearity: 0.25 })
+  if (options.animate) {
+    map.flyTo(center, zoom, { duration: 0.7, easeLinearity: 0.25 })
+    return
+  }
+  map.setView(center, zoom, { animate: false })
 }
