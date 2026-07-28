@@ -191,7 +191,7 @@ export function DetailOverlay({
 
   const runQuery = useRunDetail(isRun ? overlay.id : null)
   const clubQuery = useClubDetail(isRun ? null : overlay.slug, locale)
-  const query = isRun ? runQuery : clubQuery
+  const { isError, refetch } = isRun ? runQuery : clubQuery
 
   const exiting = inactive ? false : overlay.exiting
 
@@ -213,42 +213,42 @@ export function DetailOverlay({
     onExitComplete: handleAnimationEnd,
   }
 
-  if (query.isError) {
+  const close = () => onClose?.()
+
+  // Branching on kind before reading the data is what keeps this free of
+  // non-null assertions.
+  const panel = isRun
+    ? runQuery.data && (
+        <RunDetailPanel
+          run={runQuery.data}
+          onBack={close}
+          onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
+          locale={locale}
+        />
+      )
+    : clubQuery.data && (
+        <ClubDetailPanel
+          club={clubQuery.data}
+          onBack={close}
+          onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
+        />
+      )
+
+  if (isError) {
     return (
       <OverlayShell {...shell}>
         <DetailError
           kind={overlay.kind}
-          onBack={() => onClose?.()}
-          onRetry={() => void query.refetch()}
+          onBack={close}
+          onRetry={() => void refetch()}
         />
-      </OverlayShell>
-    )
-  }
-
-  if (!query.data) {
-    return (
-      <OverlayShell {...shell}>
-        <DetailSkeleton kind={overlay.kind} />
       </OverlayShell>
     )
   }
 
   return (
     <OverlayShell {...shell}>
-      {isRun ? (
-        <RunDetailPanel
-          run={runQuery.data!}
-          onBack={() => onClose?.()}
-          onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
-          locale={locale}
-        />
-      ) : (
-        <ClubDetailPanel
-          club={clubQuery.data!}
-          onBack={() => onClose?.()}
-          onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
-        />
-      )}
+      {panel ?? <DetailSkeleton kind={overlay.kind} />}
     </OverlayShell>
   )
 }

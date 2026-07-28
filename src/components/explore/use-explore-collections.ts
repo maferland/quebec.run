@@ -16,11 +16,22 @@ function matchesQuery(
   return haystack.some((value) => foldedIncludes(value, foldedQuery))
 }
 
-function toRunPoint(run: ExploreRun, past: boolean): MapPoint {
+type RunLike = {
+  id: string
+  time: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  lat: number | null
+  lng: number | null
+}
+
+// Returns null rather than asserting: a run or club without coordinates simply
+// has no marker.
+function runPoint(run: RunLike, past: boolean): MapPoint | null {
+  if (run.lat === null || run.lng === null) return null
   return {
     id: run.id,
-    lat: run.lat!,
-    lng: run.lng!,
+    lat: run.lat,
+    lng: run.lng,
     kind: 'run',
     label: run.time,
     cancelled: run.status === 'CANCELLED',
@@ -28,18 +39,19 @@ function toRunPoint(run: ExploreRun, past: boolean): MapPoint {
   }
 }
 
-function toClubPoint(club: ExploreClub): MapPoint {
+function clubPoint(club: ExploreClub): MapPoint | null {
+  if (club.lat === null || club.lng === null) return null
   return {
     id: club.id,
-    lat: club.lat!,
-    lng: club.lng!,
+    lat: club.lat,
+    lng: club.lng,
     kind: 'club',
     label: club.name,
   }
 }
 
-const hasCoords = (item: { lat: number | null; lng: number | null }) =>
-  item.lat !== null && item.lng !== null
+const compact = <T>(items: (T | null)[]): T[] =>
+  items.flatMap((item) => (item ? [item] : []))
 
 export function useExploreCollections({
   runs,
@@ -81,35 +93,26 @@ export function useExploreCollections({
   }, [clubs, filters, query])
 
   // Keeps the open run pinned even when the day's list does not contain it.
-  const selectedRunPoint = useMemo<MapPoint | null>(() => {
-    if (!selectedRun || selectedRun.lat === null || selectedRun.lng === null) {
-      return null
-    }
-    return {
-      id: selectedRun.id,
-      lat: selectedRun.lat,
-      lng: selectedRun.lng,
-      kind: 'run',
-      label: selectedRun.time,
-      cancelled: selectedRun.status === 'CANCELLED',
-      past: Boolean(selectedRun.isPast),
-    }
-  }, [selectedRun])
+  const selectedRunPoint = useMemo(
+    () =>
+      selectedRun ? runPoint(selectedRun, Boolean(selectedRun.isPast)) : null,
+    [selectedRun]
+  )
 
   const points = useMemo((): MapPoint[] => {
     if (mode === 'clubs') {
-      return filteredClubs.filter(hasCoords).map(toClubPoint)
+      return compact(filteredClubs.map(clubPoint))
     }
-    const runPoints = filteredRuns
-      .filter(hasCoords)
-      .map((run) =>
-        toRunPoint(
+    const runPoints = compact(
+      filteredRuns.map((run) =>
+        runPoint(
           run,
           day === 0 &&
             run.status !== 'CANCELLED' &&
             isRunTimePast(run.time, nowMin)
         )
       )
+    )
     if (
       selectedRunPoint &&
       !runPoints.some((point) => point.id === selectedRunPoint.id)

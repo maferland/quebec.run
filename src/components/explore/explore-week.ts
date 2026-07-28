@@ -1,7 +1,6 @@
 import type { WeekDay } from './week-bar'
+import type { WeekCount } from '@/lib/hooks/use-explore'
 import { intlLocale } from '@/lib/utils/intl'
-
-export type WeekCount = { day: number; count: number }
 
 export function buildWeekDays({
   counts,

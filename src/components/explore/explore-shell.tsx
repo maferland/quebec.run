@@ -19,7 +19,7 @@ import { ExploreControls } from './explore-controls'
 import { DesktopRail, MobileSheet, mapInsets } from './explore-panels'
 import { DetailOverlay } from './detail-panel'
 import { detailKey } from './explore-route'
-import { buildWeekDays, type WeekCount } from './explore-week'
+import { buildWeekDays } from './explore-week'
 import { useDetailRoute, type DetailOverlayState } from './use-detail-route'
 import { useExploreRouting } from './use-explore-routing'
 import { useExploreCollections } from './use-explore-collections'
@@ -38,6 +38,7 @@ import {
   useExploreRuns,
   useRunDetail,
   useWeekCounts,
+  type WeekCount,
 } from '@/lib/hooks/use-explore'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
