@@ -174,6 +174,50 @@ describe('Clubs Service Integration Tests', () => {
       ])
     })
 
+    it.each([
+      { term: 'panthere', label: 'unaccented query, accented name' },
+      { term: 'Panthère', label: 'accented query, accented name' },
+      { term: 'PANTHERE', label: 'uppercase unaccented query' },
+    ])('matches an accented club name by $label', async ({ term }) => {
+      await seedVariety()
+      await testPrisma.club.create({
+        data: {
+          name: 'La Panthère',
+          slug: 'la-panthere',
+          description: 'Club de course à Québec',
+          type: 'ROAD',
+          vibe: 'SOCIAL',
+          beginnerFriendly: false,
+          ownerId: testUserId,
+        },
+      })
+
+      const { clubs } = await getClubListing({ data: { search: term } })
+
+      expect(clubs.map((c) => c.slug)).toEqual(['la-panthere'])
+    })
+
+    it('matches an accented description from an unaccented query', async () => {
+      await seedVariety()
+      await testPrisma.club.create({
+        data: {
+          name: 'Cafe Run',
+          slug: 'cafe-run',
+          description: 'Départ du café, entraînement léger',
+          type: 'ROAD',
+          vibe: 'SOCIAL',
+          beginnerFriendly: false,
+          ownerId: testUserId,
+        },
+      })
+
+      const { clubs } = await getClubListing({
+        data: { search: 'entrainement' },
+      })
+
+      expect(clubs.map((c) => c.slug)).toEqual(['cafe-run'])
+    })
+
     it('filters by type=ROAD (includes MIXED)', async () => {
       await seedVariety()
       const { clubs } = await getClubListing({ data: { type: 'ROAD' } })

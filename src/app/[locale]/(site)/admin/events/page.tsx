@@ -1,9 +1,10 @@
-import { getTranslations } from 'next-intl/server'
+import { getLocale, getTranslations } from 'next-intl/server'
 import { Link } from '@/i18n/navigation'
 import { Button } from '@/components/ui/button'
 import { Plus, Edit, ExternalLink } from 'lucide-react'
 import { prisma } from '@/lib/prisma'
 import { DeleteEventButton } from '@/components/admin/delete-event-button'
+import { formatEventDate } from '@/lib/utils/intl'
 
 async function getAllEventsForAdmin() {
   return await prisma.event.findMany({
@@ -24,6 +25,7 @@ async function getAllEventsForAdmin() {
 
 export default async function AdminEventsPage() {
   const t = await getTranslations('admin.events')
+  const locale = await getLocale()
   const events = await getAllEventsForAdmin()
 
   return (
@@ -102,7 +104,11 @@ export default async function AdminEventsPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-sm text-text-primary">
-                        {new Date(event.date).toLocaleDateString()}
+                        {formatEventDate(event.date, locale, {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
                       </div>
                       <div className="text-xs text-text-secondary">
                         {event.time}

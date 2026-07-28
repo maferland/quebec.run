@@ -47,6 +47,7 @@ import {
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 import { isRunTimePast } from '@/lib/utils/run-time'
+import { foldAccents, foldedIncludes } from '@/lib/utils/intl'
 import {
   useDetailPrefetch,
   useExploreClubs,
@@ -104,8 +105,11 @@ function buildWeekDays({
   })
 }
 
-function matchesQuery(haystack: (string | null | undefined)[], query: string) {
-  return haystack.some((value) => value?.toLowerCase().includes(query))
+function matchesQuery(
+  haystack: (string | null | undefined)[],
+  foldedQuery: string
+) {
+  return haystack.some((value) => foldedIncludes(value, foldedQuery))
 }
 
 // useSearchParams needs a Suspense boundary above it.
@@ -311,7 +315,7 @@ function ExploreShellInner({
     [weekCounts, locale, t]
   )
 
-  const query = search.query.trim().toLowerCase()
+  const query = foldAccents(search.query.trim())
 
   const filteredRuns = useMemo(() => {
     const byFilter = runs.filter((run) => runMatches(run, filters))

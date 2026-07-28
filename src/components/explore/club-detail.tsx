@@ -1,7 +1,8 @@
 'use client'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
+import { formatEventDate } from '@/lib/utils/intl'
 
 const UPCOMING_PREVIEW_COUNT = 3
 const SCHEDULE_PREVIEW_COUNT = 4
@@ -162,6 +163,7 @@ type Props = {
 
 export function ClubDetailPanel({ club, onBack, onOpenRun }: Props) {
   const t = useTranslations('explore')
+  const locale = useLocale()
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(false)
   const [showAllSchedule, setShowAllSchedule] = useState(false)
@@ -456,7 +458,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun }: Props) {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {visibleUpcoming.map((e, i) => {
               const cancelled = e.status === 'CANCELLED'
-              const dateLabel = formatUpcomingDate(e.date)
+              const dateLabel = formatEventDate(e.date, locale)
               return (
                 <button
                   type="button"
@@ -558,14 +560,4 @@ export function ClubDetailPanel({ club, onBack, onOpenRun }: Props) {
       )}
     </div>
   )
-}
-
-function formatUpcomingDate(value: string) {
-  const date = new Date(value)
-  if (Number.isNaN(date.getTime())) return ''
-  return new Intl.DateTimeFormat(undefined, {
-    weekday: 'short',
-    month: 'short',
-    day: 'numeric',
-  }).format(date)
 }

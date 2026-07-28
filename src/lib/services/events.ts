@@ -24,6 +24,7 @@ import {
   expandRRuleDates,
 } from './recurring-events'
 import { addDays } from 'date-fns'
+import { foldAccents, foldedIncludes } from '@/lib/utils/intl'
 import {
   EVENT_FACETS,
   createEmptyFacetCounts,
@@ -310,11 +311,9 @@ export const getAllEvents = async ({ data }: PublicPayload<EventsQuery>) => {
   let events = await getEventsInRange(startDate, endDate, resolvedClubId)
 
   if (search) {
-    const q = search.toLowerCase()
+    const q = foldAccents(search)
     events = events.filter(
-      (e) =>
-        e.title.toLowerCase().includes(q) ||
-        (e.address?.toLowerCase().includes(q) ?? false)
+      (e) => foldedIncludes(e.title, q) || foldedIncludes(e.address, q)
     )
   }
 
