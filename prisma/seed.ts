@@ -773,7 +773,7 @@ async function main() {
       description: 'Lieu de rencontre variable — annoncé sur Instagram',
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=30',
       timezone: 'America/Toronto',
-      pacePolicy: 'OPEN_PACE',
+      pacePolicy: 'OPEN_PACE' as const,
       clubId: gringos.id,
     },
   ]
