@@ -15,6 +15,7 @@ import { filterCount } from './filter-panel'
 import { PassportFAB } from './passport/passport-fab'
 import { ExploreTopBar } from './explore-top-bar'
 import { RunList } from './explore-list'
+import { AllDoneNote } from './quiet-states'
 import { ExploreControls } from './explore-controls'
 import { DesktopRail, MobileSheet, mapInsets } from './explore-panels'
 import { DetailOverlay } from './detail-panel'
@@ -280,10 +281,24 @@ function ExploreShellInner({
       allRuns={runs}
       onPreloadRun={preloadRun}
       onPreloadClub={preloadClub}
-      allDoneDismissed={allDoneDismissed}
-      onDismissAllDone={() => setAllDoneDismissed(true)}
     />
   )
+
+  // No upcoming run left today, and the list is not empty.
+  const allDone =
+    mode === 'runs' &&
+    day === 0 &&
+    collections.runCount > 0 &&
+    !collections.nextRunId &&
+    !allDoneDismissed
+
+  const listOverlay = allDone ? (
+    <AllDoneNote
+      week={week}
+      setDay={routing.setDay}
+      onDismiss={() => setAllDoneDismissed(true)}
+    />
+  ) : undefined
 
   return (
     <div
@@ -333,13 +348,18 @@ function ExploreShellInner({
       />
 
       {desktop ? (
-        <DesktopRail listRef={listRef} controls={controls}>
+        <DesktopRail
+          listRef={listRef}
+          controls={controls}
+          overlay={listOverlay}
+        >
           {list}
         </DesktopRail>
       ) : (
         <MobileSheet
           listRef={listRef}
           controls={controls}
+          overlay={listOverlay}
           height={sheet.height}
           dragging={sheet.dragging}
           gripHandlers={sheet.gripHandlers}
