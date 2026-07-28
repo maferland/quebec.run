@@ -52,7 +52,11 @@ export function useNowMinutes() {
 
 export function useSheetDrag(containerHeight: number) {
   const [dragging, setDragging] = useState(false)
-  const [height, setHeight] = useState(0)
+  // Tagged with the container it was measured against, so a resize recentres
+  // without an effect and the first paint already has the height.
+  const [dragged, setDragged] = useState<{ height: number; of: number } | null>(
+    null
+  )
   const dragRef = useRef<{ y: number; h: number } | null>(null)
 
   const snaps = useMemo(
@@ -64,11 +68,12 @@ export function useSheetDrag(containerHeight: number) {
     [containerHeight]
   )
 
-  // Not keyed on `dragging`: that fired right after onPointerUp picked a snap
-  // point, resetting the sheet to the middle on every drag.
-  useIsomorphicLayoutEffect(() => {
-    if (snaps.mid > 0) setHeight(snaps.mid)
-  }, [snaps.mid])
+  const height = dragged?.of === containerHeight ? dragged.height : snaps.mid
+
+  const setHeight = useCallback(
+    (next: number) => setDragged({ height: next, of: containerHeight }),
+    [containerHeight]
+  )
 
   const onPointerDown = useCallback(
     (event: React.PointerEvent) => {
@@ -83,25 +88,26 @@ export function useSheetDrag(containerHeight: number) {
 
   const onPointerMove = useCallback(
     (event: React.PointerEvent) => {
-      if (!dragRef.current) return
-      const dy = event.clientY - dragRef.current.y
-      setHeight(() =>
-        Math.max(snaps.peek, Math.min(snaps.full, dragRef.current!.h - dy))
-      )
+      const drag = dragRef.current
+      if (!drag) return
+      const dy = event.clientY - drag.y
+      setHeight(Math.max(snaps.peek, Math.min(snaps.full, drag.h - dy)))
     },
-    [snaps]
+    [setHeight, snaps]
   )
 
   const onPointerUp = useCallback(() => {
     if (!dragRef.current) return
     dragRef.current = null
     setDragging(false)
-    setHeight((current) =>
-      [snaps.peek, snaps.mid, snaps.full].reduce((a, b) =>
-        Math.abs(b - current) < Math.abs(a - current) ? b : a
+    setDragged((current) => {
+      const from = current?.of === containerHeight ? current.height : snaps.mid
+      const nearest = [snaps.peek, snaps.mid, snaps.full].reduce((a, b) =>
+        Math.abs(b - from) < Math.abs(a - from) ? b : a
       )
-    )
-  }, [snaps])
+      return { height: nearest, of: containerHeight }
+    })
+  }, [containerHeight, snaps])
 
   return {
     height,

@@ -224,6 +224,7 @@ export function DetailOverlay({
           onBack={close}
           onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
           locale={locale}
+          animateIn={overlay.enter}
         />
       )
     : clubQuery.data && (
@@ -231,6 +232,7 @@ export function DetailOverlay({
           club={clubQuery.data}
           onBack={close}
           onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
+          animateIn={overlay.enter}
         />
       )
 

@@ -921,6 +921,15 @@ body:has(.qr-root) .site-footer {
     animation: revealRow 0.22s cubic-bezier(0.2, 0.7, 0.3, 1);
   }
 }
+
+/* A locale switch remounts the tree; replaying every entrance animation reads
+   as the whole screen flashing. */
+.qr-root.is-restored .screen-enter,
+.qr-root.is-restored .sheet-card-enter,
+.qr-root.is-restored .reveal-row,
+.qr-root.is-restored .detail-enter {
+  animation: none !important;
+}
 @keyframes screenIn {
   from {
     transform: translateY(10px);

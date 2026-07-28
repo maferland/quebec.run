@@ -159,20 +159,27 @@ type Props = {
   club: ClubDetailData
   onBack: () => void
   onOpenRun: (id: string) => void
+  animateIn?: boolean
 }
 
-export function ClubDetailPanel({ club, onBack, onOpenRun }: Props) {
+export function ClubDetailPanel({
+  club,
+  onBack,
+  onOpenRun,
+  animateIn = true,
+}: Props) {
   const t = useTranslations('explore')
   const locale = useLocale()
   const [shared, setShared] = useState(false)
-  const [shown, setShown] = useState(false)
+  const [shown, setShown] = useState(!animateIn)
   const [showAllSchedule, setShowAllSchedule] = useState(false)
   const [showAllUpcoming, setShowAllUpcoming] = useState(false)
 
   useEffect(() => {
+    if (!animateIn) return
     const id = requestAnimationFrame(() => setShown(true))
     return () => cancelAnimationFrame(id)
-  }, [])
+  }, [animateIn])
 
   const pace = paceRange(club.paceMin, club.paceMax)
   const typeLabel = club.type ? t(`type_${club.type.toLowerCase()}`) : null
