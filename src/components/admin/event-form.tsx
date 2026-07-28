@@ -197,7 +197,6 @@ export function EventForm({
             name="address"
             label={tEvent('address')}
             error={errors.address}
-            required
             placeholder="Meeting location"
           />
 

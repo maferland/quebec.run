@@ -163,6 +163,8 @@ export function RunList({
   allRuns,
   onPreloadRun,
   onPreloadClub,
+  allDoneDismissed,
+  onDismissAllDone,
 }: {
   runs: ExploreRun[]
   clubs: ExploreClub[]
@@ -184,6 +186,8 @@ export function RunList({
   allRuns: ExploreRun[]
   onPreloadRun: (id: string) => void
   onPreloadClub: (slug: string) => void
+  allDoneDismissed: boolean
+  onDismissAllDone: () => void
 }) {
   const resultCount = mode === 'clubs' ? clubs.length : runs.length
   const resultLabel =
@@ -269,11 +273,8 @@ export function RunList({
     runs.every(
       (run) => run.status === 'CANCELLED' || isRunTimePast(run.time, nowMin)
     )
-  if (allPast) {
-    return <AllDoneNote week={week} setDay={setDay} tr={tr} />
-  }
 
-  return (
+  const listContent = (
     <div
       className={refreshing ? 'is-refreshing' : undefined}
       style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
@@ -294,4 +295,34 @@ export function RunList({
       ))}
     </div>
   )
+
+  if (allPast && !allDoneDismissed) {
+    return (
+      <div style={{ position: 'relative' }}>
+        {listContent}
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            background: 'color-mix(in oklch, var(--bg) 82%, transparent)',
+            backdropFilter: 'blur(6px)',
+            borderRadius: 'var(--r-lg)',
+          }}
+        >
+          <AllDoneNote
+            week={week}
+            setDay={setDay}
+            onDismiss={onDismissAllDone}
+            tr={tr}
+          />
+        </div>
+      </div>
+    )
+  }
+
+  return listContent
 }

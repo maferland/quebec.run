@@ -146,6 +146,7 @@ export type RunDetailData = {
   isPast?: boolean
   status: 'SCHEDULED' | 'CANCELLED'
   distance: string | null
+  pacePolicy: 'SHARED' | 'OPEN_PACE' | null
   address: string | null
   lat: number | null
   lng: number | null
@@ -253,6 +254,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
     ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
+  const variableFallback = run.pacePolicy === 'OPEN_PACE' ? tr('variable') : '—'
   const clubDescription =
     run.club.description && run.club.description.length > 120
       ? `${run.club.description.slice(0, 120)}…`
@@ -394,11 +396,15 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
         <div style={{ width: 1, background: 'var(--line)' }} />
         <StatCol
           icon={RulerIcon}
-          value={run.distance ? `${run.distance} km` : '—'}
+          value={run.distance ? `${run.distance} km` : variableFallback}
           label={tr('distance')}
         />
         <div style={{ width: 1, background: 'var(--line)' }} />
-        <StatCol icon={GaugeIcon} value={pace ?? '—'} label={tr('pace')} />
+        <StatCol
+          icon={GaugeIcon}
+          value={pace ?? variableFallback}
+          label={tr('pace')}
+        />
       </div>
 
       {/* meeting point */}
@@ -491,14 +497,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
             textAlign: 'left',
           }}
         >
-          <span
-            style={{
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center',
-              gap: 10,
-            }}
-          >
+          <span style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             <span style={{ display: 'block' }}>
               <span
                 style={{ display: 'block', fontSize: 16.5, fontWeight: 700 }}
@@ -525,6 +524,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
                 color: 'var(--faint)',
                 display: 'inline-flex',
                 alignItems: 'center',
+                justifyContent: 'flex-end',
                 gap: 4,
                 fontSize: 13,
                 fontWeight: 600,

@@ -28,6 +28,7 @@ type RunDetailResponse = {
   status: 'SCHEDULED' | 'CANCELLED'
   distance?: string | null
   pace?: string | null
+  pacePolicy?: 'SHARED' | 'OPEN_PACE' | null
   address?: string | null
   latitude?: number | null
   longitude?: number | null
@@ -70,6 +71,7 @@ export function loadRunDetail(id: string) {
       isPast,
       status: data.status,
       distance: data.distance ?? data.pace ?? null,
+      pacePolicy: data.pacePolicy ?? null,
       address: data.address ?? null,
       lat: data.latitude ?? data.lat ?? null,
       lng: data.longitude ?? data.lng ?? null,

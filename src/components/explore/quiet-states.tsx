@@ -78,6 +78,21 @@ const CheckCircleIcon = (
   </svg>
 )
 
+const XIcon = (
+  <svg
+    width="16"
+    height="16"
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+  >
+    <path d="M6 6l12 12M18 6L6 18" />
+  </svg>
+)
+
 type EmptyDayProps = {
   week: WeekDay[]
   day: number
@@ -204,24 +219,56 @@ export function NoMatch({
 type AllDoneNoteProps = {
   week: WeekDay[]
   setDay: (offset: number) => void
+  onDismiss?: () => void
   tr: (k: string) => string
 }
 
-export function AllDoneNote({ week, setDay, tr }: AllDoneNoteProps) {
+export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
   const tomorrow = week.find((d) => d.offset === 1) ?? null
 
   return (
     <FadeIn>
       <div
         style={{
+          position: 'relative',
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           textAlign: 'center',
           gap: 14,
           padding: '42px 24px 30px',
+          background: 'var(--bg-2)',
+          border: '1px solid var(--line-2)',
+          borderRadius: 'var(--r-xl)',
+          boxShadow:
+            '0 24px 70px -12px rgba(0,0,0,.55), 0 6px 20px rgba(0,0,0,.3)',
+          maxWidth: 300,
+          marginInline: 'auto',
         }}
       >
+        {onDismiss && (
+          <button
+            className="tap"
+            onClick={onDismiss}
+            aria-label={tr('all_done_close')}
+            style={{
+              position: 'absolute',
+              top: 10,
+              right: 10,
+              border: 'none',
+              background: 'var(--surface)',
+              color: 'var(--dim)',
+              width: 30,
+              height: 30,
+              borderRadius: 100,
+              display: 'grid',
+              placeItems: 'center',
+              cursor: 'pointer',
+            }}
+          >
+            {XIcon}
+          </button>
+        )}
         <span style={{ color: 'var(--accent)' }}>{CheckCircleIcon}</span>
         <h3 style={{ fontSize: 18, margin: 0 }}>{tr('all_done_title')}</h3>
         <p
