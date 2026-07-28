@@ -9,10 +9,10 @@ import type { ClubDetailData } from '@/components/explore/club-detail'
 import type { RunDetailData } from '@/components/explore/run-detail'
 import type { ClubForDetail, ExploreClub } from '@/lib/services/clubs'
 import type { ExploreRun } from '@/lib/services/events'
+import type { WeekCount } from '@/components/explore/explore-week'
 import { isRunPast } from '@/lib/utils/run-time'
 
-export type WeekCount = { day: number; count: number }
-
+export type { WeekCount }
 // Close enough to the `revalidate = 900` on the explore routes that a remount
 // reuses the cache instead of refetching.
 const STALE_TIME = 5 * 60 * 1000
@@ -172,8 +172,11 @@ export function useRunDetail(id: string | null) {
   return useQuery({ ...runDetailQuery(id ?? ''), enabled: Boolean(id) })
 }
 
-export function useClubDetail(slug: string, locale: string) {
-  return useQuery(clubDetailQuery(slug, locale))
+export function useClubDetail(slug: string | null, locale: string) {
+  return useQuery({
+    ...clubDetailQuery(slug ?? '', locale),
+    enabled: Boolean(slug),
+  })
 }
 
 export function useDetailPrefetch(locale: string) {

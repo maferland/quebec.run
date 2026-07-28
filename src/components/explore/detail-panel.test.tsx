@@ -1,7 +1,7 @@
 import userEvent from '@testing-library/user-event'
 import { afterEach, expect, it, vi } from 'vitest'
 import { render, screen } from '@/lib/test-utils'
-import { ClubDetailOverlay, RunDetailOverlay } from './detail-panel'
+import { DetailOverlay } from './detail-panel'
 
 const replace = vi.fn()
 
@@ -33,7 +33,18 @@ it('keeps a failed run route open and retries its request', async () => {
       )
     )
 
-  render(<RunDetailOverlay id="run-1" onClose={onClose} />)
+  render(
+    <DetailOverlay
+      overlay={{
+        kind: 'run',
+        id: 'run-1',
+        enter: true,
+        exiting: false,
+        closeMode: 'route',
+      }}
+      onClose={onClose}
+    />
+  )
 
   expect(
     await screen.findByRole('heading', { name: 'Could not load the run' })
@@ -75,7 +86,18 @@ it('keeps a failed club route open and retries its request', async () => {
       )
     )
 
-  render(<ClubDetailOverlay slug="trail-club" onClose={onClose} />)
+  render(
+    <DetailOverlay
+      overlay={{
+        kind: 'club',
+        slug: 'trail-club',
+        enter: true,
+        exiting: false,
+        closeMode: 'route',
+      }}
+      onClose={onClose}
+    />
+  )
 
   expect(
     await screen.findByRole('heading', { name: 'Could not load the club' })

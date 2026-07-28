@@ -1,7 +1,8 @@
 import { act } from '@testing-library/react'
 import { describe, expect, it, vi } from 'vitest'
 import { renderHook } from '@/lib/test-utils'
-import { useExploreSearch, useSheetDrag } from './use-explore-layout'
+import { useSheetDrag } from './use-explore-layout'
+import { useExploreSearch } from './use-explore-search'
 
 const CONTAINER = 1000
 const SNAPS = { peek: 340, mid: 600, full: 930 }
