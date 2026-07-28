@@ -4,7 +4,7 @@
 
 1. `npm run lint`
 2. `bun tsc --noEmit`
-3. `npm run test -- --coverage` (≥95%)
+3. `npm run test -- --coverage` (must clear the ratchet in `vitest.config.ts`)
 4. `npx prettier --write .`
 
 **Apply to:** components, schemas (Prisma/Zod/API), services, routes, hooks/utils, bug fixes, features
@@ -20,7 +20,7 @@ If multiple iterations of feedback are needed, keep running pinpoint after each 
 
 ## Testing Strategy
 
-**Coverage:** Maintain ≥95% threshold; focus on meaningful paths
+**Coverage:** `vitest.config.ts` holds a ratchet, currently 50% statements / 78% branches / 72% functions. Raise it in any PR that adds tests; never lower it. 95% stays the goal, not the gate.
 
 - **Unit (components, functions):** Test via roles/labels/names (not CSS selectors), use `@testing-library/user-event`
 - **Integration (services + DB):** Use real test DB with `TEST_DATABASE_URL`, clean/seed per test, let Prisma generate IDs

@@ -26,6 +26,11 @@ export default defineConfig(({ mode }) => {
           '**/*.e2e.{ts,tsx}',
           'src/lib/storybook-utils.tsx',
           'src/lib/auth.ts',
+          'src/lib/test-utils.tsx',
+          'src/lib/test-i18n.ts',
+          'src/lib/test-e2e-helpers.ts',
+          'scripts/**',
+          '.storybook/**',
           'prisma/**',
           '.next/',
           '.worktrees/',
@@ -34,13 +39,12 @@ export default defineConfig(({ mode }) => {
           // Exclude only API route files - these are integration tested
           'src/app/api/**/route.ts',
         ],
+        // Flat keys: a nested `global` object is silently ignored by Vitest 3.
         thresholds: {
-          global: {
-            branches: 95,
-            functions: 95,
-            lines: 95,
-            statements: 95,
-          },
+          statements: 50,
+          lines: 50,
+          branches: 78,
+          functions: 72,
         },
       },
     },
