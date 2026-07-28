@@ -1,4 +1,4 @@
-import type { Metadata } from 'next'
+import type { Metadata, Viewport } from 'next'
 import { Space_Grotesk, Hanken_Grotesk, Space_Mono } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { SpeedInsights } from '@vercel/speed-insights/next'
@@ -32,6 +32,10 @@ const spaceMono = Space_Mono({
   display: 'swap',
 })
 
+export const viewport: Viewport = {
+  themeColor: '#161b26',
+}
+
 export const dynamicParams = false
 
 export function generateStaticParams() {
@@ -53,6 +57,8 @@ export async function generateMetadata({
       path: '',
       title: t('title'),
       description: t('description'),
+      ogTitle: t('ogTitle'),
+      ogDescription: t('ogDescription'),
     }),
   }
 }

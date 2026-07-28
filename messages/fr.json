@@ -51,8 +51,12 @@
     "title": "quebec.run | Trouvez votre prochaine course à Québec",
     "description": "Découvrez les clubs de course et événements à Québec. Connectez-vous avec d'autres coureurs et explorez de nouveaux parcours ensemble.",
     "home": {
-      "title": "quebec.run | Clubs de course et événements à Québec",
-      "description": "Trouvez un club de course à Québec : 6AM Club, Faux Mouvement, La Foulée, Le Coureur Nordique et plus. Tous les événements de course de la semaine."
+      "title": "quebec.run | Où courir ce soir à Québec ?",
+      "description": "Tous les clubs de course de Québec sur une carte. Trouve une sortie ce soir, filtrée par moment de la journée.",
+      "ogTitle": "quebec.run | Où courir ce soir ?",
+      "ogDescription": "Tous les clubs de course de Québec, sur une seule carte.",
+      "ogImageHeadline": "Où courir ce soir ?",
+      "ogImageAccent": "ce soir"
     },
     "clubs": {
       "title": "Clubs de course à Québec | quebec.run",
@@ -60,7 +64,8 @@
     },
     "clubDetail": {
       "title": "{clubName} | Club de course à Québec",
-      "description": "{clubName} — horaires, points de rencontre et prochains événements de course à Québec."
+      "description": "{clubName} — horaires, points de rencontre et prochains événements de course à Québec.",
+      "ogKicker": "Club de course à Québec"
     },
     "events": {
       "title": "Événements de course à Québec | quebec.run",
