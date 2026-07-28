@@ -437,6 +437,7 @@
     "members": "members",
     "upcoming": "Upcoming runs",
     "see_more": "See more",
+    "see_more_count": "See {count} more",
     "show_fewer": "Show fewer",
     "view_club": "View club",
     "detail_error_run": "Could not load the run",

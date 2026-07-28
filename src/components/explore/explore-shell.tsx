@@ -62,11 +62,17 @@ export type InitialExploreData = {
 
 // ── Week bar helpers ──────────────────────────────────────────────────────────
 
-function buildWeekDays(
-  counts: WeekCount[],
-  locale: string,
-  tr: (k: string) => string
-): WeekDay[] {
+function buildWeekDays({
+  counts,
+  locale,
+  todayLabel,
+  tomorrowLabel,
+}: {
+  counts: WeekCount[]
+  locale: string
+  todayLabel: string
+  tomorrowLabel: string
+}): WeekDay[] {
   const loc = locale === 'fr' ? 'fr-CA' : 'en-CA'
   const wdFmt = new Intl.DateTimeFormat(loc, { weekday: 'short' })
   const mdFmt = new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'short' })
@@ -81,9 +87,9 @@ function buildWeekDays(
 
     const short =
       o === 0
-        ? tr('tonight')
+        ? todayLabel
         : o === 1
-          ? tr('tomorrow')
+          ? tomorrowLabel
           : wdFmt.format(date).replace('.', '').toUpperCase()
 
     return {
@@ -119,7 +125,6 @@ function ExploreShellInner({
   const { theme, setTheme } = useTheme()
   const locale = useLocale()
   const t = useTranslations('explore')
-  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
 
   const searchParams = useSearchParams()
   const pathname = usePathname()
@@ -358,8 +363,14 @@ function ExploreShellInner({
   // ── Derived values ──────────────────────────────────────────────────────────
 
   const week = useMemo(
-    () => buildWeekDays(weekCounts, locale, tr),
-    [weekCounts, locale, tr]
+    () =>
+      buildWeekDays({
+        counts: weekCounts,
+        locale,
+        todayLabel: t('tonight'),
+        tomorrowLabel: t('tomorrow'),
+      }),
+    [weekCounts, locale, t]
   )
 
   const [nowMin, setNowMin] = useState(() => getTorontoMinutes())
@@ -611,7 +622,6 @@ function ExploreShellInner({
       searchInputRef={searchInputRef}
       activeFilterCount={activeFilterCount}
       onOpenFilters={() => setFiltersOpen(true)}
-      tr={tr}
     />
   )
 
@@ -635,7 +645,6 @@ function ExploreShellInner({
           : loadingRuns && runs.length === 0
       }
       refreshing={mode === 'runs' && loadingRuns && runs.length > 0}
-      tr={tr}
       day={day}
       week={week}
       setDay={setDay}
@@ -701,7 +710,6 @@ function ExploreShellInner({
           const query = searchParams.toString()
           router.push(`${segments.join('/')}${query ? `?${query}` : ''}`)
         }}
-        tr={tr}
       />
       {/* Desktop rail */}
       {desktop && (
@@ -813,7 +821,6 @@ function ExploreShellInner({
           showTod={mode === 'runs'}
           loading={mode === 'clubs' ? false : loadingRuns}
           locale={locale}
-          tr={tr}
         />
       )}
 
@@ -858,7 +865,7 @@ function ExploreShellInner({
       )}
 
       {/* Passport FAB */}
-      {PASSPORT_ENABLED && <PassportFAB tr={tr} />}
+      {PASSPORT_ENABLED && <PassportFAB />}
     </div>
   )
 }

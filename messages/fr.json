@@ -437,6 +437,7 @@
     "members": "membres",
     "upcoming": "Prochaines sorties",
     "see_more": "Voir plus",
+    "see_more_count": "Voir {count} de plus",
     "show_fewer": "Réduire",
     "view_club": "Voir le club",
     "detail_error_run": "Impossible de charger la sortie",

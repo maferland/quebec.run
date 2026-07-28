@@ -6,8 +6,6 @@ import type { ExploreRun } from '@/lib/services/events'
 import { ClubCard } from './club-card'
 import { RunCard } from './run-card'
 
-const tr = (key: string) => key
-
 const club: ExploreClub = {
   id: 'club-1',
   slug: 'quebec-track-club',
@@ -56,7 +54,7 @@ describe.each([
   it('opens a focused club card', async () => {
     const user = userEvent.setup()
     const onOpen = vi.fn()
-    render(<ClubCard club={club} onOpen={onOpen} onIntent={vi.fn()} tr={tr} />)
+    render(<ClubCard club={club} onOpen={onOpen} onIntent={vi.fn()} />)
 
     await user.tab()
     expect(
@@ -79,7 +77,6 @@ describe.each([
         onIntent={vi.fn()}
         nowMin={0}
         day={1}
-        tr={tr}
       />
     )
 
@@ -104,7 +101,6 @@ it('tabs from an expanded run summary to its details action', async () => {
       onIntent={vi.fn()}
       nowMin={0}
       day={1}
-      tr={tr}
     />
   )
 
@@ -114,7 +110,7 @@ it('tabs from an expanded run summary to its details action', async () => {
   ).toHaveFocus()
   await user.tab()
 
-  expect(screen.getByRole('button', { name: /open_run/ })).toHaveFocus()
+  expect(screen.getByRole('button', { name: /Details/ })).toHaveFocus()
 })
 
 it('keeps the collapsed run action out of the tab order', () => {
@@ -127,11 +123,10 @@ it('keeps the collapsed run action out of the tab order', () => {
       onIntent={vi.fn()}
       nowMin={0}
       day={1}
-      tr={tr}
     />
   )
   const detailsAction = screen.getByRole('button', {
-    name: /open_run/,
+    name: /Details/,
     hidden: true,
   })
 
@@ -146,10 +141,9 @@ it('keeps the collapsed run action out of the tab order', () => {
       onIntent={vi.fn()}
       nowMin={0}
       day={1}
-      tr={tr}
     />
   )
 
-  expect(screen.getByRole('button', { name: /open_run/ })).toBe(detailsAction)
+  expect(screen.getByRole('button', { name: /Details/ })).toBe(detailsAction)
   expect(detailsAction).toHaveAttribute('tabindex', '0')
 })

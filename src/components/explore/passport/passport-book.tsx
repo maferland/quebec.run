@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { getPassport, type PassportData } from './passport-store'
 import type { ExploreClub } from '@/lib/services/clubs'
@@ -20,10 +21,10 @@ const CheckIcon = (
 
 type Props = {
   onCollect: (club: ExploreClub) => void
-  tr: (k: string) => string
 }
 
-export function PassportBook({ onCollect, tr }: Props) {
+export function PassportBook({ onCollect }: Props) {
+  const t = useTranslations('explore')
   const [passport, setPassport] = useState<PassportData | null>(null)
   const [clubs, setClubs] = useState<ExploreClub[]>([])
 
@@ -45,10 +46,10 @@ export function PassportBook({ onCollect, tr }: Props) {
         <h2
           style={{ fontSize: 22, margin: '0 0 4px', letterSpacing: '-0.02em' }}
         >
-          {tr('passport_book_title')}
+          {t('passport_book_title')}
         </h2>
         <p style={{ margin: 0, fontSize: 14, color: 'var(--dim)' }}>
-          {stamped.length} / {clubs.length} {tr('passport_book_count')}
+          {stamped.length} / {clubs.length} {t('passport_book_count')}
         </p>
       </div>
 

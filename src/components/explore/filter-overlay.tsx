@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { FilterPanel, type Filters } from './filter-panel'
 
@@ -28,7 +29,6 @@ type Props = {
   showTod: boolean
   loading: boolean
   locale: string
-  tr: (k: string) => string
 }
 
 export function FilterOverlay({
@@ -40,8 +40,8 @@ export function FilterOverlay({
   showTod,
   loading,
   locale,
-  tr,
 }: Props) {
+  const t = useTranslations('explore')
   const [shown, setShown] = useState(false)
   useEffect(() => {
     const id = requestAnimationFrame(() => setShown(true))
@@ -57,7 +57,7 @@ export function FilterOverlay({
         marginBottom: 20,
       }}
     >
-      <h2 style={{ fontSize: 19, margin: 0 }}>{tr('filters')}</h2>
+      <h2 style={{ fontSize: 19, margin: 0 }}>{t('filters')}</h2>
       <button
         className="tap"
         onClick={onClose}
@@ -138,7 +138,6 @@ export function FilterOverlay({
             showTod={showTod}
             loading={loading}
             locale={locale}
-            tr={tr}
           />
         </div>
       </div>
@@ -191,7 +190,6 @@ export function FilterOverlay({
           showTod={showTod}
           loading={loading}
           locale={locale}
-          tr={tr}
         />
       </div>
     </div>

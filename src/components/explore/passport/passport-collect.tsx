@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useRef, useState } from 'react'
 import { addStamp } from './passport-store'
 import type { ExploreClub } from '@/lib/services/clubs'
@@ -9,10 +10,10 @@ const CORRECT_PIN = '6064' // matches dev server port — fun easter egg
 type Props = {
   club: ExploreClub
   onDone: () => void
-  tr: (k: string) => string
 }
 
-export function PassportCollect({ club, onDone, tr }: Props) {
+export function PassportCollect({ club, onDone }: Props) {
+  const t = useTranslations('explore')
   const [digits, setDigits] = useState<string[]>([])
   const [shake, setShake] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -66,9 +67,7 @@ export function PassportCollect({ club, onDone, tr }: Props) {
           {club.name}
         </h2>
         <p style={{ margin: 0, fontSize: 14, color: 'var(--dim)' }}>
-          {success
-            ? tr('passport_collect_success')
-            : tr('passport_collect_hint')}
+          {success ? t('passport_collect_success') : t('passport_collect_hint')}
         </p>
       </div>
 

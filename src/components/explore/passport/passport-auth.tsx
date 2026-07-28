@@ -1,13 +1,14 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useState } from 'react'
 import { setAccount } from './passport-store'
 
 type Props = {
   onDone: () => void
-  tr: (k: string) => string
 }
 
-export function PassportAuth({ onDone, tr }: Props) {
+export function PassportAuth({ onDone }: Props) {
+  const t = useTranslations('explore')
   const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [error, setError] = useState('')
@@ -15,7 +16,7 @@ export function PassportAuth({ onDone, tr }: Props) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (!name.trim() || !email.trim()) {
-      setError(tr('passport_required'))
+      setError(t('passport_required'))
       return
     }
     setAccount({ name: name.trim(), email: email.trim() })
@@ -45,7 +46,7 @@ export function PassportAuth({ onDone, tr }: Props) {
             letterSpacing: '-0.02em',
           }}
         >
-          {tr('passport_title')}
+          {t('passport_title')}
         </h2>
         <p
           style={{
@@ -55,7 +56,7 @@ export function PassportAuth({ onDone, tr }: Props) {
             lineHeight: 1.5,
           }}
         >
-          {tr('passport_subtitle')}
+          {t('passport_subtitle')}
         </p>
       </div>
       <form
@@ -65,7 +66,7 @@ export function PassportAuth({ onDone, tr }: Props) {
         <input
           style={inputStyle}
           type="text"
-          placeholder={tr('passport_name')}
+          placeholder={t('passport_name')}
           value={name}
           onChange={(e) => setName(e.target.value)}
           autoComplete="name"
@@ -73,7 +74,7 @@ export function PassportAuth({ onDone, tr }: Props) {
         <input
           style={inputStyle}
           type="email"
-          placeholder={tr('passport_email')}
+          placeholder={t('passport_email')}
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           autoComplete="email"
@@ -96,7 +97,7 @@ export function PassportAuth({ onDone, tr }: Props) {
             marginTop: 4,
           }}
         >
-          {tr('passport_start')}
+          {t('passport_start')}
         </button>
       </form>
     </div>

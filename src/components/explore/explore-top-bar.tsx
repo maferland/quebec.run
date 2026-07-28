@@ -11,7 +11,6 @@ type ExploreTopBarProps = {
   theme: 'dark' | 'light'
   onThemeChange: (theme: 'dark' | 'light') => void
   onLocaleChange: (locale: 'fr' | 'en') => void
-  tr: (key: string) => string
 }
 
 export function ExploreTopBar({
@@ -20,8 +19,9 @@ export function ExploreTopBar({
   theme,
   onThemeChange,
   onLocaleChange,
-  tr,
 }: ExploreTopBarProps) {
+  const t = useTranslations('explore')
+
   return (
     <div
       style={{
@@ -65,7 +65,7 @@ export function ExploreTopBar({
               <button
                 key={value}
                 aria-label={
-                  value === 'dark' ? tr('theme_dark') : tr('theme_light')
+                  value === 'dark' ? t('theme_dark') : t('theme_light')
                 }
                 onClick={() => onThemeChange(value)}
                 className={theme === value ? 'is-active' : undefined}
@@ -77,7 +77,7 @@ export function ExploreTopBar({
         ) : (
           <button
             className="qr-account-button"
-            aria-label={theme === 'dark' ? tr('theme_light') : tr('theme_dark')}
+            aria-label={theme === 'dark' ? t('theme_light') : t('theme_dark')}
             onClick={() => onThemeChange(theme === 'dark' ? 'light' : 'dark')}
           >
             <ThemeIcon theme={theme === 'dark' ? 'light' : 'dark'} />

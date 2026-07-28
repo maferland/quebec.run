@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import type { WeekDay } from './week-bar'
 
@@ -97,10 +98,10 @@ type EmptyDayProps = {
   week: WeekDay[]
   day: number
   setDay: (offset: number) => void
-  tr: (k: string) => string
 }
 
-export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
+export function EmptyDay({ week, day, setDay }: EmptyDayProps) {
+  const t = useTranslations('explore')
   const target =
     week.find((d, i) => i > 0 && d.offset !== day && d.count > 0) ?? null
 
@@ -117,7 +118,7 @@ export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
         }}
       >
         <span style={{ color: 'var(--faint)' }}>{CalendarIcon}</span>
-        <h3 style={{ fontSize: 18, margin: 0 }}>{tr('no_runs_title')}</h3>
+        <h3 style={{ fontSize: 18, margin: 0 }}>{t('no_runs_title')}</h3>
         <p
           style={{
             fontSize: 14,
@@ -127,7 +128,7 @@ export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
             margin: 0,
           }}
         >
-          {tr('no_runs_body')}
+          {t('no_runs_body')}
         </p>
         {target && (
           <button
@@ -145,8 +146,7 @@ export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
               cursor: 'pointer',
             }}
           >
-            {tr('no_runs_cta')} {target.short.toLowerCase()} ·{' '}
-            {target.dateLabel}
+            {t('no_runs_cta')} {target.short.toLowerCase()} · {target.dateLabel}
           </button>
         )}
       </div>
@@ -154,16 +154,12 @@ export function EmptyDay({ week, day, setDay, tr }: EmptyDayProps) {
   )
 }
 
-type NoMatchProps = { tr: (k: string) => string } & (
+type NoMatchProps =
   | { variant: 'search'; onClearFilters?: never }
   | { variant?: 'filters'; onClearFilters: () => void }
-)
 
-export function NoMatch({
-  onClearFilters,
-  tr,
-  variant = 'filters',
-}: NoMatchProps) {
+export function NoMatch({ onClearFilters, variant = 'filters' }: NoMatchProps) {
+  const t = useTranslations('explore')
   const isSearch = variant === 'search'
   return (
     <FadeIn>
@@ -179,7 +175,7 @@ export function NoMatch({
       >
         <span style={{ color: 'var(--faint)' }}>{SearchIcon}</span>
         <h3 style={{ fontSize: 18, margin: 0 }}>
-          {tr(isSearch ? 'no_search' : 'no_match_title')}
+          {t(isSearch ? 'no_search' : 'no_match_title')}
         </h3>
         <p
           style={{
@@ -190,7 +186,7 @@ export function NoMatch({
             margin: 0,
           }}
         >
-          {tr(isSearch ? 'no_search_sub' : 'no_match_body')}
+          {t(isSearch ? 'no_search_sub' : 'no_match_body')}
         </p>
         {!isSearch && (
           <button
@@ -208,7 +204,7 @@ export function NoMatch({
               cursor: 'pointer',
             }}
           >
-            {tr('clear_filters')}
+            {t('clear_filters')}
           </button>
         )}
       </div>
@@ -220,10 +216,10 @@ type AllDoneNoteProps = {
   week: WeekDay[]
   setDay: (offset: number) => void
   onDismiss?: () => void
-  tr: (k: string) => string
 }
 
-export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
+export function AllDoneNote({ week, setDay, onDismiss }: AllDoneNoteProps) {
+  const t = useTranslations('explore')
   const tomorrow = week.find((d) => d.offset === 1) ?? null
 
   return (
@@ -250,7 +246,7 @@ export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
           <button
             className="tap"
             onClick={onDismiss}
-            aria-label={tr('all_done_close')}
+            aria-label={t('all_done_close')}
             style={{
               position: 'absolute',
               top: 10,
@@ -270,7 +266,7 @@ export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
           </button>
         )}
         <span style={{ color: 'var(--accent)' }}>{CheckCircleIcon}</span>
-        <h3 style={{ fontSize: 18, margin: 0 }}>{tr('all_done_title')}</h3>
+        <h3 style={{ fontSize: 18, margin: 0 }}>{t('all_done_title')}</h3>
         <p
           style={{
             fontSize: 14,
@@ -280,7 +276,7 @@ export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
             margin: 0,
           }}
         >
-          {tr('all_done_body')}
+          {t('all_done_body')}
         </p>
         {tomorrow && tomorrow.count > 0 && (
           <button
@@ -298,7 +294,7 @@ export function AllDoneNote({ week, setDay, onDismiss, tr }: AllDoneNoteProps) {
               cursor: 'pointer',
             }}
           >
-            {tr('all_done_cta')} {tomorrow.short.toLowerCase()} ·{' '}
+            {t('all_done_cta')} {tomorrow.short.toLowerCase()} ·{' '}
             {tomorrow.dateLabel}
           </button>
         )}
