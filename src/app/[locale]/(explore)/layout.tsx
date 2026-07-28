@@ -7,10 +7,8 @@ export const revalidate = 900
 
 export default async function ExploreLayout({
   children,
-  modal,
 }: {
   children: React.ReactNode
-  modal: React.ReactNode
 }) {
   const [weekCounts, runs, clubs] = await Promise.all([
     getWeekEventCounts().catch(() => undefined),
@@ -37,7 +35,6 @@ export default async function ExploreLayout({
       />
       <ExploreShell initialData={{ day: 0, weekCounts, runs, clubs }} />
       {children}
-      <div className="fixed inset-0 z-[1300] pointer-events-none">{modal}</div>
     </ExploreProviders>
   )
 }
