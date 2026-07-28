@@ -13,12 +13,7 @@ import { useSearchParams, usePathname, useRouter } from 'next/navigation'
 import { MapView, type MapPoint } from './map-view'
 import type { WeekDay } from './week-bar'
 import { useTheme } from './theme-provider'
-import {
-  ClubDetailOverlay,
-  PANEL_ENTER_MS,
-  PANEL_EXIT_MS,
-  RunDetailOverlay,
-} from './detail-panel'
+import { ClubDetailOverlay, RunDetailOverlay } from './detail-panel'
 import { FilterOverlay } from './filter-overlay'
 import {
   filterCount,
@@ -45,6 +40,7 @@ import {
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
+import { useDetailRoute, type DetailOverlayState } from './use-detail-route'
 import {
   useDetailPrefetch,
   useExploreClubs,
@@ -56,12 +52,6 @@ import {
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
 const RAIL_WIDTH = 404
-
-type DetailOverlayState = DetailRoute & {
-  exiting: boolean
-  enter: boolean
-  closeMode: 'history' | 'route'
-}
 
 export type InitialExploreData = {
   day: number
@@ -142,24 +132,6 @@ function ExploreShellInner({
       return { kind: 'club', slug: routeSelection.clubSlug }
     return null
   }, [routeSelection.clubSlug, routeSelection.runId])
-  const currentDetailKey = detailKey(currentDetail)
-  const hydratedRef = useRef(false)
-  const pendingCloseRef = useRef<'history' | 'route' | null>(null)
-  const pendingOpenRef = useRef<string | null>(null)
-  const closingDetailKeyRef = useRef<string | null>(null)
-  const detailHistoryRef = useRef<DetailOverlayState[]>([])
-  const pendingDetailBackRef = useRef<string | null>(null)
-  const pendingDetailBackCloseModeRef = useRef<'history' | 'route' | null>(null)
-  const exitFallbackRef = useRef<number | null>(null)
-  const enterFallbackRef = useRef<number | null>(null)
-  const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
-    () =>
-      currentDetail
-        ? { ...currentDetail, exiting: false, enter: false, closeMode: 'route' }
-        : null
-  )
-  const [previousDetailOverlay, setPreviousDetailOverlay] =
-    useState<DetailOverlayState | null>(null)
   const [previewRunId, setPreviewRunId] = useState<string | null>(null)
 
   // ── URL-derived state ───────────────────────────────────────────────────────
@@ -183,154 +155,22 @@ function ExploreShellInner({
   const { data: selectedRun } = useRunDetail(selectedRunId)
   const { prefetchRun, prefetchClub } = useDetailPrefetch(locale)
 
-  const clearExitFallback = useCallback(() => {
-    if (!exitFallbackRef.current) return
-    window.clearTimeout(exitFallbackRef.current)
-    exitFallbackRef.current = null
-  }, [])
-
-  const clearEnterFallback = useCallback(() => {
-    if (!enterFallbackRef.current) return
-    window.clearTimeout(enterFallbackRef.current)
-    enterFallbackRef.current = null
-  }, [])
-
-  const completeDetailEnter = useCallback(() => {
-    clearEnterFallback()
-    setPreviousDetailOverlay(null)
-  }, [clearEnterFallback])
-
-  const completeDetailExit = useCallback(() => {
-    clearExitFallback()
-    const pendingClose = pendingCloseRef.current
-    pendingCloseRef.current = null
-    if (pendingClose === 'history') {
-      closingDetailKeyRef.current = detailKey(detailOverlay)
-      setDetailOverlay(null)
-      router.back()
-      return
-    }
-    if (pendingClose === 'route') {
-      const fallback =
-        detailOverlay?.kind === 'club'
-          ? `/${locale}/clubs${buildQs(day, filters)}`
-          : `/${locale}${buildQs(day, filters)}`
-      closingDetailKeyRef.current = detailKey(detailOverlay)
-      setDetailOverlay(null)
-      router.replace(fallback, { scroll: false })
-      return
-    }
-    setDetailOverlay(null)
-  }, [clearExitFallback, day, detailOverlay, filters, locale, router])
-
-  const startDetailExit = useCallback(
-    (closeMode?: 'history' | 'route') => {
-      if (closeMode === 'history' && detailHistoryRef.current.length > 0) {
-        const previousDetail = detailHistoryRef.current.pop() ?? null
-        pendingDetailBackRef.current = detailKey(previousDetail)
-        pendingDetailBackCloseModeRef.current =
-          previousDetail?.closeMode ?? 'history'
-        pendingCloseRef.current = null
-        clearExitFallback()
-        router.back()
-        return
-      }
-      if (closeMode) pendingCloseRef.current = closeMode
-      setDetailOverlay((overlay) =>
-        overlay ? { ...overlay, exiting: true } : overlay
-      )
-      clearExitFallback()
-      exitFallbackRef.current = window.setTimeout(
-        completeDetailExit,
-        PANEL_EXIT_MS + 100
-      )
-    },
-    [clearExitFallback, completeDetailExit, router]
+  const buildFallbackPath = useCallback(
+    (detail: DetailOverlayState | null) =>
+      detail?.kind === 'club'
+        ? `/${locale}/clubs${buildQs(day, filters)}`
+        : `/${locale}${buildQs(day, filters)}`,
+    [day, filters, locale]
   )
 
-  useEffect(() => {
-    if (currentDetail) {
-      if (closingDetailKeyRef.current === currentDetailKey) return
-      closingDetailKeyRef.current = null
-      const existingKey = detailKey(detailOverlay)
-      const isPendingOpen = pendingOpenRef.current === currentDetailKey
-      if (isPendingOpen) pendingOpenRef.current = null
-      if (currentDetailKey === existingKey && isPendingOpen) {
-        setDetailOverlay((overlay) =>
-          overlay ? { ...overlay, closeMode: 'history' } : overlay
-        )
-        hydratedRef.current = true
-        return
-      }
-      const closeMode = hydratedRef.current ? 'history' : 'route'
-      if (currentDetailKey !== existingKey) {
-        clearExitFallback()
-        clearEnterFallback()
-        pendingCloseRef.current = null
-        const isDetailBack = pendingDetailBackRef.current === currentDetailKey
-        pendingDetailBackRef.current = null
-        const detailBackCloseMode = pendingDetailBackCloseModeRef.current
-        pendingDetailBackCloseModeRef.current = null
-        if (detailOverlay) {
-          if (!isDetailBack) {
-            detailHistoryRef.current.push(detailOverlay)
-          }
-          setPreviousDetailOverlay({
-            ...detailOverlay,
-            enter: false,
-            exiting: false,
-          })
-          enterFallbackRef.current = window.setTimeout(
-            completeDetailEnter,
-            PANEL_ENTER_MS + 100
-          )
-        } else {
-          setPreviousDetailOverlay(null)
-        }
-        setDetailOverlay({
-          ...currentDetail,
-          exiting: false,
-          enter: hydratedRef.current,
-          closeMode: isDetailBack
-            ? (detailBackCloseMode ?? 'route')
-            : closeMode,
-        })
-      }
-      hydratedRef.current = true
-      return
-    }
-
-    hydratedRef.current = true
-    closingDetailKeyRef.current = null
-    detailHistoryRef.current = []
-    pendingDetailBackRef.current = null
-    pendingDetailBackCloseModeRef.current = null
-    clearEnterFallback()
-    setPreviousDetailOverlay(null)
-    if (
-      pendingOpenRef.current &&
-      pendingOpenRef.current === detailKey(detailOverlay)
-    ) {
-      return
-    }
-    if (!detailOverlay || detailOverlay.exiting) return
-    startDetailExit()
-  }, [
-    clearExitFallback,
-    clearEnterFallback,
-    completeDetailEnter,
-    currentDetail,
-    currentDetailKey,
-    detailOverlay,
-    startDetailExit,
-  ])
-
-  useEffect(() => {
-    return () => {
-      clearEnterFallback()
-      clearExitFallback()
-    }
-  }, [clearEnterFallback, clearExitFallback])
+  const {
+    overlay: detailOverlay,
+    previousOverlay: previousDetailOverlay,
+    openDetail,
+    requestExit: startDetailExit,
+    completeEnter: completeDetailEnter,
+    completeExit: completeDetailExit,
+  } = useDetailRoute({ currentDetail, buildFallbackPath })
 
   useEffect(() => {
     const queryMode = searchParams.get('mode')
@@ -654,16 +494,8 @@ function ExploreShellInner({
   const openRunDetail = useCallback(
     (id: string) => {
       const runDay = dayOffsetFromRunId(id) ?? day
-      const detail: DetailRoute = { kind: 'run', id }
-      closingDetailKeyRef.current = null
-      pendingOpenRef.current = detailKey(detail)
       prefetchRun(id)
-      setDetailOverlay({
-        ...detail,
-        exiting: false,
-        enter: true,
-        closeMode: 'route',
-      })
+      openDetail({ kind: 'run', id })
       startTransition(() => {
         router.push(
           `/${locale}/run/${encodeURIComponent(id)}${buildQs(runDay, filters)}`,
@@ -671,23 +503,15 @@ function ExploreShellInner({
         )
       })
     },
-    [day, filters, locale, prefetchRun, router, startTransition]
+    [day, filters, locale, openDetail, prefetchRun, router, startTransition]
   )
 
   const openClubDetail = useCallback(
     (id: string) => {
       const club = clubs.find((candidate) => candidate.id === id)
       if (!club) return
-      const detail: DetailRoute = { kind: 'club', slug: club.slug }
-      closingDetailKeyRef.current = null
-      pendingOpenRef.current = detailKey(detail)
       prefetchClub(club.slug)
-      setDetailOverlay({
-        ...detail,
-        exiting: false,
-        enter: true,
-        closeMode: 'route',
-      })
+      openDetail({ kind: 'club', slug: club.slug })
       startTransition(() => {
         router.push(
           `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
@@ -695,7 +519,16 @@ function ExploreShellInner({
         )
       })
     },
-    [clubs, day, filters, locale, prefetchClub, router, startTransition]
+    [
+      clubs,
+      day,
+      filters,
+      locale,
+      openDetail,
+      prefetchClub,
+      router,
+      startTransition,
+    ]
   )
 
   const selectMapPoint = useCallback(
