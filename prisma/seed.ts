@@ -373,6 +373,35 @@ async function main() {
     },
   })
 
+  // Gringo's Running Club — meeting spot rotates weekly, announced on Instagram
+  const gringos = await prisma.club.upsert({
+    where: { slug: createSlug("Gringo's Running Club") },
+    update: {
+      description:
+        'Sorties hebdomadaires le jeudi soir, lieu de rencontre variable annoncé sur Instagram.',
+      language: 'fr',
+      website: 'https://gringosrunningclub.com',
+      instagram: 'gringosrunningclub',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+    create: {
+      name: "Gringo's Running Club",
+      slug: createSlug("Gringo's Running Club"),
+      description:
+        'Sorties hebdomadaires le jeudi soir, lieu de rencontre variable annoncé sur Instagram.',
+      language: 'fr',
+      website: 'https://gringosrunningclub.com',
+      instagram: 'gringosrunningclub',
+      vibe: 'SOCIAL',
+      type: 'ROAD',
+      beginnerFriendly: true,
+      ownerId: staffUser.id,
+    },
+  })
+
   // Create recurring events for each 6AM Club location
   // Source: https://6amclub.run (scraped March 2026)
   const recurringEvents = [
@@ -736,6 +765,16 @@ async function main() {
       schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=6;BYMINUTE=15',
       timezone: 'America/Toronto',
       clubId: onCourtParlabas.id,
+    },
+    // Gringo's Running Club — Thu 18:30, meeting spot rotates weekly (see Instagram)
+    {
+      title: "Gringo's Running Club",
+      slug: 'jeudi',
+      description: 'Lieu de rencontre variable — annoncé sur Instagram',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=30',
+      timezone: 'America/Toronto',
+      pacePolicy: 'OPEN_PACE' as const,
+      clubId: gringos.id,
     },
   ]
 

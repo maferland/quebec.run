@@ -429,6 +429,7 @@ function ExploreShellInner({
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchQ, setSearchQ] = useState('')
+  const [allDoneDismissed, setAllDoneDismissed] = useState(false)
 
   const [weekCounts, setWeekCounts] = useState<
     { day: number; count: number }[]
@@ -463,6 +464,10 @@ function ExploreShellInner({
   }, [snaps.mid, dragging])
 
   // ── Side effects ────────────────────────────────────────────────────────────
+
+  useEffect(() => {
+    setAllDoneDismissed(false)
+  }, [day])
 
   useEffect(() => {
     if (!searchOpen) return
@@ -898,6 +903,8 @@ function ExploreShellInner({
       allRuns={runs}
       onPreloadRun={preloadRun}
       onPreloadClub={preloadClub}
+      allDoneDismissed={allDoneDismissed}
+      onDismissAllDone={() => setAllDoneDismissed(true)}
     />
   )
 

@@ -103,7 +103,7 @@ export const eventCreateSchema = z.object({
   time: z
     .string()
     .regex(/^([01]?[0-9]|2[0-3]):[0-5][0-9]$/, 'Must be in HH:MM format'),
-  address: z.string().min(1, 'Address is required'),
+  address: z.string().optional(),
   distance: z.string().optional(),
   pace: z.string().optional(),
   clubId: z.string().min(1, 'Club ID is required'),
@@ -226,7 +226,7 @@ export type StravaSyncResponse = z.infer<typeof stravaSyncResponseSchema>
 export const recurringEventCreateSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().optional(),
-  address: z.string().min(1, 'Address is required'),
+  address: z.string().optional(),
   distance: z.string().optional(),
   pace: z.string().optional(),
   clubId: z.string().min(1, 'Club is required'),

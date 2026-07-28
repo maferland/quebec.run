@@ -143,7 +143,6 @@ export function RecurringEventForm({
         name="address"
         label="Address"
         error={errors.address}
-        required
       />
 
       <div className="grid grid-cols-2 gap-4">
