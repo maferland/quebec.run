@@ -1,17 +1,12 @@
 import userEvent from '@testing-library/user-event'
-import { render, screen } from '@testing-library/react'
 import { afterEach, expect, it, vi } from 'vitest'
+import { render, screen } from '@/lib/test-utils'
 import { ClubDetailOverlay, RunDetailOverlay } from './detail-panel'
 
 const replace = vi.fn()
 
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace, back: vi.fn() }),
-}))
-
-vi.mock('next-intl', () => ({
-  useLocale: () => 'en',
-  useTranslations: () => (key: string) => key,
 }))
 
 afterEach(() => {

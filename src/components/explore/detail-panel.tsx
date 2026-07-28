@@ -9,122 +9,12 @@ import {
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTheme } from './theme-provider'
-import { RunDetailPanel, type RunDetailData } from './run-detail'
-import { ClubDetailPanel, type ClubDetailData } from './club-detail'
-import type { ClubForDetail } from '@/lib/services/clubs'
-import { isRunPast } from '@/lib/utils/run-time'
+import { RunDetailPanel } from './run-detail'
+import { ClubDetailPanel } from './club-detail'
+import { useClubDetail, useRunDetail } from '@/lib/hooks/use-explore'
 
 export const PANEL_ENTER_MS = 280
 export const PANEL_EXIT_MS = 220
-
-const runDetailRequests = new Map<string, Promise<RunDetailData>>()
-const clubDetailRequests = new Map<string, Promise<ClubDetailData>>()
-
-type RunDetailResponse = {
-  id: string
-  title: string
-  time: string
-  date?: string | null
-  status: 'SCHEDULED' | 'CANCELLED'
-  distance?: string | null
-  pace?: string | null
-  pacePolicy?: 'SHARED' | 'OPEN_PACE' | null
-  address?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  lat?: number | null
-  lng?: number | null
-  club?: Partial<RunDetailData['club']>
-}
-
-function cacheRequest<T>(
-  cache: Map<string, Promise<T>>,
-  key: string,
-  request: () => Promise<T>
-) {
-  const cached = cache.get(key)
-  if (cached) return cached
-
-  const pending = request().catch((error) => {
-    cache.delete(key)
-    throw error
-  })
-  cache.set(key, pending)
-  return pending
-}
-
-export function loadRunDetail(id: string) {
-  return cacheRequest(runDetailRequests, id, async () => {
-    const response = await fetch(`/api/explore/runs/${id}`)
-    if (!response.ok) throw new Error('Run not found')
-    const data = (await response.json()) as RunDetailResponse
-
-    const isPast = data.date
-      ? isRunPast(data.date, data.time, new Date())
-      : false
-
-    return {
-      id: data.id,
-      title: data.title,
-      time: data.time,
-      date: data.date ?? null,
-      isPast,
-      status: data.status,
-      distance: data.distance ?? data.pace ?? null,
-      pacePolicy: data.pacePolicy ?? null,
-      address: data.address ?? null,
-      lat: data.latitude ?? data.lat ?? null,
-      lng: data.longitude ?? data.lng ?? null,
-      club: {
-        id: data.club?.id ?? '',
-        slug: data.club?.slug ?? '',
-        name: data.club?.name ?? '',
-        description: data.club?.description ?? null,
-        type: data.club?.type ?? null,
-        vibe: data.club?.vibe ?? null,
-        beginnerFriendly: data.club?.beginnerFriendly ?? false,
-        paceMin: data.club?.paceMin ?? null,
-        paceMax: data.club?.paceMax ?? null,
-      },
-    }
-  })
-}
-
-function loadClubDetail(slug: string, locale: string) {
-  const key = `${locale}:${slug}`
-  return cacheRequest(clubDetailRequests, key, async () => {
-    const response = await fetch(`/api/explore/clubs/${slug}?locale=${locale}`)
-    if (!response.ok) throw new Error('Club not found')
-    const data = (await response.json()) as ClubForDetail
-
-    return {
-      id: data.id,
-      slug: data.slug,
-      name: data.name,
-      type: data.type,
-      vibe: data.vibe,
-      beginnerFriendly: data.beginnerFriendly,
-      paceMin: data.paceMin,
-      paceMax: data.paceMax,
-      description: data.description,
-      instagram: data.instagram,
-      website: data.website,
-      schedule: data.schedule,
-      upcomingRuns: (data.upcomingRuns ?? []).map((run) => ({
-        ...run,
-        date: run.date instanceof Date ? run.date.toISOString() : run.date,
-      })),
-    }
-  })
-}
-
-export function preloadRunDetail(id: string) {
-  void loadRunDetail(id).catch(() => {})
-}
-
-export function preloadClubDetail(slug: string, locale: string) {
-  void loadClubDetail(slug, locale).catch(() => {})
-}
 
 function useAnimatedClose(close: () => void) {
   const [exiting, setExiting] = useState(false)
@@ -268,21 +158,14 @@ function DetailSkeleton({ kind }: { kind: 'run' | 'club' }) {
 
 function DetailError({
   kind,
-  locale,
   onBack,
   onRetry,
 }: {
   kind: 'run' | 'club'
-  locale: string
   onBack: () => void
   onRetry: () => void
 }) {
-  const french = locale === 'fr'
-  const subject = french
-    ? kind === 'run'
-      ? 'la sortie'
-      : 'le club'
-    : `the ${kind}`
+  const t = useTranslations('explore')
 
   return (
     <div
@@ -298,13 +181,11 @@ function DetailError({
       }}
     >
       <h1 style={{ margin: 0, fontSize: 24 }}>
-        {french
-          ? `Impossible de charger ${subject}`
-          : `Could not load ${subject}`}
+        {kind === 'run' ? t('detail_error_run') : t('detail_error_club')}
       </h1>
       <div style={{ display: 'flex', gap: 9 }}>
         <button className="tap" onClick={onBack} style={errorButtonStyle}>
-          {french ? 'Retour' : 'Back'}
+          {t('detail_error_back')}
         </button>
         <button
           className="tap"
@@ -316,7 +197,7 @@ function DetailError({
             color: 'var(--lime-ink)',
           }}
         >
-          {french ? 'Réessayer' : 'Retry'}
+          {t('detail_error_retry')}
         </button>
       </div>
     </div>
@@ -335,19 +216,9 @@ const errorButtonStyle = {
   cursor: 'pointer',
 } as const
 
-// ── Run detail overlay ────────────────────────────────────────────────────────
+// ── Overlay plumbing shared by both kinds ─────────────────────────────────────
 
-export function RunDetailOverlay({
-  id,
-  enter = true,
-  exiting: controlledExiting,
-  inactive = false,
-  onClose,
-  onEntered,
-  onExited,
-  backBehavior = 'route',
-}: {
-  id: string
+type OverlayProps = {
   enter?: boolean
   exiting?: boolean
   inactive?: boolean
@@ -355,28 +226,32 @@ export function RunDetailOverlay({
   onEntered?: () => void
   onExited?: () => void
   backBehavior?: 'history' | 'route'
-}) {
-  const router = useRouter()
-  const locale = useLocale()
-  const t = useTranslations('explore')
-  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
+}
 
-  const [run, setRun] = useState<RunDetailData | null>(null)
-  const [error, setError] = useState(false)
-  const [requestVersion, setRequestVersion] = useState(0)
+function useOverlay({
+  fallbackPath,
+  onClose,
+  onExited,
+  exiting: controlledExiting,
+  backBehavior,
+}: {
+  fallbackPath: string
+} & Pick<OverlayProps, 'onClose' | 'onExited' | 'exiting' | 'backBehavior'>) {
+  const router = useRouter()
 
   const closeDetail = useCallback(() => {
     if (backBehavior === 'history') {
       router.back()
       return
     }
-    router.replace(`/${locale}`)
-  }, [backBehavior, locale, router])
+    router.replace(fallbackPath)
+  }, [backBehavior, fallbackPath, router])
+
   const { exiting, requestClose, handleAnimationEnd } =
     useAnimatedClose(closeDetail)
   const isControlled = onClose !== undefined
   const isExiting = controlledExiting ?? exiting
-  const requestPanelClose = onClose ?? requestClose
+
   const handlePanelAnimationEnd = useCallback(
     (event: AnimationEvent<HTMLDivElement>) => {
       if (!isControlled) {
@@ -391,65 +266,68 @@ export function RunDetailOverlay({
     [handleAnimationEnd, isControlled, isExiting, onExited]
   )
 
-  useEffect(() => {
-    let active = true
-    setError(false)
-    setRun(null)
-    loadRunDetail(id)
-      .then((data) => {
-        if (active) setRun(data)
-      })
-      .catch(() => {
-        if (active) setError(true)
-      })
-    return () => {
-      active = false
-    }
-  }, [id, requestVersion])
+  return {
+    router,
+    isExiting,
+    requestPanelClose: onClose ?? requestClose,
+    handlePanelAnimationEnd,
+  }
+}
 
-  if (error) {
+// ── Run detail overlay ────────────────────────────────────────────────────────
+
+export function RunDetailOverlay({
+  id,
+  enter = true,
+  exiting: controlledExiting,
+  inactive = false,
+  onClose,
+  onEntered,
+  onExited,
+  backBehavior = 'route',
+}: OverlayProps & { id: string }) {
+  const locale = useLocale()
+  const t = useTranslations('explore')
+  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
+  const { data: run, isError, refetch } = useRunDetail(id)
+  const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
+    useOverlay({
+      fallbackPath: `/${locale}`,
+      onClose,
+      onExited,
+      exiting: controlledExiting,
+      backBehavior,
+    })
+
+  const shell = {
+    enter,
+    exiting: isExiting,
+    inactive,
+    onEnterComplete: onEntered,
+    onExitComplete: handlePanelAnimationEnd,
+  }
+
+  if (isError) {
     return (
-      <OverlayShell
-        enter={enter}
-        exiting={isExiting}
-        inactive={inactive}
-        onEnterComplete={onEntered}
-        onExitComplete={handlePanelAnimationEnd}
-      >
+      <OverlayShell {...shell}>
         <DetailError
           kind="run"
-          locale={locale}
           onBack={requestPanelClose}
-          onRetry={() => {
-            setError(false)
-            setRequestVersion((version) => version + 1)
-          }}
+          onRetry={() => void refetch()}
         />
       </OverlayShell>
     )
   }
   if (!run) {
     return (
-      <OverlayShell
-        enter={enter}
-        exiting={isExiting}
-        inactive={inactive}
-        onEnterComplete={onEntered}
-        onExitComplete={handlePanelAnimationEnd}
-      >
+      <OverlayShell {...shell}>
         <DetailSkeleton kind="run" />
       </OverlayShell>
     )
   }
 
   return (
-    <OverlayShell
-      enter={enter}
-      exiting={isExiting}
-      inactive={inactive}
-      onEnterComplete={onEntered}
-      onExitComplete={handlePanelAnimationEnd}
-    >
+    <OverlayShell {...shell}>
       <RunDetailPanel
         run={run}
         onBack={requestPanelClose}
@@ -472,110 +350,49 @@ export function ClubDetailOverlay({
   onEntered,
   onExited,
   backBehavior = 'route',
-}: {
-  slug: string
-  enter?: boolean
-  exiting?: boolean
-  inactive?: boolean
-  onClose?: () => void
-  onEntered?: () => void
-  onExited?: () => void
-  backBehavior?: 'history' | 'route'
-}) {
-  const router = useRouter()
+}: OverlayProps & { slug: string }) {
   const locale = useLocale()
   const t = useTranslations('explore')
   const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
+  const { data: club, isError, refetch } = useClubDetail(slug, locale)
+  const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
+    useOverlay({
+      fallbackPath: `/${locale}/clubs`,
+      onClose,
+      onExited,
+      exiting: controlledExiting,
+      backBehavior,
+    })
 
-  const [club, setClub] = useState<ClubDetailData | null>(null)
-  const [error, setError] = useState(false)
-  const [requestVersion, setRequestVersion] = useState(0)
+  const shell = {
+    enter,
+    exiting: isExiting,
+    inactive,
+    onEnterComplete: onEntered,
+    onExitComplete: handlePanelAnimationEnd,
+  }
 
-  const closeDetail = useCallback(() => {
-    if (backBehavior === 'history') {
-      router.back()
-      return
-    }
-    router.replace(`/${locale}/clubs`)
-  }, [backBehavior, locale, router])
-  const { exiting, requestClose, handleAnimationEnd } =
-    useAnimatedClose(closeDetail)
-  const isControlled = onClose !== undefined
-  const isExiting = controlledExiting ?? exiting
-  const requestPanelClose = onClose ?? requestClose
-  const handlePanelAnimationEnd = useCallback(
-    (event: AnimationEvent<HTMLDivElement>) => {
-      if (!isControlled) {
-        handleAnimationEnd(event)
-        return
-      }
-      if (!isExiting) return
-      if (event.target !== event.currentTarget) return
-      if (event.animationName !== 'detailPanelOut') return
-      onExited?.()
-    },
-    [handleAnimationEnd, isControlled, isExiting, onExited]
-  )
-
-  useEffect(() => {
-    let active = true
-    setError(false)
-    setClub(null)
-    loadClubDetail(slug, locale)
-      .then((data) => {
-        if (active) setClub(data)
-      })
-      .catch(() => {
-        if (active) setError(true)
-      })
-    return () => {
-      active = false
-    }
-  }, [slug, locale, requestVersion])
-
-  if (error) {
+  if (isError) {
     return (
-      <OverlayShell
-        enter={enter}
-        exiting={isExiting}
-        inactive={inactive}
-        onEnterComplete={onEntered}
-        onExitComplete={handlePanelAnimationEnd}
-      >
+      <OverlayShell {...shell}>
         <DetailError
           kind="club"
-          locale={locale}
           onBack={requestPanelClose}
-          onRetry={() => {
-            setError(false)
-            setRequestVersion((version) => version + 1)
-          }}
+          onRetry={() => void refetch()}
         />
       </OverlayShell>
     )
   }
   if (!club) {
     return (
-      <OverlayShell
-        enter={enter}
-        exiting={isExiting}
-        inactive={inactive}
-        onEnterComplete={onEntered}
-        onExitComplete={handlePanelAnimationEnd}
-      >
+      <OverlayShell {...shell}>
         <DetailSkeleton kind="club" />
       </OverlayShell>
     )
   }
 
   return (
-    <OverlayShell
-      enter={enter}
-      exiting={isExiting}
-      inactive={inactive}
-      onEnterComplete={onEntered}
-      onExitComplete={handlePanelAnimationEnd}
-    >
+    <OverlayShell {...shell}>
       <ClubDetailPanel
         club={club}
         onBack={requestPanelClose}
