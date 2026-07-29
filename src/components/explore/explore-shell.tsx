@@ -15,10 +15,12 @@ import { filterCount } from './filter-panel'
 import { PassportFAB } from './passport/passport-fab'
 import { ExploreTopBar } from './explore-top-bar'
 import { RunList } from './explore-list'
+import { AllDoneNote } from './quiet-states'
 import { ExploreControls } from './explore-controls'
 import { DesktopRail, MobileSheet, mapInsets } from './explore-panels'
 import { DetailOverlay } from './detail-panel'
 import { detailKey } from './explore-route'
+import { hasPainted, markPainted } from './explore-session'
 import { buildWeekDays } from './explore-week'
 import { useDetailRoute, type DetailOverlayState } from './use-detail-route'
 import { useExploreRouting } from './use-explore-routing'
@@ -111,7 +113,10 @@ function ExploreShellInner({
   const nowMin = useNowMinutes()
   const listRef = useRef<HTMLDivElement>(null)
 
-  const [mapReady, setMapReady] = useState(false)
+  const [mapReady, setMapReady] = useState(hasPainted)
+  // True only for a mount that follows an earlier paint, i.e. a locale switch.
+  const restoredMount = useRef(hasPainted()).current
+  const [suppressEntrance, setSuppressEntrance] = useState(restoredMount)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [allDoneDismissed, setAllDoneDismissed] = useState(false)
 
@@ -202,6 +207,12 @@ function ExploreShellInner({
 
   // ── Effects ─────────────────────────────────────────────────────────────────
   useEffect(() => {
+    if (!suppressEntrance) return
+    const frame = requestAnimationFrame(() => setSuppressEntrance(false))
+    return () => cancelAnimationFrame(frame)
+  }, [suppressEntrance])
+
+  useEffect(() => {
     setAllDoneDismissed(false)
   }, [day])
 
@@ -226,6 +237,7 @@ function ExploreShellInner({
     day,
     desktop,
     targetId: collections.nextRunId,
+    instant: restoredMount,
   })
 
   // ── Sections ────────────────────────────────────────────────────────────────
@@ -269,15 +281,29 @@ function ExploreShellInner({
       allRuns={runs}
       onPreloadRun={preloadRun}
       onPreloadClub={preloadClub}
-      allDoneDismissed={allDoneDismissed}
-      onDismissAllDone={() => setAllDoneDismissed(true)}
     />
   )
+
+  // No upcoming run left today, and the list is not empty.
+  const allDone =
+    mode === 'runs' &&
+    day === 0 &&
+    collections.runCount > 0 &&
+    !collections.nextRunId &&
+    !allDoneDismissed
+
+  const listOverlay = allDone ? (
+    <AllDoneNote
+      week={week}
+      setDay={routing.setDay}
+      onDismiss={() => setAllDoneDismissed(true)}
+    />
+  ) : undefined
 
   return (
     <div
       ref={rootRef}
-      className="qr-root"
+      className={`qr-root${suppressEntrance ? ' is-restored' : ''}`}
       data-theme={theme}
       suppressHydrationWarning
       style={ROOT_STYLE}
@@ -306,7 +332,10 @@ function ExploreShellInner({
             detailOpen: Boolean(detail.overlay),
           })}
           hideInactive={Boolean(detail.overlay && selectedId)}
-          onReady={() => setMapReady(true)}
+          onReady={() => {
+            markPainted()
+            setMapReady(true)
+          }}
         />
       )}
 
@@ -319,13 +348,18 @@ function ExploreShellInner({
       />
 
       {desktop ? (
-        <DesktopRail listRef={listRef} controls={controls}>
+        <DesktopRail
+          listRef={listRef}
+          controls={controls}
+          overlay={listOverlay}
+        >
           {list}
         </DesktopRail>
       ) : (
         <MobileSheet
           listRef={listRef}
           controls={controls}
+          overlay={listOverlay}
           height={sheet.height}
           dragging={sheet.dragging}
           gripHandlers={sheet.gripHandlers}

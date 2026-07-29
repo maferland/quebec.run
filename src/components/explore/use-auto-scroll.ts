@@ -8,12 +8,14 @@ export function useAutoScrollToNextRun({
   day,
   desktop,
   targetId,
+  instant = false,
 }: {
   listRef: React.RefObject<HTMLDivElement | null>
   enabled: boolean
   day: number
   desktop: boolean
   targetId: string | null
+  instant?: boolean
 }) {
   const scrolledDayRef = useRef<number | null>(null)
   const scrolledListRef = useRef<HTMLDivElement | null>(null)
@@ -36,11 +38,12 @@ export function useAutoScrollToNextRun({
         target.getBoundingClientRect().top -
         list.getBoundingClientRect().top -
         4,
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'auto'
-        : 'smooth',
+      behavior:
+        instant || window.matchMedia('(prefers-reduced-motion: reduce)').matches
+          ? 'auto'
+          : 'smooth',
     })
     scrolledDayRef.current = day
     scrolledListRef.current = list
-  }, [day, desktop, enabled, listRef, targetId])
+  }, [day, desktop, enabled, instant, listRef, targetId])
 }

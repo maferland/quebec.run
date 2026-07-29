@@ -233,17 +233,25 @@ type Props = {
   onBack: () => void
   onOpenClub: (slug: string) => void
   locale: string
+  animateIn?: boolean
 }
 
-export function RunDetailPanel({ run, onBack, onOpenClub, locale }: Props) {
+export function RunDetailPanel({
+  run,
+  onBack,
+  onOpenClub,
+  locale,
+  animateIn = true,
+}: Props) {
   const t = useTranslations('explore')
   const [shared, setShared] = useState(false)
-  const [shown, setShown] = useState(false)
+  const [shown, setShown] = useState(!animateIn)
 
   useEffect(() => {
+    if (!animateIn) return
     const id = requestAnimationFrame(() => setShown(true))
     return () => cancelAnimationFrame(id)
-  }, [])
+  }, [animateIn])
 
   const cancelled = run.status === 'CANCELLED'
   const isPast = run.isPast ?? false

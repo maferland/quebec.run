@@ -35,12 +35,55 @@ type ListContainerProps = {
   listRef: React.RefObject<HTMLDivElement | null>
   controls: React.ReactNode
   children: React.ReactNode
+  // Covers the visible scroll port, so it must sit outside the scrolling node.
+  overlay?: React.ReactNode
+}
+
+function ScrollPort({
+  listRef,
+  overlay,
+  padding,
+  children,
+}: {
+  listRef: React.RefObject<HTMLDivElement | null>
+  overlay?: React.ReactNode
+  padding: string
+  children: React.ReactNode
+}) {
+  return (
+    <div style={{ position: 'relative', flex: 1, minHeight: 0 }}>
+      <div
+        ref={listRef}
+        className="qr-themed-scroll"
+        style={{ position: 'absolute', inset: 0, overflowY: 'auto', padding }}
+      >
+        {children}
+      </div>
+      {overlay && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: 16,
+            background: 'color-mix(in oklch, var(--bg) 82%, transparent)',
+            backdropFilter: 'blur(6px)',
+          }}
+        >
+          {overlay}
+        </div>
+      )}
+    </div>
+  )
 }
 
 export function DesktopRail({
   listRef,
   controls,
   children,
+  overlay,
 }: ListContainerProps) {
   return (
     <div
@@ -69,13 +112,9 @@ export function DesktopRail({
       >
         {controls}
       </div>
-      <div
-        ref={listRef}
-        className="qr-themed-scroll"
-        style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 26px' }}
-      >
+      <ScrollPort listRef={listRef} overlay={overlay} padding="16px 18px 26px">
         {children}
-      </div>
+      </ScrollPort>
     </div>
   )
 }
@@ -84,6 +123,7 @@ export function MobileSheet({
   listRef,
   controls,
   children,
+  overlay,
   height,
   dragging,
   gripHandlers,
@@ -128,17 +168,13 @@ export function MobileSheet({
         />
       </div>
       <div style={{ flexShrink: 0, padding: '0 16px 12px' }}>{controls}</div>
-      <div
-        ref={listRef}
-        className="qr-themed-scroll"
-        style={{
-          flex: 1,
-          overflowY: 'auto',
-          padding: '4px 16px calc(22px + env(safe-area-inset-bottom))',
-        }}
+      <ScrollPort
+        listRef={listRef}
+        overlay={overlay}
+        padding="4px 16px calc(22px + env(safe-area-inset-bottom))"
       >
         {children}
-      </div>
+      </ScrollPort>
     </div>
   )
 }

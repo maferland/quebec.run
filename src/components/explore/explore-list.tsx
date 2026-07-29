@@ -1,11 +1,10 @@
 import { useTranslations } from 'next-intl'
 import { ClubCard } from './club-card'
 import { RunCard } from './run-card'
-import { AllDoneNote, EmptyDay, NoMatch } from './quiet-states'
+import { EmptyDay, NoMatch } from './quiet-states'
 import type { WeekDay } from './week-bar'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
-import { isRunTimePast } from '@/lib/utils/run-time'
 
 type Mode = 'runs' | 'clubs'
 
@@ -161,8 +160,6 @@ export function RunList({
   allRuns,
   onPreloadRun,
   onPreloadClub,
-  allDoneDismissed,
-  onDismissAllDone,
 }: {
   runs: ExploreRun[]
   clubs: ExploreClub[]
@@ -183,8 +180,6 @@ export function RunList({
   allRuns: ExploreRun[]
   onPreloadRun: (id: string) => void
   onPreloadClub: (slug: string) => void
-  allDoneDismissed: boolean
-  onDismissAllDone: () => void
 }) {
   const t = useTranslations('explore')
   const resultCount = mode === 'clubs' ? clubs.length : runs.length
@@ -264,14 +259,7 @@ export function RunList({
     )
   }
 
-  // Today's runs are all in the past
-  const allPast =
-    day === 0 &&
-    runs.every(
-      (run) => run.status === 'CANCELLED' || isRunTimePast(run.time, nowMin)
-    )
-
-  const listContent = (
+  return (
     <div
       className={refreshing ? 'is-refreshing' : undefined}
       style={{ display: 'flex', flexDirection: 'column', gap: 10 }}
@@ -291,33 +279,4 @@ export function RunList({
       ))}
     </div>
   )
-
-  if (allPast && !allDoneDismissed) {
-    return (
-      <div style={{ position: 'relative' }}>
-        {listContent}
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            padding: 16,
-            background: 'color-mix(in oklch, var(--bg) 82%, transparent)',
-            backdropFilter: 'blur(6px)',
-            borderRadius: 'var(--r-lg)',
-          }}
-        >
-          <AllDoneNote
-            week={week}
-            setDay={setDay}
-            onDismiss={onDismissAllDone}
-          />
-        </div>
-      </div>
-    )
-  }
-
-  return listContent
 }

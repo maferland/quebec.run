@@ -1,5 +1,5 @@
 'use client'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as L from 'leaflet'
 import type { MapViewProps } from './map-view'
 import 'leaflet/dist/leaflet.css'
@@ -13,9 +13,18 @@ const TILES = {
 }
 const FIT_PADDING = 96
 
-// A locale switch replaces the [locale] tree, remounting the map. Holding the
-// viewport at module scope keeps a manual pan or zoom across that remount.
-let lastViewport: { center: L.LatLng; zoom: number } | null = null
+// The map lives on a node React never owns, so a locale switch re-parents the
+// live Leaflet instance instead of destroying and rebuilding it.
+let liveContainer: HTMLDivElement | null = null
+let liveMap: L.Map | null = null
+
+function mapContainer() {
+  if (!liveContainer) {
+    liveContainer = document.createElement('div')
+    liveContainer.style.cssText = 'position:absolute;inset:0'
+  }
+  return liveContainer
+}
 
 function createTileLayer(theme: 'dark' | 'light') {
   return L.tileLayer(TILES[theme], {
@@ -54,16 +63,46 @@ export function MapViewContent({
   activeIdRef.current = activeId
   onSelectRef.current = onSelect
 
-  useEffect(() => {
-    if (!containerRef.current) return
+  useLayoutEffect(() => {
+    const host = containerRef.current
+    if (!host) return
+    const container = mapContainer()
+    host.appendChild(container)
 
-    const map = L.map(containerRef.current, {
+    // Already alive from a previous mount: adopt it and skip initial framing.
+    if (liveMap) {
+      const existing = liveMap
+      mapRef.current = existing
+      hasPositionedRef.current = true
+      lastFitRef.current = pointSignature(pointsRef.current)
+      lastFlyRef.current = null
+      const size = existing.getSize()
+      if (
+        size.x !== container.clientWidth ||
+        size.y !== container.clientHeight
+      ) {
+        existing.invalidateSize({ animate: false })
+      }
+      setMapReady(true)
+      onReady?.()
+      const observer = new ResizeObserver(() =>
+        existing.invalidateSize({ animate: false })
+      )
+      observer.observe(container)
+      return () => {
+        observer.disconnect()
+        container.remove()
+      }
+    }
+
+    const map = L.map(container, {
       center: QC_CENTER,
       zoom: INITIAL_ZOOM,
       zoomControl: false,
       attributionControl: true,
       zoomSnap: 0.25,
     })
+    liveMap = map
 
     const initialPoints = pointsRef.current
     const initialActiveId = activeIdRef.current
@@ -100,18 +139,6 @@ export function MapViewContent({
       hasPositionedRef.current = true
     }
 
-    if (lastViewport) {
-      map.setView(lastViewport.center, lastViewport.zoom, { animate: false })
-      hasPositionedRef.current = true
-      lastFitRef.current = pointSignature(initialPoints)
-      lastFlyRef.current = activePoint
-        ? flyKey(activePoint.id, initialInsets)
-        : null
-    }
-    map.on('moveend zoomend', () => {
-      lastViewport = { center: map.getCenter(), zoom: map.getZoom() }
-    })
-
     tileThemeRef.current = theme
     const initialTileLayer = createTileLayer(theme)
     if (onReady) initialTileLayer.once('tileload', onReady)
@@ -128,14 +155,12 @@ export function MapViewContent({
     setMapReady(true)
 
     const ro = new ResizeObserver(() => map.invalidateSize({ animate: false }))
-    ro.observe(containerRef.current!)
+    ro.observe(container)
 
+    // The map is deliberately not destroyed: it outlives this component.
     return () => {
       ro.disconnect()
-      map.remove()
-      mapRef.current = null
-      markersRef.current = {}
-      setMapReady(false)
+      container.remove()
     }
     // mount once
     // eslint-disable-next-line react-hooks/exhaustive-deps
