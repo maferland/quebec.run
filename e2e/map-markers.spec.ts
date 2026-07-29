@@ -15,6 +15,19 @@ async function gotoLoadedExplore(page: Page, path: string) {
   expect(exploreRequests).toEqual([])
 }
 
+// A toggle click that lands before hydration is dropped, and the closed layer
+// hides with opacity, so retry until the input joins the accessibility tree.
+async function openSearch(page: Page) {
+  const input = page.getByRole('textbox')
+  await expect(async () => {
+    if (!(await input.isVisible())) {
+      await page.getByRole('button', { name: 'Search', exact: true }).click()
+    }
+    await expect(input).toBeVisible({ timeout: 1000 })
+  }).toPass({ timeout: 15_000 })
+  return input
+}
+
 test.describe('Map Markers', () => {
   test('displays event map on homepage', async ({ page }) => {
     await page.goto('/en')
@@ -36,24 +49,25 @@ test.describe('Map Markers', () => {
 
     await page.goto('/en?day=4')
 
-    await expect(
-      page.getByRole('button', { name: new RegExp(`Clubs\\s+${clubs.length}`) })
-    ).toBeVisible()
+    const clubsTab = page.getByRole('button', {
+      name: new RegExp(`Clubs\\s+${clubs.length}`),
+    })
+    await expect(clubsTab).toBeVisible()
 
-    await page.getByRole('button', { name: /clubs/i }).click()
-    await expect(
-      page.getByText(`${clubs.length} clubs`, { exact: true })
-    ).toBeVisible()
+    const summary = page.getByText(`${clubs.length} clubs`, { exact: true })
+    await expect(async () => {
+      await clubsTab.click()
+      await expect(summary).toBeVisible({ timeout: 1000 })
+    }).toPass()
   })
 
   test('shows a search empty state without a clear-filters action', async ({
     page,
   }) => {
     await page.goto('/en/clubs')
-    await page.getByRole('button', { name: 'Search', exact: true }).click()
-    await page
-      .locator('input[placeholder="Search a run or club…"]:visible')
-      .fill('definitely-no-such-club')
+    const clubSearch = await openSearch(page)
+    await clubSearch.fill('definitely-no-such-club')
+    await expect(clubSearch).toHaveValue('definitely-no-such-club')
 
     await expect(
       page.getByRole('heading', { name: 'No results' })
@@ -63,10 +77,9 @@ test.describe('Map Markers', () => {
     ).toHaveCount(0)
 
     await page.goto('/en?day=1')
-    await page.getByRole('button', { name: 'Search', exact: true }).click()
-    await page
-      .locator('input[placeholder="Search a run or club…"]:visible')
-      .fill('definitely-no-such-run')
+    const runSearch = await openSearch(page)
+    await runSearch.fill('definitely-no-such-run')
+    await expect(runSearch).toHaveValue('definitely-no-such-run')
 
     await expect(
       page.getByRole('heading', { name: 'No results' })
