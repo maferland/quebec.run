@@ -27,7 +27,9 @@ export async function GET(
     getClubBySlug({ slug }).catch(() => null),
     getTranslations({ locale, namespace: 'metadata.clubDetail' }),
   ])
-  const name = club?.name ?? slug
+
+  // The page 404s for an unknown slug, so the preview must not claim it exists.
+  if (!club) return new Response(null, { status: 404 })
 
   return new ImageResponse(
     <div
@@ -88,9 +90,9 @@ export async function GET(
             lineHeight: 1.1,
           }}
         >
-          {name}
+          {club.name}
         </div>
-        {club?.description && (
+        {club.description && (
           <div style={{ display: 'flex', fontSize: 28, color: '#b7bac4' }}>
             {truncate(club.description, MAX_DESCRIPTION_LENGTH)}
           </div>
