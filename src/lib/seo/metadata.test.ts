@@ -77,4 +77,35 @@ describe('buildPageMetadata', () => {
     })
     expect((meta.openGraph as { type?: string }).type).toBe('article')
   })
+
+  it('defaults the OG image to the locale opengraph-image route', () => {
+    const meta = buildPageMetadata({
+      locale: 'en',
+      path: '/clubs/foo',
+      title: 'T',
+      description: 'D',
+    })
+    const [image] = meta.openGraph?.images as { url: string }[]
+    expect(image.url).toBe(`${SITE_URL}/en/opengraph-image`)
+  })
+
+  it('overrides OG/Twitter title, description and image independently of the page title', () => {
+    const meta = buildPageMetadata({
+      locale: 'fr',
+      path: '/clubs/foo',
+      title: 'Page Title',
+      description: 'Page description',
+      ogTitle: 'OG Title',
+      ogDescription: 'OG description',
+      ogImage: `${SITE_URL}/fr/clubs/foo/opengraph-image`,
+    })
+    expect(meta.title).toBe('Page Title')
+    expect(meta.description).toBe('Page description')
+    expect(meta.openGraph?.title).toBe('OG Title')
+    expect(meta.openGraph?.description).toBe('OG description')
+    expect((meta.openGraph?.images as { url: string }[])[0].url).toBe(
+      `${SITE_URL}/fr/clubs/foo/opengraph-image`
+    )
+    expect(meta.twitter?.title).toBe('OG Title')
+  })
 })

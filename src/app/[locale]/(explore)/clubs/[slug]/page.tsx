@@ -26,6 +26,9 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
     description: club
       ? t('description', { clubName: club.name })
       : t('description', { clubName: slug }),
+    ogImage: club
+      ? `${SITE_URL}/${locale}/clubs/${slug}/opengraph-image`
+      : undefined,
     noIndex: !club,
   })
 }
