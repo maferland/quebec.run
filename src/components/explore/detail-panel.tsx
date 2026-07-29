@@ -1,63 +1,15 @@
 'use client'
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-  type AnimationEvent,
-} from 'react'
+import { useCallback, type AnimationEvent } from 'react'
 import { useRouter } from 'next/navigation'
 import { useLocale, useTranslations } from 'next-intl'
 import { useTheme } from './theme-provider'
 import { RunDetailPanel } from './run-detail'
 import { ClubDetailPanel } from './club-detail'
 import { useClubDetail, useRunDetail } from '@/lib/hooks/use-explore'
+import type { DetailOverlayState } from './use-detail-route'
 
 export const PANEL_ENTER_MS = 280
 export const PANEL_EXIT_MS = 220
-
-function useAnimatedClose(close: () => void) {
-  const [exiting, setExiting] = useState(false)
-  const closeRef = useRef(close)
-  const fallbackRef = useRef<number | null>(null)
-
-  useEffect(() => {
-    closeRef.current = close
-  }, [close])
-
-  useEffect(() => {
-    return () => {
-      if (fallbackRef.current) window.clearTimeout(fallbackRef.current)
-    }
-  }, [])
-
-  const requestClose = useCallback(() => {
-    setExiting((alreadyExiting) => {
-      if (alreadyExiting) return true
-      fallbackRef.current = window.setTimeout(() => {
-        fallbackRef.current = null
-        closeRef.current()
-      }, PANEL_EXIT_MS + 80)
-      return true
-    })
-  }, [])
-
-  const handleAnimationEnd = useCallback(
-    (event: AnimationEvent<HTMLDivElement>) => {
-      if (!exiting) return
-      if (event.target !== event.currentTarget) return
-      if (event.animationName !== 'detailPanelOut') return
-      if (fallbackRef.current) {
-        window.clearTimeout(fallbackRef.current)
-        fallbackRef.current = null
-      }
-      closeRef.current()
-    },
-    [exiting]
-  )
-
-  return { exiting, requestClose, handleAnimationEnd }
-}
 
 // ── Shared overlay shell ──────────────────────────────────────────────────────
 
@@ -216,183 +168,87 @@ const errorButtonStyle = {
   cursor: 'pointer',
 } as const
 
-// ── Overlay plumbing shared by both kinds ─────────────────────────────────────
+// ── Overlay ───────────────────────────────────────────────────────────────────
 
-type OverlayProps = {
-  enter?: boolean
-  exiting?: boolean
+// Close, enter and exit are driven entirely by useDetailRoute in the shell;
+// this component only reports animation completion back to it.
+export function DetailOverlay({
+  overlay,
+  inactive = false,
+  onClose,
+  onEntered,
+  onExited,
+}: {
+  overlay: DetailOverlayState
   inactive?: boolean
   onClose?: () => void
   onEntered?: () => void
   onExited?: () => void
-  backBehavior?: 'history' | 'route'
-}
-
-function useOverlay({
-  fallbackPath,
-  onClose,
-  onExited,
-  exiting: controlledExiting,
-  backBehavior,
-}: {
-  fallbackPath: string
-} & Pick<OverlayProps, 'onClose' | 'onExited' | 'exiting' | 'backBehavior'>) {
+}) {
+  const locale = useLocale()
   const router = useRouter()
+  const isRun = overlay.kind === 'run'
 
-  const closeDetail = useCallback(() => {
-    if (backBehavior === 'history') {
-      router.back()
-      return
-    }
-    router.replace(fallbackPath)
-  }, [backBehavior, fallbackPath, router])
+  const runQuery = useRunDetail(isRun ? overlay.id : null)
+  const clubQuery = useClubDetail(isRun ? null : overlay.slug, locale)
+  const { isError, refetch } = isRun ? runQuery : clubQuery
 
-  const { exiting, requestClose, handleAnimationEnd } =
-    useAnimatedClose(closeDetail)
-  const isControlled = onClose !== undefined
-  const isExiting = controlledExiting ?? exiting
+  const exiting = inactive ? false : overlay.exiting
 
-  const handlePanelAnimationEnd = useCallback(
+  const handleAnimationEnd = useCallback(
     (event: AnimationEvent<HTMLDivElement>) => {
-      if (!isControlled) {
-        handleAnimationEnd(event)
-        return
-      }
-      if (!isExiting) return
+      if (!exiting) return
       if (event.target !== event.currentTarget) return
       if (event.animationName !== 'detailPanelOut') return
       onExited?.()
     },
-    [handleAnimationEnd, isControlled, isExiting, onExited]
+    [exiting, onExited]
   )
 
-  return {
-    router,
-    isExiting,
-    requestPanelClose: onClose ?? requestClose,
-    handlePanelAnimationEnd,
-  }
-}
-
-// ── Run detail overlay ────────────────────────────────────────────────────────
-
-export function RunDetailOverlay({
-  id,
-  enter = true,
-  exiting: controlledExiting,
-  inactive = false,
-  onClose,
-  onEntered,
-  onExited,
-  backBehavior = 'route',
-}: OverlayProps & { id: string }) {
-  const locale = useLocale()
-  const { data: run, isError, refetch } = useRunDetail(id)
-  const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
-    useOverlay({
-      fallbackPath: `/${locale}`,
-      onClose,
-      onExited,
-      exiting: controlledExiting,
-      backBehavior,
-    })
-
   const shell = {
-    enter,
-    exiting: isExiting,
+    enter: inactive ? false : overlay.enter,
+    exiting,
     inactive,
     onEnterComplete: onEntered,
-    onExitComplete: handlePanelAnimationEnd,
+    onExitComplete: handleAnimationEnd,
   }
+
+  const close = () => onClose?.()
+
+  // Branching on kind before reading the data is what keeps this free of
+  // non-null assertions.
+  const panel = isRun
+    ? runQuery.data && (
+        <RunDetailPanel
+          run={runQuery.data}
+          onBack={close}
+          onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
+          locale={locale}
+        />
+      )
+    : clubQuery.data && (
+        <ClubDetailPanel
+          club={clubQuery.data}
+          onBack={close}
+          onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
+        />
+      )
 
   if (isError) {
     return (
       <OverlayShell {...shell}>
         <DetailError
-          kind="run"
-          onBack={requestPanelClose}
+          kind={overlay.kind}
+          onBack={close}
           onRetry={() => void refetch()}
         />
-      </OverlayShell>
-    )
-  }
-  if (!run) {
-    return (
-      <OverlayShell {...shell}>
-        <DetailSkeleton kind="run" />
       </OverlayShell>
     )
   }
 
   return (
     <OverlayShell {...shell}>
-      <RunDetailPanel
-        run={run}
-        onBack={requestPanelClose}
-        onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
-        locale={locale}
-      />
-    </OverlayShell>
-  )
-}
-
-// ── Club detail overlay ───────────────────────────────────────────────────────
-
-export function ClubDetailOverlay({
-  slug,
-  enter = true,
-  exiting: controlledExiting,
-  inactive = false,
-  onClose,
-  onEntered,
-  onExited,
-  backBehavior = 'route',
-}: OverlayProps & { slug: string }) {
-  const locale = useLocale()
-  const { data: club, isError, refetch } = useClubDetail(slug, locale)
-  const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
-    useOverlay({
-      fallbackPath: `/${locale}/clubs`,
-      onClose,
-      onExited,
-      exiting: controlledExiting,
-      backBehavior,
-    })
-
-  const shell = {
-    enter,
-    exiting: isExiting,
-    inactive,
-    onEnterComplete: onEntered,
-    onExitComplete: handlePanelAnimationEnd,
-  }
-
-  if (isError) {
-    return (
-      <OverlayShell {...shell}>
-        <DetailError
-          kind="club"
-          onBack={requestPanelClose}
-          onRetry={() => void refetch()}
-        />
-      </OverlayShell>
-    )
-  }
-  if (!club) {
-    return (
-      <OverlayShell {...shell}>
-        <DetailSkeleton kind="club" />
-      </OverlayShell>
-    )
-  }
-
-  return (
-    <OverlayShell {...shell}>
-      <ClubDetailPanel
-        club={club}
-        onBack={requestPanelClose}
-        onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
-      />
+      {panel ?? <DetailSkeleton kind={overlay.kind} />}
     </OverlayShell>
   )
 }

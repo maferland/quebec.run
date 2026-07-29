@@ -20,7 +20,7 @@ If multiple iterations of feedback are needed, keep running pinpoint after each 
 
 ## Testing Strategy
 
-**Coverage:** `vitest.config.ts` holds a ratchet, currently 50% statements / 78% branches / 72% functions. Raise it in any PR that adds tests; never lower it. 95% stays the goal, not the gate.
+**Coverage:** `vitest.config.ts` holds a ratchet, currently 54% statements / 79% branches / 72% functions. Raise it in any PR that adds tests; never lower it. 95% stays the goal, not the gate.
 
 - **Unit (components, functions):** Test via roles/labels/names (not CSS selectors), use `@testing-library/user-event`
 - **Integration (services + DB):** Use real test DB with `TEST_DATABASE_URL`, clean/seed per test, let Prisma generate IDs

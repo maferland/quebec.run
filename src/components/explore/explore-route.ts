@@ -27,6 +27,8 @@ export function parseRouteSelection(pathname: string) {
   return { runId: null, clubSlug: null }
 }
 
+export function detailKey(detail: DetailRoute): string
+export function detailKey(detail: DetailRoute | null): string | null
 export function detailKey(detail: DetailRoute | null): string | null {
   if (!detail) return null
   return detail.kind === 'run' ? `run:${detail.id}` : `club:${detail.slug}`

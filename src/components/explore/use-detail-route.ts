@@ -12,6 +12,13 @@ export type DetailOverlayState = DetailRoute & {
   closeMode: CloseMode
 }
 
+// Why the URL changed, recorded by whoever changed it so the sync effect below
+// can tell an intentional move from a browser Back. At most one is ever live.
+type Expectation =
+  | { type: 'opened'; key: string }
+  | { type: 'closed'; key: string }
+  | { type: 'back'; key: string; closeMode: CloseMode }
+
 export type UseDetailRouteResult = {
   overlay: DetailOverlayState | null
   previousOverlay: DetailOverlayState | null
@@ -34,13 +41,11 @@ export function useDetailRoute({
   const currentDetailKey = detailKey(currentDetail)
 
   const hydratedRef = useRef(false)
+  const expectedRef = useRef<Expectation | null>(null)
+  // How the exit currently animating should finish once it lands.
   const pendingCloseRef = useRef<CloseMode | null>(null)
-  const pendingOpenRef = useRef<string | null>(null)
-  const closingDetailKeyRef = useRef<string | null>(null)
   // Lets Back from a nested detail return to the previous panel, not the map.
   const historyRef = useRef<DetailOverlayState[]>([])
-  const pendingBackRef = useRef<string | null>(null)
-  const pendingBackCloseModeRef = useRef<CloseMode | null>(null)
   const exitFallbackRef = useRef<number | null>(null)
   const enterFallbackRef = useRef<number | null>(null)
 
@@ -73,27 +78,25 @@ export function useDetailRoute({
     clearExitFallback()
     const pendingClose = pendingCloseRef.current
     pendingCloseRef.current = null
-    if (pendingClose === 'history') {
-      closingDetailKeyRef.current = detailKey(overlay)
-      setOverlay(null)
-      router.back()
-      return
-    }
-    if (pendingClose === 'route') {
-      closingDetailKeyRef.current = detailKey(overlay)
-      setOverlay(null)
-      router.replace(buildFallbackPath(overlay), { scroll: false })
-      return
-    }
     setOverlay(null)
+    if (!pendingClose || !overlay) return
+    expectedRef.current = { type: 'closed', key: detailKey(overlay) }
+    if (pendingClose === 'history') router.back()
+    else router.replace(buildFallbackPath(overlay), { scroll: false })
   }, [buildFallbackPath, clearExitFallback, overlay, router])
 
   const requestExit = useCallback(
     (closeMode?: CloseMode) => {
-      if (closeMode === 'history' && historyRef.current.length > 0) {
-        const previousDetail = historyRef.current.pop() ?? null
-        pendingBackRef.current = detailKey(previousDetail)
-        pendingBackCloseModeRef.current = previousDetail?.closeMode ?? 'history'
+      // Back out of a nested detail: no exit animation, the popped panel
+      // arrives with the route.
+      const previousDetail =
+        closeMode === 'history' ? historyRef.current.pop() : undefined
+      if (previousDetail) {
+        expectedRef.current = {
+          type: 'back',
+          key: detailKey(previousDetail),
+          closeMode: previousDetail.closeMode,
+        }
         pendingCloseRef.current = null
         clearExitFallback()
         router.back()
@@ -113,19 +116,21 @@ export function useDetailRoute({
   )
 
   const openDetail = useCallback((detail: DetailRoute) => {
-    closingDetailKeyRef.current = null
-    pendingOpenRef.current = detailKey(detail)
+    expectedRef.current = { type: 'opened', key: detailKey(detail) }
     setOverlay({ ...detail, exiting: false, enter: true, closeMode: 'route' })
   }, [])
 
   useEffect(() => {
+    const expected = expectedRef.current
+    const matches = expected?.key === currentDetailKey
+
     if (currentDetail) {
-      if (closingDetailKeyRef.current === currentDetailKey) return
-      closingDetailKeyRef.current = null
+      if (expected?.type === 'closed' && matches) return
+      const openedThis = expected?.type === 'opened' && matches
+      const backToThis = expected?.type === 'back' && matches ? expected : null
+      expectedRef.current = null
       const existingKey = detailKey(overlay)
-      const isPendingOpen = pendingOpenRef.current === currentDetailKey
-      if (isPendingOpen) pendingOpenRef.current = null
-      if (currentDetailKey === existingKey && isPendingOpen) {
+      if (currentDetailKey === existingKey && openedThis) {
         setOverlay((current) =>
           current ? { ...current, closeMode: 'history' } : current
         )
@@ -137,12 +142,8 @@ export function useDetailRoute({
         clearExitFallback()
         clearEnterFallback()
         pendingCloseRef.current = null
-        const isDetailBack = pendingBackRef.current === currentDetailKey
-        pendingBackRef.current = null
-        const detailBackCloseMode = pendingBackCloseModeRef.current
-        pendingBackCloseModeRef.current = null
         if (overlay) {
-          if (!isDetailBack) historyRef.current.push(overlay)
+          if (!backToThis) historyRef.current.push(overlay)
           setPreviousOverlay({ ...overlay, enter: false, exiting: false })
           enterFallbackRef.current = window.setTimeout(
             completeEnter,
@@ -155,9 +156,7 @@ export function useDetailRoute({
           ...currentDetail,
           exiting: false,
           enter: hydratedRef.current,
-          closeMode: isDetailBack
-            ? (detailBackCloseMode ?? 'route')
-            : closeMode,
+          closeMode: backToThis ? backToThis.closeMode : closeMode,
         })
       }
       hydratedRef.current = true
@@ -165,14 +164,13 @@ export function useDetailRoute({
     }
 
     hydratedRef.current = true
-    closingDetailKeyRef.current = null
     historyRef.current = []
-    pendingBackRef.current = null
-    pendingBackCloseModeRef.current = null
     clearEnterFallback()
     setPreviousOverlay(null)
-    if (pendingOpenRef.current && pendingOpenRef.current === detailKey(overlay))
-      return
+    const openedCurrent =
+      expected?.type === 'opened' && expected.key === detailKey(overlay)
+    expectedRef.current = openedCurrent ? expected : null
+    if (openedCurrent) return
     if (!overlay || overlay.exiting) return
     requestExit()
   }, [

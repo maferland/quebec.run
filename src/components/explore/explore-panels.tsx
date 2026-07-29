@@ -1,8 +1,35 @@
 'use client'
-import { ClubDetailOverlay, RunDetailOverlay } from './detail-panel'
-import type { DetailOverlayState } from './use-detail-route'
+import type { useSheetDrag } from './use-explore-layout'
+
+type SheetDrag = ReturnType<typeof useSheetDrag>
 
 export const RAIL_WIDTH = 404
+
+const MOBILE_TOP_INSET = 76
+
+// Keeps map content clear of the rail, the sheet, or an open detail panel.
+export function mapInsets({
+  desktop,
+  containerHeight,
+  sheetHeight,
+  detailOpen,
+}: {
+  desktop: boolean
+  containerHeight: number
+  sheetHeight: number
+  detailOpen: boolean
+}) {
+  if (desktop) return { left: RAIL_WIDTH + 24, top: 24, bottom: 24 }
+  if (detailOpen) {
+    const visible = Math.min(300, Math.max(220, containerHeight * 0.3))
+    return {
+      left: 0,
+      top: MOBILE_TOP_INSET,
+      bottom: Math.max(0, containerHeight - visible),
+    }
+  }
+  return { left: 0, top: MOBILE_TOP_INSET, bottom: sheetHeight }
+}
 
 type ListContainerProps = {
   listRef: React.RefObject<HTMLDivElement | null>
@@ -60,16 +87,8 @@ export function MobileSheet({
   height,
   dragging,
   gripHandlers,
-}: ListContainerProps & {
-  height: number
-  dragging: boolean
-  gripHandlers: {
-    onPointerDown: (event: React.PointerEvent) => void
-    onPointerMove: (event: React.PointerEvent) => void
-    onPointerUp: () => void
-    onPointerCancel: () => void
-  }
-}) {
+}: ListContainerProps &
+  Pick<SheetDrag, 'height' | 'dragging' | 'gripHandlers'>) {
   return (
     <div
       style={{
@@ -121,34 +140,5 @@ export function MobileSheet({
         {children}
       </div>
     </div>
-  )
-}
-
-export function DetailPanelSlot({
-  overlay,
-  inactive = false,
-  onClose,
-  onEntered,
-  onExited,
-}: {
-  overlay: DetailOverlayState
-  inactive?: boolean
-  onClose?: () => void
-  onEntered?: () => void
-  onExited?: () => void
-}) {
-  const shared = {
-    enter: inactive ? false : overlay.enter,
-    exiting: inactive ? false : overlay.exiting,
-    inactive,
-    onClose,
-    onEntered,
-    onExited,
-  }
-
-  return overlay.kind === 'run' ? (
-    <RunDetailOverlay {...shared} id={overlay.id} />
-  ) : (
-    <ClubDetailOverlay {...shared} slug={overlay.slug} />
   )
 }

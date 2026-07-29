@@ -1,21 +1,35 @@
 'use client'
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from 'react'
 import { getTorontoMinutes } from '@/lib/utils/run-time'
 
 const DESKTOP_MIN_WIDTH = 880
+
+const useIsomorphicLayoutEffect =
+  typeof window === 'undefined' ? useEffect : useLayoutEffect
 
 export function useContainerMetrics<T extends HTMLElement>() {
   const rootRef = useRef<T>(null)
   const [desktop, setDesktop] = useState(false)
   const [height, setHeight] = useState(0)
 
-  useEffect(() => {
+  // Measured before paint: a locale switch remounts this tree, and waiting for
+  // the async ResizeObserver left frames with the map unmounted.
+  useIsomorphicLayoutEffect(() => {
     const el = rootRef.current
     if (!el) return
-    const observer = new ResizeObserver(() => {
+    const measure = () => {
       setDesktop(el.clientWidth >= DESKTOP_MIN_WIDTH)
       setHeight(el.clientHeight)
-    })
+    }
+    measure()
+    const observer = new ResizeObserver(measure)
     observer.observe(el)
     return () => observer.disconnect()
   }, [])
@@ -52,7 +66,7 @@ export function useSheetDrag(containerHeight: number) {
 
   // Not keyed on `dragging`: that fired right after onPointerUp picked a snap
   // point, resetting the sheet to the middle on every drag.
-  useEffect(() => {
+  useIsomorphicLayoutEffect(() => {
     if (snaps.mid > 0) setHeight(snaps.mid)
   }, [snaps.mid])
 
@@ -99,67 +113,4 @@ export function useSheetDrag(containerHeight: number) {
       onPointerCancel: onPointerUp,
     },
   }
-}
-
-export function useExploreSearch() {
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [open, setOpen] = useState(false)
-  const [query, setQuery] = useState('')
-
-  useEffect(() => {
-    if (!open) return
-    const frame = window.requestAnimationFrame(() => inputRef.current?.focus())
-    return () => window.cancelAnimationFrame(frame)
-  }, [open])
-
-  const close = useCallback(() => {
-    setOpen(false)
-    setQuery('')
-  }, [])
-
-  return { inputRef, open, setOpen, query, setQuery, close }
-}
-
-// Scrolls once per day, so the list does not jump again as runs age out.
-export function useAutoScrollToNextRun({
-  listRef,
-  enabled,
-  day,
-  desktop,
-  targetId,
-}: {
-  listRef: React.RefObject<HTMLDivElement | null>
-  enabled: boolean
-  day: number
-  desktop: boolean
-  targetId: string | null
-}) {
-  const scrolledDayRef = useRef<number | null>(null)
-  const scrolledListRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (!enabled || !targetId) return
-    const list = listRef.current
-    if (!list) return
-    if (scrolledDayRef.current === day && scrolledListRef.current === list)
-      return
-
-    const target = list.querySelector<HTMLElement>(
-      `[data-run-id="${targetId}"]`
-    )
-    if (!target) return
-
-    list.scrollTo({
-      top:
-        list.scrollTop +
-        target.getBoundingClientRect().top -
-        list.getBoundingClientRect().top -
-        4,
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'auto'
-        : 'smooth',
-    })
-    scrolledDayRef.current = day
-    scrolledListRef.current = list
-  }, [day, desktop, enabled, listRef, targetId])
 }

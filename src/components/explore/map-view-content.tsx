@@ -13,6 +13,10 @@ const TILES = {
 }
 const FIT_PADDING = 96
 
+// A locale switch replaces the [locale] tree, remounting the map. Holding the
+// viewport at module scope keeps a manual pan or zoom across that remount.
+let lastViewport: { center: L.LatLng; zoom: number } | null = null
+
 function createTileLayer(theme: 'dark' | 'light') {
   return L.tileLayer(TILES[theme], {
     subdomains: 'abcd',
@@ -95,6 +99,18 @@ export function MapViewContent({
       lastFitRef.current = pointSignature(initialPoints)
       hasPositionedRef.current = true
     }
+
+    if (lastViewport) {
+      map.setView(lastViewport.center, lastViewport.zoom, { animate: false })
+      hasPositionedRef.current = true
+      lastFitRef.current = pointSignature(initialPoints)
+      lastFlyRef.current = activePoint
+        ? flyKey(activePoint.id, initialInsets)
+        : null
+    }
+    map.on('moveend zoomend', () => {
+      lastViewport = { center: map.getCenter(), zoom: map.getZoom() }
+    })
 
     tileThemeRef.current = theme
     const initialTileLayer = createTileLayer(theme)
