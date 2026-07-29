@@ -9,7 +9,6 @@ import {
   setRequestLocale,
 } from 'next-intl/server'
 import { notFound } from 'next/navigation'
-import { Providers } from '../providers'
 import { locales } from '@/i18n'
 import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
 import '../globals.css'
@@ -81,7 +80,7 @@ export default async function LocaleLayout({ children, params }: Props) {
         className={`${spaceGrotesk.variable} ${hankenGrotesk.variable} ${spaceMono.variable} font-body antialiased bg-surface-variant overflow-x-hidden`}
       >
         <NextIntlClientProvider locale={locale} messages={messages}>
-          <Providers>{children}</Providers>
+          {children}
         </NextIntlClientProvider>
         <Analytics />
         <SpeedInsights />

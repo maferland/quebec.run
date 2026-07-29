@@ -271,10 +271,9 @@ test.describe('Map Markers', () => {
             transform: String(finalKeyframe?.transform ?? ''),
           }
         })
-      expect(exitAnimation).toEqual({
-        name: 'detailPanelOut',
-        transform: 'translateX(-100%)',
-      })
+      expect(exitAnimation.name).toBe('detailPanelOut')
+      // Chromium serialises this as translate(-100%), older builds as translateX
+      expect(exitAnimation.transform).toMatch(/^translate(X)?\(-100%\)$/)
     }
     await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
     await expect(page).toHaveURL(/\/en\/clubs(?:\?.*)?$/)

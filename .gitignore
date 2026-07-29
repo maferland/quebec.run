@@ -80,3 +80,7 @@ test-results/*
 /.amp/
 /tasks/
 .env*.local
+
+# Local review artifacts
+/shots/
+/.playwright-mcp/

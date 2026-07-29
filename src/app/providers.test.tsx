@@ -1,14 +1,18 @@
-import { render } from '@testing-library/react'
-import { Providers } from './providers'
+import { render, screen } from '@testing-library/react'
+import { describe, expect, it } from 'vitest'
+import { ExploreProviders, SiteProviders } from './providers'
 
-describe('Providers', () => {
+describe.each([
+  { name: 'SiteProviders', Wrapper: SiteProviders },
+  { name: 'ExploreProviders', Wrapper: ExploreProviders },
+])('$name', ({ Wrapper }) => {
   it('renders children', () => {
-    const { getByText } = render(
-      <Providers>
+    render(
+      <Wrapper>
         <div>Test Content</div>
-      </Providers>
+      </Wrapper>
     )
 
-    expect(getByText('Test Content')).toBeInTheDocument()
+    expect(screen.getByText('Test Content')).toBeInTheDocument()
   })
 })
