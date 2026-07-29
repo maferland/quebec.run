@@ -4,10 +4,11 @@ The locale-switch 404 is fixed (commit `fd77348`). This plan covers the code-qua
 behind it: `explore-shell.tsx` was 1121 lines with no tests, and the data layer was three
 hand-rolled caches that React Query already solves.
 
-All seven PRs have landed. `explore-shell.tsx` is 572 lines, down from 1121, and the suite
-went from 824 to 877 tests. Five bugs were found and fixed along the way: the locale 404,
-the mobile sheet drag, the dead coverage gate, accent-blind search, and dates rendering in
-the browser's locale instead of the app's.
+Ten PRs landed. `explore-shell.tsx` is 406 lines, down from 1121, and the suite went from
+824 to 943 tests. Seven bugs were found and fixed along the way: the locale 404, the mobile
+sheet drag, the dead coverage gate, accent-blind search, dates rendering in the browser's
+locale instead of the app's, the all-done veil measuring against the scroll content box,
+and two e2e tests that drove the toolbar before it was interactive.
 
 ## What's actually wrong
 
@@ -100,7 +101,7 @@ functions — with `scripts/**`, `.storybook/**` and the `src/lib/test-*` helper
 so the number reflects shipped code. `CLAUDE.md` updated to describe the ratchet instead
 of a 95% gate that never ran.
 
-## PR 7 — accent-insensitive search and locale-correct dates (done)
+### PR 7 — accent-insensitive search and locale-correct dates (done)
 
 Both were listed as follow-ups and then pulled in.
 
@@ -130,6 +131,94 @@ and the old formatter would have shown Jul 30 to anyone east of Toronto.
 
 23 unit tests for the utils plus 4 integration tests for the club search.
 
+### PR 8 — second strict pass (done)
+
+Two close mechanisms fought over the detail overlay. `useDetailRoute` already
+owned close, enter and exit for the shell, while `detail-panel` kept its own
+`useAnimatedClose`, a `backBehavior` prop, a `fallbackPath` and an `isControlled`
+switch. The second one is deleted, and `detail-panel.tsx` went from 398 lines to 254.
+
+`useDetailRoute` carried nine refs. Four of them answered the same question, "why
+did the URL just change", and were mutually exclusive by construction, which is
+the tell that they were always a sum type. One `Expectation` union of
+`opened`/`closed`/`back` replaced them. Nine refs became seven, and the
+reconciling effect reads one named value instead of keeping four nullable strings
+in sync. The 14 tests did not change, which is what they were written for.
+
+Every non-null assertion this work had introduced is gone:
+
+- `DetailOverlay` dispatched through a merged `query` and then wrote
+  `runQuery.data!`. Branching on kind before reading the data narrows naturally.
+- `use-explore-collections` asserted `run.lat!` while a separate `hasCoords`
+  filter enforced the same invariant elsewhere. One builder per kind returns null
+  when coordinates are missing and the caller compacts. That also deleted the
+  hand-rolled copy of the run point that `selectedRunPoint` carried.
+- The history pop was guarded by `length > 0` and then asserted. The pop result
+  is the check.
+- `detailKey` has an overload, so a non-null detail yields a non-null key.
+
+`explore-shell.tsx` lost 456 lines to `use-explore-routing.ts` (every URL write,
+exposing no router), `use-explore-collections.ts` (filtering, map points,
+counts), `use-explore-search.ts`, `explore-week.ts` and `use-auto-scroll.ts`.
+`WeekCount` moved to the data layer, which owns the response it describes.
+
+Splitting the code into more small functions dropped statement coverage under the
+ratchet. The answer was 29 tests for the routing hook and 8 for `mapInsets`, not a
+lower bar.
+
+### PR 9 — the locale-switch flash and the all-done veil (done)
+
+The first "0 blank frames" measurement was the wrong signal: it counted DOM
+elements, and an element being present says nothing about whether it painted.
+Capturing real frames showed the tree fading out and the map washing out
+mid-transition.
+
+A locale switch changes the `[locale]` segment, so React unmounts everything
+below it even though the page never reloads. Four first-visit affordances were
+replaying on every toggle. `mapReady` reset to false, so the static map preview
+snapped back to full opacity over the live map and faded out again, which was the
+largest contributor. Both detail panels ran their own fade from local state and
+now take `animateIn`. Every list card replayed `cardIn`, suppressed now by an
+`is-restored` class on the root for the first frame of a remounted tree. Leaflet
+was destroyed and rebuilt.
+
+The map is the interesting one. The Leaflet container is now a node React never
+owns: the component renders a host div and re-parents the live map into it in a
+layout effect. The instance survives the remount, verified by element identity,
+which deleted the saved-viewport workaround, the `fadeAnimation` special case and
+the marker rebuild.
+
+Worst-frame pixel difference against the settled frame:
+
+```
+club detail  6.3% -> 0.8%, settles in one frame
+home         6.3% -> 4.4%, settles in four
+```
+
+The all-done veil was rendered inside the scrolling node with `position:
+absolute; inset: 0`, and absolute inset resolves against the scroll content box,
+not the visible port. Measured on seeded data, the content box is 968px tall on
+desktop against a 655px port, and 952px against 339px on mobile, so the note
+centred against the full content height and sat off screen on mobile while the
+veil stopped at the content edge. A veil that covers the port belongs to whoever
+owns the port, so it moved into a `ScrollPort` wrapper shared by `DesktopRail` and
+`MobileSheet`. The veil rect now matches the port rect exactly on both
+breakpoints.
+
+### PR 10 — e2e hydration (done)
+
+Two `map-markers` tests drove the toolbar immediately after `page.goto`. On a
+slow runner the click landed before React hydrated and was dropped. The closed
+search layer hides with `opacity` and `aria-hidden` rather than `display`, so
+`input[placeholder=…]:visible` matched it while the search was shut: measured,
+that locator counts 1 element with the search closed while `getByRole('textbox')`
+counts 0. The fill wrote into a node React did not own yet, React reset it on
+hydration, and the empty state never appeared.
+
+The tests now gate on the accessibility tree and retry the toggle until it takes
+effect. This was pre-existing; `main` was green by luck, and the refactor only
+made hydration slow enough to expose it.
+
 ## Still open
 
 **The run detail response is a union.** `/api/explore/runs/[id]` returns either a
@@ -137,3 +226,15 @@ virtual event or a Prisma event, with different club shapes, which is why the
 client type is all-optional with `??` fallbacks on every field. A Zod schema at
 that boundary would let the fallbacks go. Left alone: it is a correctness change
 to the API contract, not a refactor.
+
+**Home still repaints part of the map on a locale switch.** 4.4% worst-frame
+difference over four frames, down from a full-screen 6.3% flash, and confined to
+the map region: per-pane diffing put the list at 0.0%. The remaining cause is
+that `[locale]` is a routed segment, so React tears down everything below it.
+Removing that needs a middleware-rewrite architecture change, which is out of
+scope here. Moving `<html>` above `[locale]` would do it and was rejected: it
+breaks the server-rendered `lang` attribute that SEO depends on.
+
+**Three e2e tests still settle with a sleep.** `gotoLoadedExplore` waits 500ms and
+one test adds another 400ms. They pass, so PR 10 left them alone, but they are the
+same hydration race and the same fix applies.
