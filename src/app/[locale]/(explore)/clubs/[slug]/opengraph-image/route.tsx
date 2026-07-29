@@ -1,12 +1,17 @@
 import { ImageResponse } from 'next/og'
 import { getTranslations } from 'next-intl/server'
 import { getClubBySlug } from '@/lib/services/clubs'
-import { BrandMark } from '@/lib/seo/brand-mark'
+import {
+  BrandLockup,
+  OgGlow,
+  OG_ACCENT,
+  OG_DIM,
+  ogCardStyle,
+} from '@/lib/seo/og-theme'
 
 export const revalidate = 900
 export const dynamicParams = true
 
-const ACCENT = '#d2a8fe'
 const MAX_DESCRIPTION_LENGTH = 140
 
 function truncate(text: string, maxLength: number) {
@@ -32,47 +37,9 @@ export async function GET(
   if (!club) return new Response(null, { status: 404 })
 
   return new ImageResponse(
-    <div
-      style={{
-        display: 'flex',
-        flexDirection: 'column',
-        justifyContent: 'space-between',
-        width: '100%',
-        height: '100%',
-        padding: 80,
-        background: '#161b26',
-        color: '#f6f5f8',
-        fontFamily: 'sans-serif',
-      }}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', gap: 20 }}>
-        <div
-          style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 72,
-            height: 72,
-            borderRadius: 18,
-            background: '#2a2350',
-          }}
-        >
-          <BrandMark size={50} />
-        </div>
-        <div
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            fontSize: 26,
-            color: '#b7bac4',
-          }}
-        >
-          <div style={{ display: 'flex', fontWeight: 800 }}>
-            quebec&nbsp;.&nbsp;run
-          </div>
-          <div style={{ display: 'flex' }}>{t('ogKicker')}</div>
-        </div>
-      </div>
+    <div style={ogCardStyle}>
+      <OgGlow />
+      <BrandLockup kicker={t('ogKicker')} />
       <div
         style={{
           display: 'flex',
@@ -93,7 +60,7 @@ export async function GET(
           {club.name}
         </div>
         {club.description && (
-          <div style={{ display: 'flex', fontSize: 28, color: '#b7bac4' }}>
+          <div style={{ display: 'flex', fontSize: 28, color: OG_DIM }}>
             {truncate(club.description, MAX_DESCRIPTION_LENGTH)}
           </div>
         )}
@@ -105,10 +72,10 @@ export async function GET(
             width: 10,
             height: 10,
             borderRadius: 5,
-            background: ACCENT,
+            background: OG_ACCENT,
           }}
         />
-        <div style={{ display: 'flex', fontSize: 24, color: '#b7bac4' }}>
+        <div style={{ display: 'flex', fontSize: 24, color: OG_DIM }}>
           quebec.run
         </div>
       </div>
