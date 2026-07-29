@@ -17,9 +17,6 @@ import {
   ClubDetailOverlay,
   PANEL_ENTER_MS,
   PANEL_EXIT_MS,
-  loadRunDetail,
-  preloadClubDetail,
-  preloadRunDetail,
   RunDetailOverlay,
 } from './detail-panel'
 import { FilterOverlay } from './filter-overlay'
@@ -48,6 +45,14 @@ import {
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
 import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
+import {
+  useDetailPrefetch,
+  useExploreClubs,
+  useExploreRuns,
+  useRunDetail,
+  useWeekCounts,
+  type WeekCount,
+} from '@/lib/hooks/use-explore'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
 const RAIL_WIDTH = 404
@@ -60,7 +65,7 @@ type DetailOverlayState = DetailRoute & {
 
 export type InitialExploreData = {
   day: number
-  weekCounts?: { day: number; count: number }[]
+  weekCounts?: WeekCount[]
   runs?: ExploreRun[]
   clubs?: ExploreClub[]
 }
@@ -68,7 +73,7 @@ export type InitialExploreData = {
 // ── Week bar helpers ──────────────────────────────────────────────────────────
 
 function buildWeekDays(
-  counts: { day: number; count: number }[],
+  counts: WeekCount[],
   locale: string,
   tr: (k: string) => string
 ): WeekDay[] {
@@ -164,14 +169,19 @@ function ExploreShellInner({
   const day = searchParams.has('day')
     ? parseDay(searchParams)
     : (dayOffsetFromRunId(selectedRunId) ?? 0)
-  const initialRuns = initialData?.day === day ? initialData.runs : undefined
-  const hasInitialRuns = initialRuns !== undefined
-  const runsByDayRef = useRef(
-    new Map<number, ExploreRun[]>(
-      initialData?.runs ? [[initialData.day, initialData.runs]] : []
-    )
-  )
   const filters = useMemo(() => parseFilters(searchParams), [searchParams])
+
+  // ── Explore data ────────────────────────────────────────────────────────────
+  const { data: weekCounts = [] } = useWeekCounts(initialData?.weekCounts)
+  const { data: runs = [], isFetching: fetchingRuns } = useExploreRuns({
+    day,
+    initialData: initialData?.day === day ? initialData.runs : undefined,
+  })
+  const { data: clubs = [], isFetching: fetchingClubs } = useExploreClubs(
+    initialData?.clubs
+  )
+  const { data: selectedRun } = useRunDetail(selectedRunId)
+  const { prefetchRun, prefetchClub } = useDetailPrefetch(locale)
 
   const clearExitFallback = useCallback(() => {
     if (!exitFallbackRef.current) return
@@ -431,21 +441,23 @@ function ExploreShellInner({
   const [searchQ, setSearchQ] = useState('')
   const [allDoneDismissed, setAllDoneDismissed] = useState(false)
 
-  const [weekCounts, setWeekCounts] = useState<
-    { day: number; count: number }[]
-  >(() => initialData?.weekCounts ?? [])
-  const [runs, setRuns] = useState<ExploreRun[]>(() => initialRuns ?? [])
-  const [clubs, setClubs] = useState<ExploreClub[]>(
-    () => initialData?.clubs ?? []
-  )
-  const initialRunsDayRef = useRef(hasInitialRuns ? day : null)
-  const [selectedRunPoint, setSelectedRunPoint] = useState<
-    (MapPoint & { kind: 'run' }) | null
-  >(null)
-  const [loadingRuns, setLoadingRuns] = useState(!hasInitialRuns)
-  const [loadingClubs, setLoadingClubs] = useState(
-    initialData?.clubs === undefined
-  )
+  const loadingRuns = fetchingRuns && runs.length === 0
+  const loadingClubs = fetchingClubs && clubs.length === 0
+
+  const selectedRunPoint = useMemo<(MapPoint & { kind: 'run' }) | null>(() => {
+    if (!selectedRun || selectedRun.lat === null || selectedRun.lng === null) {
+      return null
+    }
+    return {
+      id: selectedRun.id,
+      lat: selectedRun.lat,
+      lng: selectedRun.lng,
+      kind: 'run',
+      label: selectedRun.time,
+      cancelled: selectedRun.status === 'CANCELLED',
+      past: Boolean(selectedRun.isPast),
+    }
+  }, [selectedRun])
 
   const [dragging, setDragging] = useState(false)
   const dragRef = useRef<{ y: number; h: number } | null>(null)
@@ -502,108 +514,6 @@ function ExploreShellInner({
     ro.observe(el)
     return () => ro.disconnect()
   }, [])
-
-  useEffect(() => {
-    if (weekCounts.length > 0) return
-    fetch('/api/explore/week-counts')
-      .then((r) => {
-        if (!r.ok) return []
-        return r.json()
-      })
-      .then((data) => {
-        if (Array.isArray(data)) setWeekCounts(data)
-      })
-      .catch(() => {})
-  }, [weekCounts.length])
-
-  useEffect(() => {
-    if (initialRunsDayRef.current === day) {
-      initialRunsDayRef.current = null
-      setLoadingRuns(false)
-      return
-    }
-    const cachedRuns = runsByDayRef.current.get(day)
-    if (cachedRuns) {
-      setRuns(cachedRuns)
-      setLoadingRuns(false)
-      return
-    }
-    const controller = new AbortController()
-    setLoadingRuns(true)
-    fetch(`/api/explore/runs?day=${day}`, { signal: controller.signal })
-      .then((r) => {
-        if (!r.ok) return []
-        return r.json()
-      })
-      .then((data: ExploreRun[]) => {
-        if (!Array.isArray(data)) return
-        runsByDayRef.current.set(day, data)
-        setRuns(data)
-      })
-      .catch((error) => {
-        if (error?.name !== 'AbortError') return
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoadingRuns(false)
-      })
-    return () => controller.abort()
-  }, [day])
-
-  useEffect(() => {
-    let active = true
-    if (!selectedRunId) {
-      setSelectedRunPoint(null)
-      return
-    }
-
-    loadRunDetail(selectedRunId)
-      .then((run) => {
-        if (!active) return
-        setSelectedRunPoint(
-          run.lat === null || run.lng === null
-            ? null
-            : {
-                id: run.id,
-                lat: run.lat,
-                lng: run.lng,
-                kind: 'run',
-                label: run.time,
-                cancelled: run.status === 'CANCELLED',
-                past: run.isPast,
-              }
-        )
-      })
-      .catch(() => {
-        if (active) setSelectedRunPoint(null)
-      })
-
-    return () => {
-      active = false
-    }
-  }, [selectedRunId])
-
-  useEffect(() => {
-    if (clubs.length > 0) {
-      setLoadingClubs(false)
-      return
-    }
-    const controller = new AbortController()
-    fetch('/api/explore/clubs', { signal: controller.signal })
-      .then((r) => {
-        if (!r.ok) return []
-        return r.json()
-      })
-      .then((data) => {
-        if (Array.isArray(data)) setClubs(data)
-      })
-      .catch((error) => {
-        if (error?.name !== 'AbortError') return
-      })
-      .finally(() => {
-        if (!controller.signal.aborted) setLoadingClubs(false)
-      })
-    return () => controller.abort()
-  }, [clubs.length])
 
   // ── Derived values ──────────────────────────────────────────────────────────
 
@@ -747,7 +657,7 @@ function ExploreShellInner({
       const detail: DetailRoute = { kind: 'run', id }
       closingDetailKeyRef.current = null
       pendingOpenRef.current = detailKey(detail)
-      preloadRunDetail(id)
+      prefetchRun(id)
       setDetailOverlay({
         ...detail,
         exiting: false,
@@ -761,7 +671,7 @@ function ExploreShellInner({
         )
       })
     },
-    [day, filters, locale, router, startTransition]
+    [day, filters, locale, prefetchRun, router, startTransition]
   )
 
   const openClubDetail = useCallback(
@@ -771,7 +681,7 @@ function ExploreShellInner({
       const detail: DetailRoute = { kind: 'club', slug: club.slug }
       closingDetailKeyRef.current = null
       pendingOpenRef.current = detailKey(detail)
-      preloadClubDetail(club.slug, locale)
+      prefetchClub(club.slug)
       setDetailOverlay({
         ...detail,
         exiting: false,
@@ -785,7 +695,7 @@ function ExploreShellInner({
         )
       })
     },
-    [clubs, day, filters, locale, router, startTransition]
+    [clubs, day, filters, locale, prefetchClub, router, startTransition]
   )
 
   const selectMapPoint = useCallback(
@@ -805,18 +715,18 @@ function ExploreShellInner({
 
   const preloadRun = useCallback(
     (id: string) => {
-      preloadRunDetail(id)
+      prefetchRun(id)
       router.prefetch(`/${locale}/run/${encodeURIComponent(id)}`)
     },
-    [locale, router]
+    [locale, prefetchRun, router]
   )
 
   const preloadClub = useCallback(
     (slug: string) => {
-      preloadClubDetail(slug, locale)
+      prefetchClub(slug)
       router.prefetch(`/${locale}/clubs/${encodeURIComponent(slug)}`)
     },
-    [locale, router]
+    [locale, prefetchClub, router]
   )
 
   // ── Grip drag ───────────────────────────────────────────────────────────────

@@ -20,5 +20,11 @@ export function SiteProviders({ children }: { children: React.ReactNode }) {
 }
 
 export function ExploreProviders({ children }: { children: React.ReactNode }) {
-  return <ThemeProvider>{children}</ThemeProvider>
+  const [queryClient] = useState(() => new QueryClient())
+
+  return (
+    <QueryClientProvider client={queryClient}>
+      <ThemeProvider>{children}</ThemeProvider>
+    </QueryClientProvider>
+  )
 }
