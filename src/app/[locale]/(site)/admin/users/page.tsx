@@ -2,10 +2,11 @@
 
 import { useState } from 'react'
 import { useSession } from 'next-auth/react'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import { useAllUsers, useToggleUserStaff } from '@/lib/hooks/use-users'
 import { StaffActionsMenu } from '@/components/admin/staff-actions-menu'
 import { ConfirmStaffDialog } from '@/components/admin/confirm-staff-dialog'
+import { formatEventDate } from '@/lib/utils/intl'
 
 type User = {
   id: string
@@ -18,6 +19,7 @@ type User = {
 
 export default function AdminUsersPage() {
   const t = useTranslations('admin.users')
+  const locale = useLocale()
   const { data: session } = useSession()
   const { data: users, isLoading } = useAllUsers()
   const [dialogState, setDialogState] = useState<{
@@ -149,7 +151,11 @@ export default function AdminUsersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="text-sm text-text-secondary">
-                          {new Date(user.createdAt).toLocaleDateString()}
+                          {formatEventDate(user.createdAt, locale, {
+                            year: 'numeric',
+                            month: 'short',
+                            day: 'numeric',
+                          })}
                         </div>
                       </td>
                       <td className="px-6 py-4 text-right">

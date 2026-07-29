@@ -4,9 +4,10 @@ The locale-switch 404 is fixed (commit `fd77348`). This plan covers the code-qua
 behind it: `explore-shell.tsx` was 1121 lines with no tests, and the data layer was three
 hand-rolled caches that React Query already solves.
 
-All six PRs have landed. `explore-shell.tsx` is 572 lines, the explore tree has 25 new
-unit tests, and three bugs surfaced along the way (listed at the end, plus the sheet-drag
-one fixed in PR 5).
+All seven PRs have landed. `explore-shell.tsx` is 572 lines, down from 1121, and the suite
+went from 824 to 877 tests. Five bugs were found and fixed along the way: the locale 404,
+the mobile sheet drag, the dead coverage gate, accent-blind search, and dates rendering in
+the browser's locale instead of the app's.
 
 ## What's actually wrong
 
@@ -99,30 +100,40 @@ functions — with `scripts/**`, `.storybook/**` and the `src/lib/test-*` helper
 so the number reflects shipped code. `CLAUDE.md` updated to describe the ratchet instead
 of a 95% gate that never ran.
 
-## Found but not folded in
+## PR 7 — accent-insensitive search and locale-correct dates (done)
 
-Both are behaviour changes rather than refactors, so they want their own PR and their own
-review.
+Both were listed as follow-ups and then pulled in.
 
-1. **Search is accent-sensitive.** Typing `panthere` finds nothing; the club is
-   `La Panthère`. For a French-first app where people rarely type accents, that is a real
-   usability bug. Fix is to normalise both sides with
-   `String.prototype.normalize('NFD')` before comparing.
-2. **Upcoming-run dates render in English on the French club page** — `Wed, Jul 29` under
-   `Prochaines sorties`. `formatUpcomingDate` in `club-detail.tsx` does not take a locale.
-3. **The run detail response is a union.** `/api/explore/runs/[id]` returns either a
-   virtual event or a Prisma event, with different club shapes, which is why the client
-   type is all-optional with `??` fallbacks on every field. A Zod schema at that boundary
-   would let the fallbacks go.
+**Search folds accents.** `panthere` now finds `La Panthère`, `cafe` finds
+`Café de Course`, `entrainement` finds `entraînement`. `foldAccents` in
+`src/lib/utils/intl.ts` normalises to NFD and strips `\p{Diacritic}` on both
+sides of the comparison. Applied to all four search paths, not just the one that
+was reported:
 
-## Decisions
+- the explore client filter for runs and clubs (`explore-shell.tsx`)
+- `matchesClubFilters` in `src/lib/services/clubs.ts`
+- the event title/address filter in `src/lib/services/events.ts`
 
-- **Ship as the 5-PR stack**, not one branch.
-- **Styling stays as-is.** Inline `style={{}}` and CSS vars move with the components they
-  belong to. No Tailwind conversion, no `qr-*` migration. Revisit separately with
-  Chromatic diffs if it's still worth doing afterwards.
-- **Detail panels keep `DetailSkeleton` / `DetailError`**, driven by `isPending` and
-  `isError`. No Suspense: the enter/exit animation needs the shell element to stay
-  mounted across the load.
-- **Coverage gate gets fixed and ratcheted** from today's real number rather than jumping
-  to 95%. Each PR in the stack raises it.
+A genuine non-match still returns nothing.
+
+**Dates follow the app locale, not the browser's.** `club-detail.tsx` called
+`new Intl.DateTimeFormat(undefined, …)`, and `undefined` resolves to the
+runtime locale, which is why `Prochaines sorties` read `Wed, Jul 29` on the
+French page. It reads `mer. 29 juill.` now.
+
+The same bug class lived in two admin pages as bare `toLocaleDateString()`; both
+fixed, and there are no locale-less date formatters left in `src/`.
+
+`formatEventDate` also pins `America/Toronto`, which the old code omitted. A test
+covers the case that exposed: `2026-07-30T01:30:00Z` is still Jul 29 in Quebec,
+and the old formatter would have shown Jul 30 to anyone east of Toronto.
+
+23 unit tests for the utils plus 4 integration tests for the club search.
+
+## Still open
+
+**The run detail response is a union.** `/api/explore/runs/[id]` returns either a
+virtual event or a Prisma event, with different club shapes, which is why the
+client type is all-optional with `??` fallbacks on every field. A Zod schema at
+that boundary would let the fallbacks go. Left alone: it is a correctness change
+to the API contract, not a refactor.

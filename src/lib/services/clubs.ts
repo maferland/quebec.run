@@ -28,6 +28,7 @@ import { ConflictError, NotFoundError, UnauthorizedError } from '@/lib/errors'
 // We need the ClubId type for getClubById
 import { clubIdSchema, clubSlugSchema } from '@/lib/schemas'
 import type { z } from 'zod'
+import { foldAccents, foldedIncludes } from '@/lib/utils/intl'
 type ClubId = z.infer<typeof clubIdSchema>
 type ClubSlug = z.infer<typeof clubSlugSchema>
 
@@ -58,9 +59,9 @@ function matchesClubFilters(
   data: ClubsQuery
 ): boolean {
   if (data.search) {
-    const q = data.search.toLowerCase()
-    const nameHit = club.name.toLowerCase().includes(q)
-    const descHit = club.description?.toLowerCase().includes(q) ?? false
+    const q = foldAccents(data.search)
+    const nameHit = foldedIncludes(club.name, q)
+    const descHit = foldedIncludes(club.description, q)
     if (!nameHit && !descHit) return false
   }
   if (data.type === 'ROAD' && club.type !== 'ROAD' && club.type !== 'MIXED') {
