@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { TypeTag, VibePill, Flag, Stamp, paceRange } from './badges'
 
@@ -232,10 +233,10 @@ type Props = {
   onBack: () => void
   onOpenClub: (slug: string) => void
   locale: string
-  tr: (k: string) => string
 }
 
-export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
+export function RunDetailPanel({ run, onBack, onOpenClub, locale }: Props) {
+  const t = useTranslations('explore')
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(false)
 
@@ -248,13 +249,13 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
   const isPast = run.isPast ?? false
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
   const typeLabel = run.club.type
-    ? tr(`type_${run.club.type.toLowerCase()}`)
+    ? t(`type_${run.club.type.toLowerCase()}`)
     : null
   const vibeLabel = run.club.vibe
-    ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
+    ? t(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
-  const variableFallback = run.pacePolicy === 'OPEN_PACE' ? tr('variable') : '—'
+  const variableFallback = run.pacePolicy === 'OPEN_PACE' ? t('variable') : '—'
   const clubDescription =
     run.club.description && run.club.description.length > 120
       ? `${run.club.description.slice(0, 120)}…`
@@ -325,7 +326,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
             cursor: 'pointer',
           }}
         >
-          {ChevLIcon} {tr('back')}
+          {ChevLIcon} {t('back')}
         </button>
         <button
           className="tap"
@@ -345,7 +346,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
             cursor: 'pointer',
           }}
         >
-          {shared ? CheckIcon : ShareIcon} {shared ? tr('copied') : tr('share')}
+          {shared ? CheckIcon : ShareIcon} {shared ? t('copied') : t('share')}
         </button>
       </div>
 
@@ -361,11 +362,9 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
         >
           {typeLabel && <TypeTag kind={run.club.type} label={typeLabel} />}
           {vibeLabel && <VibePill label={vibeLabel} />}
-          {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
-          {cancelled && <Stamp tone="cancelled">{tr('cancelled')}</Stamp>}
-          {isPast && !cancelled && (
-            <Stamp tone="past">{tr('past_badge')}</Stamp>
-          )}
+          {run.club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
+          {cancelled && <Stamp tone="cancelled">{t('cancelled')}</Stamp>}
+          {isPast && !cancelled && <Stamp tone="past">{t('past_badge')}</Stamp>}
         </div>
         <h1
           style={{
@@ -392,25 +391,25 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
           overflow: 'hidden',
         }}
       >
-        <StatCol icon={ClockIcon} value={run.time} label={tr('time')} />
+        <StatCol icon={ClockIcon} value={run.time} label={t('time')} />
         <div style={{ width: 1, background: 'var(--line)' }} />
         <StatCol
           icon={RulerIcon}
           value={run.distance ? `${run.distance} km` : variableFallback}
-          label={tr('distance')}
+          label={t('distance')}
         />
         <div style={{ width: 1, background: 'var(--line)' }} />
         <StatCol
           icon={GaugeIcon}
           value={pace ?? variableFallback}
-          label={tr('pace')}
+          label={t('pace')}
         />
       </div>
 
       {/* meeting point */}
       {run.address && (
         <div>
-          <SectionLabel>{tr('meeting_point')}</SectionLabel>
+          <SectionLabel>{t('meeting_point')}</SectionLabel>
           <div
             style={{
               display: 'flex',
@@ -468,7 +467,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
                   textDecoration: 'none',
                 }}
               >
-                {RouteIcon} {tr('directions')}
+                {RouteIcon} {t('directions')}
               </a>
             )}
           </div>
@@ -477,7 +476,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
 
       {/* club */}
       <div>
-        <SectionLabel>{tr('about_club')}</SectionLabel>
+        <SectionLabel>{t('about_club')}</SectionLabel>
         <button
           type="button"
           className="tap"
@@ -531,7 +530,7 @@ export function RunDetailPanel({ run, onBack, onOpenClub, locale, tr }: Props) {
                 whiteSpace: 'nowrap',
               }}
             >
-              {tr('view_club')} {ChevRIcon}
+              {t('view_club')} {ChevRIcon}
             </span>
           </span>
         </button>

@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import { ClubCard } from './club-card'
 import { RunCard } from './run-card'
 import { AllDoneNote, EmptyDay, NoMatch } from './quiet-states'
@@ -28,16 +29,15 @@ const FilterIcon = (
 export function FilterButton({
   n,
   onClick,
-  tr,
 }: {
   n: number
   onClick: () => void
-  tr: (k: string) => string
 }) {
+  const t = useTranslations('explore')
   const on = n > 0
   return (
     <button
-      aria-label={tr('filters')}
+      aria-label={t('filters')}
       onClick={onClick}
       style={{
         width: 44,
@@ -76,14 +76,13 @@ export function ModeToggle({
   setMode,
   runCount,
   clubCount,
-  tr,
 }: {
   mode: Mode
   setMode: (m: Mode) => void
   runCount: number
   clubCount: number
-  tr: (k: string) => string
 }) {
+  const t = useTranslations('explore')
   const opt = (id: Mode, label: string, count: number) => {
     const on = mode === id
     return (
@@ -136,8 +135,8 @@ export function ModeToggle({
         gap: 3,
       }}
     >
-      {opt('runs', tr('runs'), runCount)}
-      {opt('clubs', tr('clubs'), clubCount)}
+      {opt('runs', t('runs'), runCount)}
+      {opt('clubs', t('clubs'), clubCount)}
     </div>
   )
 }
@@ -152,7 +151,6 @@ export function RunList({
   onOpenClub,
   loading,
   refreshing,
-  tr,
   day,
   week,
   setDay,
@@ -175,7 +173,6 @@ export function RunList({
   onOpenClub: (id: string) => void
   loading: boolean
   refreshing: boolean
-  tr: (k: string) => string
   day: number
   week: WeekDay[]
   setDay: (o: number) => void
@@ -189,11 +186,12 @@ export function RunList({
   allDoneDismissed: boolean
   onDismissAllDone: () => void
 }) {
+  const t = useTranslations('explore')
   const resultCount = mode === 'clubs' ? clubs.length : runs.length
   const resultLabel =
     mode === 'clubs'
-      ? tr(resultCount === 1 ? 'clubs_count_one' : 'clubs_count_many')
-      : tr(resultCount === 1 ? 'results_one' : 'results_many')
+      ? t(resultCount === 1 ? 'clubs_count_one' : 'clubs_count_many')
+      : t(resultCount === 1 ? 'results_one' : 'results_many')
   const resultSummary = (
     <div style={{ fontSize: 13, color: 'var(--faint)', padding: '0 2px 2px' }}>
       <span
@@ -227,9 +225,9 @@ export function RunList({
   if (mode === 'clubs') {
     if (clubs.length === 0) {
       return hasActiveFilters ? (
-        <NoMatch onClearFilters={onClearFilters} tr={tr} />
+        <NoMatch onClearFilters={onClearFilters} />
       ) : (
-        <NoMatch variant="search" tr={tr} />
+        <NoMatch variant="search" />
       )
     }
     return (
@@ -244,7 +242,6 @@ export function RunList({
             club={c}
             onOpen={() => onOpenClub(c.id)}
             onIntent={() => onPreloadClub(c.slug)}
-            tr={tr}
           />
         ))}
       </div>
@@ -253,17 +250,17 @@ export function RunList({
 
   // No runs on this day at all (no filters applied)
   if (allRuns.length === 0) {
-    return <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
+    return <EmptyDay week={week} day={day} setDay={setDay} />
   }
 
   // Filters excluded all runs
   if (runs.length === 0) {
     return hasActiveFilters ? (
-      <NoMatch onClearFilters={onClearFilters} tr={tr} />
+      <NoMatch onClearFilters={onClearFilters} />
     ) : hasSearchQuery ? (
-      <NoMatch variant="search" tr={tr} />
+      <NoMatch variant="search" />
     ) : (
-      <EmptyDay week={week} day={day} setDay={setDay} tr={tr} />
+      <EmptyDay week={week} day={day} setDay={setDay} />
     )
   }
 
@@ -290,7 +287,6 @@ export function RunList({
           onIntent={() => onPreloadRun(r.id)}
           nowMin={nowMin}
           day={day}
-          tr={tr}
         />
       ))}
     </div>
@@ -317,7 +313,6 @@ export function RunList({
             week={week}
             setDay={setDay}
             onDismiss={onDismissAllDone}
-            tr={tr}
           />
         </div>
       </div>

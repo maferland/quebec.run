@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import type { ExploreRun } from '@/lib/services/events'
 import { isRunTimePast } from '@/lib/utils/run-time'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
@@ -71,7 +72,6 @@ type Props = {
   onIntent: () => void
   nowMin: number
   day: number
-  tr: (k: string) => string
 }
 
 export function RunCard({
@@ -82,8 +82,8 @@ export function RunCard({
   onIntent,
   nowMin,
   day,
-  tr,
 }: Props) {
+  const t = useTranslations('explore')
   const cancelled = run.status === 'CANCELLED'
   const isPast = day === 0 && !cancelled && isRunTimePast(run.time, nowMin)
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
@@ -91,10 +91,10 @@ export function RunCard({
 
   const pace = paceRange(run.club.paceMin, run.club.paceMax)
   const typeLabel = run.club.type
-    ? tr(`type_${run.club.type.toLowerCase()}`)
+    ? t(`type_${run.club.type.toLowerCase()}`)
     : null
   const vibeLabel = run.club.vibe
-    ? tr(`vibe_${run.club.vibe.toLowerCase()}`)
+    ? t(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
 
   return (
@@ -209,9 +209,9 @@ export function RunCard({
             </span>
           </span>
           {cancelled ? (
-            <Stamp tone="cancelled">{tr('cancelled')}</Stamp>
+            <Stamp tone="cancelled">{t('cancelled')}</Stamp>
           ) : isPast ? (
-            <Stamp tone="past">{tr('past_badge')}</Stamp>
+            <Stamp tone="past">{t('past_badge')}</Stamp>
           ) : null}
         </span>
 
@@ -225,7 +225,7 @@ export function RunCard({
           }}
         >
           {typeLabel && <TypeTag kind={run.club.type} label={typeLabel} />}
-          {run.club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+          {run.club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
           {vibeLabel && <VibePill label={vibeLabel} />}
         </span>
 
@@ -244,7 +244,7 @@ export function RunCard({
             )}
             {pace && (
               <MetaPill icon={GaugeIcon}>
-                {pace} {tr('pace_unit')}
+                {pace} {t('pace_unit')}
               </MetaPill>
             )}
           </span>
@@ -313,7 +313,7 @@ export function RunCard({
                   cursor: 'pointer',
                 }}
               >
-                {tr('open_run')} {ArrowIcon}
+                {t('open_run')} {ArrowIcon}
               </button>
             </div>
           </div>

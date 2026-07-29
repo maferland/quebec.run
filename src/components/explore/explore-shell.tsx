@@ -6,19 +6,11 @@ import {
   useMemo,
   useRef,
   useState,
-  useTransition,
 } from 'react'
-import { useLocale, useTranslations } from 'next-intl'
-import { useSearchParams, usePathname, useRouter } from 'next/navigation'
+import { useTranslations } from 'next-intl'
 import { MapView, type MapPoint } from './map-view'
 import type { WeekDay } from './week-bar'
 import { useTheme } from './theme-provider'
-import {
-  ClubDetailOverlay,
-  PANEL_ENTER_MS,
-  PANEL_EXIT_MS,
-  RunDetailOverlay,
-} from './detail-panel'
 import { FilterOverlay } from './filter-overlay'
 import {
   filterCount,
@@ -32,19 +24,29 @@ import { ExploreTopBar } from './explore-top-bar'
 import { RunList } from './explore-list'
 import { ExploreControls } from './explore-controls'
 import {
+  DesktopRail,
+  DetailPanelSlot,
+  MobileSheet,
+  RAIL_WIDTH,
+} from './explore-panels'
+import {
   buildQs,
   dayOffsetFromRunId,
   detailKey,
-  parseDay,
-  parseFilters,
-  parseModeFromPath,
-  parseRouteSelection,
-  type DetailRoute,
   type Mode,
 } from './explore-route'
+import { useDetailRoute, type DetailOverlayState } from './use-detail-route'
+import { useExploreUrlState } from './use-explore-url-state'
+import {
+  useAutoScrollToNextRun,
+  useContainerMetrics,
+  useExploreSearch,
+  useNowMinutes,
+  useSheetDrag,
+} from './use-explore-layout'
 import type { ExploreRun } from '@/lib/services/events'
 import type { ExploreClub } from '@/lib/services/clubs'
-import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
+import { isRunTimePast } from '@/lib/utils/run-time'
 import {
   useDetailPrefetch,
   useExploreClubs,
@@ -55,13 +57,6 @@ import {
 } from '@/lib/hooks/use-explore'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
-const RAIL_WIDTH = 404
-
-type DetailOverlayState = DetailRoute & {
-  exiting: boolean
-  enter: boolean
-  closeMode: 'history' | 'route'
-}
 
 export type InitialExploreData = {
   day: number
@@ -70,13 +65,17 @@ export type InitialExploreData = {
   clubs?: ExploreClub[]
 }
 
-// ── Week bar helpers ──────────────────────────────────────────────────────────
-
-function buildWeekDays(
-  counts: WeekCount[],
-  locale: string,
-  tr: (k: string) => string
-): WeekDay[] {
+function buildWeekDays({
+  counts,
+  locale,
+  todayLabel,
+  tomorrowLabel,
+}: {
+  counts: WeekCount[]
+  locale: string
+  todayLabel: string
+  tomorrowLabel: string
+}): WeekDay[] {
   const loc = locale === 'fr' ? 'fr-CA' : 'en-CA'
   const wdFmt = new Intl.DateTimeFormat(loc, { weekday: 'short' })
   const mdFmt = new Intl.DateTimeFormat(loc, { day: 'numeric', month: 'short' })
@@ -91,9 +90,9 @@ function buildWeekDays(
 
     const short =
       o === 0
-        ? tr('tonight')
+        ? todayLabel
         : o === 1
-          ? tr('tomorrow')
+          ? tomorrowLabel
           : wdFmt.format(date).replace('.', '').toUpperCase()
 
     return {
@@ -105,8 +104,11 @@ function buildWeekDays(
   })
 }
 
-// ── Public export wraps inner in Suspense (required for useSearchParams) ─────
+function matchesQuery(haystack: (string | null | undefined)[], query: string) {
+  return haystack.some((value) => value?.toLowerCase().includes(query))
+}
 
+// useSearchParams needs a Suspense boundary above it.
 export function ExploreShell({
   initialData,
 }: {
@@ -119,59 +121,29 @@ export function ExploreShell({
   )
 }
 
-// ── Inner shell ───────────────────────────────────────────────────────────────
-
 function ExploreShellInner({
   initialData,
 }: {
   initialData?: InitialExploreData
 }) {
   const { theme, setTheme } = useTheme()
-  const locale = useLocale()
   const t = useTranslations('explore')
-  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
+  const {
+    locale,
+    pathname,
+    searchParams,
+    mode,
+    day,
+    filters,
+    selectedRunId,
+    selectedClubSlug,
+    currentDetail,
+    updateUrl,
+    router,
+    startTransition,
+  } = useExploreUrlState()
 
-  const searchParams = useSearchParams()
-  const pathname = usePathname()
-  const router = useRouter()
-  const [, startTransition] = useTransition()
-  const routeSelection = parseRouteSelection(pathname)
-  const currentDetail = useMemo<DetailRoute | null>(() => {
-    if (routeSelection.runId) return { kind: 'run', id: routeSelection.runId }
-    if (routeSelection.clubSlug)
-      return { kind: 'club', slug: routeSelection.clubSlug }
-    return null
-  }, [routeSelection.clubSlug, routeSelection.runId])
-  const currentDetailKey = detailKey(currentDetail)
-  const hydratedRef = useRef(false)
-  const pendingCloseRef = useRef<'history' | 'route' | null>(null)
-  const pendingOpenRef = useRef<string | null>(null)
-  const closingDetailKeyRef = useRef<string | null>(null)
-  const detailHistoryRef = useRef<DetailOverlayState[]>([])
-  const pendingDetailBackRef = useRef<string | null>(null)
-  const pendingDetailBackCloseModeRef = useRef<'history' | 'route' | null>(null)
-  const exitFallbackRef = useRef<number | null>(null)
-  const enterFallbackRef = useRef<number | null>(null)
-  const [detailOverlay, setDetailOverlay] = useState<DetailOverlayState | null>(
-    () =>
-      currentDetail
-        ? { ...currentDetail, exiting: false, enter: false, closeMode: 'route' }
-        : null
-  )
-  const [previousDetailOverlay, setPreviousDetailOverlay] =
-    useState<DetailOverlayState | null>(null)
-  const [previewRunId, setPreviewRunId] = useState<string | null>(null)
-
-  // ── URL-derived state ───────────────────────────────────────────────────────
-  const mode = parseModeFromPath(pathname)
-  const selectedRunId = routeSelection.runId ?? searchParams.get('run')
-  const selectedClubSlug = routeSelection.clubSlug ?? searchParams.get('club')
-  const day = searchParams.has('day')
-    ? parseDay(searchParams)
-    : (dayOffsetFromRunId(selectedRunId) ?? 0)
-  const filters = useMemo(() => parseFilters(searchParams), [searchParams])
-
-  // ── Explore data ────────────────────────────────────────────────────────────
+  // ── Data ────────────────────────────────────────────────────────────────────
   const { data: weekCounts = [] } = useWeekCounts(initialData?.weekCounts)
   const { data: runs = [], isFetching: fetchingRuns } = useExploreRuns({
     day,
@@ -183,266 +155,179 @@ function ExploreShellInner({
   const { data: selectedRun } = useRunDetail(selectedRunId)
   const { prefetchRun, prefetchClub } = useDetailPrefetch(locale)
 
-  const clearExitFallback = useCallback(() => {
-    if (!exitFallbackRef.current) return
-    window.clearTimeout(exitFallbackRef.current)
-    exitFallbackRef.current = null
-  }, [])
+  const loadingRuns = fetchingRuns && runs.length === 0
+  const loadingClubs = fetchingClubs && clubs.length === 0
 
-  const clearEnterFallback = useCallback(() => {
-    if (!enterFallbackRef.current) return
-    window.clearTimeout(enterFallbackRef.current)
-    enterFallbackRef.current = null
-  }, [])
+  // ── Detail panel ────────────────────────────────────────────────────────────
+  const buildFallbackPath = useCallback(
+    (detail: DetailOverlayState | null) =>
+      detail?.kind === 'club'
+        ? `/${locale}/clubs${buildQs(day, filters)}`
+        : `/${locale}${buildQs(day, filters)}`,
+    [day, filters, locale]
+  )
+  const {
+    overlay: detailOverlay,
+    previousOverlay: previousDetailOverlay,
+    openDetail,
+    requestExit,
+    completeEnter,
+    completeExit,
+  } = useDetailRoute({ currentDetail, buildFallbackPath })
 
-  const completeDetailEnter = useCallback(() => {
-    clearEnterFallback()
-    setPreviousDetailOverlay(null)
-  }, [clearEnterFallback])
+  // ── Layout ──────────────────────────────────────────────────────────────────
+  const {
+    rootRef,
+    desktop,
+    height: containerH,
+  } = useContainerMetrics<HTMLDivElement>()
+  const sheet = useSheetDrag(containerH)
+  const search = useExploreSearch()
+  const nowMin = useNowMinutes()
+  const listRef = useRef<HTMLDivElement>(null)
 
-  const completeDetailExit = useCallback(() => {
-    clearExitFallback()
-    const pendingClose = pendingCloseRef.current
-    pendingCloseRef.current = null
-    if (pendingClose === 'history') {
-      closingDetailKeyRef.current = detailKey(detailOverlay)
-      setDetailOverlay(null)
-      router.back()
-      return
-    }
-    if (pendingClose === 'route') {
-      const fallback =
-        detailOverlay?.kind === 'club'
-          ? `/${locale}/clubs${buildQs(day, filters)}`
-          : `/${locale}${buildQs(day, filters)}`
-      closingDetailKeyRef.current = detailKey(detailOverlay)
-      setDetailOverlay(null)
-      router.replace(fallback, { scroll: false })
-      return
-    }
-    setDetailOverlay(null)
-  }, [clearExitFallback, day, detailOverlay, filters, locale, router])
+  const [mapReady, setMapReady] = useState(false)
+  const [filtersOpen, setFiltersOpen] = useState(false)
+  const [previewRunId, setPreviewRunId] = useState<string | null>(null)
+  const [allDoneDismissed, setAllDoneDismissed] = useState(false)
 
-  const startDetailExit = useCallback(
-    (closeMode?: 'history' | 'route') => {
-      if (closeMode === 'history' && detailHistoryRef.current.length > 0) {
-        const previousDetail = detailHistoryRef.current.pop() ?? null
-        pendingDetailBackRef.current = detailKey(previousDetail)
-        pendingDetailBackCloseModeRef.current =
-          previousDetail?.closeMode ?? 'history'
-        pendingCloseRef.current = null
-        clearExitFallback()
-        router.back()
+  const hasMeasuredMapLayout = containerH > 0 && (desktop || sheet.height > 0)
+  const searchClose = search.close
+
+  useEffect(() => {
+    setAllDoneDismissed(false)
+  }, [day])
+
+  useEffect(() => {
+    if (!filtersOpen && !search.open) return
+    const closeTopSurface = (event: KeyboardEvent) => {
+      if (event.key !== 'Escape') return
+      if (filtersOpen) {
+        setFiltersOpen(false)
         return
       }
-      if (closeMode) pendingCloseRef.current = closeMode
-      setDetailOverlay((overlay) =>
-        overlay ? { ...overlay, exiting: true } : overlay
-      )
-      clearExitFallback()
-      exitFallbackRef.current = window.setTimeout(
-        completeDetailExit,
-        PANEL_EXIT_MS + 100
-      )
+      searchClose()
+    }
+    window.addEventListener('keydown', closeTopSurface)
+    return () => window.removeEventListener('keydown', closeTopSurface)
+  }, [filtersOpen, search.open, searchClose])
+
+  // ── Navigation ──────────────────────────────────────────────────────────────
+  const navigate = useCallback(
+    (updates: Parameters<typeof updateUrl>[0]) => {
+      setPreviewRunId(null)
+      updateUrl({ ...updates, runId: null, clubSlug: null })
     },
-    [clearExitFallback, completeDetailExit, router]
+    [updateUrl]
   )
 
-  useEffect(() => {
-    if (currentDetail) {
-      if (closingDetailKeyRef.current === currentDetailKey) return
-      closingDetailKeyRef.current = null
-      const existingKey = detailKey(detailOverlay)
-      const isPendingOpen = pendingOpenRef.current === currentDetailKey
-      if (isPendingOpen) pendingOpenRef.current = null
-      if (currentDetailKey === existingKey && isPendingOpen) {
-        setDetailOverlay((overlay) =>
-          overlay ? { ...overlay, closeMode: 'history' } : overlay
-        )
-        hydratedRef.current = true
-        return
-      }
-      const closeMode = hydratedRef.current ? 'history' : 'route'
-      if (currentDetailKey !== existingKey) {
-        clearExitFallback()
-        clearEnterFallback()
-        pendingCloseRef.current = null
-        const isDetailBack = pendingDetailBackRef.current === currentDetailKey
-        pendingDetailBackRef.current = null
-        const detailBackCloseMode = pendingDetailBackCloseModeRef.current
-        pendingDetailBackCloseModeRef.current = null
-        if (detailOverlay) {
-          if (!isDetailBack) {
-            detailHistoryRef.current.push(detailOverlay)
-          }
-          setPreviousDetailOverlay({
-            ...detailOverlay,
-            enter: false,
-            exiting: false,
-          })
-          enterFallbackRef.current = window.setTimeout(
-            completeDetailEnter,
-            PANEL_ENTER_MS + 100
-          )
-        } else {
-          setPreviousDetailOverlay(null)
-        }
-        setDetailOverlay({
-          ...currentDetail,
-          exiting: false,
-          enter: hydratedRef.current,
-          closeMode: isDetailBack
-            ? (detailBackCloseMode ?? 'route')
-            : closeMode,
-        })
-      }
-      hydratedRef.current = true
-      return
-    }
+  const setDay = useCallback((o: number) => navigate({ day: o }), [navigate])
+  const setMode = useCallback((m: Mode) => navigate({ mode: m }), [navigate])
+  const setFilters = useCallback(
+    (fn: (prev: Filters) => Filters) => navigate({ filters: fn(filters) }),
+    [filters, navigate]
+  )
+  const clearFilters = useCallback(
+    () => updateUrl({ filters: DEFAULT_FILTERS }),
+    [updateUrl]
+  )
 
-    hydratedRef.current = true
-    closingDetailKeyRef.current = null
-    detailHistoryRef.current = []
-    pendingDetailBackRef.current = null
-    pendingDetailBackCloseModeRef.current = null
-    clearEnterFallback()
-    setPreviousDetailOverlay(null)
-    if (
-      pendingOpenRef.current &&
-      pendingOpenRef.current === detailKey(detailOverlay)
-    ) {
-      return
-    }
-    if (!detailOverlay || detailOverlay.exiting) return
-    startDetailExit()
-  }, [
-    clearExitFallback,
-    clearEnterFallback,
-    completeDetailEnter,
-    currentDetail,
-    currentDetailKey,
-    detailOverlay,
-    startDetailExit,
-  ])
-
-  useEffect(() => {
-    return () => {
-      clearEnterFallback()
-      clearExitFallback()
-    }
-  }, [clearEnterFallback, clearExitFallback])
-
-  useEffect(() => {
-    const queryMode = searchParams.get('mode')
-    const queryClubSlug = searchParams.get('club')
-    const queryRunId = searchParams.get('run')
-
-    if (!routeSelection.clubSlug && (queryMode === 'clubs' || queryClubSlug)) {
-      const path = queryClubSlug
-        ? `/${locale}/clubs/${encodeURIComponent(queryClubSlug)}`
-        : `/${locale}/clubs`
-      router.replace(`${path}${buildQs(day, filters)}`, { scroll: false })
-      return
-    }
-
-    if (!routeSelection.runId && queryRunId) {
-      router.replace(`/${locale}/run/${encodeURIComponent(queryRunId)}`, {
-        scroll: false,
-      })
-    }
-  }, [
-    day,
-    filters,
-    locale,
-    routeSelection.clubSlug,
-    routeSelection.runId,
-    router,
-    searchParams,
-  ])
-
-  const updateUrl = useCallback(
-    (updates: {
-      day?: number
-      mode?: Mode
-      filters?: Filters
-      runId?: string | null
-      clubSlug?: string | null
-    }) => {
-      const newDay = updates.day ?? day
-      const newMode = updates.mode ?? mode
-      const newFilters = updates.filters ?? filters
-      const newRunId =
-        updates.runId === undefined ? selectedRunId : updates.runId
-      const newClubSlug =
-        updates.clubSlug === undefined ? selectedClubSlug : updates.clubSlug
-      const basePath = newMode === 'clubs' ? `/${locale}/clubs` : `/${locale}`
-      const selected =
-        newMode === 'clubs'
-          ? { clubSlug: newClubSlug, runId: null }
-          : { runId: newRunId, clubSlug: null }
-      const url = `${basePath}${buildQs(newDay, newFilters, selected)}`
-      if (newMode === mode && !currentDetail && !newRunId && !newClubSlug) {
-        window.history.replaceState(null, '', url)
-        return
-      }
+  const openRunDetail = useCallback(
+    (id: string) => {
+      const runDay = dayOffsetFromRunId(id) ?? day
+      prefetchRun(id)
+      openDetail({ kind: 'run', id })
       startTransition(() => {
-        router.replace(url, { scroll: false })
+        router.push(
+          `/${locale}/run/${encodeURIComponent(id)}${buildQs(runDay, filters)}`,
+          { scroll: false }
+        )
+      })
+    },
+    [day, filters, locale, openDetail, prefetchRun, router, startTransition]
+  )
+
+  const openClubDetail = useCallback(
+    (id: string) => {
+      const club = clubs.find((candidate) => candidate.id === id)
+      if (!club) return
+      prefetchClub(club.slug)
+      openDetail({ kind: 'club', slug: club.slug })
+      startTransition(() => {
+        router.push(
+          `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
+          { scroll: false }
+        )
       })
     },
     [
+      clubs,
       day,
-      mode,
       filters,
-      selectedRunId,
-      selectedClubSlug,
-      currentDetail,
       locale,
+      openDetail,
+      prefetchClub,
       router,
       startTransition,
     ]
   )
 
-  const setDay = useCallback(
-    (o: number) => {
-      setPreviewRunId(null)
-      updateUrl({ day: o, runId: null, clubSlug: null })
+  const preloadRun = useCallback(
+    (id: string) => {
+      prefetchRun(id)
+      router.prefetch(`/${locale}/run/${encodeURIComponent(id)}`)
     },
-    [updateUrl]
+    [locale, prefetchRun, router]
   )
 
-  const setMode = useCallback(
-    (m: Mode) => {
-      setPreviewRunId(null)
-      updateUrl({ mode: m, runId: null, clubSlug: null })
+  const preloadClub = useCallback(
+    (slug: string) => {
+      prefetchClub(slug)
+      router.prefetch(`/${locale}/clubs/${encodeURIComponent(slug)}`)
     },
-    [updateUrl]
+    [locale, prefetchClub, router]
   )
 
-  const setFilters = useCallback(
-    (fn: (prev: Filters) => Filters) => {
-      setPreviewRunId(null)
-      updateUrl({ filters: fn(filters), runId: null, clubSlug: null })
+  const selectMapPoint = useCallback(
+    (id: string) => {
+      if (mode === 'clubs') {
+        openClubDetail(id)
+        return
+      }
+      setPreviewRunId(id)
     },
-    [filters, updateUrl]
+    [mode, openClubDetail]
   )
 
-  // ── Local UI state ──────────────────────────────────────────────────────────
-  const rootRef = useRef<HTMLDivElement>(null)
-  const listRef = useRef<HTMLDivElement>(null)
-  const searchInputRef = useRef<HTMLInputElement>(null)
-  const autoScrolledDayRef = useRef<number | null>(null)
-  const autoScrolledListRef = useRef<HTMLDivElement | null>(null)
+  // ── Derived ─────────────────────────────────────────────────────────────────
+  const week = useMemo(
+    () =>
+      buildWeekDays({
+        counts: weekCounts,
+        locale,
+        todayLabel: t('tonight'),
+        tomorrowLabel: t('tomorrow'),
+      }),
+    [weekCounts, locale, t]
+  )
 
-  const [desktop, setDesktop] = useState(false)
-  const [containerH, setContainerH] = useState(0)
-  const [mapReady, setMapReady] = useState(false)
-  const [filtersOpen, setFiltersOpen] = useState(false)
-  const [searchOpen, setSearchOpen] = useState(false)
-  const [searchQ, setSearchQ] = useState('')
-  const [allDoneDismissed, setAllDoneDismissed] = useState(false)
+  const query = search.query.trim().toLowerCase()
 
-  const loadingRuns = fetchingRuns && runs.length === 0
-  const loadingClubs = fetchingClubs && clubs.length === 0
+  const filteredRuns = useMemo(() => {
+    const byFilter = runs.filter((run) => runMatches(run, filters))
+    if (!query) return byFilter
+    return byFilter.filter((run) =>
+      matchesQuery([run.title, run.club.name, run.address], query)
+    )
+  }, [runs, filters, query])
+
+  const filteredClubs = useMemo(() => {
+    const byFilter = clubs.filter((club) => clubMatches(club, filters))
+    if (!query) return byFilter
+    return byFilter.filter((club) =>
+      matchesQuery([club.name, club.description], query)
+    )
+  }, [clubs, filters, query])
 
   const selectedRunPoint = useMemo<(MapPoint & { kind: 'run' }) | null>(() => {
     if (!selectedRun || selectedRun.lat === null || selectedRun.lng === null) {
@@ -458,151 +343,6 @@ function ExploreShellInner({
       past: Boolean(selectedRun.isPast),
     }
   }, [selectedRun])
-
-  const [dragging, setDragging] = useState(false)
-  const dragRef = useRef<{ y: number; h: number } | null>(null)
-  const snaps = useMemo(
-    () => ({
-      peek: Math.round(containerH * 0.34),
-      mid: Math.round(containerH * 0.6),
-      full: Math.round(containerH * 0.93),
-    }),
-    [containerH]
-  )
-  const [sheetH, setSheetH] = useState(0)
-  const hasMeasuredMapLayout = containerH > 0 && (desktop || sheetH > 0)
-  useEffect(() => {
-    if (snaps.mid > 0 && !dragging) setSheetH(snaps.mid)
-  }, [snaps.mid, dragging])
-
-  // ── Side effects ────────────────────────────────────────────────────────────
-
-  useEffect(() => {
-    setAllDoneDismissed(false)
-  }, [day])
-
-  useEffect(() => {
-    if (!searchOpen) return
-    const frame = window.requestAnimationFrame(() => {
-      searchInputRef.current?.focus()
-    })
-    return () => window.cancelAnimationFrame(frame)
-  }, [searchOpen])
-
-  useEffect(() => {
-    if (!filtersOpen && !searchOpen) return
-    const closeOpenSurface = (event: KeyboardEvent) => {
-      if (event.key !== 'Escape') return
-      if (filtersOpen) {
-        setFiltersOpen(false)
-        return
-      }
-      setSearchOpen(false)
-      setSearchQ('')
-    }
-    window.addEventListener('keydown', closeOpenSurface)
-    return () => window.removeEventListener('keydown', closeOpenSurface)
-  }, [filtersOpen, searchOpen])
-
-  useEffect(() => {
-    const el = rootRef.current
-    if (!el) return
-    const ro = new ResizeObserver(() => {
-      setDesktop(el.clientWidth >= 880)
-      setContainerH(el.clientHeight)
-    })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
-
-  // ── Derived values ──────────────────────────────────────────────────────────
-
-  const week = useMemo(
-    () => buildWeekDays(weekCounts, locale, tr),
-    [weekCounts, locale, tr]
-  )
-
-  const [nowMin, setNowMin] = useState(() => getTorontoMinutes())
-
-  useEffect(() => {
-    const updateNow = () => setNowMin(getTorontoMinutes())
-    updateNow()
-    const interval = window.setInterval(updateNow, 60_000)
-    return () => window.clearInterval(interval)
-  }, [])
-
-  const insets = useMemo(
-    () =>
-      desktop
-        ? { left: RAIL_WIDTH + 24, top: 24, bottom: 24 }
-        : detailOverlay
-          ? {
-              left: 0,
-              top: 76,
-              bottom: Math.max(
-                0,
-                containerH - Math.min(300, Math.max(220, containerH * 0.3))
-              ),
-            }
-          : { left: 0, top: 76, bottom: sheetH },
-    [containerH, desktop, detailOverlay, sheetH]
-  )
-
-  const filteredRuns = useMemo(() => {
-    const byFilter = runs.filter((r) => runMatches(r, filters))
-    if (!searchQ.trim()) return byFilter
-    const q = searchQ.toLowerCase()
-    return byFilter.filter(
-      (r) =>
-        r.title.toLowerCase().includes(q) ||
-        r.club.name.toLowerCase().includes(q) ||
-        (r.address?.toLowerCase().includes(q) ?? false)
-    )
-  }, [runs, filters, searchQ])
-
-  const filteredClubs = useMemo(() => {
-    const byFilter = clubs.filter((c) => clubMatches(c, filters))
-    if (!searchQ.trim()) return byFilter
-    const q = searchQ.toLowerCase()
-    return byFilter.filter(
-      (c) =>
-        c.name.toLowerCase().includes(q) ||
-        (c.description?.toLowerCase().includes(q) ?? false)
-    )
-  }, [clubs, filters, searchQ])
-
-  useEffect(() => {
-    if (mode !== 'runs' || day !== 0 || loadingRuns) return
-    const nextRun = filteredRuns.find(
-      (run) => run.status !== 'CANCELLED' && !isRunTimePast(run.time, nowMin)
-    )
-    const list = listRef.current
-    if (!nextRun || !list) return
-    if (
-      autoScrolledDayRef.current === day &&
-      autoScrolledListRef.current === list
-    )
-      return
-
-    const target = list.querySelector<HTMLElement>(
-      `[data-run-id="${nextRun.id}"]`
-    )
-    if (!target) return
-
-    const top =
-      list.scrollTop +
-      target.getBoundingClientRect().top -
-      list.getBoundingClientRect().top -
-      4
-    list.scrollTo({
-      top,
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'auto'
-        : 'smooth',
-    })
-    autoScrolledDayRef.current = day
-    autoScrolledListRef.current = list
-  }, [day, desktop, filteredRuns, loadingRuns, mode, nowMin])
 
   const points = useMemo((): MapPoint[] => {
     if (mode === 'clubs') {
@@ -646,121 +386,42 @@ function ExploreShellInner({
 
   const selId =
     mode === 'clubs' ? selectedClubId : (selectedRunId ?? previewRunId)
-
-  const setSelectedId = useCallback((id: string | null) => {
-    setPreviewRunId(id)
-  }, [])
-
-  const openRunDetail = useCallback(
-    (id: string) => {
-      const runDay = dayOffsetFromRunId(id) ?? day
-      const detail: DetailRoute = { kind: 'run', id }
-      closingDetailKeyRef.current = null
-      pendingOpenRef.current = detailKey(detail)
-      prefetchRun(id)
-      setDetailOverlay({
-        ...detail,
-        exiting: false,
-        enter: true,
-        closeMode: 'route',
-      })
-      startTransition(() => {
-        router.push(
-          `/${locale}/run/${encodeURIComponent(id)}${buildQs(runDay, filters)}`,
-          { scroll: false }
-        )
-      })
-    },
-    [day, filters, locale, prefetchRun, router, startTransition]
-  )
-
-  const openClubDetail = useCallback(
-    (id: string) => {
-      const club = clubs.find((candidate) => candidate.id === id)
-      if (!club) return
-      const detail: DetailRoute = { kind: 'club', slug: club.slug }
-      closingDetailKeyRef.current = null
-      pendingOpenRef.current = detailKey(detail)
-      prefetchClub(club.slug)
-      setDetailOverlay({
-        ...detail,
-        exiting: false,
-        enter: true,
-        closeMode: 'route',
-      })
-      startTransition(() => {
-        router.push(
-          `/${locale}/clubs/${encodeURIComponent(club.slug)}${buildQs(day, filters)}`,
-          { scroll: false }
-        )
-      })
-    },
-    [clubs, day, filters, locale, prefetchClub, router, startTransition]
-  )
-
-  const selectMapPoint = useCallback(
-    (id: string) => {
-      if (mode === 'clubs') {
-        openClubDetail(id)
-        return
-      }
-      setSelectedId(id)
-    },
-    [mode, openClubDetail, setSelectedId]
-  )
-
   const runCount = filteredRuns.length
   const clubCount = filteredClubs.length
   const activeFilterCount = filterCount(filters)
 
-  const preloadRun = useCallback(
-    (id: string) => {
-      prefetchRun(id)
-      router.prefetch(`/${locale}/run/${encodeURIComponent(id)}`)
-    },
-    [locale, prefetchRun, router]
+  const nextRunId = useMemo(
+    () =>
+      filteredRuns.find(
+        (run) => run.status !== 'CANCELLED' && !isRunTimePast(run.time, nowMin)
+      )?.id ?? null,
+    [filteredRuns, nowMin]
   )
 
-  const preloadClub = useCallback(
-    (slug: string) => {
-      prefetchClub(slug)
-      router.prefetch(`/${locale}/clubs/${encodeURIComponent(slug)}`)
-    },
-    [locale, prefetchClub, router]
-  )
+  useAutoScrollToNextRun({
+    listRef,
+    enabled: mode === 'runs' && day === 0 && !loadingRuns,
+    day,
+    desktop,
+    targetId: nextRunId,
+  })
 
-  // ── Grip drag ───────────────────────────────────────────────────────────────
-
-  const onGripDown = useCallback(
-    (e: React.PointerEvent) => {
-      dragRef.current = { y: e.clientY, h: sheetH }
-      setDragging(true)
-      try {
-        ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-      } catch {}
-    },
-    [sheetH]
+  const insets = useMemo(
+    () =>
+      desktop
+        ? { left: RAIL_WIDTH + 24, top: 24, bottom: 24 }
+        : detailOverlay
+          ? {
+              left: 0,
+              top: 76,
+              bottom: Math.max(
+                0,
+                containerH - Math.min(300, Math.max(220, containerH * 0.3))
+              ),
+            }
+          : { left: 0, top: 76, bottom: sheet.height },
+    [containerH, desktop, detailOverlay, sheet.height]
   )
-  const onGripMove = useCallback(
-    (e: React.PointerEvent) => {
-      if (!dragRef.current) return
-      const dy = e.clientY - dragRef.current.y
-      setSheetH(() => {
-        const h = dragRef.current!.h - dy
-        return Math.max(snaps.peek, Math.min(snaps.full, h))
-      })
-    },
-    [snaps]
-  )
-  const onGripUp = useCallback(() => {
-    if (!dragRef.current) return
-    dragRef.current = null
-    setDragging(false)
-    setSheetH((h) => {
-      const arr = [snaps.peek, snaps.mid, snaps.full]
-      return arr.reduce((a, b) => (Math.abs(b - h) < Math.abs(a - h) ? b : a))
-    })
-  }, [snaps])
 
   const controls = (
     <ExploreControls
@@ -771,20 +432,14 @@ function ExploreShellInner({
       week={week}
       day={day}
       setDay={setDay}
-      searchOpen={searchOpen}
-      setSearchOpen={setSearchOpen}
-      searchQuery={searchQ}
-      setSearchQuery={setSearchQ}
-      searchInputRef={searchInputRef}
+      searchOpen={search.open}
+      setSearchOpen={search.setOpen}
+      searchQuery={search.query}
+      setSearchQuery={search.setQuery}
+      searchInputRef={search.inputRef}
       activeFilterCount={activeFilterCount}
       onOpenFilters={() => setFiltersOpen(true)}
-      tr={tr}
     />
-  )
-
-  const clearFilters = useCallback(
-    () => updateUrl({ filters: DEFAULT_FILTERS }),
-    [updateUrl]
   )
 
   const list = (
@@ -793,22 +448,17 @@ function ExploreShellInner({
       clubs={filteredClubs}
       mode={mode}
       selId={selId}
-      onSelect={setSelectedId}
+      onSelect={setPreviewRunId}
       onOpenRun={openRunDetail}
       onOpenClub={openClubDetail}
-      loading={
-        mode === 'clubs'
-          ? loadingClubs && clubs.length === 0
-          : loadingRuns && runs.length === 0
-      }
-      refreshing={mode === 'runs' && loadingRuns && runs.length > 0}
-      tr={tr}
+      loading={mode === 'clubs' ? loadingClubs : loadingRuns}
+      refreshing={mode === 'runs' && fetchingRuns && runs.length > 0}
       day={day}
       week={week}
       setDay={setDay}
       nowMin={nowMin}
       hasActiveFilters={activeFilterCount > 0}
-      hasSearchQuery={searchQ.trim().length > 0}
+      hasSearchQuery={query.length > 0}
       onClearFilters={clearFilters}
       allRuns={runs}
       onPreloadRun={preloadRun}
@@ -865,111 +515,27 @@ function ExploreShellInner({
         onLocaleChange={(nextLocale) => {
           const segments = pathname.split('/')
           segments[1] = nextLocale
-          const query = searchParams.toString()
-          router.push(`${segments.join('/')}${query ? `?${query}` : ''}`)
+          const qs = searchParams.toString()
+          router.push(`${segments.join('/')}${qs ? `?${qs}` : ''}`)
         }}
-        tr={tr}
       />
-      {/* Desktop rail */}
-      {desktop && (
-        <div
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            left: 0,
-            width: RAIL_WIDTH,
-            zIndex: 35,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'color-mix(in oklch, var(--bg) 88%, transparent)',
-            backdropFilter: 'blur(16px)',
-            borderRight: '1px solid var(--line)',
-            boxShadow: '8px 0 40px rgba(0,0,0,.4)',
-          }}
+
+      {desktop ? (
+        <DesktopRail listRef={listRef} controls={controls}>
+          {list}
+        </DesktopRail>
+      ) : (
+        <MobileSheet
+          listRef={listRef}
+          controls={controls}
+          height={sheet.height}
+          dragging={sheet.dragging}
+          gripHandlers={sheet.gripHandlers}
         >
-          <div style={{ height: 94, flexShrink: 0 }} />
-          <div
-            style={{
-              padding: '4px 18px 14px',
-              borderBottom: '1px solid var(--line)',
-              flexShrink: 0,
-            }}
-          >
-            {controls}
-          </div>
-          <div
-            ref={listRef}
-            className="qr-themed-scroll"
-            style={{ flex: 1, overflowY: 'auto', padding: '16px 18px 26px' }}
-          >
-            {list}
-          </div>
-        </div>
+          {list}
+        </MobileSheet>
       )}
 
-      {/* Mobile bottom sheet */}
-      {!desktop && (
-        <div
-          style={{
-            position: 'absolute',
-            left: 0,
-            right: 0,
-            bottom: 0,
-            height: sheetH || '60dvh',
-            zIndex: 35,
-            display: 'flex',
-            flexDirection: 'column',
-            background: 'var(--bg)',
-            borderTop: '1px solid var(--line-2)',
-            borderRadius: 'var(--r-xl) var(--r-xl) 0 0',
-            boxShadow: '0 -12px 40px rgba(0,0,0,.5)',
-            transition: dragging
-              ? 'none'
-              : 'height .34s cubic-bezier(.2,.7,.3,1)',
-            overflow: 'hidden',
-          }}
-        >
-          <div
-            onPointerDown={onGripDown}
-            onPointerMove={onGripMove}
-            onPointerUp={onGripUp}
-            onPointerCancel={onGripUp}
-            style={{
-              flexShrink: 0,
-              padding: '10px 16px 8px',
-              cursor: 'grab',
-              touchAction: 'none',
-            }}
-          >
-            <div
-              style={{
-                width: 36,
-                height: 4,
-                borderRadius: 2,
-                background: 'var(--line-2)',
-                margin: '0 auto',
-              }}
-            />
-          </div>
-          <div style={{ flexShrink: 0, padding: '0 16px 12px' }}>
-            {controls}
-          </div>
-          <div
-            ref={listRef}
-            className="qr-themed-scroll"
-            style={{
-              flex: 1,
-              overflowY: 'auto',
-              padding: '4px 16px calc(22px + env(safe-area-inset-bottom))',
-            }}
-          >
-            {list}
-          </div>
-        </div>
-      )}
-
-      {/* Filter overlay */}
       {filtersOpen && (
         <FilterOverlay
           desktop={desktop}
@@ -980,52 +546,27 @@ function ExploreShellInner({
           showTod={mode === 'runs'}
           loading={mode === 'clubs' ? false : loadingRuns}
           locale={locale}
-          tr={tr}
         />
       )}
 
-      {/* Route-owned detail panel */}
-      {previousDetailOverlay?.kind === 'run' && (
-        <RunDetailOverlay
+      {previousDetailOverlay && (
+        <DetailPanelSlot
           key={detailKey(previousDetailOverlay)}
-          id={previousDetailOverlay.id}
-          enter={false}
+          overlay={previousDetailOverlay}
           inactive
         />
       )}
-      {previousDetailOverlay?.kind === 'club' && (
-        <ClubDetailOverlay
-          key={detailKey(previousDetailOverlay)}
-          slug={previousDetailOverlay.slug}
-          enter={false}
-          inactive
-        />
-      )}
-      {detailOverlay?.kind === 'run' && (
-        <RunDetailOverlay
+      {detailOverlay && (
+        <DetailPanelSlot
           key={detailKey(detailOverlay)}
-          id={detailOverlay.id}
-          enter={detailOverlay.enter}
-          exiting={detailOverlay.exiting}
-          onClose={() => startDetailExit(detailOverlay.closeMode)}
-          onEntered={completeDetailEnter}
-          onExited={completeDetailExit}
-        />
-      )}
-      {detailOverlay?.kind === 'club' && (
-        <ClubDetailOverlay
-          key={detailKey(detailOverlay)}
-          slug={detailOverlay.slug}
-          enter={detailOverlay.enter}
-          exiting={detailOverlay.exiting}
-          onClose={() => startDetailExit(detailOverlay.closeMode)}
-          onEntered={completeDetailEnter}
-          onExited={completeDetailExit}
+          overlay={detailOverlay}
+          onClose={() => requestExit(detailOverlay.closeMode)}
+          onEntered={completeEnter}
+          onExited={completeExit}
         />
       )}
 
-      {/* Passport FAB */}
-      {PASSPORT_ENABLED && <PassportFAB tr={tr} />}
+      {PASSPORT_ENABLED && <PassportFAB />}
     </div>
   )
 }

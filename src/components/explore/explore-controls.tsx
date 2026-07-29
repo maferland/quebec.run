@@ -1,3 +1,4 @@
+import { useTranslations } from 'next-intl'
 import type { RefObject } from 'react'
 import { Search, X } from 'lucide-react'
 import { FilterButton, ModeToggle } from './explore-list'
@@ -18,7 +19,6 @@ type ExploreControlsProps = {
   searchInputRef: RefObject<HTMLInputElement | null>
   activeFilterCount: number
   onOpenFilters: () => void
-  tr: (key: string) => string
 }
 
 export function ExploreControls({
@@ -36,8 +36,8 @@ export function ExploreControls({
   searchInputRef,
   activeFilterCount,
   onOpenFilters,
-  tr,
 }: ExploreControlsProps) {
+  const t = useTranslations('explore')
   return (
     <>
       <div
@@ -59,12 +59,12 @@ export function ExploreControls({
               ref={searchInputRef}
               value={searchQuery}
               onChange={(event) => setSearchQuery(event.target.value)}
-              placeholder={tr('search_placeholder')}
+              placeholder={t('search_placeholder')}
             />
           </div>
           <button
             className="tap qr-round-action"
-            aria-label={tr('search_close')}
+            aria-label={t('search_close')}
             onClick={() => {
               setSearchOpen(false)
               setSearchQuery('')
@@ -83,16 +83,15 @@ export function ExploreControls({
             setMode={setMode}
             runCount={runCount}
             clubCount={clubCount}
-            tr={tr}
           />
           <button
             className="tap qr-round-action"
-            aria-label={tr('search_open')}
+            aria-label={t('search_open')}
             onClick={() => setSearchOpen(true)}
           >
             <Search size={15} aria-hidden="true" />
           </button>
-          <FilterButton n={activeFilterCount} onClick={onOpenFilters} tr={tr} />
+          <FilterButton n={activeFilterCount} onClick={onOpenFilters} />
         </div>
       </div>
     </>

@@ -287,8 +287,6 @@ export function RunDetailOverlay({
   backBehavior = 'route',
 }: OverlayProps & { id: string }) {
   const locale = useLocale()
-  const t = useTranslations('explore')
-  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
   const { data: run, isError, refetch } = useRunDetail(id)
   const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
     useOverlay({
@@ -333,7 +331,6 @@ export function RunDetailOverlay({
         onBack={requestPanelClose}
         onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
         locale={locale}
-        tr={tr}
       />
     </OverlayShell>
   )
@@ -352,8 +349,6 @@ export function ClubDetailOverlay({
   backBehavior = 'route',
 }: OverlayProps & { slug: string }) {
   const locale = useLocale()
-  const t = useTranslations('explore')
-  const tr = useCallback((k: string) => t(k as Parameters<typeof t>[0]), [t])
   const { data: club, isError, refetch } = useClubDetail(slug, locale)
   const { router, isExiting, requestPanelClose, handlePanelAnimationEnd } =
     useOverlay({
@@ -397,7 +392,6 @@ export function ClubDetailOverlay({
         club={club}
         onBack={requestPanelClose}
         onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
-        tr={tr}
       />
     </OverlayShell>
   )

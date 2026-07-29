@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { PACE_BUCKETS, todBucket } from './badges'
 
 export type Filters = {
@@ -201,7 +202,6 @@ type Props = {
   showTod: boolean
   loading: boolean
   locale: string
-  tr: (k: string) => string
 }
 
 export function FilterPanel({
@@ -212,8 +212,8 @@ export function FilterPanel({
   showTod,
   loading,
   locale,
-  tr,
 }: Props) {
+  const t = useTranslations('explore')
   const toggle = (key: 'types' | 'vibes', val: string) => {
     setFilters((f) => {
       const has = f[key].includes(val)
@@ -248,44 +248,44 @@ export function FilterPanel({
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 22 }}>
       {showTod && (
-        <Section title={tr('filter_time')}>
+        <Section title={t('filter_time')}>
           {(['all', 'am', 'pm', 'eve'] as const).map((k) => (
             <Toggle
               key={k}
               on={filters.tod === k}
               onClick={() => setFilters((f) => ({ ...f, tod: k }))}
             >
-              {tr(k === 'all' ? 'tod_all' : `tod_${k}`)}
+              {t(k === 'all' ? 'tod_all' : `tod_${k}`)}
             </Toggle>
           ))}
         </Section>
       )}
 
-      <Section title={tr('filter_type')}>
+      <Section title={t('filter_type')}>
         {(['trail', 'road', 'track', 'mixed'] as const).map((k) => (
           <Toggle
             key={k}
             on={filters.types.includes(k)}
             onClick={() => toggle('types', k)}
           >
-            {tr(`type_${k}`)}
+            {t(`type_${k}`)}
           </Toggle>
         ))}
       </Section>
 
-      <Section title={tr('filter_vibe')}>
+      <Section title={t('filter_vibe')}>
         {(['social', 'training', 'competitive'] as const).map((k) => (
           <Toggle
             key={k}
             on={filters.vibes.includes(k)}
             onClick={() => toggle('vibes', k)}
           >
-            {tr(`vibe_${k}`)}
+            {t(`vibe_${k}`)}
           </Toggle>
         ))}
       </Section>
 
-      <Section title={tr('filter_pace')}>
+      <Section title={t('filter_pace')}>
         {PACE_BUCKETS.map((b) => (
           <Toggle
             key={b.id}
@@ -293,7 +293,7 @@ export function FilterPanel({
             onClick={() => setFilters((f) => ({ ...f, pace: b.id }))}
           >
             {b.id === 'any' ? (
-              tr('pace_any')
+              t('pace_any')
             ) : (
               <span
                 style={{ display: 'inline-flex', alignItems: 'center', gap: 5 }}
@@ -316,7 +316,7 @@ export function FilterPanel({
         ))}
       </Section>
 
-      <Section title={tr('filter_beginner')}>
+      <Section title={t('filter_beginner')}>
         <Toggle
           on={filters.beginner}
           onClick={() => setFilters((f) => ({ ...f, beginner: !f.beginner }))}
@@ -332,7 +332,7 @@ export function FilterPanel({
             >
               {CheckIcon}
             </span>
-            {tr('beginner_badge')}
+            {t('beginner_badge')}
           </span>
         </Toggle>
       </Section>
@@ -362,7 +362,7 @@ export function FilterPanel({
             cursor: 'pointer',
           }}
         >
-          {tr('clear')}
+          {t('clear')}
         </button>
         <button
           className="tap"
@@ -380,7 +380,7 @@ export function FilterPanel({
             cursor: 'pointer',
           }}
         >
-          {tr('apply')} · {resultCount}
+          {t('apply')} · {resultCount}
         </button>
       </div>
     </div>

@@ -4,8 +4,6 @@ import { render, screen } from '@/lib/test-utils'
 import { ClubDetailPanel, type ClubDetailData } from './club-detail'
 import { RunDetailPanel, type RunDetailData } from './run-detail'
 
-const tr = (key: string) => key
-
 it('opens the related club from a native button', async () => {
   const user = userEvent.setup()
   const onOpenClub = vi.fn()
@@ -39,7 +37,6 @@ it('opens the related club from a native button', async () => {
       onBack={vi.fn()}
       onOpenClub={onOpenClub}
       locale="en"
-      tr={tr}
     />
   )
 
@@ -76,14 +73,7 @@ it('opens an upcoming run from a native button', async () => {
     ],
   }
 
-  render(
-    <ClubDetailPanel
-      club={club}
-      onBack={vi.fn()}
-      onOpenRun={onOpenRun}
-      tr={tr}
-    />
-  )
+  render(<ClubDetailPanel club={club} onBack={vi.fn()} onOpenRun={onOpenRun} />)
 
   await user.click(screen.getByRole('button', { name: /Tempo Run/ }))
   expect(onOpenRun).toHaveBeenCalledWith('run-1')

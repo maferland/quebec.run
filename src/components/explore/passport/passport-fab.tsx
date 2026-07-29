@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { getPassport } from './passport-store'
 import { PassportAuth } from './passport-auth'
@@ -46,9 +47,8 @@ const CloseIcon = (
   </svg>
 )
 
-type Props = { tr: (k: string) => string }
-
-export function PassportFAB({ tr }: Props) {
+export function PassportFAB() {
+  const t = useTranslations('explore')
   const [open, setOpen] = useState(false)
   const [screen, setScreen] = useState<Screen>('auth')
 
@@ -64,7 +64,7 @@ export function PassportFAB({ tr }: Props) {
       {/* FAB button */}
       <button
         onClick={() => setOpen((v) => !v)}
-        aria-label={tr('passport_fab_label')}
+        aria-label={t('passport_fab_label')}
         style={{
           position: 'fixed',
           bottom: 'calc(24px + env(safe-area-inset-bottom))',
@@ -104,19 +104,15 @@ export function PassportFAB({ tr }: Props) {
           }}
         >
           {screen === 'auth' && (
-            <PassportAuth onDone={() => setScreen('book')} tr={tr} />
+            <PassportAuth onDone={() => setScreen('book')} />
           )}
           {screen === 'book' && (
-            <PassportBook
-              onCollect={(club) => setScreen({ collect: club })}
-              tr={tr}
-            />
+            <PassportBook onCollect={(club) => setScreen({ collect: club })} />
           )}
           {typeof screen === 'object' && 'collect' in screen && (
             <PassportCollect
               club={screen.collect}
               onDone={() => setScreen('book')}
-              tr={tr}
             />
           )}
         </div>

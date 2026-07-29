@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import type { ExploreClub } from '@/lib/services/clubs'
 import { TypeTag, VibePill, MetaPill, Flag, paceRange } from './badges'
 
@@ -22,13 +23,13 @@ type Props = {
   club: ExploreClub
   onOpen: () => void
   onIntent: () => void
-  tr: (k: string) => string
 }
 
-export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
+export function ClubCard({ club, onOpen, onIntent }: Props) {
+  const t = useTranslations('explore')
   const pace = paceRange(club.paceMin, club.paceMax)
-  const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
-  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
+  const typeLabel = club.type ? t(`type_${club.type.toLowerCase()}`) : null
+  const vibeLabel = club.vibe ? t(`vibe_${club.vibe.toLowerCase()}`) : null
 
   return (
     <button
@@ -92,13 +93,13 @@ export function ClubCard({ club, onOpen, onIntent, tr }: Props) {
       >
         {typeLabel && <TypeTag kind={club.type} label={typeLabel} />}
         {vibeLabel && <VibePill label={vibeLabel} />}
-        {club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+        {club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
       </span>
 
       {pace && (
         <span style={{ display: 'flex', gap: 14, alignItems: 'center' }}>
           <MetaPill icon={GaugeIcon}>
-            {pace} {tr('pace_unit')}
+            {pace} {t('pace_unit')}
           </MetaPill>
         </span>
       )}

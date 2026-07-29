@@ -1,4 +1,5 @@
 'use client'
+import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
 
@@ -157,10 +158,10 @@ type Props = {
   club: ClubDetailData
   onBack: () => void
   onOpenRun: (id: string) => void
-  tr: (k: string) => string
 }
 
-export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
+export function ClubDetailPanel({ club, onBack, onOpenRun }: Props) {
+  const t = useTranslations('explore')
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(false)
   const [showAllSchedule, setShowAllSchedule] = useState(false)
@@ -172,8 +173,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
   }, [])
 
   const pace = paceRange(club.paceMin, club.paceMax)
-  const typeLabel = club.type ? tr(`type_${club.type.toLowerCase()}`) : null
-  const vibeLabel = club.vibe ? tr(`vibe_${club.vibe.toLowerCase()}`) : null
+  const typeLabel = club.type ? t(`type_${club.type.toLowerCase()}`) : null
+  const vibeLabel = club.vibe ? t(`vibe_${club.vibe.toLowerCase()}`) : null
   const visibleSchedule = showAllSchedule
     ? club.schedule
     : club.schedule.slice(0, SCHEDULE_PREVIEW_COUNT)
@@ -234,7 +235,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
             cursor: 'pointer',
           }}
         >
-          {ChevLIcon} {tr('back')}
+          {ChevLIcon} {t('back')}
         </button>
         <button
           className="tap"
@@ -254,7 +255,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
             cursor: 'pointer',
           }}
         >
-          {shared ? CheckIcon : ShareIcon} {shared ? tr('copied') : tr('share')}
+          {shared ? CheckIcon : ShareIcon} {shared ? t('copied') : t('share')}
         </button>
       </div>
 
@@ -296,10 +297,10 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
         {vibeLabel && <VibePill label={vibeLabel} />}
         {pace && (
           <MetaPill icon={GaugeIcon}>
-            {pace} {tr('pace_unit')}
+            {pace} {t('pace_unit')}
           </MetaPill>
         )}
-        {club.beginnerFriendly && <Flag>{tr('beginner_badge')}</Flag>}
+        {club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
       </div>
 
       {/* description */}
@@ -361,7 +362,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
               <span style={{ color: 'var(--text)', display: 'inline-flex' }}>
                 {WebIcon}
               </span>
-              {tr('website') ?? 'Site web'}
+              {t('website') ?? 'Site web'}
             </a>
           )}
         </div>
@@ -370,7 +371,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
       {/* weekly schedule */}
       {club.schedule.length > 0 && (
         <div>
-          <SectionLabel>{tr('weekly')}</SectionLabel>
+          <SectionLabel>{t('weekly')}</SectionLabel>
           <div
             style={{
               background: 'var(--surface)',
@@ -440,8 +441,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                 }}
               >
                 {showAllSchedule
-                  ? showFewerLabel(tr)
-                  : seeMoreLabel(tr, hiddenScheduleCount)}
+                  ? t('show_fewer')
+                  : t('see_more_count', { count: hiddenScheduleCount })}
               </button>
             )}
           </div>
@@ -451,7 +452,7 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
       {/* upcoming runs */}
       {club.upcomingRuns.length > 0 && (
         <div>
-          <SectionLabel>{tr('upcoming')}</SectionLabel>
+          <SectionLabel>{t('upcoming')}</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {visibleUpcoming.map((e, i) => {
               const cancelled = e.status === 'CANCELLED'
@@ -518,13 +519,13 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                       {e.distance && e.type && <span>·</span>}
                       {e.type && (
                         <span style={{ textTransform: 'capitalize' }}>
-                          {tr(`type_${e.type.toLowerCase()}`)}
+                          {t(`type_${e.type.toLowerCase()}`)}
                         </span>
                       )}
                     </span>
                   </span>
                   {cancelled ? (
-                    <Stamp tone="cancelled">{tr('cancelled')}</Stamp>
+                    <Stamp tone="cancelled">{t('cancelled')}</Stamp>
                   ) : (
                     <span style={{ color: 'var(--faint)' }}>{ChevRIcon}</span>
                   )}
@@ -548,8 +549,8 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
                 }}
               >
                 {showAllUpcoming
-                  ? showFewerLabel(tr)
-                  : seeMoreLabel(tr, hiddenUpcomingCount)}
+                  ? t('show_fewer')
+                  : t('see_more_count', { count: hiddenUpcomingCount })}
               </button>
             )}
           </div>
@@ -557,17 +558,6 @@ export function ClubDetailPanel({ club, onBack, onOpenRun, tr }: Props) {
       )}
     </div>
   )
-}
-
-function seeMoreLabel(tr: (k: string) => string, count: number) {
-  const label = tr('see_more')
-  if (label === 'Voir plus') return `Voir ${count} de plus`
-  return `See ${count} more`
-}
-
-function showFewerLabel(tr: (k: string) => string) {
-  const label = tr('show_fewer')
-  return label.startsWith('explore.') ? 'Show fewer' : label
 }
 
 function formatUpcomingDate(value: string) {
