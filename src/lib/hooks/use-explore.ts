@@ -7,6 +7,7 @@ import {
 import { useMemo } from 'react'
 import type { ClubDetailData } from '@/components/explore/club-detail'
 import type { RunDetailData } from '@/components/explore/run-detail'
+import type { RunDetailResponse } from '@/lib/schemas'
 import type { ClubForDetail, ExploreClub } from '@/lib/services/clubs'
 import type { ExploreRun } from '@/lib/services/events'
 import { isRunPast } from '@/lib/utils/run-time'
@@ -31,47 +32,21 @@ async function getJson<T>(url: string, errorMessage: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
-type RunDetailResponse = {
-  id: string
-  title: string
-  time: string
-  date?: string | null
-  status: 'SCHEDULED' | 'CANCELLED'
-  distance?: string | null
-  pace?: string | null
-  pacePolicy?: 'SHARED' | 'OPEN_PACE' | null
-  address?: string | null
-  latitude?: number | null
-  longitude?: number | null
-  lat?: number | null
-  lng?: number | null
-  club?: Partial<RunDetailData['club']>
-}
-
 function toRunDetail(data: RunDetailResponse): RunDetailData {
   return {
     id: data.id,
     title: data.title,
     time: data.time,
-    date: data.date ?? null,
-    isPast: data.date ? isRunPast(data.date, data.time, new Date()) : false,
+    date: data.date,
+    isPast: isRunPast(data.date, data.time, new Date()),
     status: data.status,
-    distance: data.distance ?? data.pace ?? null,
-    pacePolicy: data.pacePolicy ?? null,
-    address: data.address ?? null,
-    lat: data.latitude ?? data.lat ?? null,
-    lng: data.longitude ?? data.lng ?? null,
-    club: {
-      id: data.club?.id ?? '',
-      slug: data.club?.slug ?? '',
-      name: data.club?.name ?? '',
-      description: data.club?.description ?? null,
-      type: data.club?.type ?? null,
-      vibe: data.club?.vibe ?? null,
-      beginnerFriendly: data.club?.beginnerFriendly ?? false,
-      paceMin: data.club?.paceMin ?? null,
-      paceMax: data.club?.paceMax ?? null,
-    },
+    // A run states either a fixed distance or a pace; neither is guaranteed.
+    distance: data.distance ?? data.pace,
+    pacePolicy: data.pacePolicy,
+    address: data.address,
+    lat: data.latitude,
+    lng: data.longitude,
+    club: data.club,
   }
 }
 

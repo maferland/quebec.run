@@ -157,6 +157,53 @@ export type EventByClubAndSlugBare = z.infer<
   typeof eventByClubAndSlugBareSchema
 >
 
+// Explore run detail response — /api/explore/runs/[id] answers with either an
+// occurrence synthesized from a recurring pattern or a stored one-off event.
+// Only the synthesized one carries `recurringSlug`, and it can never be
+// cancelled: cancelling an occurrence materializes a stored event instead.
+export const runDetailClubSchema = z.object({
+  id: z.string(),
+  slug: z.string(),
+  name: z.string(),
+  description: z.string().nullable(),
+  type: z.enum(['ROAD', 'TRAIL']).nullable(),
+  vibe: z.enum(['SOCIAL', 'TRAINING']).nullable(),
+  beginnerFriendly: z.boolean(),
+  paceMin: z.string().nullable(),
+  paceMax: z.string().nullable(),
+})
+export type RunDetailClub = z.infer<typeof runDetailClubSchema>
+
+const runDetailSharedShape = {
+  id: z.string(),
+  title: z.string(),
+  description: z.string().nullable(),
+  date: z.iso.datetime(),
+  time: z.string(),
+  address: z.string().nullable(),
+  latitude: z.number().nullable(),
+  longitude: z.number().nullable(),
+  distance: z.string().nullable(),
+  pace: z.string().nullable(),
+  pacePolicy: z.enum(['OPEN_PACE', 'SHARED']).nullable(),
+  club: runDetailClubSchema,
+}
+
+export const runDetailResponseSchema = z.discriminatedUnion('kind', [
+  z.object({
+    ...runDetailSharedShape,
+    kind: z.literal('recurring'),
+    status: z.literal('SCHEDULED'),
+    recurringSlug: z.string(),
+  }),
+  z.object({
+    ...runDetailSharedShape,
+    kind: z.literal('one-off'),
+    status: z.enum(['SCHEDULED', 'CANCELLED']),
+  }),
+])
+export type RunDetailResponse = z.infer<typeof runDetailResponseSchema>
+
 // User schemas
 export const userIdSchema = z.object({
   id: z.string().min(1, 'User ID is required'),
