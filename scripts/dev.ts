@@ -44,7 +44,7 @@ const startMailhog = async () => {
     `📬 Starting Mailhog on SMTP ${mailhogSmtpPort}, web ${mailhogWebPort}...`
   )
   try {
-    await $`mailhog -smtp-bind-addr :${mailhogSmtpPort} -ui-bind-addr :${mailhogWebPort}`
+    await $`mailhog -smtp-bind-addr :${mailhogSmtpPort} -ui-bind-addr :${mailhogWebPort} -api-bind-addr :${mailhogWebPort}`
   } catch {
     console.log(
       `📬 No Mailhog on port ${mailhogWebPort}. Check docker compose, or install the mailhog binary. Magic-link sign-in won't work until it's up.`
