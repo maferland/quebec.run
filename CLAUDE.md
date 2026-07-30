@@ -44,11 +44,11 @@ Auto-generates:
 
 - Worktree at `.worktrees/<branch-name>`
 - Branch `maferland/<branch-name>`
-- Isolated DB `quebec.run_<branch-name>`
+- Isolated DB `<current DB>_<branch-name>` (derived from the `DATABASE_URL` in effect where you run it, so a nested worktree branches off its parent's DB, not main's)
 - Ports: `60XX` (dev), `61XX` (Storybook), `62XX` (Mailhog)
-- Copies `.env` and runs migrations
+- Copies `.env`, replaces the override keys in place (never appends duplicates), runs migrations
 
-**Removing:** Use `npm run remove-worktree <branch-name>` (drops DB, deletes branch)
+**Removing:** Use `npm run remove-worktree <branch-name>` (drops DB, deletes branch). Refuses to drop when the worktree `.env` still points at the main DB.
 
 ## Critical Rules
 
