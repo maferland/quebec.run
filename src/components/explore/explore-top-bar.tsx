@@ -2,6 +2,7 @@
 
 import Link from 'next/link'
 import { LogIn, LogOut, Shield, User } from 'lucide-react'
+import { BrandMark } from '@/lib/seo/brand-mark'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 
@@ -39,19 +40,7 @@ export function ExploreTopBar({
     >
       <Link href={`/${locale}`} className="qr-brand-pill">
         <span className="qr-brand-mark" aria-hidden="true">
-          <svg
-            width="17"
-            height="17"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="var(--accent-ink)"
-            strokeWidth="2.2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <circle cx="14" cy="5" r="1.8" fill="currentColor" stroke="none" />
-            <path d="M6 21l3-5 3 1 1-4-4-2 1-3 4 2 2 3" />
-          </svg>
+          <BrandMark size={20} fill="var(--accent-ink)" />
         </span>
         <span className="qr-brand-name">
           quebec<span style={{ color: 'var(--accent)' }}>.run</span>
