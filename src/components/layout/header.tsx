@@ -2,14 +2,14 @@
 
 import { DesktopNavigation } from '@/components/layout/desktop-navigation'
 import { MobileMenu } from '@/components/ui/mobile-menu'
-import { MapPin } from 'lucide-react'
+import { BrandMark } from '@/lib/seo/brand-mark'
 import { useTranslations } from 'next-intl'
 import { Link } from '@/i18n/navigation'
 
 const QuebecRunLogo = ({ t }: { t: (key: string) => string }) => (
   <div className="flex items-center space-x-3">
     <div className="w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-sm">
-      <MapPin size={18} className="text-text-inverse" />
+      <BrandMark size={20} fill="var(--color-text-inverse)" />
     </div>
     <div>
       <div className="text-xl font-heading font-bold text-primary leading-tight">

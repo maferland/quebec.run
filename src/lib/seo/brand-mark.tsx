@@ -18,6 +18,7 @@ export function BrandMark({
       height={size}
       viewBox="0 0 2048 2048"
       style={{ display: 'flex' }}
+      aria-hidden="true"
     >
       <path fill={fill} d={PATH_MAIN} />
       <path fill={fill} fillOpacity={0.258824} d={PATH_ACCENT} />
