@@ -4,11 +4,16 @@ import { execSync } from 'child_process'
 import {
   existsSync,
   copyFileSync,
-  appendFileSync,
   mkdirSync,
   readFileSync,
+  writeFileSync,
 } from 'fs'
 import { resolve } from 'path'
+import {
+  applyEnvOverrides,
+  deriveWorktreeDatabaseUrls,
+  readEnvValueFromFile,
+} from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')
@@ -41,34 +46,13 @@ function getDatabaseUrl(branchName: string): {
   testDatabaseUrl: string
   dbName: string
 } {
-  const envContent = readFileSync(MAIN_ENV_FILE, 'utf-8')
-  const dbUrlMatch = envContent.match(/DATABASE_URL="([^"]+)"/)
+  const sourceDbUrl = readEnvValueFromFile(MAIN_ENV_FILE, 'DATABASE_URL')
 
-  if (!dbUrlMatch) {
+  if (!sourceDbUrl) {
     throw new Error('DATABASE_URL not found in .env')
   }
 
-  const mainDbUrl = dbUrlMatch[1]
-  const urlParts = mainDbUrl.split('/')
-  const dbNameWithSchema = urlParts[urlParts.length - 1]
-  const baseDbName = dbNameWithSchema.split('?')[0]
-
-  // Create unique db name: quebec.run_branch-name
-  const sanitizedBranch = branchName.replace(/[^a-z0-9_]/gi, '_')
-  const newDbName = `${baseDbName}_${sanitizedBranch}`
-  const newTestDbName = `${newDbName}_test`
-
-  // Replace database name in URL
-  const baseUrl = urlParts.slice(0, -1).join('/')
-  const schema = dbNameWithSchema.includes('?')
-    ? '?' + dbNameWithSchema.split('?')[1]
-    : '?schema=public'
-
-  return {
-    databaseUrl: `${baseUrl}/${newDbName}${schema}`,
-    testDatabaseUrl: `${baseUrl}/${newTestDbName}${schema}`,
-    dbName: newDbName,
-  }
+  return deriveWorktreeDatabaseUrls(sourceDbUrl, branchName)
 }
 
 async function main() {
@@ -179,16 +163,17 @@ async function main() {
       }
     }
 
-    // Append port config and database URL to .env
+    // Replace port config and database URLs in .env (no duplicate keys)
     const worktreeEnvFile = resolve(worktreePath, '.env')
-    const envContent = `
-# Worktree-specific overrides
-PORT=${devPort}
-STORYBOOK_PORT=${storybookPort}
-DATABASE_URL="${databaseUrl}"
-TEST_DATABASE_URL="${testDatabaseUrl}"
-`
-    appendFileSync(worktreeEnvFile, envContent)
+    writeFileSync(
+      worktreeEnvFile,
+      applyEnvOverrides(readFileSync(worktreeEnvFile, 'utf-8'), {
+        PORT: String(devPort),
+        STORYBOOK_PORT: String(storybookPort),
+        DATABASE_URL: databaseUrl,
+        TEST_DATABASE_URL: testDatabaseUrl,
+      })
+    )
     console.log(`✓ Updated .env with ports and database`)
 
     // Run bun install

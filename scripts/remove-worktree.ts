@@ -1,11 +1,13 @@
 #!/usr/bin/env tsx
 
 import { execSync } from 'child_process'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync } from 'fs'
 import { resolve } from 'path'
+import { databaseNameFromUrl, readEnvValueFromFile } from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')
+const MAIN_ENV_FILE = resolve(REPO_ROOT, '.env')
 
 function exec(command: string, cwd?: string): string {
   try {
@@ -20,25 +22,10 @@ function exec(command: string, cwd?: string): string {
   }
 }
 
-function getDatabaseName(worktreePath: string): string | null {
-  const envFile = resolve(worktreePath, '.env')
+function getDatabaseName(envFile: string): string | null {
+  const databaseUrl = readEnvValueFromFile(envFile, 'DATABASE_URL')
 
-  if (!existsSync(envFile)) {
-    return null
-  }
-
-  const envContent = readFileSync(envFile, 'utf-8')
-  // Match DATABASE_URL specifically (not TEST_DATABASE_URL) and get the last one (worktree override)
-  const matches = envContent.matchAll(/^DATABASE_URL="[^"]*\/([^/?]+)/gm)
-  const allMatches = Array.from(matches)
-
-  if (allMatches.length === 0) {
-    return null
-  }
-
-  // Return the last match (worktree-specific override)
-  const lastMatch = allMatches[allMatches.length - 1]
-  return lastMatch[1]
+  return databaseUrl ? databaseNameFromUrl(databaseUrl) : null
 }
 
 async function main() {
@@ -57,10 +44,21 @@ async function main() {
       throw new Error(`Worktree not found at ${worktreePath}`)
     }
 
-    console.log(`Removing worktree: ${branchName}`)
-
     // Get database name before removing
-    const dbName = getDatabaseName(worktreePath)
+    const dbName = getDatabaseName(resolve(worktreePath, '.env'))
+    const mainDbName = getDatabaseName(MAIN_ENV_FILE)
+
+    // A worktree whose .env was never overridden still points at the main
+    // database, and dropping that would take the developer's data with it
+    if (dbName && dbName === mainDbName) {
+      throw new Error(
+        `Worktree .env still points at the main database "${dbName}" - it never got its own.\n` +
+          `Refusing to drop it. Remove the worktree by hand once you are sure:\n` +
+          `  git worktree remove ${worktreePath} --force`
+      )
+    }
+
+    console.log(`Removing worktree: ${branchName}`)
 
     // Remove git worktree
     exec(`git worktree remove ${worktreePath} --force`)
