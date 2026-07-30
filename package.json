@@ -113,9 +113,6 @@
     "typescript": "^5",
     "vitest": "^3.2.4"
   },
-  "overrides": {
-    "nodemailer": "$nodemailer"
-  },
   "volta": {
     "node": "25.2.1"
   }
