@@ -3,12 +3,15 @@ import { $ } from 'bun'
 
 const port = Bun.env.PORT || '3000'
 const mailhogWebPort = Bun.env.MAILHOG_WEB_PORT || '8025'
+const mailhogSmtpPort = Bun.env.MAILHOG_SMTP_PORT || '1025'
 
 const startDocker = async () => {
   try {
     await $`docker compose up -d`
   } catch {
-    console.log('🐳 Docker already running')
+    console.log(
+      '🐳 docker compose did not start, looking for a running Mailhog'
+    )
   }
 }
 
@@ -37,9 +40,11 @@ const startMailhog = async () => {
     return
   }
 
-  console.log('📬 Starting Mailhog...')
+  console.log(
+    `📬 Starting Mailhog on SMTP ${mailhogSmtpPort}, web ${mailhogWebPort}...`
+  )
   try {
-    await $`mailhog`
+    await $`mailhog -smtp-bind-addr :${mailhogSmtpPort} -ui-bind-addr :${mailhogWebPort}`
   } catch {
     console.log(
       `📬 No Mailhog on port ${mailhogWebPort}. Check docker compose, or install the mailhog binary. Magic-link sign-in won't work until it's up.`
