@@ -114,7 +114,7 @@
     "vitest": "^3.2.4"
   },
   "overrides": {
-    "nodemailer": "^9.0.1"
+    "nodemailer": "$nodemailer"
   },
   "volta": {
     "node": "25.2.1"
