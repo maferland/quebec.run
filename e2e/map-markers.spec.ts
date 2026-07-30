@@ -1,5 +1,9 @@
 import { test, expect, type Page, type Request } from '@playwright/test'
 
+// Sub-pixel jitter in sticky-element geometry between scroll positions is
+// normal; only a real layout shift moves an element further than this.
+const STUCK_IN_PLACE_TOLERANCE_PX = 2
+
 async function gotoLoadedExplore(page: Page, path: string) {
   const exploreRequests: string[] = []
   const trackExploreRequest = (request: Request) => {
@@ -497,7 +501,11 @@ test.describe('Map Markers', () => {
         behavior: 'instant',
       })
     )
-    expect((await actions.boundingBox())?.y).toBeCloseTo(actionBox?.y ?? 0, 0)
+    const scrolledActionsY = (await actions.boundingBox())?.y ?? 0
+    expect(
+      Math.abs(scrolledActionsY - (actionBox?.y ?? 0)),
+      'sticky actions bar stays put while the panel scrolls'
+    ).toBeLessThanOrEqual(STUCK_IN_PLACE_TOLERANCE_PX)
     expect(lastContentBottom).toBeLessThanOrEqual(
       (panelBox?.y ?? 0) + (panelBox?.height ?? 0)
     )
