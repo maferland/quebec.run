@@ -9,8 +9,7 @@ async function gotoLoadedExplore(page: Page, path: string) {
   }
   page.on('request', trackExploreRequest)
   await page.goto(path)
-  await page.getByRole('button', { name: 'Search', exact: true }).waitFor()
-  await page.waitForTimeout(500)
+  await waitForInteractive(page)
   page.off('request', trackExploreRequest)
   expect(exploreRequests).toEqual([])
 }
@@ -26,6 +25,15 @@ async function openSearch(page: Page) {
     await expect(input).toBeVisible({ timeout: 1000 })
   }).toPass({ timeout: 15_000 })
   return input
+}
+
+// Standing in for "the app is interactive now": open the search through the
+// retrying helper, then put it back. A toggle that took effect proves React
+// has claimed the toolbar, so later clicks are no longer dropped.
+async function waitForInteractive(page: Page) {
+  const input = await openSearch(page)
+  await page.getByRole('button', { name: 'Close search' }).click()
+  await expect(input).toBeHidden()
 }
 
 test.describe('Map Markers', () => {
@@ -92,8 +100,6 @@ test.describe('Map Markers', () => {
   test('opens search without shifting the toolbar', async ({ page }) => {
     await gotoLoadedExplore(page, '/en')
 
-    await page.getByRole('button', { name: 'Search', exact: true }).waitFor()
-    await page.waitForTimeout(400)
     const toolbar = page.locator('.qr-search-toolbar:visible')
     const searchLayer = page.locator('.qr-search-layer:visible')
     const before = await toolbar.boundingBox()
@@ -400,13 +406,28 @@ test.describe('Map Markers', () => {
       .click()
     await expect(page.locator('.qr-detail-shell')).toBeVisible()
     if (testInfo.project.name === 'Desktop Chrome') {
-      await page.waitForTimeout(60)
-      const enterX = await page
+      const enterAnimation = await page
         .locator('.qr-detail-shell')
         .evaluate((panel) => {
-          return new DOMMatrix(getComputedStyle(panel).transform).m41
+          const animation = panel
+            .getAnimations()
+            .find(
+              (candidate) =>
+                candidate instanceof CSSAnimation &&
+                candidate.animationName === 'detailPanelIn'
+            )
+          const firstKeyframe = (animation?.effect as KeyframeEffect | null)
+            ?.getKeyframes()
+            .at(0)
+          return {
+            name:
+              animation instanceof CSSAnimation ? animation.animationName : '',
+            transform: String(firstKeyframe?.transform ?? ''),
+          }
         })
-      expect(enterX).toBeLessThan(0)
+      expect(enterAnimation.name).toBe('detailPanelIn')
+      // Chromium serialises this as translate(-100%), older builds as translateX
+      expect(enterAnimation.transform).toMatch(/^translate(X)?\(-100%\)$/)
     }
     await expect(
       page.locator('.qr-detail-shell [aria-busy="true"]')
@@ -435,14 +456,23 @@ test.describe('Map Markers', () => {
     await expect(page.getByText(/Café de Course/)).toBeVisible()
 
     if (testInfo.project.name === 'Mobile Chrome') {
-      await page.waitForTimeout(800)
-      const panelBox = await page.locator('.qr-detail-shell').boundingBox()
-      const pinBox = await page.locator('.pin.is-active').boundingBox()
-      expect(panelBox).not.toBeNull()
-      expect(pinBox).not.toBeNull()
-      const exposedMapCenter = (76 + (panelBox?.y ?? 0)) / 2
-      const pinCenter = (pinBox?.y ?? 0) + (pinBox?.height ?? 0) / 2
-      expect(Math.abs(pinCenter - exposedMapCenter)).toBeLessThan(24)
+      const panel = page.locator('.qr-detail-shell')
+      const pin = page.locator('.pin.is-active')
+      // The map eases the active pin into the strip left exposed by the panel;
+      // poll for it landing there instead of guessing at the ease duration.
+      await expect
+        .poll(
+          async () => {
+            const panelBox = await panel.boundingBox()
+            const pinBox = await pin.boundingBox()
+            if (!panelBox || !pinBox) return Number.POSITIVE_INFINITY
+            const exposedMapCenter = (76 + panelBox.y) / 2
+            const pinCenter = pinBox.y + pinBox.height / 2
+            return Math.abs(pinCenter - exposedMapCenter)
+          },
+          { timeout: 15000 }
+        )
+        .toBeLessThan(24)
     }
 
     await page.getByRole('button', { name: /back/i }).click()
