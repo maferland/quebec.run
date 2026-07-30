@@ -214,7 +214,9 @@ async function main() {
     console.log(`Database: ${dbName}`)
     console.log(`Dev server: http://localhost:${devPort}`)
     console.log(`Storybook: http://localhost:${storybookPort}`)
-    console.log(`Mailhog: http://localhost:8025 (shared)`)
+    console.log(
+      `Mailhog: http://localhost:${process.env.MAILHOG_WEB_PORT || '8025'} (shared)`
+    )
     console.log(`\nTo start working:`)
     console.log(`  cd ${worktreePath}`)
     console.log(`  bun run dev\n`)

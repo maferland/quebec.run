@@ -9,7 +9,7 @@ meeting point, distance, pace, whether beginners are welcome. Everything exists
 in French and English, French first, because that's the language most of these
 clubs run in.
 
-Clubs are either maintained by hand or synced from their Strava club. Weekly
+Clubs are either maintained by hand or imported from their Strava club. Weekly
 runs are stored as a recurring pattern and materialized into dated events by a
 cron job, so a club sets its Tuesday 18:15 once instead of posting it 52 times.
 
@@ -69,8 +69,10 @@ bun run db:seed
 bun run dev
 ```
 
-`bun run dev` brings up docker-compose, starts Mailhog if it isn't already
-listening, and runs `next dev --turbopack` on `PORT` (3000 by default).
+`bun run dev` brings up docker-compose, waits for Mailhog to answer on
+`MAILHOG_WEB_PORT` (8026 in `.env.example`), and runs `next dev --turbopack` on
+`PORT` (3000 by default). If Docker isn't running it falls back to a local
+`mailhog` binary, and if that's missing it warns and keeps the dev server up.
 
 ## Scripts
 
@@ -119,7 +121,7 @@ In production, set `USE_RESEND=true` and add a `RESEND_API_KEY` from
 `bun run worktree <name>` creates a worktree under `.worktrees/`, branches
 `maferland/<name>`, gives it its own database, assigns non-conflicting ports,
 and runs migrations. `bun run remove-worktree <name>` tears all of that down.
-[PORTS.md](PORTS.md) covers the port allocation.
+[PORTS.md](PORTS.md) covers the port environment variables.
 
 ## Deployment
 
