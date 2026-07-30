@@ -39,6 +39,16 @@ describe('readEnvValue', () => {
       'DATABASE_URL=postgres://a/db # local',
       'postgres://a/db',
     ],
+    [
+      'quoted trailing comment',
+      'DATABASE_URL="postgres://a/db" # local',
+      'postgres://a/db',
+    ],
+    [
+      'single quoted trailing comment',
+      "DATABASE_URL='postgres://a/db' # local",
+      'postgres://a/db',
+    ],
   ])('reads a %s value', (_label, line, expected) => {
     expect(readEnvValue(line, 'DATABASE_URL')).toBe(expected)
   })
@@ -125,6 +135,18 @@ describe('applyEnvOverrides', () => {
     expect(readEnvValue(twice, 'DATABASE_URL')).toBe(
       'postgresql://user@localhost:5432/other?schema=public'
     )
+  })
+
+  it('keeps a single override header when re-applied', () => {
+    const twice = applyEnvOverrides(
+      applyEnvOverrides(MAIN_ENV, OVERRIDES),
+      OVERRIDES
+    )
+    const headers = twice
+      .split('\n')
+      .filter((line) => line === '# Worktree-specific overrides')
+
+    expect(headers).toHaveLength(1)
   })
 })
 

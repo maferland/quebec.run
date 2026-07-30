@@ -7,6 +7,7 @@ import { databaseNameFromUrl, readEnvValueFromFile } from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')
+const MAIN_ENV_FILE = resolve(REPO_ROOT, '.env')
 
 function exec(command: string, cwd?: string): string {
   try {
@@ -21,11 +22,8 @@ function exec(command: string, cwd?: string): string {
   }
 }
 
-function getDatabaseName(worktreePath: string): string | null {
-  const databaseUrl = readEnvValueFromFile(
-    resolve(worktreePath, '.env'),
-    'DATABASE_URL'
-  )
+function getDatabaseName(envFile: string): string | null {
+  const databaseUrl = readEnvValueFromFile(envFile, 'DATABASE_URL')
 
   return databaseUrl ? databaseNameFromUrl(databaseUrl) : null
 }
@@ -46,10 +44,21 @@ async function main() {
       throw new Error(`Worktree not found at ${worktreePath}`)
     }
 
-    console.log(`Removing worktree: ${branchName}`)
-
     // Get database name before removing
-    const dbName = getDatabaseName(worktreePath)
+    const dbName = getDatabaseName(resolve(worktreePath, '.env'))
+    const mainDbName = getDatabaseName(MAIN_ENV_FILE)
+
+    // A worktree whose .env was never overridden still points at the main
+    // database, and dropping that would take the developer's data with it
+    if (dbName && dbName === mainDbName) {
+      throw new Error(
+        `Worktree .env still points at the main database "${dbName}" - it never got its own.\n` +
+          `Refusing to drop it. Remove the worktree by hand once you are sure:\n` +
+          `  git worktree remove ${worktreePath} --force`
+      )
+    }
+
+    console.log(`Removing worktree: ${branchName}`)
 
     // Remove git worktree
     exec(`git worktree remove ${worktreePath} --force`)

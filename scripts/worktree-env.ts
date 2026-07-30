@@ -11,15 +11,17 @@ import { existsSync, readFileSync } from 'fs'
 
 const ENV_LINE = /^\s*(?:export\s+)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/
 
+const OVERRIDE_HEADER = '# Worktree-specific overrides'
+
 function parseValue(raw: string): string {
   const value = raw.trim()
   const quote = value[0]
-  if (
-    (quote === '"' || quote === "'") &&
-    value.length > 1 &&
-    value.endsWith(quote)
-  ) {
-    return value.slice(1, -1)
+  if (quote === '"' || quote === "'") {
+    // Anything past the closing quote is a trailing comment
+    const closingQuote = value.indexOf(quote, 1)
+    if (closingQuote > 0) {
+      return value.slice(1, closingQuote)
+    }
   }
   // Unquoted values can carry a trailing comment
   return value.split('#')[0].trim()
@@ -71,6 +73,9 @@ export function applyEnvOverrides(
   const kept = envContent
     .split('\n')
     .filter((line) => {
+      if (line.trim() === OVERRIDE_HEADER) {
+        return false
+      }
       const key = envKey(line)
       return key === null || !overridden.includes(key)
     })
@@ -79,7 +84,7 @@ export function applyEnvOverrides(
 
   const block = overridden.map((key) => `${key}="${overrides[key]}"`).join('\n')
 
-  return `${kept}\n\n# Worktree-specific overrides\n${block}\n`
+  return `${kept}\n\n${OVERRIDE_HEADER}\n${block}\n`
 }
 
 /** Database name from a postgres URL: last path segment, minus query string. */
