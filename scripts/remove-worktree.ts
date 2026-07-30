@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
 
 import { execSync } from 'child_process'
-import { existsSync, readFileSync } from 'fs'
+import { existsSync } from 'fs'
 import { resolve } from 'path'
+import { databaseNameFromUrl, readEnvValueFromFile } from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')
@@ -21,24 +22,12 @@ function exec(command: string, cwd?: string): string {
 }
 
 function getDatabaseName(worktreePath: string): string | null {
-  const envFile = resolve(worktreePath, '.env')
+  const databaseUrl = readEnvValueFromFile(
+    resolve(worktreePath, '.env'),
+    'DATABASE_URL'
+  )
 
-  if (!existsSync(envFile)) {
-    return null
-  }
-
-  const envContent = readFileSync(envFile, 'utf-8')
-  // Match DATABASE_URL specifically (not TEST_DATABASE_URL) and get the last one (worktree override)
-  const matches = envContent.matchAll(/^DATABASE_URL="[^"]*\/([^/?]+)/gm)
-  const allMatches = Array.from(matches)
-
-  if (allMatches.length === 0) {
-    return null
-  }
-
-  // Return the last match (worktree-specific override)
-  const lastMatch = allMatches[allMatches.length - 1]
-  return lastMatch[1]
+  return databaseUrl ? databaseNameFromUrl(databaseUrl) : null
 }
 
 async function main() {
