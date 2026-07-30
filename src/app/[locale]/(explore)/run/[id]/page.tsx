@@ -36,6 +36,11 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
       title && clubName
         ? t('description', { eventTitle: title, clubName })
         : '',
+    // The card already carries the wordmark, so the OG title drops the suffix.
+    ogTitle: title && clubName ? `${title} — ${clubName}` : undefined,
+    ogImage: title
+      ? `${SITE_URL}/${locale}/run/${id}/opengraph-image`
+      : undefined,
     noIndex: !title,
   })
 }

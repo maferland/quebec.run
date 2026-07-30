@@ -73,7 +73,8 @@
     },
     "eventDetail": {
       "title": "{eventTitle} | {clubName} | quebec.run",
-      "description": "{eventTitle} with {clubName} in Quebec City. Time, meeting point and run details."
+      "description": "{eventTitle} with {clubName} in Quebec City. Time, meeting point and run details.",
+      "ogKicker": "Group run in Quebec City"
     },
     "calendar": {
       "title": "Running calendar in Quebec City | quebec.run",

@@ -3,23 +3,17 @@ import { getTranslations } from 'next-intl/server'
 import { getClubBySlug } from '@/lib/services/clubs'
 import {
   BrandLockup,
+  OgFooter,
   OgGlow,
-  OG_ACCENT,
   OG_DIM,
   ogCardStyle,
+  truncateForCard,
 } from '@/lib/seo/og-theme'
 
 export const revalidate = 900
 export const dynamicParams = true
 
 const MAX_DESCRIPTION_LENGTH = 140
-
-function truncate(text: string, maxLength: number) {
-  if (text.length <= maxLength) return text
-  const clipped = text.slice(0, maxLength)
-  const lastSpace = clipped.lastIndexOf(' ')
-  return `${(lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`
-}
 
 type Params = { locale: string; slug: string }
 
@@ -61,24 +55,11 @@ export async function GET(
         </div>
         {club.description && (
           <div style={{ display: 'flex', fontSize: 28, color: OG_DIM }}>
-            {truncate(club.description, MAX_DESCRIPTION_LENGTH)}
+            {truncateForCard(club.description, MAX_DESCRIPTION_LENGTH)}
           </div>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            display: 'flex',
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            background: OG_ACCENT,
-          }}
-        />
-        <div style={{ display: 'flex', fontSize: 24, color: OG_DIM }}>
-          quebec.run
-        </div>
-      </div>
+      <OgFooter />
     </div>,
     { width: 1200, height: 630 }
   )

@@ -2,6 +2,7 @@ import { ImageResponse } from 'next/og'
 import { getTranslations } from 'next-intl/server'
 import {
   BrandLockup,
+  OgFooter,
   OgGlow,
   OG_ACCENT,
   OG_DIM,
@@ -60,20 +61,7 @@ export default async function Image({ params }: Props) {
           {t('ogDescription')}
         </div>
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <div
-          style={{
-            display: 'flex',
-            width: 10,
-            height: 10,
-            borderRadius: 5,
-            background: OG_ACCENT,
-          }}
-        />
-        <div style={{ display: 'flex', fontSize: 24, color: OG_DIM }}>
-          quebec.run
-        </div>
-      </div>
+      <OgFooter />
     </div>,
     size
   )

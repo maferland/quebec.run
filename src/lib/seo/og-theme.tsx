@@ -40,6 +40,34 @@ export function OgGlow() {
   )
 }
 
+// Every card closes on the same accent dot + wordmark footer.
+export function OgFooter() {
+  return (
+    <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+      <div
+        style={{
+          display: 'flex',
+          width: 10,
+          height: 10,
+          borderRadius: 5,
+          background: OG_ACCENT,
+        }}
+      />
+      <div style={{ display: 'flex', fontSize: 24, color: OG_DIM }}>
+        quebec.run
+      </div>
+    </div>
+  )
+}
+
+// Satori does not wrap-and-clip, so long copy is cut to a whole word here.
+export function truncateForCard(text: string, maxLength: number) {
+  if (text.length <= maxLength) return text
+  const clipped = text.slice(0, maxLength)
+  const lastSpace = clipped.lastIndexOf(' ')
+  return `${(lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`
+}
+
 // The mark is one size on every card. A kicker turns the wordmark into a
 // two-line lockup, which only changes the type size, never the mark.
 export function BrandLockup({ kicker }: { kicker?: string }) {
