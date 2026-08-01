@@ -16,7 +16,9 @@ function toRunDetailResponse(event: EventForDetail) {
     id: event.id,
     title: event.title,
     description: event.description,
-    date: event.date.toISOString(),
+    // `getEventById` is unstable_cache-backed, so a cache hit hands back the
+    // JSON-serialized date as a string even though the type says Date.
+    date: event.date instanceof Date ? event.date.toISOString() : event.date,
     time: event.time,
     address: event.address,
     latitude: event.latitude,

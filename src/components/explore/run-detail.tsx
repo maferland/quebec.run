@@ -259,20 +259,15 @@ export function RunDetailPanel({
       ? `${run.club.description.slice(0, 120)}…`
       : run.club.description
 
-  const dateLabel = run.date
-    ? (() => {
-        const fmt = new Intl.DateTimeFormat(
-          locale === 'fr' ? 'fr-CA' : 'en-CA',
-          {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            timeZone: 'America/Toronto',
-          }
-        ).format(new Date(run.date))
-        return `${fmt.charAt(0).toUpperCase()}${fmt.slice(1)} · ${run.time}`
-      })()
-    : run.time
+  const dateLabel = (() => {
+    const fmt = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'America/Toronto',
+    }).format(new Date(run.date))
+    return `${fmt.charAt(0).toUpperCase()}${fmt.slice(1)} · ${run.time}`
+  })()
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {})

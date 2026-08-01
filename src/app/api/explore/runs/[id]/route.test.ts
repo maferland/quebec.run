@@ -95,6 +95,58 @@ describe('GET /api/explore/runs/[id]', () => {
     expect(data.status).toBe('CANCELLED')
   })
 
+  it('accepts every club type and vibe Prisma can store', async () => {
+    vi.mocked(getEventById).mockResolvedValue({
+      id: 'event-1',
+      title: 'Track Night',
+      description: null,
+      date: new Date('2026-08-04T22:00:00.000Z'),
+      time: '19:00',
+      address: null,
+      latitude: null,
+      longitude: null,
+      distance: null,
+      pace: null,
+      pacePolicy: null,
+      status: 'SCHEDULED',
+      club: { ...club, type: 'MIXED', vibe: 'COMPETITIVE' },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    const response = await GET(request('event-1'), context('event-1'))
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.club.type).toBe('MIXED')
+    expect(data.club.vibe).toBe('COMPETITIVE')
+  })
+
+  it('accepts a date already serialized to a string by the public cache', async () => {
+    vi.mocked(getEventById).mockResolvedValue({
+      id: 'event-1',
+      title: 'Cached Event',
+      description: null,
+      // unstable_cache hands back JSON, so a cache hit yields an ISO string.
+      date: '2026-08-04T22:00:00.000Z',
+      time: '09:00',
+      address: null,
+      latitude: null,
+      longitude: null,
+      distance: null,
+      pace: null,
+      pacePolicy: null,
+      status: 'SCHEDULED',
+      club,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any)
+
+    const response = await GET(request('event-1'), context('event-1'))
+    const data = await response.json()
+
+    expect(response.status).toBe(200)
+    expect(data.date).toBe('2026-08-04T22:00:00.000Z')
+  })
+
   it('returns 404 when the event is not found', async () => {
     vi.mocked(getEventById).mockResolvedValue(null)
 
