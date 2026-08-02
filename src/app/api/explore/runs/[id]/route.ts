@@ -1,6 +1,10 @@
 import { withPublic } from '@/lib/api-middleware'
 import { publicCacheHeaders } from '@/lib/public-cache'
-import { eventIdSchema, runDetailResponseSchema } from '@/lib/schemas'
+import {
+  eventIdSchema,
+  runDetailResponseSchema,
+  type RunDetailResponse,
+} from '@/lib/schemas'
 import { getEventById } from '@/lib/services/events'
 
 type EventForDetail = Awaited<ReturnType<typeof getEventById>>
@@ -9,7 +13,9 @@ type EventForDetail = Awaited<ReturnType<typeof getEventById>>
 // from a recurring pattern carry `recurringSlug`; stored events don't.
 // A clubless event has nothing for the detail panel to render, so it reads as
 // missing here — same call the /run/[id] page makes.
-function toRunDetailResponse(event: EventForDetail) {
+function toRunDetailResponse(
+  event: EventForDetail
+): RunDetailResponse | null {
   if (!event?.club) return null
 
   const shared = {
@@ -47,7 +53,10 @@ export const GET = withPublic(eventIdSchema)(async (data) => {
 
   const parsed = runDetailResponseSchema.safeParse(payload)
   if (!parsed.success) {
-    console.error('Invalid run detail response:', parsed.error)
+    console.error(
+      `Invalid run detail response for event ${data.id}:`,
+      parsed.error
+    )
     return Response.json(
       { error: 'Invalid run detail response' },
       { status: 500 }
