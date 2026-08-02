@@ -13,9 +13,7 @@ type EventForDetail = Awaited<ReturnType<typeof getEventById>>
 // from a recurring pattern carry `recurringSlug`; stored events don't.
 // A clubless event has nothing for the detail panel to render, so it reads as
 // missing here — same call the /run/[id] page makes.
-function toRunDetailResponse(
-  event: EventForDetail
-): RunDetailResponse | null {
+function toRunDetailResponse(event: EventForDetail): RunDetailResponse | null {
   if (!event?.club) return null
 
   const shared = {
