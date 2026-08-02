@@ -1,278 +1,141 @@
-<div align="center">
-<h1>🏃‍♂️ quebec.run</h1>
+# quebec.run
 
-<p>Quebec city running hub</p>
-</div>
+Where to run in Quebec City this week, on one map.
 
----
+The site answers a single question: it's Tuesday, where can I show up and run
+with people? The home page is a map of the city showing the runs happening on
+the day you picked. Tap a pin or a card and the run opens over the map — club,
+meeting point, distance, pace, whether beginners are welcome. Everything exists
+in French and English, French first, because that's the language most of these
+clubs run in.
 
-# Courses - Quebec Run Clubs
+Clubs are either maintained by hand or imported from their Strava club. Weekly
+runs are stored as a recurring pattern and materialized into dated events by a
+cron job, so a club sets its Tuesday 18:15 once instead of posting it 52 times.
 
-A modern web application for discovering and managing run clubs in Quebec City.
-Built with Next.js 14, TypeScript, and Tailwind CSS.
+- [Stack](#stack)
+- [Running it locally](#running-it-locally)
+- [Scripts](#scripts)
+- [Database](#database)
+- [Email in development](#email-in-development)
+- [Worktrees](#worktrees)
+- [Deployment](#deployment)
+- [Docs](#docs)
 
-<!-- START doctoc generated TOC please keep comment here to allow auto update -->
-<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
+## Stack
 
-- [🏃‍♂️ Features](#%E2%80%8D-features)
-- [🚀 Tech Stack](#-tech-stack)
-- [📋 Prerequisites](#-prerequisites)
-- [🛠️ Installation](#-installation)
-- [🗂️ Project Structure](#-project-structure)
-- [🔧 Development](#-development)
-  - [Available Scripts](#available-scripts)
-  - [Database Management](#database-management)
-  - [Email Testing](#email-testing)
-- [🚀 Deployment](#-deployment)
-  - [Environment Setup](#environment-setup)
-  - [Deployment Platforms](#deployment-platforms)
-- [🤝 Contributing](#-contributing)
-- [📝 API Reference](#-api-reference)
-  - [Club Endpoints](#club-endpoints)
-  - [Run Endpoints](#run-endpoints)
-- [🔒 Security](#-security)
-- [🗺️ Roadmap](#-roadmap)
-- [📄 License](#-license)
-- [🙏 Acknowledgments](#-acknowledgments)
-- [📞 Support](#-support)
+- Next.js 15 (App Router), React 19, TypeScript
+- Tailwind CSS 4
+- PostgreSQL with Prisma 7
+- next-intl for `fr`/`en` routing (`fr` is the default, the prefix is always
+  present)
+- NextAuth 4, passwordless email sign-in
+- Leaflet + react-leaflet on Carto basemap tiles
+- React Query for the explore data, Zod for env and form validation, date-fns
+  for dates
+- Resend in production, Mailhog in development
+- Vitest, Playwright, Storybook
 
-<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+The map lives in `src/app/[locale]/(explore)`. Everything else (admin, auth,
+legal, settings) lives in `(site)`. Business logic sits in `src/lib/services`
+and route handlers stay thin.
 
-## 🏃‍♂️ Features
+## Running it locally
 
-- **Discover Run Clubs**: Browse through local running clubs with detailed
-  information
-- **Upcoming Runs**: View scheduled runs with dates, distances, and locations
-- **User Authentication**: Passwordless email authentication via NextAuth
-- **Admin Dashboard**: Club owners can manage their clubs and runs
-- **Responsive Design**: Beautiful UI that works on all devices
-- **Map Integration**: Interactive map view (coming soon)
-- **Calendar View**: Calendar interface for browsing runs (coming soon)
-
-## 🚀 Tech Stack
-
-- **Framework**: [Next.js 14](https://nextjs.org/) with App Router
-- **Language**: [TypeScript](https://www.typescriptlang.org/)
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Database**: [PostgreSQL](https://www.postgresql.org/) with
-  [Prisma ORM](https://www.prisma.io/)
-- **Authentication**: [NextAuth.js](https://next-auth.js.org/) with email
-  providers
-- **Email**: [Resend](https://resend.com/) for production,
-  [Mailhog](https://github.com/mailhog/MailHog) for development
-- **Validation**: [Zod](https://github.com/colinhacks/zod) for environment
-  variables and forms
-- **Date Handling**: [date-fns](https://date-fns.org/)
-
-## 📋 Prerequisites
-
-- [Bun](https://bun.sh/) 1.0+
-- PostgreSQL database
-- Resend API key (for production email)
-- Mailhog (for development email testing)
-
-## 🛠️ Installation
-
-1. **Clone the repository**
-
-   ```bash
-   git clone https://github.com/yourusername/courses.git
-   cd courses
-   ```
-
-2. **Install dependencies**
-
-   ```bash
-   bun install
-   ```
-
-3. **Set up environment variables**
-
-   ```bash
-   cp .env.example .env
-   ```
-
-   Update the `.env` file with your configuration:
-
-   ```env
-   # Database
-   DATABASE_URL="postgresql://username:password@localhost:5432/courses?schema=public"
-
-   # NextAuth
-   NEXTAUTH_SECRET="your-nextauth-secret-key-32-chars-minimum"
-   NEXTAUTH_URL="http://localhost:3000"
-
-   # Email Configuration
-   EMAIL_FROM="noreply@yourdomain.com"
-   USE_RESEND=false  # Set to true for production
-
-   # Development (Mailhog)
-   EMAIL_SERVER_HOST="localhost"
-   EMAIL_SERVER_PORT="1025"
-
-   # Production (Resend)
-   RESEND_API_KEY="your-resend-api-key"
-   ```
-
-4. **Set up the database**
-
-   ```bash
-   bun prisma migrate dev
-   bun run db:seed  # Optional: seed with sample data
-   ```
-
-5. **Start development servers**
-
-   ```bash
-   bun run dev
-   ```
-
-   This runs both the Next.js app and Mailhog concurrently:
-   - App: http://localhost:3000
-   - Mailhog UI: http://localhost:8025
-
-## 🗂️ Project Structure
-
-```
-src/
-├── app/                    # Next.js 14 App Router
-│   ├── api/               # API routes
-│   ├── admin/             # Admin dashboard pages
-│   └── (auth)/           # Authentication pages
-├── components/            # React components
-│   ├── layout/           # Layout components (header, footer)
-│   └── ui/               # Reusable UI components
-├── lib/                   # Utilities and configurations
-│   ├── auth.ts           # NextAuth configuration
-│   ├── env.ts            # Environment validation
-│   └── clubs.ts          # Database service functions
-└── prisma/               # Database schema and migrations
-```
-
-## 🔧 Development
-
-### Available Scripts
-
-- `npm run dev` - Start development server with Mailhog
-- `npm run dev:app` - Start only the Next.js app
-- `npm run dev:mail` - Start only Mailhog
-- `npm run build` - Build for production
-- `npm run start` - Start production server
-- `npm run lint` - Run ESLint
-- `npm run type-check` - Run TypeScript compiler
-
-### Database Management
+You need [Bun](https://bun.sh/), PostgreSQL, and Docker (for Mailhog).
 
 ```bash
-# Create and apply a new migration
-npx prisma migrate dev --name migration_name
-
-# Reset database (development only)
-npx prisma migrate reset
-
-# Generate Prisma client after schema changes
-npx prisma generate
-
-# View database in Prisma Studio
-npx prisma studio
+git clone git@github.com:maferland/quebec.run.git
+cd quebec.run
+bun install          # postinstall runs prisma generate
+cp .env.example .env
 ```
 
-### Email Testing
+`src/lib/env.ts` validates the environment with Zod and refuses to boot on
+anything missing. What it wants:
 
-In development, emails are captured by Mailhog:
+- `DATABASE_URL`
+- `NEXTAUTH_SECRET`, at least 32 characters
+- `EMAIL_FROM`, plus `RESEND_API_KEY` when `USE_RESEND=true`, or
+  `EMAIL_SERVER_HOST` and `EMAIL_SERVER_PORT` when it's false
+- `STRAVA_CLIENT_ID`, `STRAVA_CLIENT_SECRET`, `STRAVA_REFRESH_TOKEN`, required
+  even locally. Mock values are fine if you aren't touching the Strava sync
 
-- Web UI: http://localhost:8025
-- SMTP: localhost:1025
+Then migrate, seed, and start:
 
-For production, configure Resend:
+```bash
+bun prisma migrate dev
+bun run db:seed
+bun run dev
+```
 
-1. Get API key from [Resend](https://resend.com/)
-2. Set `USE_RESEND=true` in environment
-3. Add your `RESEND_API_KEY`
+`bun run dev` brings up docker-compose, waits for Mailhog to answer on
+`MAILHOG_WEB_PORT` (8026 in `.env.example`), and runs `next dev --turbopack` on
+`PORT` (3000 by default). If Docker isn't running it falls back to a local
+`mailhog` binary, and if that's missing it warns and keeps the dev server up.
 
-## 🚀 Deployment
+## Scripts
 
-### Environment Setup
+```bash
+bun run dev                # docker-compose + Mailhog + next dev --turbopack
+bun run build              # next build
+bun run start              # production server
+bun run lint               # eslint
+bun run typecheck          # tsc --noEmit
+bun run test               # vitest, all suites
+bun run test:unit          # vitest without the service/DB tests
+bun run test:integration   # only the service tests (needs TEST_DATABASE_URL)
+bun run test:coverage      # vitest with the coverage ratchet
+bun run test:e2e           # playwright (also :headed and :ui)
+bun run storybook          # storybook on STORYBOOK_PORT (6006 by default)
+bun run geocode            # geocode addresses that have no coordinates
+```
 
-1. **Production Environment Variables**
+`vitest.config.ts` holds a coverage ratchet. Raise it when you add tests, never
+lower it.
 
-   ```env
-   USE_RESEND=true
-   RESEND_API_KEY="your-production-resend-key"
-   DATABASE_URL="your-production-database-url"
-   NEXTAUTH_URL="https://yourdomain.com"
-   ```
+## Database
 
-2. **Database Migration**
-   ```bash
-   npx prisma migrate deploy
-   ```
+```bash
+bun prisma migrate dev --name what_changed   # create and apply a migration
+bun run db:reset                             # reset and reseed (dev only)
+bun prisma generate                          # regenerate the client
+bun prisma studio                            # browse the data
+```
 
-### Deployment Platforms
+Use `migrate dev`, not `db push`. The schema is `prisma/schema.prisma`: users
+and organizations own clubs, clubs own recurring events, and recurring events
+generate the dated `Event` rows the map reads.
 
-- **Vercel**: Connect your GitHub repo for automatic deployments
-- **Railway**: Database and app hosting with automatic scaling
-- **Digital Ocean**: App Platform with managed databases
+## Email in development
 
-## 🤝 Contributing
+Sign-in is a magic link, so you need somewhere to catch mail. With
+`USE_RESEND=false`, Mailhog does it: SMTP on `MAILHOG_SMTP_PORT` and a web inbox
+on `MAILHOG_WEB_PORT` (`1026` and `8026` in `.env.example`).
 
-1. Fork the repository
-2. Create a feature branch (`git checkout -b feature/amazing-feature`)
-3. Commit your changes (`git commit -m 'Add amazing feature'`)
-4. Push to the branch (`git push origin feature/amazing-feature`)
-5. Open a Pull Request
+In production, set `USE_RESEND=true` and add a `RESEND_API_KEY` from
+[Resend](https://resend.com/).
 
-## 📝 API Reference
+## Worktrees
 
-### Club Endpoints
+`bun run worktree <name>` creates a worktree under `.worktrees/`, branches
+`maferland/<name>`, gives it its own database, assigns non-conflicting ports,
+and runs migrations. `bun run remove-worktree <name>` tears all of that down.
+[PORTS.md](PORTS.md) covers the port environment variables.
 
-- `GET /api/clubs` - List all clubs
-- `POST /api/clubs` - Create new club (authenticated)
-- `PUT /api/clubs/[id]` - Update club (owner/admin only)
-- `DELETE /api/clubs/[id]` - Delete club (admin only)
+## Deployment
 
-### Run Endpoints
+Vercel, from `main`. `vercel.json` registers the weekly cron that materializes
+recurring events (Sundays, 02:00 UTC). Production needs the same environment
+variables as local plus a real `NEXTAUTH_URL` and `RESEND_API_KEY`; migrations
+run with `prisma migrate deploy`.
 
-- `GET /api/runs` - List all runs
-- `POST /api/runs` - Create new run (club owner)
-- `PUT /api/runs/[id]` - Update run (club owner)
-- `DELETE /api/runs/[id]` - Delete run (club owner)
+## Docs
 
-## 🔒 Security
+Working notes live in `docs/`, with the current domain model plan under
+`docs/plans/`. A few older documents still sit at the root
+([REFRAME.md](REFRAME.md), [QUEBEC_RUN_ROADMAP.md](QUEBEC_RUN_ROADMAP.md),
+[RENOVATE.md](RENOVATE.md)) and overlap each other. The roadmap marks itself
+superseded. Treat `docs/plans/` as the current word.
 
-- **Authentication**: Email-based passwordless authentication
-- **Authorization**: Role-based access control (user/admin)
-- **Environment**: Zod validation for all environment variables
-- **Database**: Prisma ORM prevents SQL injection
-- **HTTPS**: Enforced in production via Next.js security headers
-
-## 🗺️ Roadmap
-
-- [ ] **v0.1** - Basic club and run management ✅
-- [ ] **v0.2** - Interactive map integration
-- [ ] **v0.3** - Calendar view for runs
-- [ ] **v0.4** - User profiles and run history
-- [ ] **v0.5** - Social features (comments, ratings)
-- [ ] **v1.0** - Mobile app
-
-## 📄 License
-
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
-for details.
-
-## 🙏 Acknowledgments
-
-- Quebec City running community
-- All contributors and testers
-
-## 📞 Support
-
-- Create an [issue](https://github.com/yourusername/courses/issues) for bug
-  reports
-- Start a [discussion](https://github.com/yourusername/courses/discussions) for
-  questions
-- Email: support@yourdomain.com
-
----
-
-**Made with ❤️ for the Quebec running community**
+[MIT](LICENSE).

@@ -10,56 +10,32 @@ Add these to your `.env` file (copy from `.env.example`):
 # Server port (default: 3000)
 PORT=3000
 
-# Mailhog Docker ports (default: 1025 for SMTP, 8025 for web UI)
-MAILHOG_SMTP_PORT=1025
-MAILHOG_WEB_PORT=8025
+# Mailhog ports (code default: 1025 for SMTP, 8025 for web UI;
+# `.env.example` ships 1026/8026 to stay clear of a system-wide Mailhog)
+MAILHOG_SMTP_PORT=1026
+MAILHOG_WEB_PORT=8026
 
 # Email server port (should match MAILHOG_SMTP_PORT)
-EMAIL_SERVER_PORT=1025
+EMAIL_SERVER_PORT=1026
 ```
 
 ## Usage
 
-### Option 1: Use Mailhog binary (current setup)
+`npm run dev` brings up docker-compose, waits for Mailhog to answer on
+`MAILHOG_WEB_PORT`, and falls back to a local `mailhog` binary bound to your
+configured SMTP and web ports if the container never comes up.
 
-```bash
-npm run dev
-```
-
-This runs `mailhog` binary on default ports. If you need different ports, start mailhog manually:
-
-```bash
-mailhog -smtp-bind-addr :1026 -ui-bind-addr :8026
-```
-
-Then update `EMAIL_SERVER_PORT=1026` in `.env`.
-
-### Option 2: Use Docker Compose (recommended)
+Docker services can also be driven on their own:
 
 ```bash
 # Start Mailhog with Docker
 npm run docker:up
-
-# Start dev server only
-npm run dev:app
-
-# Or start both together
-npm run dev:docker
 
 # Stop Docker services
 npm run docker:down
 
 # View Mailhog logs
 npm run docker:logs
-```
-
-With Docker, you can customize ports in `.env`:
-
-```bash
-PORT=3001
-MAILHOG_SMTP_PORT=1026
-MAILHOG_WEB_PORT=8026
-EMAIL_SERVER_PORT=1026
 ```
 
 ## Accessing Services

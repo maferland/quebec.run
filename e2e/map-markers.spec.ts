@@ -344,6 +344,7 @@ test.describe('Map Markers', () => {
     expect(run).toBeTruthy()
 
     await page.goto('/en?day=1')
+    await waitForInteractive(page)
     await page.getByText(run.title, { exact: false }).first().click()
     await expect(page).toHaveURL(/\/en\?day=1$/)
     await expect(page.locator('.pin.is-active')).toBeVisible()
