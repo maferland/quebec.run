@@ -94,8 +94,7 @@ export function useExploreCollections({
 
   // Keeps the open run pinned even when the day's list does not contain it.
   const selectedRunPoint = useMemo(
-    () =>
-      selectedRun ? runPoint(selectedRun, Boolean(selectedRun.isPast)) : null,
+    () => (selectedRun ? runPoint(selectedRun, selectedRun.isPast) : null),
     [selectedRun]
   )
 

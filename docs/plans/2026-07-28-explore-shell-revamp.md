@@ -60,7 +60,9 @@ invalidated, so a long session accumulated every club in both locales. React Que
 Response normalisation moved across verbatim. Replacing the all-optional
 `RunDetailResponse` and its `??` fallbacks with a Zod schema is a separate correctness
 change (the run detail API returns a union of a virtual and a Prisma event), tracked as a
-follow-up rather than folded in here.
+follow-up rather than folded in here. That follow-up has since landed:
+`runDetailResponseSchema` in `src/lib/schemas.ts` is the discriminated union the route
+validates against, and the client type is `z.infer` of it.
 
 ### PR 3 — extract the panel state machine (done, `06933b6`)
 
@@ -220,12 +222,6 @@ effect. This was pre-existing; `main` was green by luck, and the refactor only
 made hydration slow enough to expose it.
 
 ## Still open
-
-**The run detail response is a union.** `/api/explore/runs/[id]` returns either a
-virtual event or a Prisma event, with different club shapes, which is why the
-client type is all-optional with `??` fallbacks on every field. A Zod schema at
-that boundary would let the fallbacks go. Left alone: it is a correctness change
-to the API contract, not a refactor.
 
 **Home still repaints part of the map on a locale switch.** 4.4% worst-frame
 difference over four frames, down from a full-screen 6.3% flash, and confined to

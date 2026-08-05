@@ -1,6 +1,7 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import type { RunDetailClub } from '@/lib/schemas'
 import { TypeTag, VibePill, Flag, Stamp, paceRange } from './badges'
 
 const ChevLIcon = (
@@ -143,25 +144,15 @@ export type RunDetailData = {
   id: string
   title: string
   time: string
-  date: string | null
-  isPast?: boolean
+  date: string
+  isPast: boolean
   status: 'SCHEDULED' | 'CANCELLED'
   distance: string | null
   pacePolicy: 'SHARED' | 'OPEN_PACE' | null
   address: string | null
   lat: number | null
   lng: number | null
-  club: {
-    id: string
-    slug: string
-    name: string
-    description: string | null
-    type: string | null
-    vibe: string | null
-    beginnerFriendly: boolean
-    paceMin: string | null
-    paceMax: string | null
-  }
+  club: RunDetailClub
 }
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
@@ -254,7 +245,6 @@ export function RunDetailPanel({
   }, [animateIn])
 
   const cancelled = run.status === 'CANCELLED'
-  const isPast = run.isPast ?? false
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
   const typeLabel = run.club.type
     ? t(`type_${run.club.type.toLowerCase()}`)
@@ -269,20 +259,15 @@ export function RunDetailPanel({
       ? `${run.club.description.slice(0, 120)}…`
       : run.club.description
 
-  const dateLabel = run.date
-    ? (() => {
-        const fmt = new Intl.DateTimeFormat(
-          locale === 'fr' ? 'fr-CA' : 'en-CA',
-          {
-            weekday: 'long',
-            day: 'numeric',
-            month: 'long',
-            timeZone: 'America/Toronto',
-          }
-        ).format(new Date(run.date))
-        return `${fmt.charAt(0).toUpperCase()}${fmt.slice(1)} · ${run.time}`
-      })()
-    : run.time
+  const dateLabel = (() => {
+    const fmt = new Intl.DateTimeFormat(locale === 'fr' ? 'fr-CA' : 'en-CA', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      timeZone: 'America/Toronto',
+    }).format(new Date(run.date))
+    return `${fmt.charAt(0).toUpperCase()}${fmt.slice(1)} · ${run.time}`
+  })()
 
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href).catch(() => {})
@@ -372,7 +357,9 @@ export function RunDetailPanel({
           {vibeLabel && <VibePill label={vibeLabel} />}
           {run.club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
           {cancelled && <Stamp tone="cancelled">{t('cancelled')}</Stamp>}
-          {isPast && !cancelled && <Stamp tone="past">{t('past_badge')}</Stamp>}
+          {run.isPast && !cancelled && (
+            <Stamp tone="past">{t('past_badge')}</Stamp>
+          )}
         </div>
         <h1
           style={{
