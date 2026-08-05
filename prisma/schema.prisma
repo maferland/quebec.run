@@ -88,8 +88,7 @@ model Club {
   lastSynced   DateTime?
 
   // Display settings
-  isActive    Boolean @default(true) // paused = false
-  welcomeInfo String? // first-timer override
+  isActive Boolean @default(true) // paused = false
 
   // Categorization (for filters)
   type             ClubType?
