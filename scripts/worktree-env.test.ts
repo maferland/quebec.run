@@ -8,6 +8,7 @@ import {
   deriveWorktreeDatabaseUrls,
   readEnvValue,
   readEnvValueFromFile,
+  resolveDropDatabaseName,
 } from './worktree-env'
 
 const MAIN_ENV = `# Main env
@@ -207,6 +208,31 @@ DATABASE_URL="${OVERRIDES.DATABASE_URL}"
 
     expect(deriveWorktreeDatabaseUrls(activeUrl!, 'nested').dbName).toBe(
       'quebec.run_feat_nested'
+    )
+  })
+})
+
+describe('resolveDropDatabaseName', () => {
+  // The unsafe case: create-worktree died before writing overrides, or the
+  // worktree was set up by hand, so its .env is still the main repo's.
+  // Dropping that would take out the developer's main database.
+  it('refuses when the worktree database name matches main', () => {
+    expect(resolveDropDatabaseName('quebec.run', 'quebec.run')).toBeNull()
+  })
+
+  it('returns the worktree name when it differs from main', () => {
+    expect(resolveDropDatabaseName('quebec.run_feat', 'quebec.run')).toBe(
+      'quebec.run_feat'
+    )
+  })
+
+  it('returns null when the worktree has no database name', () => {
+    expect(resolveDropDatabaseName(null, 'quebec.run')).toBeNull()
+  })
+
+  it('returns the worktree name when main has no database name to compare', () => {
+    expect(resolveDropDatabaseName('quebec.run_feat', null)).toBe(
+      'quebec.run_feat'
     )
   })
 })
