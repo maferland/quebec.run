@@ -165,6 +165,7 @@ describe('useExploreCollections', () => {
       selectedRun: {
         id: 'run-9',
         title: 'Sortie',
+        description: null,
         time: '06:00',
         date: '2026-07-29',
         isPast: false,

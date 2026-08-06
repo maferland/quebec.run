@@ -111,3 +111,52 @@ it('keeps a failed club route open and retries its request', async () => {
   ).toBeInTheDocument()
   expect(fetch).toHaveBeenCalledTimes(2)
 })
+
+it.each([
+  { kind: 'one-off', shown: true },
+  { kind: 'recurring', shown: false },
+])(
+  'shows the run description for a $kind run: $shown',
+  async ({ kind, shown }) => {
+    const description = 'Limonade Sunrise launch — wear yellow or orange.'
+    vi.spyOn(global, 'fetch').mockResolvedValue(
+      new Response(
+        JSON.stringify({
+          kind,
+          id: 'run-1',
+          title: 'Special Edition',
+          description,
+          time: '18:00',
+          date: '2026-08-06T04:00:00.000Z',
+          status: 'SCHEDULED',
+          recurringSlug: kind === 'recurring' ? 'thursday' : undefined,
+          club: { id: 'club-1', slug: 'track', name: 'Track Club' },
+        }),
+        { status: 200, headers: { 'Content-Type': 'application/json' } }
+      )
+    )
+
+    render(
+      <DetailOverlay
+        overlay={{
+          kind: 'run',
+          id: 'run-1',
+          enter: true,
+          exiting: false,
+          closeMode: 'route',
+        }}
+        onClose={vi.fn()}
+      />
+    )
+
+    expect(
+      await screen.findByRole('heading', { name: 'Special Edition' })
+    ).toBeInTheDocument()
+    if (shown) {
+      expect(screen.getByText(description)).toBeInTheDocument()
+      expect(screen.getByText('About this run')).toBeInTheDocument()
+    } else {
+      expect(screen.queryByText(description)).not.toBeInTheDocument()
+    }
+  }
+)

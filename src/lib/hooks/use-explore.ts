@@ -36,6 +36,9 @@ function toRunDetail(data: RunDetailResponse): RunDetailData {
   return {
     id: data.id,
     title: data.title,
+    // Recurring patterns describe their meeting spot, which the address already
+    // covers; only a one-off says something the rest of the panel doesn't.
+    description: data.kind === 'one-off' ? data.description : null,
     time: data.time,
     date: data.date,
     isPast: isRunPast(data.date, data.time, new Date()),

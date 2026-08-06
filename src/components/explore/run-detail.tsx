@@ -143,6 +143,7 @@ const ChevRIcon = (
 export type RunDetailData = {
   id: string
   title: string
+  description: string | null
   time: string
   date: string
   isPast: boolean
@@ -400,6 +401,27 @@ export function RunDetailPanel({
           label={t('pace')}
         />
       </div>
+
+      {/* description */}
+      {run.description && (
+        <div>
+          <SectionLabel>{t('about_run')}</SectionLabel>
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r-lg)',
+              padding: '15px',
+              fontSize: 14,
+              lineHeight: 1.5,
+              color: 'var(--dim)',
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {run.description}
+          </div>
+        </div>
+      )}
 
       {/* meeting point */}
       {run.address && (
