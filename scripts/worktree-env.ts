@@ -94,6 +94,18 @@ export function databaseNameFromUrl(databaseUrl: string): string {
 }
 
 /**
+ * Database name safe to drop when tearing down a worktree, or null to
+ * refuse. A worktree whose .env was never overridden still points at the
+ * main database, and dropping that would take the developer's data with it.
+ */
+export function resolveDropDatabaseName(
+  worktreeDbName: string | null,
+  mainDbName: string | null
+): string | null {
+  return worktreeDbName === mainDbName ? null : worktreeDbName
+}
+
+/**
  * Worktree database URLs derived from the URL currently in effect, so
  * creating a worktree from inside another worktree branches off that
  * worktree's database rather than the main one.

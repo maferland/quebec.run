@@ -3,7 +3,11 @@
 import { execSync } from 'child_process'
 import { existsSync } from 'fs'
 import { resolve } from 'path'
-import { databaseNameFromUrl, readEnvValueFromFile } from './worktree-env'
+import {
+  databaseNameFromUrl,
+  readEnvValueFromFile,
+  resolveDropDatabaseName,
+} from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
 const WORKTREES_DIR = resolve(REPO_ROOT, '.worktrees')
@@ -45,14 +49,13 @@ async function main() {
     }
 
     // Get database name before removing
-    const dbName = getDatabaseName(resolve(worktreePath, '.env'))
+    const worktreeDbName = getDatabaseName(resolve(worktreePath, '.env'))
     const mainDbName = getDatabaseName(MAIN_ENV_FILE)
+    const dbName = resolveDropDatabaseName(worktreeDbName, mainDbName)
 
-    // A worktree whose .env was never overridden still points at the main
-    // database, and dropping that would take the developer's data with it
-    if (dbName && dbName === mainDbName) {
+    if (worktreeDbName && !dbName) {
       throw new Error(
-        `Worktree .env still points at the main database "${dbName}" - it never got its own.\n` +
+        `Worktree .env still points at the main database "${worktreeDbName}" - it never got its own.\n` +
           `Refusing to drop it. Remove the worktree by hand once you are sure:\n` +
           `  git worktree remove ${worktreePath} --force`
       )
