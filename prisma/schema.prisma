@@ -128,9 +128,9 @@ model RecurringEvent {
   neighborhood String?
 
   // Event details
-  distance    String?
-  pace        String?
-  pacePolicy  PacePolicy?
+  distance   String?
+  pace       String?
+  pacePolicy PacePolicy?
 
   // Schedule
   schedulePattern String
@@ -158,6 +158,9 @@ model RecurringEvent {
 model Event {
   id          String  @id @default(cuid())
   title       String
+  // Public handle for one-off events; occurrences of a pattern are addressed
+  // through their recurring slug instead, so theirs stays null.
+  slug        String? @unique
   description String?
 
   // Location

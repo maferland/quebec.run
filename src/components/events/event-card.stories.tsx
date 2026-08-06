@@ -15,6 +15,7 @@ type Story = StoryObj<typeof meta>
 
 const mockEvent = {
   id: 'event-1',
+  slug: null,
   title: '6AM Club Limoilou',
   description: null,
   address: '250 3e Rue, Québec, QC G1L 2B3',
