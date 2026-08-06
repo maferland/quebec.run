@@ -147,6 +147,28 @@ describe('Events Service Integration Tests', () => {
       expect(result.club!.id).toBe(testClub.id)
       expect(result.club!.name).toBe(testClub.name)
     })
+
+    it('derives a slug from the title, counting up past collisions', async () => {
+      const testClub = (await testPrisma.club.findMany())[0]
+      const runData = {
+        title: 'Sortie Limonade Sunrise',
+        date: '2025-04-01',
+        time: '18:00',
+        clubId: testClub.id,
+      }
+
+      const first = await createEvent({
+        user: { id: testUserId, isStaff: false },
+        data: runData,
+      })
+      const second = await createEvent({
+        user: { id: testUserId, isStaff: false },
+        data: runData,
+      })
+
+      expect(first.slug).toBe('sortie-limonade-sunrise')
+      expect(second.slug).toBe('sortie-limonade-sunrise-2')
+    })
   })
 
   describe('updateEvent', () => {
@@ -519,6 +541,25 @@ describe('Events Service Integration Tests', () => {
         data: { id: 'non-existent-id' },
       })
       expect(result).toBeNull()
+    })
+
+    it('resolves a one-off event by its slug', async () => {
+      const testClub = (await testPrisma.club.findMany())[0]
+      const event = await testPrisma.event.create({
+        data: {
+          title: 'Sortie spéciale',
+          slug: 'sortie-speciale',
+          date: new Date('2025-12-01'),
+          time: '18:00',
+          clubId: testClub.id,
+        },
+      })
+
+      const bySlug = await getEventById({ data: { id: 'sortie-speciale' } })
+      const byId = await getEventById({ data: { id: event.id } })
+
+      expect(bySlug!.id).toBe(event.id)
+      expect(byId!.id).toBe(event.id)
     })
   })
 
@@ -1206,6 +1247,23 @@ describe('Events Service Integration Tests', () => {
       const day2Titles = day2.map((r) => r.title)
       expect(day1Titles).not.toContain('Evening Test Run')
       expect(day2Titles).toContain('Evening Test Run')
+    })
+
+    it('hands out the slug as the run id when a one-off has one', async () => {
+      const testClub = (await testPrisma.club.findMany())[0]
+      await testPrisma.event.create({
+        data: {
+          title: 'Sortie Limonade',
+          slug: 'sortie-limonade',
+          date: getTorontoDayBounds(3).start,
+          time: '18:00',
+          clubId: testClub.id,
+        },
+      })
+
+      const runs = await getEventsForDay(3)
+
+      expect(runs.map((run) => run.id)).toContain('sortie-limonade')
     })
   })
 

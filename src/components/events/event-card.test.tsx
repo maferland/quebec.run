@@ -6,6 +6,7 @@ import type { GetAllEventsReturn } from '@/lib/services/events'
 // Mock event data structure matching service return type
 const mockEventWithClub: GetAllEventsReturn = {
   id: 'event-1',
+  slug: null,
   title: 'Morning 5K Run',
   description: null,
   address: '250 3e Rue, Québec, QC G1L 2B3',
@@ -372,6 +373,7 @@ describe('EventCard Component', () => {
     it('handles minimal event data gracefully', () => {
       const minimalEvent: GetAllEventsReturn = {
         id: 'minimal-event',
+        slug: null,
         title: 'Minimal Event',
         description: null,
         pacePolicy: null,

@@ -33,6 +33,7 @@ import {
 
 import { compareWeekdays, type Weekday } from '@/lib/utils/weekday'
 import { getTorontoMinutes, isRunTimePast } from '@/lib/utils/run-time'
+import { createSlug } from '@/lib/utils/slug'
 
 // ─── Explore data layer ───────────────────────────────────────────────────────
 
@@ -133,6 +134,7 @@ export function getTorontoDayBounds(
 function toExploreRun(
   event: {
     id: string
+    slug?: string | null
     title: string
     time: string
     status: 'SCHEDULED' | 'CANCELLED'
@@ -156,7 +158,9 @@ function toExploreRun(
 ): ExploreRun | null {
   if (!event.club) return null
   return {
-    id: event.id,
+    // The slug is the public handle when there is one; virtual occurrences
+    // already carry a readable id.
+    id: event.slug ?? event.id,
     title: event.title,
     time: event.time,
     status: event.status,
@@ -205,6 +209,7 @@ async function getExploreWeekRaw(): Promise<{
       },
       select: {
         id: true,
+        slug: true,
         title: true,
         time: true,
         status: true,
@@ -719,8 +724,10 @@ async function getEventByIdRaw(id: string) {
     }
   }
 
-  return await prisma.event.findUnique({
-    where: { id },
+  // One-off events answer to their slug as well as their id, so the cuid links
+  // minted before slugs existed keep resolving.
+  return await prisma.event.findFirst({
+    where: { OR: [{ id }, { slug: id }] },
     include: {
       club: {
         select: {
@@ -843,6 +850,25 @@ export const getNextOccurrenceDate = async ({
   return getCachedNextOccurrenceDate(data.clubSlug, data.eventSlug)
 }
 
+// Slugs are global, so a title that collides with an existing event picks up a
+// counter. Derived once at creation: renaming an event keeps its URL.
+async function uniqueEventSlug(title: string): Promise<string> {
+  const base = createSlug(title)
+  const taken = new Set(
+    (
+      await prisma.event.findMany({
+        where: { slug: { startsWith: base } },
+        select: { slug: true },
+      })
+    ).flatMap((event) => (event.slug ? [event.slug] : []))
+  )
+  if (!taken.has(base)) return base
+
+  let suffix = 2
+  while (taken.has(`${base}-${suffix}`)) suffix += 1
+  return `${base}-${suffix}`
+}
+
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
   // Geocode address if provided
   let latitude: number | null = null
@@ -861,6 +887,7 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
   const event = await prisma.event.create({
     data: {
       ...data,
+      slug: await uniqueEventSlug(data.title),
       date: new Date(data.date),
       latitude,
       longitude,

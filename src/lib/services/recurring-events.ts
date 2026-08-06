@@ -233,6 +233,7 @@ export async function getEventsInRange(
     },
     select: {
       id: true,
+      slug: true,
       title: true,
       description: true,
       date: true,

@@ -10,11 +10,13 @@ it('opens the related club from a native button', async () => {
   const run: RunDetailData = {
     id: 'run-1',
     title: 'Tuesday Intervals',
+    description: null,
     time: '18:00',
     date: '2026-07-22T22:00:00.000Z',
     isPast: false,
     status: 'SCHEDULED',
     distance: null,
+    pace: null,
     pacePolicy: null,
     address: null,
     lat: null,

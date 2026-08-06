@@ -58,7 +58,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
         date: { gte: now, lte: horizon },
         club: { isActive: true },
       },
-      select: { id: true, updatedAt: true },
+      select: { id: true, slug: true, updatedAt: true },
     }),
   ])
 
@@ -93,7 +93,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     ),
     ...recurringEntries,
     ...oneOffEvents.flatMap((event) => {
-      const path = `/run/${event.id}`
+      const path = `/run/${event.slug ?? event.id}`
       return LOCALES.map((locale: Locale) => ({
         url: `${SITE_URL}/${locale}${path}`,
         priority: 0.5,

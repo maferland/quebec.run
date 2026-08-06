@@ -36,12 +36,16 @@ function toRunDetail(data: RunDetailResponse): RunDetailData {
   return {
     id: data.id,
     title: data.title,
+    // Recurring patterns describe their meeting spot, which the address already
+    // covers; only a one-off says something the rest of the panel doesn't.
+    description: data.kind === 'one-off' ? data.description : null,
     time: data.time,
     date: data.date,
     isPast: isRunPast(data.date, data.time, new Date()),
     status: data.status,
-    // A run states either a fixed distance or a pace; neither is guaranteed.
-    distance: data.distance ?? data.pace,
+    distance: data.distance,
+    // A run can set its own pace; otherwise the club's range stands in.
+    pace: data.pace,
     pacePolicy: data.pacePolicy,
     address: data.address,
     lat: data.latitude,

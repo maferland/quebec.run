@@ -143,11 +143,13 @@ const ChevRIcon = (
 export type RunDetailData = {
   id: string
   title: string
+  description: string | null
   time: string
   date: string
   isPast: boolean
   status: 'SCHEDULED' | 'CANCELLED'
   distance: string | null
+  pace: string | null
   pacePolicy: 'SHARED' | 'OPEN_PACE' | null
   address: string | null
   lat: number | null
@@ -252,7 +254,7 @@ export function RunDetailPanel({
   const vibeLabel = run.club.vibe
     ? t(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
-  const pace = paceRange(run.club.paceMin, run.club.paceMax)
+  const pace = run.pace ?? paceRange(run.club.paceMin, run.club.paceMax)
   const variableFallback = run.pacePolicy === 'OPEN_PACE' ? t('variable') : '—'
   const clubDescription =
     run.club.description && run.club.description.length > 120
@@ -400,6 +402,27 @@ export function RunDetailPanel({
           label={t('pace')}
         />
       </div>
+
+      {/* description */}
+      {run.description && (
+        <div>
+          <SectionLabel>{t('about_run')}</SectionLabel>
+          <div
+            style={{
+              background: 'var(--surface)',
+              border: '1px solid var(--line)',
+              borderRadius: 'var(--r-lg)',
+              padding: '15px',
+              fontSize: 14,
+              lineHeight: 1.5,
+              color: 'var(--dim)',
+              whiteSpace: 'pre-line',
+            }}
+          >
+            {run.description}
+          </div>
+        </div>
+      )}
 
       {/* meeting point */}
       {run.address && (

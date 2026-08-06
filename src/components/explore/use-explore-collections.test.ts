@@ -165,11 +165,13 @@ describe('useExploreCollections', () => {
       selectedRun: {
         id: 'run-9',
         title: 'Sortie',
+        description: null,
         time: '06:00',
         date: '2026-07-29',
         isPast: false,
         status: 'SCHEDULED',
         distance: null,
+        pace: null,
         pacePolicy: null,
         address: null,
         lat: 46.7,
