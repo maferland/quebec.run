@@ -16,6 +16,7 @@ it('opens the related club from a native button', async () => {
     isPast: false,
     status: 'SCHEDULED',
     distance: null,
+    pace: null,
     pacePolicy: null,
     address: null,
     lat: null,

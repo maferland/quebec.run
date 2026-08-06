@@ -112,6 +112,45 @@ it('keeps a failed club route open and retries its request', async () => {
   expect(fetch).toHaveBeenCalledTimes(2)
 })
 
+it("reads the run's own pace as a pace, not a distance", async () => {
+  vi.spyOn(global, 'fetch').mockResolvedValue(
+    new Response(
+      JSON.stringify({
+        kind: 'one-off',
+        id: 'run-1',
+        title: 'Special Edition',
+        description: null,
+        time: '18:00',
+        date: '2026-08-06T04:00:00.000Z',
+        status: 'SCHEDULED',
+        distance: null,
+        pace: '6:30',
+        club: { id: 'club-1', slug: 'track', name: 'Track Club' },
+      }),
+      { status: 200, headers: { 'Content-Type': 'application/json' } }
+    )
+  )
+
+  render(
+    <DetailOverlay
+      overlay={{
+        kind: 'run',
+        id: 'run-1',
+        enter: true,
+        exiting: false,
+        closeMode: 'route',
+      }}
+      onClose={vi.fn()}
+    />
+  )
+
+  expect(
+    await screen.findByRole('heading', { name: 'Special Edition' })
+  ).toBeInTheDocument()
+  expect(screen.getByText('6:30')).toBeInTheDocument()
+  expect(screen.queryByText('6:30 km')).not.toBeInTheDocument()
+})
+
 it.each([
   { kind: 'one-off', shown: true },
   { kind: 'recurring', shown: false },

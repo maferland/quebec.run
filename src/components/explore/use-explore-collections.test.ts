@@ -171,6 +171,7 @@ describe('useExploreCollections', () => {
         isPast: false,
         status: 'SCHEDULED',
         distance: null,
+        pace: null,
         pacePolicy: null,
         address: null,
         lat: 46.7,

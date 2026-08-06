@@ -43,8 +43,9 @@ function toRunDetail(data: RunDetailResponse): RunDetailData {
     date: data.date,
     isPast: isRunPast(data.date, data.time, new Date()),
     status: data.status,
-    // A run states either a fixed distance or a pace; neither is guaranteed.
-    distance: data.distance ?? data.pace,
+    distance: data.distance,
+    // A run can set its own pace; otherwise the club's range stands in.
+    pace: data.pace,
     pacePolicy: data.pacePolicy,
     address: data.address,
     lat: data.latitude,

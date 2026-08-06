@@ -149,6 +149,7 @@ export type RunDetailData = {
   isPast: boolean
   status: 'SCHEDULED' | 'CANCELLED'
   distance: string | null
+  pace: string | null
   pacePolicy: 'SHARED' | 'OPEN_PACE' | null
   address: string | null
   lat: number | null
@@ -253,7 +254,7 @@ export function RunDetailPanel({
   const vibeLabel = run.club.vibe
     ? t(`vibe_${run.club.vibe.toLowerCase()}`)
     : null
-  const pace = paceRange(run.club.paceMin, run.club.paceMax)
+  const pace = run.pace ?? paceRange(run.club.paceMin, run.club.paceMax)
   const variableFallback = run.pacePolicy === 'OPEN_PACE' ? t('variable') : '—'
   const clubDescription =
     run.club.description && run.club.description.length > 120
