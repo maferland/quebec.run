@@ -68,8 +68,8 @@ function ScrollPort({
             alignItems: 'center',
             justifyContent: 'center',
             padding: 16,
-            background: 'color-mix(in oklch, var(--bg) 82%, transparent)',
-            backdropFilter: 'blur(6px)',
+            background: 'color-mix(in oklch, var(--bg) 60%, transparent)',
+            backdropFilter: 'blur(3px)',
           }}
         >
           {overlay}
