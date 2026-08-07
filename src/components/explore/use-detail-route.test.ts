@@ -11,7 +11,7 @@ vi.mock('next/navigation', () => ({
   useRouter: () => ({ push: vi.fn(), replace, back }),
 }))
 
-const buildFallbackPath = (detail: { kind: 'run' | 'club' } | null) =>
+const buildFallbackPath = (detail: DetailRoute | null) =>
   detail?.kind === 'club' ? '/fr/clubs' : '/fr'
 
 const setup = (currentDetail: DetailRoute | null) =>

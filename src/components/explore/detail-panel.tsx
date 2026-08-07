@@ -5,7 +5,12 @@ import { useLocale, useTranslations } from 'next-intl'
 import { useTheme } from './theme-provider'
 import { RunDetailPanel } from './run-detail'
 import { ClubDetailPanel } from './club-detail'
-import { useClubDetail, useRunDetail } from '@/lib/hooks/use-explore'
+import { PlaceDetailPanel } from './place-detail'
+import {
+  useClubDetail,
+  usePlaceDetail,
+  useRunDetail,
+} from '@/lib/hooks/use-explore'
 import type { DetailOverlayState } from './use-detail-route'
 
 export const PANEL_ENTER_MS = 280
@@ -62,7 +67,7 @@ function SkeletonBlock({ width, height }: { width: string; height: number }) {
   )
 }
 
-function DetailSkeleton({ kind }: { kind: 'run' | 'club' }) {
+function DetailSkeleton({ kind }: { kind: 'run' | 'club' | 'place' }) {
   return (
     <div
       aria-busy="true"
@@ -113,7 +118,7 @@ function DetailError({
   onBack,
   onRetry,
 }: {
-  kind: 'run' | 'club'
+  kind: 'run' | 'club' | 'place'
   onBack: () => void
   onRetry: () => void
 }) {
@@ -190,14 +195,21 @@ export function DetailOverlay({
   const locale = useLocale()
   const router = useRouter()
   const isRun = overlay.kind === 'run'
+  const isClub = overlay.kind === 'club'
+  const isPlace = overlay.kind === 'place'
 
   const runQuery = useRunDetail(isRun ? overlay.id : null)
-  const clubQuery = useClubDetail(isRun ? null : overlay.slug, locale)
+  const clubQuery = useClubDetail(isClub ? overlay.slug : null, locale)
+  const placeQuery = usePlaceDetail(
+    isPlace ? overlay.clubSlug : null,
+    isPlace ? overlay.placeSlug : null,
+    locale
+  )
+  const placeClubSlug = isPlace ? overlay.clubSlug : null
+  const activeQuery = isRun ? runQuery : isClub ? clubQuery : placeQuery
   const { isError, refetch } = serverDetail
     ? { isError: false, refetch: () => {} }
-    : isRun
-      ? runQuery
-      : clubQuery
+    : activeQuery
 
   const exiting = inactive ? false : overlay.exiting
 
@@ -235,14 +247,28 @@ export function DetailOverlay({
             animateIn={overlay.enter}
           />
         )
-      : clubQuery.data && (
-          <ClubDetailPanel
-            club={clubQuery.data}
-            onBack={close}
-            onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
-            animateIn={overlay.enter}
-          />
-        ))
+      : isClub
+        ? clubQuery.data && (
+            <ClubDetailPanel
+              club={clubQuery.data}
+              onBack={close}
+              onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
+              animateIn={overlay.enter}
+            />
+          )
+        : placeQuery.data && (
+            <PlaceDetailPanel
+              place={placeQuery.data}
+              onBack={close}
+              onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
+              onOpenPlace={(placeSlug) =>
+                router.push(
+                  `/${locale}/clubs/${placeClubSlug}/events/${placeSlug}`
+                )
+              }
+              animateIn={overlay.enter}
+            />
+          ))
 
   if (isError) {
     return (

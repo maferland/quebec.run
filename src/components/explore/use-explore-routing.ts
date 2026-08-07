@@ -40,10 +40,17 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
 
   const currentDetail = useMemo<DetailRoute | null>(() => {
     if (routeSelection.runId) return { kind: 'run', id: routeSelection.runId }
+    if (routeSelection.clubSlug && routeSelection.placeSlug) {
+      return {
+        kind: 'place',
+        clubSlug: routeSelection.clubSlug,
+        placeSlug: routeSelection.placeSlug,
+      }
+    }
     if (routeSelection.clubSlug)
       return { kind: 'club', slug: routeSelection.clubSlug }
     return null
-  }, [routeSelection.clubSlug, routeSelection.runId])
+  }, [routeSelection.clubSlug, routeSelection.placeSlug, routeSelection.runId])
 
   // Legacy ?mode=/?club=/?run= links get rewritten to their path equivalents.
   useEffect(() => {
@@ -145,11 +152,25 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     [locale, queryString, router, startTransition]
   )
 
+  const pushPlaceDetail = useCallback(
+    (clubSlug: string, placeSlug: string) => {
+      startTransition(() =>
+        router.push(
+          `/${locale}/clubs/${encodeURIComponent(clubSlug)}/events/${encodeURIComponent(placeSlug)}${queryString}`,
+          { scroll: false }
+        )
+      )
+    },
+    [locale, queryString, router, startTransition]
+  )
+
   const detailFallbackPath = useCallback(
-    (kind: 'run' | 'club' | undefined) =>
-      kind === 'club'
-        ? `/${locale}/clubs${queryString}`
-        : `/${locale}${queryString}`,
+    (detail: DetailRoute | undefined) => {
+      if (detail?.kind === 'club') return `/${locale}/clubs${queryString}`
+      if (detail?.kind === 'place')
+        return `/${locale}/clubs/${detail.clubSlug}${queryString}`
+      return `/${locale}${queryString}`
+    },
     [locale, queryString]
   )
 
@@ -183,6 +204,7 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     clearFilters,
     pushRunDetail,
     pushClubDetail,
+    pushPlaceDetail,
     prefetchRoute,
     switchLocale,
   }

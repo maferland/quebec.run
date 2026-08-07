@@ -137,7 +137,7 @@ function ExploreShellInner({
     currentDetail: routing.currentDetail,
     buildFallbackPath: useCallback(
       (overlay: DetailOverlayState | null) =>
-        routing.detailFallbackPath(overlay?.kind),
+        routing.detailFallbackPath(overlay ?? undefined),
       [routing]
     ),
   })

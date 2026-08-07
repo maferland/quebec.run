@@ -83,6 +83,37 @@ test('sitemap.xml is valid + advertises per-locale URLs with hreflang', async ({
   expect(body).toContain('hreflang="x-default"')
 })
 
+test.describe('explore panels ship real HTML with no client JS required', () => {
+  const TUESDAY_ISO = (() => {
+    const d = new Date()
+    while (d.getDay() !== 2) d.setDate(d.getDate() + 1)
+    return d.toISOString().slice(0, 10)
+  })()
+
+  test('run panel', async ({ request }) => {
+    const response = await request.get(
+      `/fr/run/fauxmouvement-mardi--${TUESDAY_ISO}`
+    )
+    expect(response.ok()).toBe(true)
+    const body = await response.text()
+    expect(body).toContain('Faux Mouvement')
+  })
+
+  test('club panel', async ({ request }) => {
+    const response = await request.get('/fr/clubs/fauxmouvement')
+    expect(response.ok()).toBe(true)
+    const body = await response.text()
+    expect(body).toContain('Faux Mouvement')
+  })
+
+  test('place panel', async ({ request }) => {
+    const response = await request.get('/fr/clubs/fauxmouvement/events/mardi')
+    expect(response.ok()).toBe(true)
+    const body = await response.text()
+    expect(body).toContain('Faux Mouvement')
+  })
+})
+
 test('robots.txt allows root, disallows /admin, references sitemap', async ({
   request,
 }) => {

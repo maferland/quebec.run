@@ -167,13 +167,20 @@ describe('opening detail routes', () => {
   })
 
   it.each([
-    { kind: 'club' as const, expected: '/fr/clubs?day=2' },
-    { kind: 'run' as const, expected: '/fr?day=2' },
-    { kind: undefined, expected: '/fr?day=2' },
-  ])('builds the $kind fallback path', ({ kind, expected }) => {
+    {
+      detail: { kind: 'club' as const, slug: 'x' },
+      expected: '/fr/clubs?day=2',
+    },
+    { detail: { kind: 'run' as const, id: 'x' }, expected: '/fr?day=2' },
+    {
+      detail: { kind: 'place' as const, clubSlug: 'x', placeSlug: 'y' },
+      expected: '/fr/clubs/x?day=2',
+    },
+    { detail: undefined, expected: '/fr?day=2' },
+  ])('builds the $detail.kind fallback path', ({ detail, expected }) => {
     const { result } = setup('/fr', 'day=2')
 
-    expect(result.current.detailFallbackPath(kind)).toBe(expected)
+    expect(result.current.detailFallbackPath(detail)).toBe(expected)
   })
 
   it('prefetches a locale-prefixed route', () => {

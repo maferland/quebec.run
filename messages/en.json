@@ -229,8 +229,6 @@
       "clubs": "Clubs",
       "events": "Events"
     },
-    "moreFromClub": "More from {name}",
-    "aboutClub": "About {name}",
     "viewClub": "View club",
     "place": {
       "schedule": "Schedule",
@@ -243,11 +241,6 @@
       "upcomingCount": "{count, plural, one {# upcoming run} other {# upcoming runs}} in the next 60 days",
       "recurring": "Recurring",
       "takeNote": "Take note"
-    },
-    "pacePolicy": {
-      "shared": "Group pace",
-      "openPace": "Open pace",
-      "openPaceHint": "Pace-flexible run — split into pace groups or interval-style structure that accommodates different paces."
     }
   },
   "validation": {

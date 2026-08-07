@@ -229,8 +229,6 @@
       "clubs": "Clubs",
       "events": "Événements"
     },
-    "moreFromClub": "Plus de {name}",
-    "aboutClub": "À propos de {name}",
     "viewClub": "Voir le club",
     "place": {
       "schedule": "Horaire",
@@ -243,11 +241,6 @@
       "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours",
       "recurring": "Récurrent",
       "takeNote": "Prenez note"
-    },
-    "pacePolicy": {
-      "shared": "Allure de groupe",
-      "openPace": "Allure libre",
-      "openPaceHint": "Course flexible — groupes par allure ou structure d'intervalles qui accommode différents rythmes."
     }
   },
   "validation": {

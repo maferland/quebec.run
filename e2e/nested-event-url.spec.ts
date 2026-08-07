@@ -8,8 +8,13 @@ const TUESDAY_ISO = (() => {
 })()
 
 test.describe('Nested event URLs', () => {
-  test('specific occurrence renders the event', async ({ page }) => {
-    await page.goto(`/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`)
+  test('a future occurrence redirects to its own run page', async ({
+    page,
+  }) => {
+    await page.goto(`/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(`/en/run/fauxmouvement-mardi--${TUESDAY_ISO}`)
     await expect(page.getByRole('heading', { level: 1 })).toContainText(
       /faux mouvement/i
     )
@@ -42,27 +47,11 @@ test.describe('Nested event URLs', () => {
     await expect(page).toHaveURL('/en/clubs/fauxmouvement/events/mardi')
   })
 
-  test('a future occurrence stays reachable but defers to the place page', async ({
-    page,
-  }) => {
-    await page.goto(`/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`)
-    await expect(page.locator('link[rel="canonical"]')).toHaveAttribute(
-      'href',
-      /\/en\/clubs\/fauxmouvement\/events\/mardi$/
-    )
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute(
-      'content',
-      /noindex/
-    )
-  })
-
-  test('legacy slug URL 301-redirects to nested form', async ({ page }) => {
+  test('legacy slug URL 301-redirects to the run page', async ({ page }) => {
     await page.goto(`/en/events/faux-mouvement-mardi--${TUESDAY_ISO}`, {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page).toHaveURL(
-      `/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`
-    )
+    await expect(page).toHaveURL(`/en/run/fauxmouvement-mardi--${TUESDAY_ISO}`)
   })
 
   test('unknown nested URL 404s', async ({ page }) => {
