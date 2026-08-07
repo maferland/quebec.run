@@ -1,6 +1,7 @@
 'use client'
 
 import { MapContainer, TileLayer, Marker, Popup } from 'react-leaflet'
+import { useTheme } from '@/components/explore/theme-provider'
 import MarkerClusterGroup from 'react-leaflet-markercluster'
 import 'leaflet.markercluster/dist/MarkerCluster.css'
 import 'leaflet.markercluster/dist/MarkerCluster.Default.css'
@@ -19,10 +20,10 @@ import { groupByLocation } from '@/lib/utils/group-by-location'
 import { markerIconConfig } from '@/lib/utils/map'
 import { ChevronRight, Clock } from 'lucide-react'
 
-// Custom blue-indigo marker icon
+// Marker pin, shared with the other maps
 const markerIcon = new Icon(markerIconConfig)
 
-// Cluster bubble that matches the brand pin (#4F46E5) so the visual language
+// Cluster bubble matches the pin so the visual language
 // stays consistent at every zoom level. Size scales with the count.
 const createClusterIcon = (cluster: MarkerCluster) => {
   const count = cluster.getChildCount()
@@ -30,13 +31,13 @@ const createClusterIcon = (cluster: MarkerCluster) => {
   return divIcon({
     html: `<div style="
       width:${size}px;height:${size}px;
-      background:#4F46E5;
-      color:white;
-      border:3px solid white;
+      background:#C9A5F8;
+      color:#2F1F4A;
+      border:3px solid rgba(255,255,255,0.35);
       border-radius:9999px;
       display:flex;align-items:center;justify-content:center;
       font-weight:600;font-family:inherit;
-      box-shadow:0 4px 12px rgba(79,70,229,0.35);
+      box-shadow:0 4px 12px rgba(0,0,0,0.35);
     ">${count}</div>`,
     className: 'quebec-run-cluster',
     iconSize: [size, size],
@@ -60,12 +61,18 @@ interface EventMapContentProps {
   initialZoom: number
 }
 
+const TILES = {
+  dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+  light: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+} as const
+
 export default function EventMapContent({
   events,
   initialCenter,
   initialZoom,
 }: EventMapContentProps) {
   const t = useTranslations('home.map.popup')
+  const { theme } = useTheme()
   const groups = groupByLocation(events)
 
   return (
@@ -76,7 +83,7 @@ export default function EventMapContent({
       attributionControl={false}
       className="h-full w-full"
     >
-      <TileLayer url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png" />
+      <TileLayer url={TILES[theme]} />
       <MarkerClusterGroup
         iconCreateFunction={createClusterIcon}
         showCoverageOnHover={false}

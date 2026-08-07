@@ -35,8 +35,7 @@ describe('Header', () => {
     // Both desktop nav + mobile drawer render the links (mobile is hidden via
     // transform until opened, so the elements still exist in the DOM).
     expect(screen.getAllByText('Clubs').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Events').length).toBeGreaterThan(0)
-    expect(screen.getAllByText('Calendar').length).toBeGreaterThan(0)
+    expect(screen.getAllByText('Explore').length).toBeGreaterThan(0)
   })
 
   it('shows sign in button when unauthenticated', () => {

@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { GET } from './route'
 import { getEventById } from '@/lib/services/events'
 
-vi.mock('@/lib/services/events', () => ({
+vi.mock('@/lib/services/events', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/services/events')>()),
   getEventById: vi.fn(),
 }))
 

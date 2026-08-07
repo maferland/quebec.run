@@ -29,7 +29,7 @@ export function Footer() {
           {/* Right aligned content */}
           <div className="flex flex-col items-center md:items-end space-y-4">
             {/* Navigation Links */}
-            <div className="flex items-center space-x-6 text-sm">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm">
               <Link
                 href="/clubs"
                 className="text-text-secondary hover:text-primary transition-colors"
@@ -38,17 +38,10 @@ export function Footer() {
               </Link>
               <span className="text-text-secondary">•</span>
               <Link
-                href="/events"
+                href="/"
                 className="text-text-secondary hover:text-primary transition-colors"
               >
-                {t('events')}
-              </Link>
-              <span className="text-text-secondary">•</span>
-              <Link
-                href="/calendar"
-                className="text-text-secondary hover:text-primary transition-colors"
-              >
-                {t('calendar')}
+                {t('explore')}
               </Link>
               {!session && (
                 <>

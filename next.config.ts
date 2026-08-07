@@ -5,6 +5,8 @@ const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
 const nextConfig: NextConfig = {
   outputFileTracingRoot: process.cwd(),
+  // Decodes minified prod errors from Vercel logs to real file/line.
+  productionBrowserSourceMaps: true,
   async redirects() {
     return [
       // Old list pages → home (explore shell)

@@ -4,6 +4,7 @@ export type Mode = 'runs' | 'clubs'
 export type DetailRoute =
   | { kind: 'run'; id: string }
   | { kind: 'club'; slug: string }
+  | { kind: 'place'; clubSlug: string; placeSlug: string }
 
 export function parseDay(params: URLSearchParams): number {
   const day = parseInt(params.get('day') ?? '0')
@@ -16,22 +17,31 @@ export function parseModeFromPath(pathname: string): Mode {
 }
 
 export function parseRouteSelection(pathname: string) {
-  const [, , section, id] = pathname.split('/')
-  if (!id) return { runId: null, clubSlug: null }
+  const [, , section, id, sub, place] = pathname.split('/')
+  if (!id) return { runId: null, clubSlug: null, placeSlug: null }
   if (section === 'run') {
-    return { runId: decodeURIComponent(id), clubSlug: null }
+    return { runId: decodeURIComponent(id), clubSlug: null, placeSlug: null }
   }
   if (section === 'club' || section === 'clubs') {
-    return { runId: null, clubSlug: decodeURIComponent(id) }
+    if (sub === 'events' && place) {
+      return {
+        runId: null,
+        clubSlug: decodeURIComponent(id),
+        placeSlug: decodeURIComponent(place),
+      }
+    }
+    return { runId: null, clubSlug: decodeURIComponent(id), placeSlug: null }
   }
-  return { runId: null, clubSlug: null }
+  return { runId: null, clubSlug: null, placeSlug: null }
 }
 
 export function detailKey(detail: DetailRoute): string
 export function detailKey(detail: DetailRoute | null): string | null
 export function detailKey(detail: DetailRoute | null): string | null {
   if (!detail) return null
-  return detail.kind === 'run' ? `run:${detail.id}` : `club:${detail.slug}`
+  if (detail.kind === 'run') return `run:${detail.id}`
+  if (detail.kind === 'club') return `club:${detail.slug}`
+  return `place:${detail.clubSlug}/${detail.placeSlug}`
 }
 
 export function parseFilters(params: URLSearchParams): Filters {

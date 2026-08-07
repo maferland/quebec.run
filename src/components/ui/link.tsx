@@ -16,8 +16,7 @@ export function Link({
   external = false,
   ...props
 }: LinkProps) {
-  const baseStyles =
-    'text-blue-600 hover:text-blue-800 hover:underline transition-colors'
+  const baseStyles = 'text-primary hover:underline transition-colors'
 
   // Auto-detect external links
   const isExternal =

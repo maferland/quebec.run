@@ -8,29 +8,50 @@ const TUESDAY_ISO = (() => {
 })()
 
 test.describe('Nested event URLs', () => {
-  test('specific occurrence renders the event', async ({ page }) => {
-    await page.goto(`/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`)
+  test('a future occurrence redirects to its own run page', async ({
+    page,
+  }) => {
+    await page.goto(`/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`, {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL(`/en/run/fauxmouvement-mardi--${TUESDAY_ISO}`)
     await expect(page.getByRole('heading', { level: 1 })).toContainText(
       /faux mouvement/i
     )
   })
 
-  test('bare slug redirects to next upcoming date', async ({ page }) => {
+  test('bare slug is the durable place page', async ({ page }) => {
     await page.goto('/en/clubs/fauxmouvement/events/mardi', {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page).toHaveURL(
-      /\/clubs\/fauxmouvement\/events\/mardi\/\d{4}-\d{2}-\d{2}$/
+    await expect(page).toHaveURL('/en/clubs/fauxmouvement/events/mardi')
+    await expect(page.getByRole('heading', { level: 1 })).toContainText(
+      /faux mouvement/i
     )
+    await expect(page.getByText(/every tuesday/i).first()).toBeVisible()
   })
 
-  test('legacy slug URL 301-redirects to nested form', async ({ page }) => {
+  test('another slug at the same place redirects to the canonical one', async ({
+    page,
+  }) => {
+    await page.goto('/en/clubs/fauxmouvement/events/jeudi', {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL('/en/clubs/fauxmouvement/events/mardi')
+  })
+
+  test('a past occurrence redirects to the place page', async ({ page }) => {
+    await page.goto('/en/clubs/fauxmouvement/events/mardi/2026-05-05', {
+      waitUntil: 'domcontentloaded',
+    })
+    await expect(page).toHaveURL('/en/clubs/fauxmouvement/events/mardi')
+  })
+
+  test('legacy slug URL 301-redirects to the run page', async ({ page }) => {
     await page.goto(`/en/events/faux-mouvement-mardi--${TUESDAY_ISO}`, {
       waitUntil: 'domcontentloaded',
     })
-    await expect(page).toHaveURL(
-      `/en/clubs/fauxmouvement/events/mardi/${TUESDAY_ISO}`
-    )
+    await expect(page).toHaveURL(`/en/run/fauxmouvement-mardi--${TUESDAY_ISO}`)
   })
 
   test('unknown nested URL 404s', async ({ page }) => {

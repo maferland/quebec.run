@@ -151,6 +151,83 @@ it("reads the run's own pace as a pace, not a distance", async () => {
   expect(screen.queryByText('6:30 km')).not.toBeInTheDocument()
 })
 
+it('keeps a failed place route open and retries its request', async () => {
+  const user = userEvent.setup()
+  const onClose = vi.fn()
+  const place = {
+    clubSlug: 'fauxmouvement',
+    clubName: 'Faux Mouvement',
+    clubDescription: 'A trail crew that meets twice a week.',
+    heading: 'Faux Mouvement',
+    schedule: 'Every Tuesday at 18:00',
+    address: '123 Rue Principale',
+    neighborhood: 'Limoilou',
+    lat: 46.8,
+    lng: -71.2,
+    slots: [
+      {
+        id: 'slot-1',
+        title: 'Faux Mouvement',
+        schedule: 'Every Tuesday at 18:00',
+        distance: '5',
+        pace: null,
+        pacePolicy: null,
+      },
+      {
+        id: 'slot-2',
+        title: 'Faux Mouvement',
+        schedule: 'Every Thursday at 18:00',
+        distance: null,
+        pace: '6:00',
+        pacePolicy: 'OPEN_PACE',
+      },
+    ],
+    upcoming: [{ slug: 'mardi', date: '2026-08-11', label: '11 aug.' }],
+    otherPlaces: [{ slug: 'jeudi', label: 'Jeudi' }],
+  }
+
+  vi.spyOn(global, 'fetch')
+    .mockResolvedValueOnce(new Response(null, { status: 500 }))
+    .mockResolvedValueOnce(
+      new Response(JSON.stringify(place), {
+        status: 200,
+        headers: { 'Content-Type': 'application/json' },
+      })
+    )
+
+  render(
+    <DetailOverlay
+      overlay={{
+        kind: 'place',
+        clubSlug: 'fauxmouvement',
+        placeSlug: 'mardi',
+        enter: true,
+        exiting: false,
+        closeMode: 'route',
+      }}
+      onClose={onClose}
+    />
+  )
+
+  expect(
+    await screen.findByRole('heading', { name: 'Could not load the club' })
+  ).toBeInTheDocument()
+  await user.click(screen.getByRole('button', { name: 'Back' }))
+  expect(onClose).toHaveBeenCalled()
+
+  await user.click(screen.getByRole('button', { name: 'Retry' }))
+  expect(
+    await screen.findByRole('heading', { name: 'Faux Mouvement' })
+  ).toBeInTheDocument()
+  expect(fetch).toHaveBeenCalledTimes(2)
+
+  expect(screen.getByText('Every Thursday at 18:00')).toBeInTheDocument()
+  expect(screen.getByText('123 Rue Principale')).toBeInTheDocument()
+  expect(screen.getByText('11 aug.')).toBeInTheDocument()
+
+  await user.click(screen.getByRole('button', { name: 'Jeudi' }))
+})
+
 it.each([
   { kind: 'one-off', shown: true },
   { kind: 'recurring', shown: false },

@@ -162,8 +162,8 @@ body {
   overflow: hidden;
 }
 
-body:has(.qr-root) .site-header,
-body:has(.qr-root) .site-footer {
+body:has(.qr-app) .site-header,
+body:has(.qr-app) .site-footer {
   display: none;
 }
 
@@ -331,6 +331,79 @@ body:has(.qr-root) .site-footer {
   --t-track: oklch(0.52 0.12 70);
   --t-mixed: oklch(0.5 0.13 312);
   background: var(--bg);
+}
+
+/* Content pages reuse the app palette but scroll as normal documents instead of
+   filling a fixed shell, so they remap the Tailwind semantic colors onto the
+   tokens above rather than restating every utility class. */
+.qr-doc {
+  height: auto;
+  min-height: 100dvh;
+  overflow: visible;
+  display: flex;
+  flex-direction: column;
+
+  --color-surface: var(--surface);
+  --color-surface-variant: var(--bg);
+  --color-surface-secondary: var(--surface-2);
+  --color-surface-tertiary: var(--surface-3);
+  --color-text-primary: var(--text);
+  --color-text-secondary: var(--dim);
+  --color-text-tertiary: var(--faint);
+  --color-text-inverse: var(--accent-ink);
+  --color-border: var(--line);
+  --color-border-secondary: var(--line-2);
+  --color-border-focus: var(--accent);
+  --color-primary: var(--accent-fg);
+  --color-primary-50: var(--accent-dim);
+  --color-primary-100: var(--accent-dim);
+  --color-primary-500: var(--accent);
+  --color-primary-600: var(--accent);
+  --color-primary-700: var(--accent);
+  --color-secondary: var(--coral);
+  --color-hover: oklch(1 0 0 / 0.06);
+  --color-active: oklch(1 0 0 / 0.1);
+  --color-success: var(--t-trail);
+  --color-success-surface: color-mix(in oklch, var(--t-trail) 18%, transparent);
+  --color-success-border: color-mix(in oklch, var(--t-trail) 40%, transparent);
+  --color-error: var(--coral);
+  --color-error-surface: var(--coral-dim);
+  --color-error-border: color-mix(in oklch, var(--coral) 45%, transparent);
+  --color-info: var(--accent-fg);
+  --color-info-surface: var(--accent-dim);
+  --color-info-border: var(--accent-dim);
+}
+
+.qr-doc[data-theme='light'] {
+  --color-hover: oklch(0.2 0.02 264 / 0.05);
+  --color-active: oklch(0.2 0.02 264 / 0.09);
+  /* Light mode flips the accent dark, so anything sitting on it needs to go pale. */
+  --color-text-inverse: var(--surface);
+}
+
+.qr-doc main {
+  flex: 1;
+}
+
+/* The typography plugin hardcodes slate greys, which vanish on the dark
+   surfaces, so point its variables at the same tokens. */
+.qr-doc .prose {
+  --tw-prose-body: var(--dim);
+  --tw-prose-headings: var(--text);
+  --tw-prose-lead: var(--dim);
+  --tw-prose-links: var(--accent-fg);
+  --tw-prose-bold: var(--text);
+  --tw-prose-counters: var(--faint);
+  --tw-prose-bullets: var(--faint);
+  --tw-prose-hr: var(--line);
+  --tw-prose-quotes: var(--text);
+  --tw-prose-quote-borders: var(--line);
+  --tw-prose-captions: var(--faint);
+  --tw-prose-code: var(--text);
+  --tw-prose-pre-code: var(--text);
+  --tw-prose-pre-bg: var(--surface-2);
+  --tw-prose-th-borders: var(--line-2);
+  --tw-prose-td-borders: var(--line);
 }
 
 /* typography helpers */
@@ -520,7 +593,7 @@ body:has(.qr-root) .site-footer {
   display: none;
 }
 .qr-root .leaflet-tile-pane {
-  filter: saturate(0.9) brightness(1.03);
+  filter: saturate(0.95) brightness(1.3);
 }
 .qr-root[data-theme='light'] .leaflet-tile-pane {
   filter: saturate(1.02) brightness(1);

@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { eventJsonLd } from './json-ld'
+import { eventJsonLd, placeJsonLd } from './json-ld'
 
 const baseEvent = {
   locale: 'en' as const,
@@ -42,5 +42,51 @@ describe('eventJsonLd', () => {
     expect(data.inLanguage).toBe('fr-CA')
     expect(data.eventStatus).toBe('https://schema.org/EventCancelled')
     expect(data).not.toHaveProperty('isAccessibleForFree')
+  })
+})
+
+describe('placeJsonLd', () => {
+  const basePlace = {
+    locale: 'fr' as const,
+    url: 'https://www.quebec.run/fr/clubs/6am-club/events/limoilou',
+    title: '6AM Club Limoilou',
+    description: null,
+    address: '201 Av. 3e, Québec',
+    latitude: 46.84,
+    longitude: -71.22,
+    clubName: '6AM Club',
+    clubUrl: 'https://www.quebec.run/fr/clubs/6am-club',
+  }
+
+  it('describes the recurrence as a Schedule instead of one dated Event', () => {
+    const data = placeJsonLd({
+      ...basePlace,
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=FR;BYHOUR=6;BYMINUTE=0',
+      nextOccurrence: new Date('2026-08-07T12:00:00.000Z'),
+    })
+
+    expect(data.eventSchedule).toEqual({
+      '@type': 'Schedule',
+      repeatFrequency: 'P1W',
+      byDay: ['https://schema.org/Friday'],
+      startTime: '06:00:00',
+      scheduleTimezone: 'America/Toronto',
+    })
+    expect(data.startDate).toBe('2026-08-07T06:00:00-04:00')
+  })
+
+  it('marks a biweekly pattern as P2W and omits startDate with no occurrence', () => {
+    const data = placeJsonLd({
+      ...basePlace,
+      schedulePattern: 'FREQ=WEEKLY;INTERVAL=2;BYDAY=SA;BYHOUR=9;BYMINUTE=30',
+      nextOccurrence: null,
+    })
+
+    expect(data.eventSchedule).toMatchObject({
+      repeatFrequency: 'P2W',
+      byDay: ['https://schema.org/Saturday'],
+      startTime: '09:30:00',
+    })
+    expect(data.startDate).toBeUndefined()
   })
 })

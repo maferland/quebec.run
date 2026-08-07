@@ -7,8 +7,10 @@ export const revalidate = 900
 
 export default async function ExploreLayout({
   children,
+  detail,
 }: {
   children: React.ReactNode
+  detail: React.ReactNode
 }) {
   const [weekCounts, runs, clubs] = await Promise.all([
     getWeekEventCounts().catch(() => undefined),
@@ -33,7 +35,10 @@ export default async function ExploreLayout({
         media="(min-width: 768px)"
         fetchPriority="high"
       />
-      <ExploreShell initialData={{ day: 0, weekCounts, runs, clubs }} />
+      <ExploreShell
+        initialData={{ day: 0, weekCounts, runs, clubs }}
+        serverDetail={detail}
+      />
       {children}
     </ExploreProviders>
   )

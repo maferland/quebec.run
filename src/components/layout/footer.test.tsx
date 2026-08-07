@@ -29,8 +29,7 @@ describe('Footer', () => {
     render(<Footer />)
 
     expect(screen.getByRole('link', { name: /clubs/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /events/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /calendar/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /explore/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /terms/i })).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /privacy/i })).toBeInTheDocument()
   })
@@ -42,13 +41,9 @@ describe('Footer', () => {
       'href',
       '/clubs'
     )
-    expect(screen.getByRole('link', { name: /events/i })).toHaveAttribute(
+    expect(screen.getByRole('link', { name: /explore/i })).toHaveAttribute(
       'href',
-      '/events'
-    )
-    expect(screen.getByRole('link', { name: /calendar/i })).toHaveAttribute(
-      'href',
-      '/calendar'
+      '/'
     )
   })
 

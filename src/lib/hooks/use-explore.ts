@@ -1,3 +1,4 @@
+import { format } from 'date-fns'
 import {
   keepPreviousData,
   useQuery,
@@ -7,9 +8,13 @@ import {
 import { useMemo } from 'react'
 import type { ClubDetailData } from '@/components/explore/club-detail'
 import type { RunDetailData } from '@/components/explore/run-detail'
+import type { PlaceDetailData } from '@/components/explore/place-detail'
 import type { RunDetailResponse } from '@/lib/schemas'
 import type { ClubForDetail, ExploreClub } from '@/lib/services/clubs'
 import type { ExploreRun } from '@/lib/services/events'
+import type { PlacePage } from '@/lib/services/recurring-events'
+import { describePattern } from '@/lib/utils/rrule-builder'
+import { formatEventDate } from '@/lib/utils/date-formatting'
 import { isRunPast } from '@/lib/utils/run-time'
 
 export type WeekCount = { day: number; count: number }
@@ -24,6 +29,28 @@ export const exploreKeys = {
   runDetail: (id: string) => ['explore', 'run-detail', { id }] as const,
   clubDetail: (slug: string, locale: string) =>
     ['explore', 'club-detail', { slug, locale }] as const,
+  placeDetail: (clubSlug: string, placeSlug: string, locale: string) =>
+    ['explore', 'place-detail', { clubSlug, placeSlug, locale }] as const,
+}
+
+const UPCOMING_SHOWN = 6
+const OTHER_PLACES_SHOWN = 6
+
+const capitalize = (value: string) =>
+  value ? value.charAt(0).toUpperCase() + value.slice(1) : value
+
+// Pattern titles carry the club name ("6AM Club Limoilou"); a list of them
+// repeats it once per link, which is the keyword noise the place page trims.
+function placeLabel(
+  place: { title: string; neighborhood: string | null },
+  clubName: string
+): string {
+  return (
+    place.neighborhood ??
+    (place.title.startsWith(clubName)
+      ? place.title.slice(clubName.length).trim() || place.title
+      : place.title)
+  )
 }
 
 async function getJson<T>(url: string, errorMessage: string): Promise<T> {
@@ -32,7 +59,7 @@ async function getJson<T>(url: string, errorMessage: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
-function toRunDetail(data: RunDetailResponse): RunDetailData {
+export function toRunDetail(data: RunDetailResponse): RunDetailData {
   return {
     id: data.id,
     title: data.title,
@@ -54,7 +81,7 @@ function toRunDetail(data: RunDetailResponse): RunDetailData {
   }
 }
 
-function toClubDetail(data: ClubForDetail): ClubDetailData {
+export function toClubDetail(data: ClubForDetail): ClubDetailData {
   return {
     id: data.id,
     slug: data.slug,
@@ -72,6 +99,59 @@ function toClubDetail(data: ClubForDetail): ClubDetailData {
       ...run,
       date: run.date instanceof Date ? run.date.toISOString() : run.date,
     })),
+  }
+}
+
+export function toPlaceDetail(
+  place: PlacePage,
+  locale: 'fr' | 'en'
+): PlaceDetailData {
+  const dateLocale = locale === 'fr' ? 'fr-CA' : 'en-CA'
+  const schedules = place.slots.flatMap((slot) => {
+    const described = describePattern(slot.schedulePattern, locale)
+    return described ? [described] : []
+  })
+
+  const upcoming = place.slots
+    .flatMap((slot) =>
+      slot.occurrences.map((date) => ({ date, slug: slot.slug }))
+    )
+    .sort((first, second) => first.date.getTime() - second.date.getTime())
+    .slice(0, UPCOMING_SHOWN)
+
+  return {
+    clubSlug: place.club.slug,
+    clubName: place.club.name,
+    clubDescription: place.club.description,
+    heading: place.slots[0]?.title ?? place.club.name,
+    schedule: schedules.join(' · '),
+    address: place.place.address,
+    neighborhood: place.place.neighborhood,
+    lat: place.place.latitude,
+    lng: place.place.longitude,
+    slots: place.slots.map((slot) => ({
+      id: slot.id,
+      title: slot.title,
+      schedule: describePattern(slot.schedulePattern, locale),
+      distance: slot.distance,
+      pace: slot.pace,
+      pacePolicy: slot.pacePolicy,
+    })),
+    upcoming: upcoming.map((occurrence) => ({
+      slug: occurrence.slug,
+      date: format(occurrence.date, 'yyyy-MM-dd'),
+      label: capitalize(
+        formatEventDate(occurrence.date, 'abbreviated', {
+          locale: dateLocale,
+        })
+      ),
+    })),
+    otherPlaces: place.otherPlaces
+      .slice(0, OTHER_PLACES_SHOWN)
+      .map((other) => ({
+        slug: other.slug,
+        label: placeLabel(other, place.club.name),
+      })),
   }
 }
 
@@ -98,6 +178,21 @@ const clubDetailQuery = (slug: string, locale: string) => ({
         `/api/explore/clubs/${slug}?locale=${locale}`,
         'Club not found'
       )
+    ),
+  staleTime: STALE_TIME,
+  retry: false,
+})
+
+const placeDetailQuery = (
+  clubSlug: string,
+  placeSlug: string,
+  locale: string
+) => ({
+  queryKey: exploreKeys.placeDetail(clubSlug, placeSlug, locale),
+  queryFn: () =>
+    getJson<PlaceDetailData>(
+      `/api/explore/places/${clubSlug}/${placeSlug}?locale=${locale}`,
+      'Place not found'
     ),
   staleTime: STALE_TIME,
   retry: false,
@@ -157,6 +252,17 @@ export function useClubDetail(slug: string | null, locale: string) {
   })
 }
 
+export function usePlaceDetail(
+  clubSlug: string | null,
+  placeSlug: string | null,
+  locale: string
+) {
+  return useQuery({
+    ...placeDetailQuery(clubSlug ?? '', placeSlug ?? '', locale),
+    enabled: Boolean(clubSlug) && Boolean(placeSlug),
+  })
+}
+
 export function useDetailPrefetch(locale: string) {
   const client: QueryClient = useQueryClient()
 
@@ -166,6 +272,10 @@ export function useDetailPrefetch(locale: string) {
         void client.prefetchQuery(runDetailQuery(id)),
       prefetchClub: (slug: string) =>
         void client.prefetchQuery(clubDetailQuery(slug, locale)),
+      prefetchPlace: (clubSlug: string, placeSlug: string) =>
+        void client.prefetchQuery(
+          placeDetailQuery(clubSlug, placeSlug, locale)
+        ),
     }),
     [client, locale]
   )

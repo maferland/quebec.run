@@ -60,7 +60,7 @@ describe('Link', () => {
 
     const link = screen.getByRole('link', { name: 'Test Link' })
     expect(link).toHaveClass('custom-class')
-    expect(link).toHaveClass('text-blue-600') // base styles should still be applied
+    expect(link).toHaveClass('text-primary') // base styles should still be applied
   })
 
   it('applies inline-flex class to external links for icon alignment', () => {

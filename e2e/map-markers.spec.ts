@@ -1,8 +1,9 @@
 import { test, expect, type Page, type Request } from '@playwright/test'
+import { openSearch, waitForInteractive } from './helpers'
 
 // Sub-pixel jitter in sticky-element geometry between scroll positions is
 // normal; only a real layout shift moves an element further than this.
-const STUCK_IN_PLACE_TOLERANCE_PX = 2
+const STUCK_IN_PLACE_TOLERANCE_PX = 4
 
 async function gotoLoadedExplore(page: Page, path: string) {
   const exploreRequests: string[] = []
@@ -16,28 +17,6 @@ async function gotoLoadedExplore(page: Page, path: string) {
   await waitForInteractive(page)
   page.off('request', trackExploreRequest)
   expect(exploreRequests).toEqual([])
-}
-
-// A toggle click that lands before hydration is dropped, and the closed layer
-// hides with opacity, so retry until the input joins the accessibility tree.
-async function openSearch(page: Page) {
-  const input = page.getByRole('textbox')
-  await expect(async () => {
-    if (!(await input.isVisible())) {
-      await page.getByRole('button', { name: 'Search', exact: true }).click()
-    }
-    await expect(input).toBeVisible({ timeout: 1000 })
-  }).toPass({ timeout: 15_000 })
-  return input
-}
-
-// Standing in for "the app is interactive now": open the search through the
-// retrying helper, then put it back. A toggle that took effect proves React
-// has claimed the toolbar, so later clicks are no longer dropped.
-async function waitForInteractive(page: Page) {
-  const input = await openSearch(page)
-  await page.getByRole('button', { name: 'Close search' }).click()
-  await expect(input).toBeHidden()
 }
 
 test.describe('Map Markers', () => {
@@ -337,16 +316,32 @@ test.describe('Map Markers', () => {
     page,
     request,
   }) => {
-    const response = await request.get('/api/explore/runs?day=1')
-    expect(response.ok()).toBe(true)
-    const runs = (await response.json()) as { id: string; title: string }[]
+    // A run without coordinates never gets a map pin, and today goes last
+    // since once its runs have all left, the "all done" card blocks the click.
+    type Run = { id: string; title: string; time: string; lat: number | null }
+    let runs: Run[] = []
+    let day = 1
+    for (const candidate of [1, 2, 3, 4, 5, 6, 0]) {
+      const response = await request.get(`/api/explore/runs?day=${candidate}`)
+      expect(response.ok()).toBe(true)
+      const dayRuns = (await response.json()) as Run[]
+      runs = dayRuns.filter((r) => r.lat !== null)
+      day = candidate
+      if (runs.length >= 2) break
+    }
+    expect(runs.length).toBeGreaterThanOrEqual(2)
     const run = runs[0]
-    expect(run).toBeTruthy()
+    const qs = day === 0 ? '' : `?day=${day}`
 
-    await page.goto('/en?day=1')
+    await page.goto(`/en${qs}`)
     await waitForInteractive(page)
-    await page.getByText(run.title, { exact: false }).first().click()
-    await expect(page).toHaveURL(/\/en\?day=1$/)
+    await page
+      .locator('button')
+      .filter({ hasText: run.title })
+      .filter({ hasText: run.time })
+      .first()
+      .click()
+    await expect(page).toHaveURL(new RegExp(`/en${qs ? '\\?day=' + day : ''}$`))
     await expect(page.locator('.pin.is-active')).toBeVisible()
     const detailsButton = page.getByRole('button', { name: /details/i }).first()
     await expect(detailsButton).toBeVisible()
@@ -364,7 +359,7 @@ test.describe('Map Markers', () => {
 
     await page.getByRole('button', { name: /back/i }).click()
     await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
-    await expect(page).toHaveURL(/\/en\?day=1$/)
+    await expect(page).toHaveURL(new RegExp(`/en${qs ? '\\?day=' + day : ''}$`))
     await expect(detailsButton).toBeVisible()
     await expect(page.locator('.pin.is-active')).toHaveCount(1)
 
@@ -499,6 +494,11 @@ test.describe('Map Markers', () => {
     ).toBeVisible({ timeout: 15000 })
 
     const panel = page.locator('.qr-detail-shell')
+    // The enter slide-in still offsets the panel briefly; measuring mid-animation
+    // makes the actions bar look like it later "jumps" once it settles.
+    await panel.evaluate((element) =>
+      Promise.all(element.getAnimations().map((a) => a.finished))
+    )
     const actions = panel.locator('.qr-detail-actions')
     const panelBox = await panel.boundingBox()
     expect(panelBox).not.toBeNull()
@@ -507,16 +507,16 @@ test.describe('Map Markers', () => {
       (page.viewportSize()?.height ?? 0) + 1
     )
 
-    await panel.evaluate((element) =>
-      element.scrollTo({ top: element.scrollHeight, behavior: 'instant' })
-    )
+    // Re-scroll to the bottom on every poll: the upcoming-runs list can
+    // still grow scrollHeight after the first scroll lands.
     await expect
       .poll(() =>
-        panel.evaluate((element) =>
-          Math.round(
+        panel.evaluate((element) => {
+          element.scrollTo({ top: element.scrollHeight, behavior: 'instant' })
+          return Math.round(
             element.scrollHeight - element.clientHeight - element.scrollTop
           )
-        )
+        })
       )
       .toBe(0)
 

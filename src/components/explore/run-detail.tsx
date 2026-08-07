@@ -1,6 +1,7 @@
 'use client'
 import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { Link } from '@/i18n/navigation'
 import type { RunDetailClub } from '@/lib/schemas'
 import { TypeTag, VibePill, Flag, Stamp, paceRange } from './badges'
 
@@ -221,10 +222,42 @@ function StatCol({
   )
 }
 
+const backButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  border: '1px solid var(--line)',
+  background: 'var(--surface)',
+  color: 'var(--text)',
+  borderRadius: 100,
+  padding: '9px 14px 9px 11px',
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
+  fontSize: 13.5,
+  cursor: 'pointer',
+  textDecoration: 'none',
+} as const
+
+const clubCardStyle = {
+  width: '100%',
+  display: 'flex',
+  flexDirection: 'column',
+  gap: 11,
+  background: 'var(--surface)',
+  border: '1px solid var(--line)',
+  borderRadius: 'var(--r-lg)',
+  padding: '15px',
+  cursor: 'pointer',
+  color: 'inherit',
+  fontFamily: 'inherit',
+  textAlign: 'left',
+  textDecoration: 'none',
+} as const
+
 type Props = {
   run: RunDetailData
-  onBack: () => void
-  onOpenClub: (slug: string) => void
+  onBack?: () => void
+  onOpenClub?: (slug: string) => void
   locale: string
   animateIn?: boolean
 }
@@ -303,26 +336,15 @@ export function RunDetailPanel({
           alignItems: 'center',
         }}
       >
-        <button
-          className="tap"
-          onClick={onBack}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            borderRadius: 100,
-            padding: '9px 14px 9px 11px',
-            fontFamily: 'var(--font-ui)',
-            fontWeight: 600,
-            fontSize: 13.5,
-            cursor: 'pointer',
-          }}
-        >
-          {ChevLIcon} {t('back')}
-        </button>
+        {onBack ? (
+          <button className="tap" onClick={onBack} style={backButtonStyle}>
+            {ChevLIcon} {t('back')}
+          </button>
+        ) : (
+          <Link href="/" className="tap" style={backButtonStyle}>
+            {ChevLIcon} {t('back')}
+          </Link>
+        )}
         <button
           className="tap"
           onClick={handleShare}
@@ -495,63 +517,69 @@ export function RunDetailPanel({
       {/* club */}
       <div>
         <SectionLabel>{t('about_club')}</SectionLabel>
-        <button
-          type="button"
-          className="tap"
-          onClick={() => onOpenClub(run.club.slug)}
-          style={{
-            width: '100%',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 11,
-            background: 'var(--surface)',
-            border: '1px solid var(--line)',
-            borderRadius: 'var(--r-lg)',
-            padding: '15px',
-            cursor: 'pointer',
-            color: 'inherit',
-            fontFamily: 'inherit',
-            textAlign: 'left',
-          }}
-        >
-          <span style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-            <span style={{ display: 'block' }}>
-              <span
-                style={{ display: 'block', fontSize: 16.5, fontWeight: 700 }}
-              >
-                {run.club.name}
-              </span>
-              {clubDescription && (
+        {(() => {
+          const body = (
+            <span style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+              <span style={{ display: 'block' }}>
                 <span
                   style={{
                     display: 'block',
-                    marginTop: 6,
-                    color: 'var(--dim)',
-                    fontSize: 13,
-                    lineHeight: 1.4,
-                    fontWeight: 500,
+                    fontSize: 16.5,
+                    fontWeight: 700,
                   }}
                 >
-                  {clubDescription}
+                  {run.club.name}
                 </span>
-              )}
+                {clubDescription && (
+                  <span
+                    style={{
+                      display: 'block',
+                      marginTop: 6,
+                      color: 'var(--dim)',
+                      fontSize: 13,
+                      lineHeight: 1.4,
+                      fontWeight: 500,
+                    }}
+                  >
+                    {clubDescription}
+                  </span>
+                )}
+              </span>
+              <span
+                style={{
+                  color: 'var(--faint)',
+                  display: 'inline-flex',
+                  alignItems: 'center',
+                  justifyContent: 'flex-end',
+                  gap: 4,
+                  fontSize: 13,
+                  fontWeight: 600,
+                  whiteSpace: 'nowrap',
+                }}
+              >
+                {t('view_club')} {ChevRIcon}
+              </span>
             </span>
-            <span
-              style={{
-                color: 'var(--faint)',
-                display: 'inline-flex',
-                alignItems: 'center',
-                justifyContent: 'flex-end',
-                gap: 4,
-                fontSize: 13,
-                fontWeight: 600,
-                whiteSpace: 'nowrap',
-              }}
+          )
+          return onOpenClub ? (
+            <button
+              type="button"
+              className="tap"
+              onClick={() => onOpenClub(run.club.slug)}
+              style={clubCardStyle}
             >
-              {t('view_club')} {ChevRIcon}
-            </span>
-          </span>
-        </button>
+              {body}
+            </button>
+          ) : (
+            <Link
+              href={`/clubs/${run.club.slug}`}
+              className="tap"
+              style={clubCardStyle}
+            >
+              {body}
+            </Link>
+          )
+        })()}
       </div>
     </div>
   )

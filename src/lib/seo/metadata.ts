@@ -19,6 +19,9 @@ export type BuildPageMetadataInput = {
   ogImage?: string
   /** Mark the page as noindex (e.g. admin). Default: indexable. */
   noIndex?: boolean
+  /** Defaults to `noIndex`. A page that defers to a canonical should still pass links on. */
+  noFollow?: boolean
+  canonicalPath?: string
   /** Override OpenGraph type. Default 'website'; use 'article' or 'event' on detail pages. */
   ogType?: 'website' | 'article'
 }
@@ -38,10 +41,12 @@ export function buildPageMetadata({
   ogDescription,
   ogImage,
   noIndex = false,
+  noFollow = noIndex,
+  canonicalPath,
   ogType = 'website',
 }: BuildPageMetadataInput): Metadata {
   const normalized = normalizePath(path)
-  const canonical = `${SITE_URL}/${locale}${normalized}`
+  const canonical = `${SITE_URL}/${locale}${normalizePath(canonicalPath ?? path)}`
   const frUrl = `${SITE_URL}/fr${normalized}`
   const enUrl = `${SITE_URL}/en${normalized}`
   const resolvedOgTitle = ogTitle ?? title
@@ -81,8 +86,8 @@ export function buildPageMetadata({
       description: resolvedOgDescription,
       images: [resolvedOgImage],
     },
-    ...(noIndex && {
-      robots: { index: false, follow: false },
+    ...((noIndex || noFollow) && {
+      robots: { index: !noIndex, follow: !noFollow },
     }),
   }
 }

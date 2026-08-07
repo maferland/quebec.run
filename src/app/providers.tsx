@@ -10,7 +10,9 @@ export function SiteProviders({ children }: { children: React.ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <SessionProvider>{children}</SessionProvider>
+      <SessionProvider>
+        <ThemeProvider>{children}</ThemeProvider>
+      </SessionProvider>
     </QueryClientProvider>
   )
 }
