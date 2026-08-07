@@ -175,12 +175,14 @@ const errorButtonStyle = {
 export function DetailOverlay({
   overlay,
   inactive = false,
+  serverDetail,
   onClose,
   onEntered,
   onExited,
 }: {
   overlay: DetailOverlayState
   inactive?: boolean
+  serverDetail?: React.ReactNode
   onClose?: () => void
   onEntered?: () => void
   onExited?: () => void
@@ -191,7 +193,11 @@ export function DetailOverlay({
 
   const runQuery = useRunDetail(isRun ? overlay.id : null)
   const clubQuery = useClubDetail(isRun ? null : overlay.slug, locale)
-  const { isError, refetch } = isRun ? runQuery : clubQuery
+  const { isError, refetch } = serverDetail
+    ? { isError: false, refetch: () => {} }
+    : isRun
+      ? runQuery
+      : clubQuery
 
   const exiting = inactive ? false : overlay.exiting
 
@@ -217,24 +223,26 @@ export function DetailOverlay({
 
   // Branching on kind before reading the data is what keeps this free of
   // non-null assertions.
-  const panel = isRun
-    ? runQuery.data && (
-        <RunDetailPanel
-          run={runQuery.data}
-          onBack={close}
-          onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
-          locale={locale}
-          animateIn={overlay.enter}
-        />
-      )
-    : clubQuery.data && (
-        <ClubDetailPanel
-          club={clubQuery.data}
-          onBack={close}
-          onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
-          animateIn={overlay.enter}
-        />
-      )
+  const panel =
+    serverDetail ??
+    (isRun
+      ? runQuery.data && (
+          <RunDetailPanel
+            run={runQuery.data}
+            onBack={close}
+            onOpenClub={(slug) => router.push(`/${locale}/clubs/${slug}`)}
+            locale={locale}
+            animateIn={overlay.enter}
+          />
+        )
+      : clubQuery.data && (
+          <ClubDetailPanel
+            club={clubQuery.data}
+            onBack={close}
+            onOpenRun={(runId) => router.push(`/${locale}/run/${runId}`)}
+            animateIn={overlay.enter}
+          />
+        ))
 
   if (isError) {
     return (

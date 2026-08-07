@@ -65,20 +65,27 @@ export type InitialExploreData = {
 // useSearchParams needs a Suspense boundary above it.
 export function ExploreShell({
   initialData,
+  serverDetail,
 }: {
   initialData?: InitialExploreData
+  serverDetail?: React.ReactNode
 }) {
   return (
     <Suspense>
-      <ExploreShellInner initialData={initialData} />
+      <ExploreShellInner
+        initialData={initialData}
+        serverDetail={serverDetail}
+      />
     </Suspense>
   )
 }
 
 function ExploreShellInner({
   initialData,
+  serverDetail,
 }: {
   initialData?: InitialExploreData
+  serverDetail?: React.ReactNode
 }) {
   const { theme, setTheme } = useTheme()
   const t = useTranslations('explore')
@@ -119,6 +126,9 @@ function ExploreShellInner({
   const [suppressEntrance, setSuppressEntrance] = useState(restoredMount)
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [allDoneDismissed, setAllDoneDismissed] = useState(false)
+  // serverDetail only backs the very first paint, so crawlers get real HTML
+  // without freezing the panel's back/open buttons into plain links forever.
+  const [firstPaint, setFirstPaint] = useState(true)
 
   const mapMeasured = containerH > 0 && (desktop || sheet.height > 0)
 
@@ -211,6 +221,10 @@ function ExploreShellInner({
     const frame = requestAnimationFrame(() => setSuppressEntrance(false))
     return () => cancelAnimationFrame(frame)
   }, [suppressEntrance])
+
+  useEffect(() => {
+    setFirstPaint(false)
+  }, [])
 
   useEffect(() => {
     setAllDoneDismissed(false)
@@ -394,6 +408,12 @@ function ExploreShellInner({
         <DetailOverlay
           key={detailKey(detail.overlay)}
           overlay={detail.overlay}
+          serverDetail={
+            firstPaint &&
+            detailKey(detail.overlay) === detailKey(routing.currentDetail)
+              ? serverDetail
+              : undefined
+          }
           onClose={() => detail.requestExit(detail.overlay?.closeMode)}
           onEntered={detail.completeEnter}
           onExited={detail.completeExit}

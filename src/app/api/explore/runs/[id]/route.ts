@@ -1,47 +1,7 @@
 import { withPublic } from '@/lib/api-middleware'
 import { publicCacheHeaders } from '@/lib/public-cache'
-import {
-  eventIdSchema,
-  runDetailResponseSchema,
-  type RunDetailResponse,
-} from '@/lib/schemas'
-import { getEventById } from '@/lib/services/events'
-
-type EventForDetail = Awaited<ReturnType<typeof getEventById>>
-
-// Shapes the service result into the response union. Occurrences synthesized
-// from a recurring pattern carry `recurringSlug`; stored events don't.
-// A clubless event has nothing for the detail panel to render, so it reads as
-// missing here — same call the /run/[id] page makes.
-function toRunDetailResponse(event: EventForDetail): RunDetailResponse | null {
-  if (!event?.club) return null
-
-  const shared = {
-    id: event.id,
-    title: event.title,
-    description: event.description,
-    // `getEventById` is unstable_cache-backed, so a cache hit hands back the
-    // JSON-serialized date as a string even though the type says Date.
-    date: event.date instanceof Date ? event.date.toISOString() : event.date,
-    time: event.time,
-    address: event.address,
-    latitude: event.latitude,
-    longitude: event.longitude,
-    distance: event.distance,
-    pace: event.pace,
-    pacePolicy: event.pacePolicy,
-    club: event.club,
-  }
-
-  return 'recurringSlug' in event
-    ? {
-        ...shared,
-        kind: 'recurring',
-        status: event.status,
-        recurringSlug: event.recurringSlug,
-      }
-    : { ...shared, kind: 'one-off', status: event.status }
-}
+import { eventIdSchema, runDetailResponseSchema } from '@/lib/schemas'
+import { getEventById, toRunDetailResponse } from '@/lib/services/events'
 
 export const GET = withPublic(eventIdSchema)(async (data) => {
   const payload = toRunDetailResponse(await getEventById({ data }))

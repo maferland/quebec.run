@@ -32,7 +32,7 @@ async function getJson<T>(url: string, errorMessage: string): Promise<T> {
   return response.json() as Promise<T>
 }
 
-function toRunDetail(data: RunDetailResponse): RunDetailData {
+export function toRunDetail(data: RunDetailResponse): RunDetailData {
   return {
     id: data.id,
     title: data.title,
@@ -54,7 +54,7 @@ function toRunDetail(data: RunDetailResponse): RunDetailData {
   }
 }
 
-function toClubDetail(data: ClubForDetail): ClubDetailData {
+export function toClubDetail(data: ClubForDetail): ClubDetailData {
   return {
     id: data.id,
     slug: data.slug,

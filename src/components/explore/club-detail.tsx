@@ -1,6 +1,7 @@
 'use client'
 import { useLocale, useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
+import { Link } from '@/i18n/navigation'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
 import { formatEventDate } from '@/lib/utils/intl'
 
@@ -155,10 +156,26 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
+const backButtonStyle = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 6,
+  border: '1px solid var(--line)',
+  background: 'var(--surface)',
+  color: 'var(--text)',
+  borderRadius: 100,
+  padding: '9px 14px 9px 11px',
+  fontFamily: 'var(--font-ui)',
+  fontWeight: 600,
+  fontSize: 13.5,
+  cursor: 'pointer',
+  textDecoration: 'none',
+} as const
+
 type Props = {
   club: ClubDetailData
-  onBack: () => void
-  onOpenRun: (id: string) => void
+  onBack?: () => void
+  onOpenRun?: (id: string) => void
   animateIn?: boolean
 }
 
@@ -226,26 +243,15 @@ export function ClubDetailPanel({
           alignItems: 'center',
         }}
       >
-        <button
-          className="tap"
-          onClick={onBack}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: 6,
-            border: '1px solid var(--line)',
-            background: 'var(--surface)',
-            color: 'var(--text)',
-            borderRadius: 100,
-            padding: '9px 14px 9px 11px',
-            fontFamily: 'var(--font-ui)',
-            fontWeight: 600,
-            fontSize: 13.5,
-            cursor: 'pointer',
-          }}
-        >
-          {ChevLIcon} {t('back')}
-        </button>
+        {onBack ? (
+          <button className="tap" onClick={onBack} style={backButtonStyle}>
+            {ChevLIcon} {t('back')}
+          </button>
+        ) : (
+          <Link href="/clubs" className="tap" style={backButtonStyle}>
+            {ChevLIcon} {t('back')}
+          </Link>
+        )}
         <button
           className="tap"
           onClick={handleShare}
@@ -466,31 +472,28 @@ export function ClubDetailPanel({
             {visibleUpcoming.map((e, i) => {
               const cancelled = e.status === 'CANCELLED'
               const dateLabel = formatEventDate(e.date, locale)
-              return (
-                <button
-                  type="button"
-                  key={e.id}
-                  className={`tap ${
-                    showAllUpcoming && i >= UPCOMING_PREVIEW_COUNT
-                      ? 'reveal-row'
-                      : ''
-                  }`}
-                  onClick={() => onOpenRun(e.id)}
-                  style={{
-                    width: '100%',
-                    display: 'flex',
-                    alignItems: 'center',
-                    gap: 12,
-                    background: 'var(--surface)',
-                    border: '1px solid var(--line)',
-                    borderRadius: 'var(--r-md)',
-                    padding: '12px 14px',
-                    cursor: 'pointer',
-                    color: 'inherit',
-                    fontFamily: 'inherit',
-                    textAlign: 'left',
-                  }}
-                >
+              const className = `tap ${
+                showAllUpcoming && i >= UPCOMING_PREVIEW_COUNT
+                  ? 'reveal-row'
+                  : ''
+              }`
+              const style = {
+                width: '100%',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 12,
+                background: 'var(--surface)',
+                border: '1px solid var(--line)',
+                borderRadius: 'var(--r-md)',
+                padding: '12px 14px',
+                cursor: 'pointer',
+                color: 'inherit',
+                fontFamily: 'inherit',
+                textAlign: 'left' as const,
+                textDecoration: 'none',
+              }
+              const body = (
+                <>
                   <span
                     style={{
                       fontFamily: 'var(--font-mono)',
@@ -538,7 +541,27 @@ export function ClubDetailPanel({
                   ) : (
                     <span style={{ color: 'var(--faint)' }}>{ChevRIcon}</span>
                   )}
+                </>
+              )
+              return onOpenRun ? (
+                <button
+                  type="button"
+                  key={e.id}
+                  className={className}
+                  onClick={() => onOpenRun(e.id)}
+                  style={style}
+                >
+                  {body}
                 </button>
+              ) : (
+                <Link
+                  key={e.id}
+                  href={`/run/${e.id}`}
+                  className={className}
+                  style={style}
+                >
+                  {body}
+                </Link>
               )
             })}
             {hiddenUpcomingCount > 0 && (

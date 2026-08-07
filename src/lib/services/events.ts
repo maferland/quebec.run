@@ -15,6 +15,7 @@ import type {
   EventByClubAndSlugBare,
   PublicPayload,
   AuthPayload,
+  RunDetailResponse,
 } from '@/lib/schemas'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 import { geocodeAddress } from './geocoding'
@@ -757,6 +758,40 @@ const getCachedEventById = cachePublicData(
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   return getCachedEventById(data.id)
+}
+
+type EventForDetail = Awaited<ReturnType<typeof getEventById>>
+
+// A clubless event has nothing for the detail panel to render.
+export function toRunDetailResponse(
+  event: EventForDetail
+): RunDetailResponse | null {
+  if (!event?.club) return null
+
+  const shared = {
+    id: event.id,
+    title: event.title,
+    description: event.description,
+    // Cache hit hands back a JSON-serialized date string despite the type.
+    date: event.date instanceof Date ? event.date.toISOString() : event.date,
+    time: event.time,
+    address: event.address,
+    latitude: event.latitude,
+    longitude: event.longitude,
+    distance: event.distance,
+    pace: event.pace,
+    pacePolicy: event.pacePolicy,
+    club: event.club,
+  }
+
+  return 'recurringSlug' in event
+    ? {
+        ...shared,
+        kind: 'recurring',
+        status: event.status,
+        recurringSlug: event.recurringSlug,
+      }
+    : { ...shared, kind: 'one-off', status: event.status }
 }
 
 async function getEventByClubAndSlugRaw(
