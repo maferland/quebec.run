@@ -1,7 +1,7 @@
 import { Link } from '@/i18n/navigation'
 import { NavLink } from '@/components/ui/nav-link'
 import { Icon } from '@/components/ui/icon'
-import { Calendar, CalendarDays, Users, Settings } from 'lucide-react'
+import { Calendar, Users, Settings } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { useTranslations } from 'next-intl'
 import { usePathname } from '@/i18n/navigation'
@@ -23,21 +23,18 @@ export function NavigationLinks({
   const t = useTranslations('navigation')
   const pathname = usePathname()
 
+  // /events and /calendar are permanent redirects to the explore shell, so the
+  // nav points at what they land on.
   const links = [
+    {
+      href: '/',
+      icon: Calendar,
+      label: t('explore'),
+    },
     {
       href: '/clubs',
       icon: Users,
       label: t('clubs'),
-    },
-    {
-      href: '/events',
-      icon: Calendar,
-      label: t('events'),
-    },
-    {
-      href: '/calendar',
-      icon: CalendarDays,
-      label: t('calendar'),
     },
   ]
 

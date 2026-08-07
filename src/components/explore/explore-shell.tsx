@@ -303,7 +303,7 @@ function ExploreShellInner({
   return (
     <div
       ref={rootRef}
-      className={`qr-root${suppressEntrance ? ' is-restored' : ''}`}
+      className={`qr-root qr-app${suppressEntrance ? ' is-restored' : ''}`}
       data-theme={theme}
       suppressHydrationWarning
       style={ROOT_STYLE}

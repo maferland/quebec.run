@@ -37,7 +37,7 @@ describe('MobileMenu', () => {
       screen.getByRole('button', { name: /close menu/i })
     ).toBeInTheDocument()
     expect(screen.getByRole('link', { name: /clubs/i })).toBeInTheDocument()
-    expect(screen.getByRole('link', { name: /events/i })).toBeInTheDocument()
+    expect(screen.getByRole('link', { name: /explore/i })).toBeInTheDocument()
     expect(screen.getByRole('button', { name: /sign in/i })).toBeInTheDocument()
   })
 
