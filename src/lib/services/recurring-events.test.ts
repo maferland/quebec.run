@@ -11,6 +11,9 @@ import {
   deleteRecurringEvent,
   getRecurringEventById,
   getRecurringEventsByClub,
+  getPlacePage,
+  getAllPlaces,
+  pickPrimarySlug,
 } from './recurring-events'
 import { addDays } from 'date-fns'
 
@@ -735,5 +738,184 @@ describe('CRUD operations', () => {
       expect(results).toHaveLength(2)
       expect(results[0].club.name).toBe('Test Club')
     })
+  })
+})
+
+describe('place pages', () => {
+  beforeEach(async () => {
+    await prisma.event.deleteMany()
+    await prisma.recurringEvent.deleteMany()
+    await prisma.club.deleteMany()
+    await prisma.organization.deleteMany()
+    await prisma.user.deleteMany()
+  })
+
+  const seedClub = async () => {
+    const user = await prisma.user.create({
+      data: { email: 'place@example.com' },
+    })
+    return prisma.club.create({
+      data: { name: 'Place Club', slug: 'place-club', ownerId: user.id },
+    })
+  }
+
+  describe('pickPrimarySlug', () => {
+    it.each([
+      { slugs: ['mardi', 'limoilou'], expected: 'limoilou' },
+      { slugs: ['jeudi', 'mardi', 'dimanche'], expected: 'mardi' },
+      { slugs: ['samedi', 'mercredi'], expected: 'mercredi' },
+      { slugs: ['beauport', 'atelier'], expected: 'atelier' },
+      { slugs: ['sunday'], expected: 'sunday' },
+    ])('picks $expected out of $slugs', ({ slugs, expected }) => {
+      expect(pickPrimarySlug(slugs)).toBe(expected)
+    })
+  })
+
+  it('groups patterns that share an address into one place', async () => {
+    const club = await seedClub()
+    await prisma.recurringEvent.createMany({
+      data: [
+        {
+          title: 'Place Club',
+          slug: 'mardi',
+          address: '70 Bd Champlain',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+        {
+          title: 'Place Club',
+          slug: 'jeudi',
+          address: '70 Bd Champlain',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=0',
+        },
+        {
+          title: 'Place Club Sillery',
+          slug: 'sillery',
+          address: '2012 Chemin Saint-Louis',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=9;BYMINUTE=0',
+        },
+      ],
+    })
+
+    const place = await getPlacePage({
+      clubSlug: 'place-club',
+      placeSlug: 'jeudi',
+    })
+
+    expect(place!.primarySlug).toBe('mardi')
+    expect(place!.slots.map((slot) => slot.slug).sort()).toEqual([
+      'jeudi',
+      'mardi',
+    ])
+    expect(place!.otherPlaces.map((other) => other.slug)).toEqual(['sillery'])
+    expect(place!.slots[0].occurrences.length).toBeGreaterThan(0)
+  })
+
+  it('keeps an address-less pattern as its own place', async () => {
+    const club = await seedClub()
+    await prisma.recurringEvent.createMany({
+      data: [
+        {
+          title: 'Roaming run',
+          slug: 'jeudi',
+          address: null,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=30',
+        },
+        {
+          title: 'Other roaming run',
+          slug: 'samedi',
+          address: null,
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=9;BYMINUTE=0',
+        },
+      ],
+    })
+
+    const place = await getPlacePage({
+      clubSlug: 'place-club',
+      placeSlug: 'jeudi',
+    })
+
+    expect(place!.primarySlug).toBe('jeudi')
+    expect(place!.slots).toHaveLength(1)
+    expect(place!.otherPlaces.map((other) => other.slug)).toEqual(['samedi'])
+  })
+
+  it.each([
+    { clubSlug: 'place-club', placeSlug: 'nope' },
+    { clubSlug: 'nope', placeSlug: 'mardi' },
+  ])(
+    'returns null for $clubSlug/$placeSlug',
+    async ({ clubSlug, placeSlug }) => {
+      const club = await seedClub()
+      await prisma.recurringEvent.create({
+        data: {
+          title: 'Place Club',
+          slug: 'mardi',
+          address: '70 Bd Champlain',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+      })
+
+      expect(await getPlacePage({ clubSlug, placeSlug })).toBeNull()
+    }
+  )
+
+  it('lists one canonical place per club for the sitemap', async () => {
+    const club = await seedClub()
+    await prisma.recurringEvent.createMany({
+      data: [
+        {
+          title: 'Place Club',
+          slug: 'mardi',
+          address: '70 Bd Champlain',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+        },
+        {
+          title: 'Place Club',
+          slug: 'jeudi',
+          address: '70 Bd Champlain',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=TH;BYHOUR=18;BYMINUTE=0',
+        },
+        {
+          title: 'Place Club Sillery',
+          slug: 'sillery',
+          address: '2012 Chemin Saint-Louis',
+          clubId: club.id,
+          schedulePattern: 'FREQ=WEEKLY;BYDAY=SA;BYHOUR=9;BYMINUTE=0',
+        },
+      ],
+    })
+
+    const places = await getAllPlaces()
+
+    expect(
+      places.map((place) => `${place.clubSlug}/${place.placeSlug}`).sort()
+    ).toEqual(['place-club/mardi', 'place-club/sillery'])
+  })
+
+  it('skips patterns from paused clubs in the sitemap list', async () => {
+    const club = await seedClub()
+    await prisma.club.update({
+      where: { id: club.id },
+      data: { isActive: false },
+    })
+    await prisma.recurringEvent.create({
+      data: {
+        title: 'Place Club',
+        slug: 'mardi',
+        address: '70 Bd Champlain',
+        clubId: club.id,
+        schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=0',
+      },
+    })
+
+    expect(await getAllPlaces()).toEqual([])
   })
 })

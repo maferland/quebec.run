@@ -14,7 +14,8 @@
     "logoTagline": "Communauté de course",
     "openMenu": "Ouvrir le menu",
     "closeMenu": "Fermer le menu",
-    "menuTitle": "Menu"
+    "menuTitle": "Menu",
+    "explore": "Explorer"
   },
   "auth": {
     "signIn": "Se connecter",
@@ -45,7 +46,8 @@
     "language": {
       "english": "English",
       "french": "Français"
-    }
+    },
+    "explore": "Explorer"
   },
   "metadata": {
     "title": "quebec.run | Trouvez votre prochaine course à Québec",
@@ -74,6 +76,11 @@
     "eventDetail": {
       "title": "{eventTitle} | {clubName} | quebec.run",
       "description": "{eventTitle} avec {clubName} à Québec. Horaire, lieu de rencontre et détails de la sortie."
+    },
+    "place": {
+      "title": "{eventTitle} — {schedule} | quebec.run",
+      "description": "{schedule}, départ au {address}. Course en groupe à Québec, ouverte à tous.",
+      "descriptionNoAddress": "{schedule} avec {clubName} à Québec. Course en groupe ouverte à tous."
     },
     "calendar": {
       "title": "Calendrier des courses à Québec | quebec.run",
@@ -225,6 +232,13 @@
     "moreFromClub": "Plus de {name}",
     "aboutClub": "À propos de {name}",
     "viewClub": "Voir le club",
+    "place": {
+      "schedule": "Horaire",
+      "upcoming": "Prochaines dates",
+      "otherPlaces": "Autres lieux de {name}",
+      "seeAllPlaces": "Voir tous les lieux",
+      "viewOnMap": "Voir sur la carte"
+    },
     "locations": {
       "upcomingCount": "{count, plural, one {# course à venir} other {# courses à venir}} dans les 60 prochains jours",
       "recurring": "Récurrent",

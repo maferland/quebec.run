@@ -1,7 +1,11 @@
 import type { Metadata } from 'next'
-import { notFound } from 'next/navigation'
+import { notFound, permanentRedirect } from 'next/navigation'
 import { getTranslations } from 'next-intl/server'
-import { getEventByClubAndSlug } from '@/lib/services/events'
+import {
+  getEventByClubAndSlug,
+  getTorontoDayBounds,
+} from '@/lib/services/events'
+import { getPlacePage } from '@/lib/services/recurring-events'
 import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
 import { JsonLd, breadcrumbList, eventJsonLd } from '@/components/seo/json-ld'
 import { getClubBySlug } from '@/lib/services/clubs'
@@ -73,9 +77,18 @@ export async function generateMetadata({
       noIndex: true,
     })
   }
+  // One occurrence of a weekly run is not its own destination: the place page
+  // carries the ranking, this URL stays reachable for anyone holding the link.
+  const place = await getPlacePage({ clubSlug: slug, placeSlug: eventSlug })
+    .catch(() => null)
+    .then((resolved) => resolved?.primarySlug ?? eventSlug)
+
   return buildPageMetadata({
     locale: locale as Locale,
     path,
+    canonicalPath: `/clubs/${slug}/events/${place}`,
+    noIndex: true,
+    noFollow: false,
     title: t('title', {
       eventTitle: event.title,
       clubName: event.club.name,
@@ -94,6 +107,13 @@ export default async function ClubEventDatePage({
   params,
 }: ClubEventDatePageProps) {
   const { locale, slug, eventSlug, date } = await params
+
+  // A date that has come and gone has nothing to offer a visitor arriving from
+  // search; the place page tells them when the next one is.
+  if (new Date(`${date}T23:59:59`) < getTorontoDayBounds(0).start) {
+    permanentRedirect(`/${locale}/clubs/${slug}/events/${eventSlug}`)
+  }
+
   const t = await getTranslations('events')
   const [event, club] = await Promise.all([
     getEventByClubAndSlug({ data: { clubSlug: slug, eventSlug, date } }).catch(

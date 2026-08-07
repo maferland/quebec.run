@@ -109,3 +109,54 @@ describe('buildPageMetadata', () => {
     expect(meta.twitter?.title).toBe('OG Title')
   })
 })
+
+describe('buildPageMetadata canonical + robots overrides', () => {
+  it('points canonical at another path when asked', () => {
+    const meta = buildPageMetadata({
+      locale: 'fr',
+      path: '/clubs/6am-club/events/limoilou/2026-08-07',
+      canonicalPath: '/clubs/6am-club/events/limoilou',
+      title: 'T',
+      description: 'D',
+    })
+    expect(meta.alternates?.canonical).toBe(
+      `${SITE_URL}/fr/clubs/6am-club/events/limoilou`
+    )
+  })
+
+  it('keeps hreflang alternates on the page own path', () => {
+    const meta = buildPageMetadata({
+      locale: 'fr',
+      path: '/clubs/6am-club/events/limoilou/2026-08-07',
+      canonicalPath: '/clubs/6am-club/events/limoilou',
+      title: 'T',
+      description: 'D',
+    })
+    expect(meta.alternates?.languages?.['fr-CA']).toBe(
+      `${SITE_URL}/fr/clubs/6am-club/events/limoilou/2026-08-07`
+    )
+  })
+
+  it.each([
+    { noIndex: undefined, noFollow: undefined, robots: undefined },
+    {
+      noIndex: true,
+      noFollow: undefined,
+      robots: { index: false, follow: false },
+    },
+    { noIndex: true, noFollow: false, robots: { index: false, follow: true } },
+  ])(
+    'maps noIndex=$noIndex noFollow=$noFollow to $robots',
+    ({ noIndex, noFollow, robots }) => {
+      const meta = buildPageMetadata({
+        locale: 'fr',
+        path: '/x',
+        title: 'T',
+        description: 'D',
+        noIndex,
+        noFollow,
+      })
+      expect(meta.robots).toEqual(robots)
+    }
+  )
+})

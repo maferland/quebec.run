@@ -14,7 +14,8 @@
     "logoTagline": "Running Community",
     "openMenu": "Open menu",
     "closeMenu": "Close menu",
-    "menuTitle": "Menu"
+    "menuTitle": "Menu",
+    "explore": "Explore"
   },
   "auth": {
     "signIn": "Sign In",
@@ -45,7 +46,8 @@
     "language": {
       "english": "English",
       "french": "Français"
-    }
+    },
+    "explore": "Explore"
   },
   "metadata": {
     "title": "quebec.run | Find Your Next Run in Quebec City",
@@ -74,6 +76,11 @@
     "eventDetail": {
       "title": "{eventTitle} | {clubName} | quebec.run",
       "description": "{eventTitle} with {clubName} in Quebec City. Time, meeting point and run details."
+    },
+    "place": {
+      "title": "{eventTitle} — {schedule} | quebec.run",
+      "description": "{schedule}, meeting at {address}. Group run in Quebec City, open to all.",
+      "descriptionNoAddress": "{schedule} with {clubName} in Quebec City. Group run open to all."
     },
     "calendar": {
       "title": "Running calendar in Quebec City | quebec.run",
@@ -225,6 +232,13 @@
     "moreFromClub": "More from {name}",
     "aboutClub": "About {name}",
     "viewClub": "View club",
+    "place": {
+      "schedule": "Schedule",
+      "upcoming": "Upcoming dates",
+      "otherPlaces": "Other {name} spots",
+      "seeAllPlaces": "See all spots",
+      "viewOnMap": "View on the map"
+    },
     "locations": {
       "upcomingCount": "{count, plural, one {# upcoming run} other {# upcoming runs}} in the next 60 days",
       "recurring": "Recurring",

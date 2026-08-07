@@ -1,4 +1,5 @@
 import { SITE_NAME, SITE_URL } from '@/lib/seo/metadata'
+import { parseRRuleToForm } from '@/lib/utils/rrule-builder'
 
 export type JsonLdProps = {
   /** Schema.org object. Stringified + escaped at render time. */
@@ -206,4 +207,92 @@ function eventDateTime(date: Date | string, time: string) {
     parts.find((part) => part.type === type)?.value ?? ''
   const offset = value('timeZoneName').replace('GMT', '') || 'Z'
   return `${value('year')}-${value('month')}-${value('day')}T${time}:00${offset}`
+}
+
+const SCHEMA_WEEKDAYS: Record<string, string> = {
+  MO: 'https://schema.org/Monday',
+  TU: 'https://schema.org/Tuesday',
+  WE: 'https://schema.org/Wednesday',
+  TH: 'https://schema.org/Thursday',
+  FR: 'https://schema.org/Friday',
+  SA: 'https://schema.org/Saturday',
+  SU: 'https://schema.org/Sunday',
+}
+
+export type PlaceJsonLdInput = {
+  locale: 'fr' | 'en'
+  url: string
+  title: string
+  description: string | null
+  schedulePattern: string
+  nextOccurrence: Date | null
+  address: string | null
+  latitude: number | null
+  longitude: number | null
+  clubName: string
+  clubUrl: string
+}
+
+// A recurring run is one Event with an eventSchedule rather than one Event per
+// date, so a single durable URL can describe every occurrence.
+export function placeJsonLd({
+  locale,
+  url,
+  title,
+  description,
+  schedulePattern,
+  nextOccurrence,
+  address,
+  latitude,
+  longitude,
+  clubName,
+  clubUrl,
+}: PlaceJsonLdInput) {
+  const form = parseRRuleToForm(schedulePattern)
+  const byDay = form.byweekday.flatMap((code) =>
+    SCHEMA_WEEKDAYS[code] ? [SCHEMA_WEEKDAYS[code]] : []
+  )
+
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'Event',
+    name: title,
+    description: description ?? undefined,
+    inLanguage: locale === 'fr' ? 'fr-CA' : 'en-CA',
+    ...(nextOccurrence && {
+      startDate: eventDateTime(nextOccurrence, form.time),
+    }),
+    eventStatus: 'https://schema.org/EventScheduled',
+    eventAttendanceMode: 'https://schema.org/OfflineEventAttendanceMode',
+    eventSchedule: {
+      '@type': 'Schedule',
+      repeatFrequency: form.frequency === 'biweekly' ? 'P2W' : 'P1W',
+      ...(byDay.length > 0 && { byDay }),
+      startTime: `${form.time}:00`,
+      scheduleTimezone: 'America/Toronto',
+    },
+    url,
+    location: {
+      '@type': 'Place',
+      name: address ?? clubName,
+      ...(address && {
+        address: {
+          '@type': 'PostalAddress',
+          streetAddress: address,
+          addressLocality: 'Québec',
+          addressRegion: 'QC',
+          addressCountry: 'CA',
+        },
+      }),
+      ...(latitude != null &&
+        longitude != null && {
+          geo: { '@type': 'GeoCoordinates', latitude, longitude },
+        }),
+    },
+    organizer: {
+      '@type': 'SportsOrganization',
+      name: clubName,
+      url: clubUrl,
+    },
+  }
 }

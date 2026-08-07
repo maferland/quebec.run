@@ -3,7 +3,14 @@ import { RRule } from 'rrule'
 import { addDays, min, format } from 'date-fns'
 import type { RecurringEvent, Club, Prisma } from '@client'
 import { createSlug } from '@/lib/utils/slug'
-import { invalidatePublicCache, PUBLIC_CACHE_TAGS } from '@/lib/public-cache'
+import {
+  cachePublicData,
+  invalidatePublicCache,
+  PUBLIC_CACHE_TAGS,
+  PUBLIC_PAGE_REVALIDATE_SECONDS,
+} from '@/lib/public-cache'
+import { weekdaySlugOrder } from '@/lib/utils/weekday-slug'
+import { parseRRuleToForm } from '@/lib/utils/rrule-builder'
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -414,4 +421,191 @@ export async function getRecurringEventsByClub(clubId: string) {
     },
     orderBy: { createdAt: 'desc' },
   })
+}
+
+// ─── Place pages ──────────────────────────────────────────────────────────────
+
+const PLACE_PATTERN_SELECT = {
+  id: true,
+  slug: true,
+  title: true,
+  description: true,
+  address: true,
+  neighborhood: true,
+  latitude: true,
+  longitude: true,
+  distance: true,
+  pace: true,
+  pacePolicy: true,
+  schedulePattern: true,
+} as const
+
+const PLACE_OCCURRENCE_DAYS = 28
+
+type PlacePattern = Prisma.RecurringEventGetPayload<{
+  select: typeof PLACE_PATTERN_SELECT
+}>
+
+// Patterns at the same street address are one place; a pattern with no address
+// (a club whose meeting spot rotates) is a place of its own.
+function placeKey(pattern: { slug: string; address: string | null }): string {
+  return pattern.address ?? `slug:${pattern.slug}`
+}
+
+const BYDAY_ORDER = ['MO', 'TU', 'WE', 'TH', 'FR', 'SA', 'SU']
+
+function weekOrder(schedulePattern: string): string {
+  const form = parseRRuleToForm(schedulePattern)
+  const day = Math.min(
+    ...form.byweekday
+      .map((code) => BYDAY_ORDER.indexOf(code))
+      .filter((i) => i >= 0)
+  )
+  return `${Number.isFinite(day) ? day : 9}-${form.time}`
+}
+
+// The place answers to every slug in its group, but only one is canonical.
+// Slugs naming a location beat slugs naming a weekday; between two weekdays the
+// earlier one in the week wins.
+export function pickPrimarySlug(slugs: string[]): string {
+  return [...slugs].sort((a, b) => {
+    const orderA = weekdaySlugOrder(a)
+    const orderB = weekdaySlugOrder(b)
+    if (orderA === null && orderB !== null) return -1
+    if (orderA !== null && orderB === null) return 1
+    if (orderA !== null && orderB !== null && orderA !== orderB) {
+      return orderA - orderB
+    }
+    return a.localeCompare(b)
+  })[0]
+}
+
+async function getPlacePageRaw(clubSlug: string, placeSlug: string) {
+  const club = await prisma.club.findUnique({
+    where: { slug: clubSlug },
+    select: { id: true, name: true, slug: true, description: true },
+  })
+  if (!club) return null
+
+  const patterns = await prisma.recurringEvent.findMany({
+    where: { clubId: club.id, isActive: true },
+    select: PLACE_PATTERN_SELECT,
+  })
+
+  const requested = patterns.find((pattern) => pattern.slug === placeSlug)
+  if (!requested) return null
+
+  const key = placeKey(requested)
+  const group = patterns.filter((pattern) => placeKey(pattern) === key)
+  const primarySlug = pickPrimarySlug(group.map((pattern) => pattern.slug))
+
+  const now = new Date()
+  const upper = addDays(now, PLACE_OCCURRENCE_DAYS)
+  // Week order, not next-occurrence order: a place's slots read as a schedule,
+  // and it should say the same thing whichever day someone lands on it.
+  const slots = group
+    .map((pattern) => ({
+      ...pattern,
+      occurrences: expandRRuleDates(pattern.schedulePattern, now, upper),
+    }))
+    .sort((first, second) =>
+      weekOrder(first.schedulePattern).localeCompare(
+        weekOrder(second.schedulePattern)
+      )
+    )
+
+  // Other places this club meets at, for a short name-only link list. Full
+  // addresses stay on the club page: repeating every location on every place
+  // page is what made all 16 pages compete for the same neighbourhood queries.
+  const others = new Map<string, PlacePattern>()
+  for (const pattern of patterns) {
+    const otherKey = placeKey(pattern)
+    if (otherKey === key) continue
+    const seen = others.get(otherKey)
+    if (!seen || pickPrimarySlug([seen.slug, pattern.slug]) === pattern.slug) {
+      others.set(otherKey, pattern)
+    }
+  }
+
+  return {
+    club,
+    primarySlug,
+    place: {
+      address: requested.address,
+      neighborhood: requested.neighborhood,
+      latitude: requested.latitude,
+      longitude: requested.longitude,
+    },
+    slots,
+    otherPlaces: [...others.values()].map((pattern) => ({
+      slug: pattern.slug,
+      title: pattern.title,
+      neighborhood: pattern.neighborhood,
+    })),
+  }
+}
+
+const getCachedPlacePage = cachePublicData(getPlacePageRaw, ['place-page'], {
+  revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+  tags: [PUBLIC_CACHE_TAGS.runs],
+})
+
+export async function getPlacePage({
+  clubSlug,
+  placeSlug,
+}: {
+  clubSlug: string
+  placeSlug: string
+}) {
+  const place = await getCachedPlacePage(clubSlug, placeSlug)
+  if (!place) return null
+  // A cache hit hands back JSON, so the occurrence dates arrive as strings even
+  // though the type says Date.
+  return {
+    ...place,
+    slots: place.slots.map((slot) => ({
+      ...slot,
+      occurrences: slot.occurrences.map((date) => new Date(date)),
+    })),
+  }
+}
+
+export type PlacePage = NonNullable<Awaited<ReturnType<typeof getPlacePage>>>
+
+/** Every (club, place) pair, for the sitemap. */
+export async function getAllPlaces() {
+  const patterns = await prisma.recurringEvent.findMany({
+    where: { isActive: true, club: { isActive: true } },
+    select: {
+      slug: true,
+      address: true,
+      updatedAt: true,
+      club: { select: { slug: true } },
+    },
+  })
+
+  const places = new Map<
+    string,
+    { clubSlug: string; slugs: string[]; updatedAt: Date }
+  >()
+  for (const pattern of patterns) {
+    const key = `${pattern.club.slug}/${placeKey(pattern)}`
+    const seen = places.get(key)
+    if (seen) {
+      seen.slugs.push(pattern.slug)
+      if (pattern.updatedAt > seen.updatedAt) seen.updatedAt = pattern.updatedAt
+    } else {
+      places.set(key, {
+        clubSlug: pattern.club.slug,
+        slugs: [pattern.slug],
+        updatedAt: pattern.updatedAt,
+      })
+    }
+  }
+
+  return [...places.values()].map((place) => ({
+    clubSlug: place.clubSlug,
+    placeSlug: pickPrimarySlug(place.slugs),
+    updatedAt: place.updatedAt,
+  }))
 }
