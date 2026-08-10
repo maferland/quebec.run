@@ -1,7 +1,6 @@
 import '@testing-library/jest-dom'
 import React from 'react'
 import { vi } from 'vitest'
-import { setupTestDatabase } from './src/lib/test-seed'
 
 // Polyfill Web APIs for jsdom environment
 // Node 18+ has these built-in, but jsdom doesn't expose them
@@ -16,9 +15,6 @@ if (typeof global.Request === 'undefined') {
 
 // Make vi available globally
 ;(globalThis as typeof globalThis & { vi: typeof vi }).vi = vi
-
-// Setup test database with migrations before all tests
-await setupTestDatabase()
 
 // Mock NextAuth to avoid URL parsing issues in tests
 vi.mock('next-auth/react', () => ({

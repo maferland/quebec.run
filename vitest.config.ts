@@ -10,6 +10,7 @@ export default defineConfig(({ mode }) => {
     plugins: [react()],
     test: {
       environment: 'jsdom',
+      globalSetup: [path.resolve(__dirname, './test-global-setup.ts')],
       setupFiles: [path.resolve(__dirname, './test-setup.ts')],
       globals: true,
       // Run database tests sequentially to prevent deadlocks
