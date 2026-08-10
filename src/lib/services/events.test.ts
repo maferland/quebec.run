@@ -1265,6 +1265,26 @@ describe('Events Service Integration Tests', () => {
 
       expect(runs.map((run) => run.id)).toContain('sortie-limonade')
     })
+
+    it("carries a one-off's own pace instead of only the club's range", async () => {
+      const testClub = (await testPrisma.club.findMany())[0]
+      await testPrisma.event.create({
+        data: {
+          title: 'Sortie 6:30',
+          slug: 'sortie-six-trente',
+          date: getTorontoDayBounds(4).start,
+          time: '18:00',
+          pace: '6:30',
+          clubId: testClub.id,
+        },
+      })
+
+      const runs = await getEventsForDay(4)
+
+      expect(runs.find((run) => run.id === 'sortie-six-trente')?.pace).toBe(
+        '6:30'
+      )
+    })
   })
 
   describe('getTorontoDayBounds', () => {

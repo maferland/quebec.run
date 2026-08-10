@@ -32,6 +32,7 @@ const run = (over: Partial<ExploreRun> = {}): ExploreRun => ({
   lat: 46.8,
   lng: -71.2,
   distance: '5',
+  pace: null,
   isPast: false,
   address: 'Grande Allée',
   neighborhood: null,
