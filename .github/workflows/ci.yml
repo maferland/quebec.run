@@ -64,20 +64,79 @@ jobs:
       - name: Run unit tests
         run: bun run test
 
+  e2e:
+    needs: test
+    runs-on: ubuntu-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        project:
+          - { name: 'Desktop Chrome', slug: desktop-chrome }
+          - { name: 'Mobile Chrome', slug: mobile-chrome }
+
+    name: e2e (${{ matrix.project.name }})
+
+    env:
+      DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
+      TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/courses_test
+      NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+      NEXTAUTH_URL: ${{ secrets.NEXTAUTH_URL }}
+      EMAIL_FROM: ${{ secrets.EMAIL_FROM }}
+      USE_RESEND: ${{ secrets.USE_RESEND }}
+      EMAIL_SERVER_HOST: ${{ secrets.EMAIL_SERVER_HOST }}
+      EMAIL_SERVER_PORT: ${{ secrets.EMAIL_SERVER_PORT }}
+      NODE_ENV: ${{ secrets.NODE_ENV }}
+      STRAVA_CLIENT_ID: mock-client-id
+      STRAVA_CLIENT_SECRET: mock-client-secret
+      STRAVA_REFRESH_TOKEN: mock-refresh-token
+
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: courses_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: latest
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Setup test database
+        run: |
+          bun prisma migrate deploy
+          bun prisma generate
+
       - name: Install Playwright browsers
-        run: bunx playwright install --with-deps
+        run: bunx playwright install --with-deps chromium
 
       - name: Seed test database
         run: bun run db:seed
 
       - name: Run E2E tests
-        run: bun run test:e2e
+        run: bun run test:e2e -- --project="${{ matrix.project.name }}"
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
         if: failure()
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project.slug }}
           path: playwright-report/
           retention-days: 30
 
