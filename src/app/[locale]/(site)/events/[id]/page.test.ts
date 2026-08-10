@@ -58,4 +58,34 @@ describe('legacy concrete event route', () => {
     expect(permanentRedirect).not.toHaveBeenCalled()
     expect(notFound).toHaveBeenCalled()
   })
+
+  it('redirects a legacy virtual slug that carries a day suffix', async () => {
+    await expect(
+      LegacyEventPage({
+        params: Promise.resolve({
+          locale: 'en',
+          id: 'le-coureur-nordique-mardi--2026-04-28',
+        }),
+        searchParams: Promise.resolve({}),
+      })
+    ).rejects.toThrow('REDIRECT')
+
+    expect(permanentRedirect).toHaveBeenCalledWith(
+      '/en/clubs/le-coureur-nordique/events/mardi/2026-04-28'
+    )
+  })
+
+  it('returns not found for an unmapped legacy virtual slug', async () => {
+    await expect(
+      LegacyEventPage({
+        params: Promise.resolve({
+          locale: 'en',
+          id: 'some-unmapped-slug--2026-04-28',
+        }),
+        searchParams: Promise.resolve({}),
+      })
+    ).rejects.toThrow('NOT_FOUND')
+
+    expect(permanentRedirect).not.toHaveBeenCalled()
+  })
 })
