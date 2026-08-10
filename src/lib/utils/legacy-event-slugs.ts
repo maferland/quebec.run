@@ -74,11 +74,20 @@ export const LEGACY_VIRTUAL_SLUG_MAP: Record<
     clubSlug: 'le-coureur-nordique',
     eventSlug: 'mardi',
   },
+  // Indexed old URLs actually carried the day suffix too.
+  'le-coureur-nordique-mardi': {
+    clubSlug: 'le-coureur-nordique',
+    eventSlug: 'mardi',
+  },
   milapres1000: { clubSlug: 'milapres1000', eventSlug: 'mardi' },
   'kogi-mardi': { clubSlug: 'kogi', eventSlug: 'mardi' },
 
   // Club La Foulée — kept workout-type qualifier
   'club-la-foulee-intervalles': {
+    clubSlug: 'club-la-foulee',
+    eventSlug: 'intervalles-mardi',
+  },
+  'club-la-foulee-intervalles-mardi': {
     clubSlug: 'club-la-foulee',
     eventSlug: 'intervalles-mardi',
   },
