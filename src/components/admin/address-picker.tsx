@@ -16,7 +16,7 @@ interface AddressPickerProps<
   },
 > {
   clubId: string
-  onAddressSelect: (address: string) => void
+  onAddressSelect: (address: string, label: string) => void
   register: UseFormRegister<T>
   error?: FieldError
 }
@@ -40,7 +40,9 @@ export function AddressPicker<
   const handleChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedAddress = e.target.value
     if (selectedAddress) {
-      onAddressSelect(selectedAddress)
+      const selectedLabel =
+        addresses?.find((addr) => addr.address === selectedAddress)?.label ?? ''
+      onAddressSelect(selectedAddress, selectedLabel)
     }
   }
 

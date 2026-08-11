@@ -19,6 +19,7 @@ it('opens the related club from a native button', async () => {
     pace: null,
     pacePolicy: null,
     address: null,
+    placeName: null,
     lat: null,
     lng: null,
     club: {

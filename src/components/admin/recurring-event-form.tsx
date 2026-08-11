@@ -25,6 +25,7 @@ const formFieldsSchema = recurringEventCreateSchema.pick({
   title: true,
   description: true,
   address: true,
+  placeName: true,
   distance: true,
   pace: true,
 })
@@ -69,6 +70,7 @@ export function RecurringEventForm({
       title: initialData?.title || '',
       description: initialData?.description || '',
       address: initialData?.address || '',
+      placeName: initialData?.placeName || '',
       distance: initialData?.distance || '',
       pace: initialData?.pace || '',
     },
@@ -136,6 +138,14 @@ export function RecurringEventForm({
         label="Description"
         error={errors.description}
         rows={3}
+      />
+
+      <FormInput
+        register={register}
+        name="placeName"
+        label="Place name"
+        error={errors.placeName}
+        placeholder="e.g. Café X"
       />
 
       <FormInput

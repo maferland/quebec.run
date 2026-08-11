@@ -75,6 +75,7 @@ export function toRunDetail(data: RunDetailResponse): RunDetailData {
     pace: data.pace,
     pacePolicy: data.pacePolicy,
     address: data.address,
+    placeName: data.placeName,
     lat: data.latitude,
     lng: data.longitude,
     club: data.club,

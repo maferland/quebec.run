@@ -27,6 +27,7 @@ describe('RecurringEventForm', () => {
     )
 
     expect(screen.getByLabelText(/title/i)).toBeInTheDocument()
+    expect(screen.getByLabelText(/place name/i)).toBeInTheDocument()
     expect(screen.getByLabelText(/address/i)).toBeInTheDocument()
   })
 
@@ -98,6 +99,7 @@ describe('RecurringEventForm', () => {
 
     // Fill required fields
     await user.type(screen.getByLabelText(/title/i), 'Test Event')
+    await user.type(screen.getByLabelText(/place name/i), 'Café Central')
     await user.type(screen.getByLabelText(/address/i), '123 Main St')
 
     // Select a day (Monday)
@@ -113,6 +115,7 @@ describe('RecurringEventForm', () => {
       expect(mockMutateAsync).toHaveBeenCalledWith(
         expect.objectContaining({
           title: 'Test Event',
+          placeName: 'Café Central',
           address: '123 Main St',
           clubId: 'test-club-id',
           schedulePattern: expect.stringContaining('FREQ=WEEKLY'),

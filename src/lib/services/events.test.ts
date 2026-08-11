@@ -1285,6 +1285,27 @@ describe('Events Service Integration Tests', () => {
         '6:30'
       )
     })
+
+    it("carries a one-off's place name", async () => {
+      const testClub = (await testPrisma.club.findMany())[0]
+      await testPrisma.event.create({
+        data: {
+          title: 'Sortie Café',
+          slug: 'sortie-cafe',
+          date: getTorontoDayBounds(5).start,
+          time: '18:00',
+          address: '100 Rue Principale',
+          placeName: 'Café Central',
+          clubId: testClub.id,
+        },
+      })
+
+      const runs = await getEventsForDay(5)
+
+      expect(runs.find((run) => run.id === 'sortie-cafe')?.placeName).toBe(
+        'Café Central'
+      )
+    })
   })
 
   describe('getTorontoDayBounds', () => {

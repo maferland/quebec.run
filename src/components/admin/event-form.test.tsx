@@ -25,6 +25,7 @@ describe('EventForm', () => {
       expect(screen.getByLabelText(/date/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/time/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/club/i)).toBeInTheDocument()
+      expect(screen.getByLabelText(/place name/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/meeting location/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/distance/i)).toBeInTheDocument()
       expect(screen.getByLabelText(/pace/i)).toBeInTheDocument()
@@ -51,6 +52,33 @@ describe('EventForm', () => {
 
       await waitFor(() => {
         expect(onSuccess).toHaveBeenCalled()
+      })
+    })
+
+    it('submits the place name alongside the address', async () => {
+      const user = userEvent.setup()
+      const onSuccess = vi.fn()
+
+      render(
+        <EventForm
+          mode="create"
+          clubs={[{ id: '1', name: 'Club 1' }]}
+          onSuccess={onSuccess}
+        />
+      )
+
+      await user.type(screen.getByLabelText(/title/i), 'Morning Run')
+      await user.type(screen.getByLabelText(/date/i), '2025-12-01')
+      await user.type(screen.getByLabelText(/time/i), '10:00')
+      await user.type(screen.getByLabelText(/place name/i), 'Café Central')
+      await user.type(screen.getByLabelText(/meeting location/i), '123 Main St')
+
+      await user.click(screen.getByRole('button', { name: /create/i }))
+
+      await waitFor(() => {
+        expect(onSuccess).toHaveBeenCalledWith(
+          expect.objectContaining({ placeName: 'Café Central' })
+        )
       })
     })
 
@@ -92,6 +120,7 @@ describe('EventForm', () => {
       date: new Date('2025-12-01'),
       time: '10:00',
       address: '123 Main St',
+      placeName: null,
       latitude: null,
       longitude: null,
       distance: '5km',

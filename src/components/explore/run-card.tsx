@@ -198,6 +198,14 @@ export function RunCard({
               >
                 {run.club.name}
               </span>
+              {run.placeName && (
+                <>
+                  <span style={{ color: 'var(--faint)' }}>·</span>
+                  <span style={{ color: 'var(--dim)', whiteSpace: 'nowrap' }}>
+                    {run.placeName}
+                  </span>
+                </>
+              )}
               {run.neighborhood && (
                 <>
                   <span style={{ color: 'var(--faint)' }}>·</span>
@@ -266,7 +274,7 @@ export function RunCard({
               borderTop: '1px solid var(--line)',
             }}
           >
-            {run.address && (
+            {(run.placeName || run.address) && (
               <div
                 style={{
                   display: 'flex',
@@ -285,7 +293,22 @@ export function RunCard({
                 >
                   {PinIcon}
                 </span>
-                <span>{run.address}</span>
+                <span>
+                  {run.placeName ? (
+                    <>
+                      <span style={{ color: 'var(--text)', fontWeight: 600 }}>
+                        {run.placeName}
+                      </span>
+                      {run.address && (
+                        <span style={{ display: 'block', marginTop: 2 }}>
+                          {run.address}
+                        </span>
+                      )}
+                    </>
+                  ) : (
+                    run.address
+                  )}
+                </span>
               </div>
             )}
             <div style={{ display: 'flex', gap: 9 }}>
