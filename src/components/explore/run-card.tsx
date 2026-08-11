@@ -89,7 +89,7 @@ export function RunCard({
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
   const dimmed = isPast && !selected
 
-  const pace = paceRange(run.club.paceMin, run.club.paceMax)
+  const pace = run.pace ?? paceRange(run.club.paceMin, run.club.paceMax)
   const typeLabel = run.club.type
     ? t(`type_${run.club.type.toLowerCase()}`)
     : null

@@ -32,6 +32,7 @@ const run: ExploreRun = {
   lat: 46.81,
   lng: -71.21,
   distance: '5',
+  pace: null,
   isPast: false,
   address: '100 Grande Allee, Quebec, QC',
   neighborhood: 'Montcalm',
