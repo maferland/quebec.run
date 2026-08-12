@@ -12,15 +12,6 @@ import {
 export const revalidate = 900
 export const dynamicParams = true
 
-const MAX_DESCRIPTION_LENGTH = 140
-
-function truncate(text: string, maxLength: number) {
-  if (text.length <= maxLength) return text
-  const clipped = text.slice(0, maxLength)
-  const lastSpace = clipped.lastIndexOf(' ')
-  return `${(lastSpace > 0 ? clipped.slice(0, lastSpace) : clipped).trimEnd()}…`
-}
-
 type Params = { locale: string; slug: string }
 
 export async function GET(
@@ -59,11 +50,6 @@ export async function GET(
         >
           {club.name}
         </div>
-        {club.description && (
-          <div style={{ display: 'flex', fontSize: 28, color: OG_DIM }}>
-            {truncate(club.description, MAX_DESCRIPTION_LENGTH)}
-          </div>
-        )}
       </div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
         <div
