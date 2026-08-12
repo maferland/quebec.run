@@ -114,6 +114,35 @@ test.describe('explore panels ship real HTML with no client JS required', () => 
   })
 })
 
+test.describe('per-entity opengraph-image routes render a real image', () => {
+  const TUESDAY_ISO = (() => {
+    const d = new Date()
+    while (d.getDay() !== 2) d.setDate(d.getDate() + 1)
+    return d.toISOString().slice(0, 10)
+  })()
+
+  test('club route', async ({ request }) => {
+    const response = await request.get(
+      '/en/clubs/fauxmouvement/opengraph-image'
+    )
+    expect(response.ok()).toBe(true)
+    expect(response.headers()['content-type']).toContain('image')
+  })
+
+  test('run route', async ({ request }) => {
+    const response = await request.get(
+      `/en/run/fauxmouvement-mardi--${TUESDAY_ISO}/opengraph-image`
+    )
+    expect(response.ok()).toBe(true)
+    expect(response.headers()['content-type']).toContain('image')
+  })
+
+  test('run route 404s for an unknown event id', async ({ request }) => {
+    const response = await request.get('/en/run/does-not-exist/opengraph-image')
+    expect(response.status()).toBe(404)
+  })
+})
+
 test('robots.txt allows root, disallows /admin, references sitemap', async ({
   request,
 }) => {

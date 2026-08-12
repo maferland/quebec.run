@@ -75,7 +75,8 @@
     },
     "eventDetail": {
       "title": "{eventTitle} | {clubName} | quebec.run",
-      "description": "{eventTitle} avec {clubName} à Québec. Horaire, lieu de rencontre et détails de la sortie."
+      "description": "{eventTitle} avec {clubName} à Québec. Horaire, lieu de rencontre et détails de la sortie.",
+      "ogKicker": "Sortie de course à Québec"
     },
     "place": {
       "title": "{eventTitle} — {schedule} | quebec.run",
