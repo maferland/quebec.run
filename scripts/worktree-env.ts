@@ -87,6 +87,13 @@ export function applyEnvOverrides(
   return `${kept}\n\n${OVERRIDE_HEADER}\n${block}\n`
 }
 
+export function databaseChildEnv(
+  databaseUrl: string,
+  testDatabaseUrl: string
+): Record<string, string> {
+  return { DATABASE_URL: databaseUrl, TEST_DATABASE_URL: testDatabaseUrl }
+}
+
 /** Database name from a postgres URL: last path segment, minus query string. */
 export function databaseNameFromUrl(databaseUrl: string): string {
   const lastSegment = databaseUrl.split('/').pop() ?? ''

@@ -4,6 +4,7 @@ import { join, resolve } from 'path'
 import { describe, expect, it } from 'vitest'
 import {
   applyEnvOverrides,
+  databaseChildEnv,
   databaseNameFromUrl,
   deriveWorktreeDatabaseUrls,
   readEnvValue,
@@ -209,6 +210,17 @@ DATABASE_URL="${OVERRIDES.DATABASE_URL}"
     expect(deriveWorktreeDatabaseUrls(activeUrl!, 'nested').dbName).toBe(
       'quebec.run_feat_nested'
     )
+  })
+})
+
+describe('databaseChildEnv', () => {
+  it('maps the derived urls onto the keys a child process reads', () => {
+    expect(
+      databaseChildEnv('postgres://a/one', 'postgres://a/one_test')
+    ).toEqual({
+      DATABASE_URL: 'postgres://a/one',
+      TEST_DATABASE_URL: 'postgres://a/one_test',
+    })
   })
 })
 
