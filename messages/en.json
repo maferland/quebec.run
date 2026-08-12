@@ -267,6 +267,7 @@
       "date": "Date",
       "time": "Time",
       "club": "Club",
+      "placeName": "Place Name",
       "address": "Meeting Location",
       "distance": "Distance",
       "pace": "Pace",

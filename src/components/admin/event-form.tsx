@@ -63,6 +63,7 @@ export function EventForm({
         : '',
       time: initialData?.time || '',
       address: initialData?.address || '',
+      placeName: initialData?.placeName || '',
       distance: initialData?.distance || '',
       pace: initialData?.pace || '',
       clubId: initialData?.clubId || clubs[0]?.id || '',
@@ -186,11 +187,22 @@ export function EventForm({
           {selectedClubId && (
             <AddressPicker
               clubId={selectedClubId}
-              onAddressSelect={(address) => setValue('address', address)}
+              onAddressSelect={(address, label) => {
+                setValue('address', address)
+                setValue('placeName', label)
+              }}
               register={register}
               error={errors.savedAddress}
             />
           )}
+
+          <FormInput
+            register={register}
+            name="placeName"
+            label={tEvent('placeName')}
+            error={errors.placeName}
+            placeholder="e.g. Café X"
+          />
 
           <FormInput
             register={register}

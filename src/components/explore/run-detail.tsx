@@ -153,6 +153,7 @@ export type RunDetailData = {
   pace: string | null
   pacePolicy: 'SHARED' | 'OPEN_PACE' | null
   address: string | null
+  placeName: string | null
   lat: number | null
   lng: number | null
   club: RunDetailClub
@@ -447,7 +448,7 @@ export function RunDetailPanel({
       )}
 
       {/* meeting point */}
-      {run.address && (
+      {(run.placeName || run.address) && (
         <div>
           <SectionLabel>{t('meeting_point')}</SectionLabel>
           <div
@@ -469,8 +470,19 @@ export function RunDetailPanel({
               </span>
               <div>
                 <div style={{ fontSize: 15, fontWeight: 600 }}>
-                  {run.address}
+                  {run.placeName ?? run.address}
                 </div>
+                {run.placeName && run.address && (
+                  <div
+                    style={{
+                      fontSize: 13.5,
+                      color: 'var(--dim)',
+                      marginTop: 3,
+                    }}
+                  >
+                    {run.address}
+                  </div>
+                )}
                 {!run.address && run.lat && run.lng && (
                   <div
                     style={{

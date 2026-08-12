@@ -35,6 +35,7 @@ const run = (over: Partial<ExploreRun> = {}): ExploreRun => ({
   pace: null,
   isPast: false,
   address: 'Grande Allée',
+  placeName: null,
   neighborhood: null,
   club: {
     id: 'club-1',
@@ -175,6 +176,7 @@ describe('useExploreCollections', () => {
         pace: null,
         pacePolicy: null,
         address: null,
+        placeName: null,
         lat: 46.7,
         lng: -71.3,
         club: {

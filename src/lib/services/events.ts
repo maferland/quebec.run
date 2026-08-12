@@ -49,6 +49,7 @@ export type ExploreRun = {
   pace: string | null
   isPast: boolean
   address: string | null
+  placeName: string | null
   neighborhood: string | null
   club: {
     id: string
@@ -145,6 +146,7 @@ function toExploreRun(
     distance: string | null
     pace: string | null
     address: string | null
+    placeName: string | null
     neighborhood: string | null
     club: {
       id: string
@@ -173,6 +175,7 @@ function toExploreRun(
     pace: event.pace,
     isPast: nowMinutes !== null && isRunTimePast(event.time, nowMinutes),
     address: event.address,
+    placeName: event.placeName,
     neighborhood: event.neighborhood,
     club: event.club,
   }
@@ -223,6 +226,7 @@ async function getExploreWeekRaw(): Promise<{
         distance: true,
         pace: true,
         address: true,
+        placeName: true,
         neighborhood: true,
         recurringEventId: true,
         club: { select: EXPLORE_CLUB_SELECT },
@@ -780,6 +784,7 @@ export function toRunDetailResponse(
     date: event.date instanceof Date ? event.date.toISOString() : event.date,
     time: event.time,
     address: event.address,
+    placeName: event.placeName,
     latitude: event.latitude,
     longitude: event.longitude,
     distance: event.distance,

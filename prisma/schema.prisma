@@ -123,6 +123,7 @@ model RecurringEvent {
 
   // Location
   address      String?
+  placeName    String?
   latitude     Float?
   longitude    Float?
   neighborhood String?
@@ -165,6 +166,7 @@ model Event {
 
   // Location
   address      String?
+  placeName    String?
   latitude     Float?
   longitude    Float?
   neighborhood String?

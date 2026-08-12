@@ -35,6 +35,7 @@ const run: ExploreRun = {
   pace: null,
   isPast: false,
   address: '100 Grande Allee, Quebec, QC',
+  placeName: null,
   neighborhood: 'Montcalm',
   club: {
     id: club.id,

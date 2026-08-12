@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { render, screen } from '@/lib/test-utils'
+import { render, screen, within } from '@/lib/test-utils'
 import type { ExploreClub } from '@/lib/services/clubs'
 import type { ExploreRun } from '@/lib/services/events'
 import { RunCard } from './run-card'
@@ -33,6 +33,7 @@ const run = (over: Partial<ExploreRun> = {}): ExploreRun => ({
   pace: null,
   isPast: false,
   address: '100 Grande Allee, Quebec, QC',
+  placeName: null,
   neighborhood: 'Montcalm',
   club: {
     id: club.id,
@@ -78,5 +79,65 @@ describe('RunCard pace', () => {
     )
 
     expect(screen.getByText('4:30–6:00 /km')).toBeInTheDocument()
+  })
+})
+
+describe('RunCard place name', () => {
+  it('shows the place name in the collapsed row', () => {
+    render(
+      <RunCard
+        run={run({ placeName: 'Café Central' })}
+        selected={false}
+        onSelect={() => {}}
+        onOpen={() => {}}
+        onIntent={() => {}}
+        nowMin={0}
+        day={1}
+      />
+    )
+
+    const collapsedRow = screen.getByRole('button', {
+      name: /Tuesday Intervals/,
+    })
+    expect(within(collapsedRow).getByText('Café Central')).toBeInTheDocument()
+  })
+
+  it('shows the place name above the address when both are present', () => {
+    const { container } = render(
+      <RunCard
+        run={run({ placeName: 'Café Central' })}
+        selected
+        onSelect={() => {}}
+        onOpen={() => {}}
+        onIntent={() => {}}
+        nowMin={0}
+        day={1}
+      />
+    )
+
+    const reveal = container.querySelector('.qr-run-reveal') as HTMLElement
+    expect(within(reveal).getByText('Café Central')).toBeInTheDocument()
+    expect(
+      within(reveal).getByText('100 Grande Allee, Quebec, QC')
+    ).toBeInTheDocument()
+  })
+
+  it('falls back to the address alone when there is no place name', () => {
+    const { container } = render(
+      <RunCard
+        run={run({ placeName: null })}
+        selected
+        onSelect={() => {}}
+        onOpen={() => {}}
+        onIntent={() => {}}
+        nowMin={0}
+        day={1}
+      />
+    )
+
+    const reveal = container.querySelector('.qr-run-reveal') as HTMLElement
+    expect(
+      within(reveal).getByText('100 Grande Allee, Quebec, QC')
+    ).toBeInTheDocument()
   })
 })
