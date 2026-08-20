@@ -1,8 +1,9 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it } from 'vitest'
 import {
   getTorontoMinutes,
   isRunPast,
   isRunTimePast,
+  nextTorontoOccurrence,
   runTimeMinutes,
 } from './run-time'
 
@@ -35,6 +36,27 @@ describe('run time', () => {
   ])('%s', (_label, date, time, expected) => {
     expect(isRunPast(date, time, new Date('2026-07-22T12:00:00.000Z'))).toBe(
       expected
+    )
+  })
+
+  describe('nextTorontoOccurrence', () => {
+    const originalTz = process.env.TZ
+
+    afterEach(() => {
+      process.env.TZ = originalTz
+    })
+
+    it.each(['UTC', 'America/Toronto', 'Asia/Tokyo'])(
+      'anchors to Toronto midnight regardless of the process TZ (%s)',
+      (tz) => {
+        process.env.TZ = tz
+        const now = new Date('2026-08-12T15:00:00.000Z')
+        const result = nextTorontoOccurrence(2, 1, now)
+
+        // setHours(0, 0, 0, 0) on a non-Eastern runner misses this boundary.
+        expect(result.toISOString()).toBe('2026-08-25T04:00:00.000Z')
+        expect(result.getUTCDay()).toBe(2)
+      }
     )
   })
 })

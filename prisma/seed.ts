@@ -3,6 +3,7 @@ import { PrismaClient } from './generated/client/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import { createSlug } from '../src/lib/utils/slug'
+import { nextTorontoOccurrence } from '../src/lib/utils/run-time'
 
 config()
 
@@ -823,10 +824,8 @@ async function main() {
     where: { clubId: kogi.id, slug: 'mardi' },
   })
   if (kogiPattern) {
-    const beerNight = new Date()
-    beerNight.setHours(0, 0, 0, 0)
-    const offset = (2 - beerNight.getDay() + 14) % 7 || 7
-    beerNight.setDate(beerNight.getDate() + offset + 7)
+    // Toronto-anchored, not the seeding machine's local midnight.
+    const beerNight = nextTorontoOccurrence(2, 1)
     const existing = await prisma.event.findFirst({
       where: {
         recurringEventId: kogiPattern.id,
