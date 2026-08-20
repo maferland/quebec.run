@@ -1,5 +1,5 @@
 {
-  "buildCommand": "next build",
+  "buildCommand": "DATABASE_URL=\"$DATABASE_URL_UNPOOLED\" prisma migrate deploy && next build",
   "crons": [
     {
       "path": "/api/cron/materialize-events",
