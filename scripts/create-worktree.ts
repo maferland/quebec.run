@@ -11,6 +11,7 @@ import {
 import { resolve } from 'path'
 import {
   applyEnvOverrides,
+  databaseChildEnv,
   deriveWorktreeDatabaseUrls,
   readEnvValueFromFile,
 } from './worktree-env'
@@ -28,12 +29,17 @@ function validateBranchName(branchName: string): void {
   }
 }
 
-function exec(command: string, cwd?: string): string {
+function exec(
+  command: string,
+  cwd?: string,
+  env?: Record<string, string>
+): string {
   try {
     return execSync(command, {
       cwd: cwd || REPO_ROOT,
       encoding: 'utf-8',
       stdio: ['pipe', 'pipe', 'pipe'],
+      env: env ? { ...process.env, ...env } : process.env,
     }).trim()
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : String(error)
@@ -183,27 +189,26 @@ async function main() {
 
     // Run migrations
     console.log('Running database migrations...')
+    const childEnv = databaseChildEnv(databaseUrl, testDatabaseUrl)
     try {
-      exec('bun prisma migrate deploy', worktreePath)
+      exec('bun prisma migrate deploy', worktreePath, childEnv)
       console.log(`✓ Migrations complete`)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
-      console.warn(`⚠️  Warning: Migration failed: ${message}`)
-      console.warn(
-        `   Run migrations manually: cd ${worktreePath} && bun prisma migrate deploy`
+      throw new Error(
+        `Migration failed: ${message}\nRun manually: cd ${worktreePath} && DATABASE_URL="${databaseUrl}" bun prisma migrate deploy`
       )
     }
 
     // Seed database
     console.log('Seeding database...')
     try {
-      exec('bun run db:seed', worktreePath)
+      exec('bun run db:seed', worktreePath, childEnv)
       console.log(`✓ Database seeded`)
     } catch (error: unknown) {
       const message = error instanceof Error ? error.message : String(error)
-      console.warn(`⚠️  Warning: Seeding failed: ${message}`)
-      console.warn(
-        `   Run seed manually: cd ${worktreePath} && bun run db:seed`
+      throw new Error(
+        `Seeding failed: ${message}\nRun manually: cd ${worktreePath} && DATABASE_URL="${databaseUrl}" bun run db:seed`
       )
     }
 
