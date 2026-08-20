@@ -3,7 +3,8 @@ import { RunDetailPanel } from '@/components/explore/run-detail'
 import { toRunDetail } from '@/lib/hooks/use-explore'
 import { getEventById, toRunDetailResponse } from '@/lib/services/events'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 export const dynamicParams = true
 
 type Props = { params: Promise<{ locale: string; id: string }> }

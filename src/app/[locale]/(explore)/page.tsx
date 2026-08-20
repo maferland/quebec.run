@@ -2,7 +2,8 @@ import { JsonLd, organization, website } from '@/components/seo/json-ld'
 import type { PageProps } from '@/lib/types/next'
 import { getTranslations } from 'next-intl/server'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 
 export default async function Home({ params }: PageProps<{ locale: string }>) {
   const { locale } = await params
