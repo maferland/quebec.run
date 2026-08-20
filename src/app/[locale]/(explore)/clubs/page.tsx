@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 
 export async function generateMetadata({
   params,

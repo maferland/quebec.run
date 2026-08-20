@@ -10,7 +10,8 @@ import {
   ogCardStyle,
 } from '@/lib/seo/og-theme'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 export const dynamicParams = true
 
 type Params = { locale: string; id: string }

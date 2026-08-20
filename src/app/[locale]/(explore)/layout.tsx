@@ -3,7 +3,8 @@ import { getClubsForExplore } from '@/lib/services/clubs'
 import { getEventsForDay, getWeekEventCounts } from '@/lib/services/events'
 import { ExploreProviders } from '@/app/providers'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 
 export default async function ExploreLayout({
   children,

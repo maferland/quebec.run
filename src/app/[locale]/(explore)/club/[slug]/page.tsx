@@ -1,6 +1,7 @@
 import { permanentRedirect } from 'next/navigation'
 
-export const revalidate = 900
+// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 21600
 export const dynamicParams = true
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
