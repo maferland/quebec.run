@@ -27,6 +27,9 @@ export default defineConfig(({ mode }) => {
           '**/*.e2e.{ts,tsx}',
           'src/lib/storybook-utils.tsx',
           'src/lib/auth.ts',
+          // Sentry bootstrap: no logic to test, runs before the app starts.
+          'src/instrumentation.ts',
+          'src/instrumentation-client.ts',
           'src/lib/test-utils.tsx',
           'src/lib/test-i18n.ts',
           'src/lib/test-e2e-helpers.ts',

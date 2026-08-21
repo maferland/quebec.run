@@ -1,5 +1,6 @@
 import type { NextConfig } from 'next'
 import createNextIntlPlugin from 'next-intl/plugin'
+import { withSentryConfig } from '@sentry/nextjs'
 
 const withNextIntl = createNextIntlPlugin('./src/i18n/request.ts')
 
@@ -24,4 +25,12 @@ const nextConfig: NextConfig = {
   },
 }
 
-export default withNextIntl(nextConfig)
+export default withSentryConfig(withNextIntl(nextConfig), {
+  // Source map upload is skipped when SENTRY_AUTH_TOKEN is unset, so builds
+  // still succeed without it.
+  org: 'quebecrun',
+  project: 'javascript-nextjs',
+  silent: !process.env.CI,
+  telemetry: false,
+  webpack: { treeshake: { removeDebugLogging: true } },
+})
