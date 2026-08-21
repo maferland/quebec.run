@@ -32,5 +32,10 @@ export default withSentryConfig(withNextIntl(nextConfig), {
   project: 'javascript-nextjs',
   silent: !process.env.CI,
   telemetry: false,
-  webpack: { treeshake: { removeDebugLogging: true } },
+  webpack: {
+    treeshake: { removeDebugLogging: true },
+    // Creates a Sentry monitor per vercel.json cron entry. Webpack-only, which
+    // is fine since this project does not build with Turbopack.
+    automaticVercelMonitors: true,
+  },
 })
