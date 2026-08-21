@@ -34,6 +34,10 @@ const envSchema = z
     EMAIL_SERVER_USER: z.string().optional(),
     EMAIL_SERVER_PASSWORD: z.string().optional(),
 
+    // Sentry error reporting. Absent means reporting is off, which is the
+    // expected state in local dev and CI.
+    NEXT_PUBLIC_SENTRY_DSN: z.string().url('Invalid Sentry DSN').optional(),
+
     // Strava API
     STRAVA_CLIENT_ID: z.string().min(1, 'Strava client ID required'),
     STRAVA_CLIENT_SECRET: z.string().min(1, 'Strava client secret required'),
