@@ -399,6 +399,28 @@
       "deleteWarning": "Cette action supprimera immédiatement et définitivement votre compte et toutes vos données. Cette action est irréversible."
     }
   },
+  "error": {
+    "404": {
+      "title": "Tu as pris un détour.",
+      "body": "Cette page n'est pas sur le parcours. Elle a bifurqué quelque part, mais la carte t'attend toujours.",
+      "primary": "Retour à l'accueil",
+      "second": "Voir les clubs",
+      "meta": "Erreur 404 · page introuvable",
+      "quips": [
+        "Même les meilleurs manquent un virage.",
+        "Ce n'était pas dans le plan d'entraînement.",
+        "Ta foulée était bonne, l'adresse non.",
+        "Reprends ton souffle, puis reprends la carte."
+      ]
+    },
+    "500": {
+      "title": "On a frappé le mur.",
+      "body": "Nos serveurs ont une petite crampe. On s'étire, on respire, réessaie dans un instant.",
+      "primary": "Réessayer",
+      "second": "Retour à l'accueil",
+      "meta": "Erreur 500 · problème de notre côté"
+    }
+  },
   "explore": {
     "tagline": "Où courir ce soir ?",
     "tonight": "Ce soir",

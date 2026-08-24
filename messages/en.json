@@ -399,6 +399,28 @@
       "deleteWarning": "This action will immediately and permanently delete your account and all your data. This cannot be undone."
     }
   },
+  "error": {
+    "404": {
+      "title": "You took a wrong turn.",
+      "body": "This page isn't on the route. It went off somewhere, but the map is still waiting for you.",
+      "primary": "Back to home",
+      "second": "Browse clubs",
+      "meta": "Error 404 · page not found",
+      "quips": [
+        "Even the best miss a turn.",
+        "That one wasn't in the training plan.",
+        "Good stride, wrong address.",
+        "Catch your breath, then get back on the map."
+      ]
+    },
+    "500": {
+      "title": "We hit the wall.",
+      "body": "Our servers have a cramp. We're stretching it out, give it another try in a moment.",
+      "primary": "Try again",
+      "second": "Back to home",
+      "meta": "Error 500 · on our end"
+    }
+  },
   "explore": {
     "tagline": "Where to run tonight?",
     "tonight": "Tonight",
