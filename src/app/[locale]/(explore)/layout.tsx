@@ -4,7 +4,7 @@ import { getEventsForDay, getWeekEventCounts } from '@/lib/services/events'
 import { ExploreProviders } from '@/app/providers'
 
 // Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 21600
+export const revalidate = 86400
 
 export default async function ExploreLayout({
   children,

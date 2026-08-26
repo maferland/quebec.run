@@ -8,7 +8,7 @@ import { addDays } from 'date-fns'
 const LOCALES = ['fr', 'en'] as const
 type Locale = (typeof LOCALES)[number]
 
-export const revalidate = 3600
+export const revalidate = 86400
 
 type SitemapEntry = MetadataRoute.Sitemap[number]
 

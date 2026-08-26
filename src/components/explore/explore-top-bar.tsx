@@ -11,7 +11,7 @@ type ExploreTopBarProps = {
   locale: string
   theme: 'dark' | 'light'
   onThemeChange: (theme: 'dark' | 'light') => void
-  onLocaleChange: (locale: 'fr' | 'en') => void
+  localeHref: (locale: 'fr' | 'en') => string
 }
 
 export function ExploreTopBar({
@@ -19,7 +19,7 @@ export function ExploreTopBar({
   locale,
   theme,
   onThemeChange,
-  onLocaleChange,
+  localeHref,
 }: ExploreTopBarProps) {
   const t = useTranslations('explore')
 
@@ -75,24 +75,27 @@ export function ExploreTopBar({
         {desktop ? (
           <div className="qr-pill-control qr-locale-control">
             {(['fr', 'en'] as const).map((value) => (
-              <button
+              <Link
                 key={value}
+                href={localeHref(value)}
+                hrefLang={value}
                 aria-label={value === 'fr' ? 'Français' : 'English'}
-                onClick={() => onLocaleChange(value)}
+                aria-current={locale === value ? 'true' : undefined}
                 className={locale === value ? 'is-active' : undefined}
               >
                 {value}
-              </button>
+              </Link>
             ))}
           </div>
         ) : (
-          <button
+          <Link
             className="qr-account-button qr-mobile-locale"
+            href={localeHref(locale === 'fr' ? 'en' : 'fr')}
+            hrefLang={locale === 'fr' ? 'en' : 'fr'}
             aria-label={locale === 'fr' ? 'English' : 'Français'}
-            onClick={() => onLocaleChange(locale === 'fr' ? 'en' : 'fr')}
           >
             {locale === 'fr' ? 'EN' : 'FR'}
-          </button>
+          </Link>
         )}
         <ExploreAccountMenu locale={locale} />
       </div>

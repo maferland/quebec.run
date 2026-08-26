@@ -14,7 +14,7 @@ const survivedNavigation = (page: Page) =>
     SENTINEL
   )
 
-// The detail heading is client-rendered, so it doubles as a hydration signal.
+// The panel is server-rendered, so the heading proves paint, not hydration.
 const gotoDetail = async (page: Page, path: string) => {
   await page.goto(path)
   await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({
@@ -22,19 +22,21 @@ const gotoDetail = async (page: Page, path: string) => {
   })
 }
 
+// The switcher is an anchor, so this click works whether or not React is ready.
 const switchLocale = async (page: Page, name: 'English' | 'Français') => {
   const target = name === 'English' ? 'en' : 'fr'
-  await page.getByRole('button', { name }).click()
+  await page.getByRole('link', { name }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', target, {
     timeout: READY_TIMEOUT,
   })
 }
 
-// The regression rendered Next's 404 tree under the still-mounted detail panel,
-// so the title is the assertion that actually catches it.
+// The designed 404 has no "404" heading, so its shell is what catches the
+// regression now; the title/heading checks stay for Next's built-in fallback.
 const expectNotNotFound = async (page: Page) => {
   await expect(page).not.toHaveTitle(/404/)
   await expect(page.getByRole('heading', { name: '404' })).toHaveCount(0)
+  await expect(page.locator('.qr-error-root')).toHaveCount(0)
 }
 
 const findRunId = async (page: Page) => {
