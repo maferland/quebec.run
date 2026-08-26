@@ -196,17 +196,23 @@ describe('switching locale', () => {
   it('swaps the locale segment and keeps the query', () => {
     const { result } = setup('/fr/clubs/la-panthere', 'day=2&beginner=1')
 
-    act(() => result.current.switchLocale('en'))
-
-    expect(push).toHaveBeenCalledWith('/en/clubs/la-panthere?day=2&beginner=1')
+    expect(result.current.localeHref('en')).toBe(
+      '/en/clubs/la-panthere?day=2&beginner=1'
+    )
   })
 
   it('omits the question mark when there is no query', () => {
     const { result } = setup('/fr/clubs')
 
-    act(() => result.current.switchLocale('en'))
+    expect(result.current.localeHref('en')).toBe('/en/clubs')
+  })
 
-    expect(push).toHaveBeenCalledWith('/en/clubs')
+  it('builds the href without navigating, so the anchor owns the click', () => {
+    const { result } = setup('/fr/clubs')
+
+    result.current.localeHref('en')
+
+    expect(push).not.toHaveBeenCalled()
   })
 })
 
