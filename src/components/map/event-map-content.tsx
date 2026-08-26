@@ -17,7 +17,7 @@ import { LocationInline } from '@/components/ui/location'
 import { formatDateTime } from '@/lib/utils/date-formatting'
 import { eventUrl } from '@/lib/utils/event-url'
 import { groupByLocation } from '@/lib/utils/group-by-location'
-import { markerIconConfig } from '@/lib/utils/map'
+import { markerIconConfig, TILE_ATTRIBUTION, TILE_URLS } from '@/lib/utils/map'
 import { ChevronRight, Clock } from 'lucide-react'
 
 // Marker pin, shared with the other maps
@@ -61,11 +61,6 @@ interface EventMapContentProps {
   initialZoom: number
 }
 
-const TILES = {
-  dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-  light: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-} as const
-
 export default function EventMapContent({
   events,
   initialCenter,
@@ -80,10 +75,9 @@ export default function EventMapContent({
       center={initialCenter}
       zoom={initialZoom}
       scrollWheelZoom={true}
-      attributionControl={false}
       className="h-full w-full"
     >
-      <TileLayer url={TILES[theme]} />
+      <TileLayer url={TILE_URLS[theme]} attribution={TILE_ATTRIBUTION} />
       <MarkerClusterGroup
         iconCreateFunction={createClusterIcon}
         showCoverageOnHover={false}
