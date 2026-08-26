@@ -1,4 +1,5 @@
 import { test, expect, type Page } from '@playwright/test'
+import { waitForShellHydrated } from './helpers'
 
 const SENTINEL = '__localeSwitchSentinel'
 const READY_TIMEOUT = 20_000
@@ -15,11 +16,13 @@ const survivedNavigation = (page: Page) =>
   )
 
 // The panel is server-rendered, so the heading proves paint, not hydration.
+// These tests assert a soft navigation, which only a hydrated shell performs.
 const gotoDetail = async (page: Page, path: string) => {
   await page.goto(path)
   await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({
     timeout: READY_TIMEOUT,
   })
+  await waitForShellHydrated(page)
 }
 
 // The switcher is an anchor, so this click works whether or not React is ready.

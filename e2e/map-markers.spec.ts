@@ -1,5 +1,5 @@
 import { test, expect, type Page, type Request } from '@playwright/test'
-import { openSearch, waitForInteractive } from './helpers'
+import { openSearch, waitForInteractive, waitForShellHydrated } from './helpers'
 
 // Sub-pixel jitter in sticky-element geometry between scroll positions is
 // normal; only a real layout shift moves an element further than this.
@@ -161,6 +161,9 @@ test.describe('Map Markers', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: 'Faux Mouvement' })
     ).toBeVisible({ timeout: 15000 })
+    // The panel is server-rendered, so the heading proves paint, not hydration.
+    // A card clicked before handlers attach leaves the URL on the club route.
+    await waitForShellHydrated(page)
 
     await page.evaluate(() => {
       const shell = document.querySelector('.qr-root:not(.qr-detail-shell)')
@@ -492,6 +495,9 @@ test.describe('Map Markers', () => {
     await expect(
       page.getByRole('heading', { level: 1, name: '6AM Club' })
     ).toBeVisible({ timeout: 15000 })
+    // Measuring the server-rendered panel before hydration reads a layout the
+    // user never sees, which is where the 959px overflow came from.
+    await waitForShellHydrated(page)
 
     const panel = page.locator('.qr-detail-shell')
     // The enter slide-in still offsets the panel briefly; measuring mid-animation
