@@ -2,15 +2,12 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import * as L from 'leaflet'
 import type { MapViewProps } from './map-view'
+import { TILE_ATTRIBUTION, TILE_URLS } from '@/lib/utils/map'
 import 'leaflet/dist/leaflet.css'
 
 const QC_CENTER: [number, number] = [46.8123, -71.208]
 const INITIAL_ZOOM = 10
 
-const TILES = {
-  dark: 'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
-  light: 'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
-}
 const FIT_PADDING = 96
 
 // The map lives on a node React never owns, so a locale switch re-parents the
@@ -27,12 +24,12 @@ function mapContainer() {
 }
 
 function createTileLayer(theme: 'dark' | 'light') {
-  return L.tileLayer(TILES[theme], {
+  return L.tileLayer(TILE_URLS[theme], {
     subdomains: 'abcd',
     maxZoom: 19,
     updateWhenZooming: false,
     keepBuffer: 1,
-    attribution: '&copy; OpenStreetMap &copy; CARTO',
+    attribution: TILE_ATTRIBUTION,
   })
 }
 

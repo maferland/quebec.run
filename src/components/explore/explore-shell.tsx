@@ -320,7 +320,13 @@ function ExploreShellInner({
       className={`qr-root qr-app${suppressEntrance ? ' is-restored' : ''}`}
       data-theme={theme}
       suppressHydrationWarning
-      style={ROOT_STYLE}
+      style={
+        {
+          ...ROOT_STYLE,
+          // Lifts the map attribution clear of the sheet as it drags.
+          '--qr-map-bottom': `${desktop ? 0 : sheet.height}px`,
+        } as React.CSSProperties
+      }
     >
       <picture className={`qr-map-preview${mapReady ? ' is-loaded' : ''}`}>
         <source media="(max-width: 767px)" srcSet="/map-preview-mobile.webp" />

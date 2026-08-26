@@ -3,7 +3,7 @@
 import { useEffect, useRef } from 'react'
 import type { Map as LeafletMap } from 'leaflet'
 import 'leaflet/dist/leaflet.css'
-import { createMarkerIcon } from '@/lib/utils/map'
+import { createMarkerIcon, TILE_ATTRIBUTION, TILE_URLS } from '@/lib/utils/map'
 
 interface AddressMapPreviewProps {
   latitude: number
@@ -38,16 +38,13 @@ export function AddressMapPreview({
         scrollWheelZoom: false,
         dragging: false,
         zoomControl: false,
-        attributionControl: false,
       })
 
       // Add tile layer (CartoDB light style for consistency with event maps)
-      L.tileLayer(
-        'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
-        {
-          maxZoom: 19,
-        }
-      ).addTo(map)
+      L.tileLayer(TILE_URLS.positron, {
+        maxZoom: 19,
+        attribution: TILE_ATTRIBUTION,
+      }).addTo(map)
 
       // Add marker with custom icon (matches event maps)
       const markerIcon = createMarkerIcon(L)
