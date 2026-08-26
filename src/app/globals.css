@@ -585,6 +585,8 @@ body:has(.qr-app) .site-footer {
   font-size: 8px !important;
   padding: 1px 5px !important;
   backdrop-filter: blur(4px);
+  /* CARTO terms: the credit stays readable above the mobile sheet. */
+  margin-bottom: calc(var(--qr-map-bottom, 0px) + 4px) !important;
 }
 .qr-root .leaflet-control-attribution a {
   color: var(--dim) !important;
