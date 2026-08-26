@@ -10,7 +10,7 @@ import {
 import { notFound } from 'next/navigation'
 
 // Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 21600
+export const revalidate = 86400
 export const dynamicParams = true
 
 type Props = { params: Promise<{ locale: string; slug: string }> }
