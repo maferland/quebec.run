@@ -216,7 +216,9 @@ body:has(.qr-app) .site-footer {
   gap: 2px;
 }
 
-.qr-root .qr-pill-control button,
+/* The locale control renders anchors so it works before hydration; the theme
+   control next to it stays a button. */
+.qr-root .qr-pill-control :is(button, a),
 .qr-root .qr-account-button {
   border: 0;
   border-radius: 100px;
@@ -227,14 +229,15 @@ body:has(.qr-app) .site-footer {
   cursor: pointer;
   background: transparent;
   color: var(--faint);
+  text-decoration: none;
 }
 
-.qr-root .qr-pill-control button.is-active {
+.qr-root .qr-pill-control :is(button, a).is-active {
   background: var(--surface-3);
   color: var(--accent);
 }
 
-.qr-root .qr-locale-control button {
+.qr-root .qr-locale-control :is(button, a) {
   width: auto;
   min-width: 30px;
   padding: 0 7px;
@@ -244,7 +247,7 @@ body:has(.qr-app) .site-footer {
   text-transform: uppercase;
 }
 
-.qr-root .qr-locale-control button.is-active {
+.qr-root .qr-locale-control :is(button, a).is-active {
   color: var(--fg);
 }
 
