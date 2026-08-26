@@ -14,7 +14,7 @@ const survivedNavigation = (page: Page) =>
     SENTINEL
   )
 
-// The detail heading is client-rendered, so it doubles as a hydration signal.
+// The panel is server-rendered, so the heading proves paint, not hydration.
 const gotoDetail = async (page: Page, path: string) => {
   await page.goto(path)
   await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible({
@@ -22,9 +22,10 @@ const gotoDetail = async (page: Page, path: string) => {
   })
 }
 
+// The switcher is an anchor, so this click works whether or not React is ready.
 const switchLocale = async (page: Page, name: 'English' | 'Français') => {
   const target = name === 'English' ? 'en' : 'fr'
-  await page.getByRole('button', { name }).click()
+  await page.getByRole('link', { name }).click()
   await expect(page.locator('html')).toHaveAttribute('lang', target, {
     timeout: READY_TIMEOUT,
   })
