@@ -358,7 +358,7 @@ function ExploreShellInner({
         locale={locale}
         theme={theme}
         onThemeChange={setTheme}
-        onLocaleChange={routing.switchLocale}
+        localeHref={routing.localeHref}
       />
 
       {desktop ? (

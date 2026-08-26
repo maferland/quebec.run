@@ -174,14 +174,16 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     [locale, queryString]
   )
 
-  const switchLocale = useCallback(
+  // Returns the href rather than navigating, so the switcher can be a real
+  // link and keep working before React hydrates.
+  const localeHref = useCallback(
     (nextLocale: 'fr' | 'en') => {
       const segments = pathname.split('/')
       segments[1] = nextLocale
       const qs = searchParams.toString()
-      router.push(`${segments.join('/')}${qs ? `?${qs}` : ''}`)
+      return `${segments.join('/')}${qs ? `?${qs}` : ''}`
     },
-    [pathname, router, searchParams]
+    [pathname, searchParams]
   )
 
   const prefetchRoute = useCallback(
@@ -206,6 +208,6 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     pushClubDetail,
     pushPlaceDetail,
     prefetchRoute,
-    switchLocale,
+    localeHref,
   }
 }
