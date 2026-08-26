@@ -1,5 +1,19 @@
+import { render } from '@/lib/test-utils'
 import { describe, expect, it } from 'vitest'
-import { eventJsonLd, placeJsonLd } from './json-ld'
+import {
+  eventJsonLd,
+  JsonLd,
+  organization,
+  placeJsonLd,
+  website,
+} from './json-ld'
+
+function renderedBlocks(ui: React.ReactElement) {
+  const { container } = render(ui)
+  return Array.from(
+    container.querySelectorAll('script[type="application/ld+json"]')
+  ).map((script) => script.textContent ?? '')
+}
 
 const baseEvent = {
   locale: 'en' as const,
@@ -88,5 +102,39 @@ describe('placeJsonLd', () => {
       startTime: '09:30:00',
     })
     expect(data.startDate).toBeUndefined()
+  })
+})
+
+describe('JsonLd', () => {
+  it('renders one script per block so no block is a top-level array', () => {
+    const blocks = renderedBlocks(
+      <JsonLd data={[organization(), website('fr')]} />
+    )
+
+    expect(blocks).toHaveLength(2)
+    for (const block of blocks) {
+      expect(JSON.parse(block)['@context']).toBe('https://schema.org')
+    }
+  })
+
+  it('renders a single script for a single object', () => {
+    const blocks = renderedBlocks(<JsonLd data={organization()} />)
+
+    expect(blocks).toHaveLength(1)
+    expect(JSON.parse(blocks[0])['@type']).toBe('Organization')
+  })
+
+  it('escapes markup characters in every block', () => {
+    const blocks = renderedBlocks(
+      <JsonLd
+        data={[
+          { '@context': 'https://schema.org', name: '<script>&</script>' },
+        ]}
+      />
+    )
+
+    expect(blocks[0]).not.toContain('<')
+    expect(blocks[0]).not.toContain('&')
+    expect(JSON.parse(blocks[0]).name).toBe('<script>&</script>')
   })
 })

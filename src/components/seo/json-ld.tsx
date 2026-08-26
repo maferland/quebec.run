@@ -12,15 +12,24 @@ export type JsonLdProps = {
  * fields (club descriptions, event titles, etc).
  */
 export function JsonLd({ data }: JsonLdProps) {
-  const json = JSON.stringify(data)
-    .replace(/</g, '\\u003c')
-    .replace(/>/g, '\\u003e')
-    .replace(/&/g, '\\u0026')
+  // One script per block: a top-level array is valid JSON-LD but crashes
+  // consumers that read parsed['@context'] as a string (JAVASCRIPT-NEXTJS-2).
+  const blocks = Array.isArray(data) ? data : [data]
   return (
-    <script
-      type="application/ld+json"
-      dangerouslySetInnerHTML={{ __html: json }}
-    />
+    <>
+      {blocks.map((block, index) => (
+        <script
+          key={index}
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(block)
+              .replace(/</g, '\\u003c')
+              .replace(/>/g, '\\u003e')
+              .replace(/&/g, '\\u0026'),
+          }}
+        />
+      ))}
+    </>
   )
 }
 
