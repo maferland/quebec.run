@@ -4,7 +4,7 @@ import { toPlaceDetail } from '@/lib/hooks/use-explore'
 import { getPlacePage } from '@/lib/services/recurring-events'
 
 // Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 21600
+export const revalidate = 86400
 export const dynamicParams = true
 
 type Props = {
