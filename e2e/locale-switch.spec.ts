@@ -31,11 +31,12 @@ const switchLocale = async (page: Page, name: 'English' | 'Français') => {
   })
 }
 
-// The regression rendered Next's 404 tree under the still-mounted detail panel,
-// so the title is the assertion that actually catches it.
+// The designed 404 has no "404" heading, so its shell is what catches the
+// regression now; the title/heading checks stay for Next's built-in fallback.
 const expectNotNotFound = async (page: Page) => {
   await expect(page).not.toHaveTitle(/404/)
   await expect(page.getByRole('heading', { name: '404' })).toHaveCount(0)
+  await expect(page.locator('.qr-error-root')).toHaveCount(0)
 }
 
 const findRunId = async (page: Page) => {
