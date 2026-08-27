@@ -10,6 +10,7 @@ import {
   readEnvValue,
   readEnvValueFromFile,
   resolveDropDatabaseName,
+  resolveDropDatabaseNames,
 } from './worktree-env'
 
 const MAIN_ENV = `# Main env
@@ -246,5 +247,46 @@ describe('resolveDropDatabaseName', () => {
     expect(resolveDropDatabaseName('quebec.run_feat', null)).toBe(
       'quebec.run_feat'
     )
+  })
+})
+
+describe('resolveDropDatabaseNames', () => {
+  const MAIN = { db: 'quebec.run', testDb: 'quebec.run_test' }
+
+  it('drops the worktree database and its test sibling', () => {
+    expect(
+      resolveDropDatabaseNames(
+        { db: 'quebec.run_feat', testDb: 'quebec.run_feat_test' },
+        MAIN
+      )
+    ).toEqual(['quebec.run_feat', 'quebec.run_feat_test'])
+  })
+
+  // The regression this function exists for: teardown used to drop only
+  // DATABASE_URL, stranding a _test database per worktree.
+  it('refuses each name independently when it matches main', () => {
+    expect(
+      resolveDropDatabaseNames(
+        { db: 'quebec.run', testDb: 'quebec.run_feat_test' },
+        MAIN
+      )
+    ).toEqual(['quebec.run_feat_test'])
+
+    expect(
+      resolveDropDatabaseNames(
+        { db: 'quebec.run_feat', testDb: 'quebec.run_test' },
+        MAIN
+      )
+    ).toEqual(['quebec.run_feat'])
+  })
+
+  it('returns nothing when the worktree owns neither database', () => {
+    expect(resolveDropDatabaseNames(MAIN, MAIN)).toEqual([])
+  })
+
+  it('skips a database the worktree env never declared', () => {
+    expect(
+      resolveDropDatabaseNames({ db: 'quebec.run_feat', testDb: null }, MAIN)
+    ).toEqual(['quebec.run_feat'])
   })
 })

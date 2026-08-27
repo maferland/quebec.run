@@ -48,7 +48,7 @@ Auto-generates:
 - Ports: `60XX` (dev), `61XX` (Storybook), `62XX` (Mailhog)
 - Copies `.env`, replaces the override keys in place (never appends duplicates), runs migrations
 
-**Removing:** Use `npm run remove-worktree <branch-name>` (drops DB, deletes branch). Refuses to drop when the worktree `.env` still points at the main DB.
+**Removing:** Use `npm run remove-worktree <branch-name>` (drops both the DB and its `_test` sibling, deletes branch). Refuses to drop either when the worktree `.env` still points at the main DB.
 
 ## Critical Rules
 
