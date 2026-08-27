@@ -45,9 +45,9 @@ export default defineConfig(({ mode }) => {
         ],
         // Flat keys: a nested `global` object is silently ignored by Vitest 3.
         thresholds: {
-          statements: 57,
-          lines: 57,
-          branches: 79,
+          statements: 58,
+          lines: 58,
+          branches: 80,
           functions: 73,
         },
       },

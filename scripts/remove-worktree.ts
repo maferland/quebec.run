@@ -7,6 +7,7 @@ import {
   databaseNameFromUrl,
   readEnvValueFromFile,
   resolveDropDatabaseName,
+  resolveDropDatabaseNames,
 } from './worktree-env'
 
 const REPO_ROOT = resolve(__dirname, '..')
@@ -26,8 +27,8 @@ function exec(command: string, cwd?: string): string {
   }
 }
 
-function getDatabaseName(envFile: string): string | null {
-  const databaseUrl = readEnvValueFromFile(envFile, 'DATABASE_URL')
+function getDatabaseName(envFile: string, key: string): string | null {
+  const databaseUrl = readEnvValueFromFile(envFile, key)
 
   return databaseUrl ? databaseNameFromUrl(databaseUrl) : null
 }
@@ -48,10 +49,21 @@ async function main() {
       throw new Error(`Worktree not found at ${worktreePath}`)
     }
 
-    // Get database name before removing
-    const worktreeDbName = getDatabaseName(resolve(worktreePath, '.env'))
-    const mainDbName = getDatabaseName(MAIN_ENV_FILE)
+    // Get database names before removing
+    const worktreeEnvFile = resolve(worktreePath, '.env')
+    const worktreeDbName = getDatabaseName(worktreeEnvFile, 'DATABASE_URL')
+    const mainDbName = getDatabaseName(MAIN_ENV_FILE, 'DATABASE_URL')
     const dbName = resolveDropDatabaseName(worktreeDbName, mainDbName)
+    const dropNames = resolveDropDatabaseNames(
+      {
+        db: worktreeDbName,
+        testDb: getDatabaseName(worktreeEnvFile, 'TEST_DATABASE_URL'),
+      },
+      {
+        db: mainDbName,
+        testDb: getDatabaseName(MAIN_ENV_FILE, 'TEST_DATABASE_URL'),
+      }
+    )
 
     if (worktreeDbName && !dbName) {
       throw new Error(
@@ -67,15 +79,15 @@ async function main() {
     exec(`git worktree remove ${worktreePath} --force`)
     console.log(`✓ Removed worktree`)
 
-    // Drop database if found
-    if (dbName) {
+    // Drop both databases: the test one is created alongside and was orphaned
+    for (const name of dropNames) {
       try {
         exec(
-          `psql -U marc-antoine.ferland -d postgres -c "DROP DATABASE IF EXISTS \\"${dbName}\\";"`
+          `psql -U marc-antoine.ferland -d postgres -c "DROP DATABASE IF EXISTS \\"${name}\\";"`
         )
-        console.log(`✓ Dropped database: ${dbName}`)
+        console.log(`✓ Dropped database: ${name}`)
       } catch {
-        console.warn(`⚠️  Warning: Could not drop database ${dbName}`)
+        console.warn(`⚠️  Warning: Could not drop database ${name}`)
       }
     }
 

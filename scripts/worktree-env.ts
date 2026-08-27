@@ -112,6 +112,19 @@ export function resolveDropDatabaseName(
   return worktreeDbName === mainDbName ? null : worktreeDbName
 }
 
+type WorktreeDatabases = { db: string | null; testDb: string | null }
+
+/** Every database a worktree owns, each guarded against dropping main's. */
+export function resolveDropDatabaseNames(
+  worktree: WorktreeDatabases,
+  main: WorktreeDatabases
+): string[] {
+  return [
+    resolveDropDatabaseName(worktree.db, main.db),
+    resolveDropDatabaseName(worktree.testDb, main.testDb),
+  ].filter((name): name is string => name !== null)
+}
+
 /**
  * Worktree database URLs derived from the URL currently in effect, so
  * creating a worktree from inside another worktree branches off that
