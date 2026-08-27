@@ -17,3 +17,11 @@ export async function waitForInteractive(page: Page) {
   await page.getByRole('button', { name: 'Close search' }).click()
   await expect(input).toBeHidden()
 }
+
+// Detail routes cover the search control, so they need a probe that survives a
+// panel. The account button renders a skeleton until its client effect resolves.
+export async function waitForShellHydrated(page: Page) {
+  await expect(page.locator('.qr-account-button.skel')).toHaveCount(0, {
+    timeout: 20_000,
+  })
+}
