@@ -10,6 +10,10 @@ import { describePattern } from '@/lib/utils/rrule-builder'
 export const revalidate = 86400
 export const dynamicParams = true
 
+export function generateStaticParams() {
+  return []
+}
+
 type Props = {
   params: Promise<{ locale: string; slug: string; place: string }>
 }

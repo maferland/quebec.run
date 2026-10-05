@@ -172,17 +172,15 @@ function ExploreShellInner({
   const preloadRun = useCallback(
     (id: string) => {
       prefetchRun(id)
-      routing.prefetchRoute(`/run/${encodeURIComponent(id)}`)
     },
-    [prefetchRun, routing]
+    [prefetchRun]
   )
 
   const preloadClub = useCallback(
     (slug: string) => {
       prefetchClub(slug)
-      routing.prefetchRoute(`/clubs/${encodeURIComponent(slug)}`)
     },
-    [prefetchClub, routing]
+    [prefetchClub]
   )
 
   // ── Derived ─────────────────────────────────────────────────────────────────
