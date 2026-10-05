@@ -61,7 +61,7 @@ export default async function RunPage({ params }: Props) {
       ? `/clubs/${event.club.slug}/events/${recurringSlug}/${date}`
       : `/run/${id}`
 
-  return (
+  return event.address?.trim() ? (
     <JsonLd
       data={eventJsonLd({
         locale: locale as Locale,
@@ -78,5 +78,5 @@ export default async function RunPage({ params }: Props) {
         status: event.status,
       })}
     />
-  )
+  ) : null
 }

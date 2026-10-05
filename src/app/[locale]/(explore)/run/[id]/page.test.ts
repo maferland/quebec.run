@@ -1,6 +1,6 @@
 import { expect, it, vi } from 'vitest'
 import { getEventById } from '@/lib/services/events'
-import { generateMetadata } from './page'
+import RunPage, { generateMetadata } from './page'
 
 vi.mock('@/lib/services/events', () => ({ getEventById: vi.fn() }))
 
@@ -36,3 +36,61 @@ it('uses canonical event resolution for virtual run metadata', async () => {
   )
   expect(metadata.robots).toBeUndefined()
 })
+
+it('keeps a missing run out of search results', async () => {
+  vi.mocked(getEventById).mockResolvedValue(null)
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: 'en', id: 'missing' }),
+  })
+
+  expect(metadata.alternates?.canonical).toBe(
+    'https://www.quebec.run/en/run/missing'
+  )
+  expect(metadata.robots).toEqual({ index: false, follow: false })
+})
+
+it('uses the run URL for a concrete event', async () => {
+  vi.mocked(getEventById).mockResolvedValue({
+    id: 'event-id',
+    title: 'Sunday Run',
+    club: { name: 'Test Club', slug: 'club-slug' },
+  } as Awaited<ReturnType<typeof getEventById>>)
+
+  const metadata = await generateMetadata({
+    params: Promise.resolve({ locale: 'en', id: 'event-id' }),
+  })
+
+  expect(metadata.alternates?.canonical).toBe(
+    'https://www.quebec.run/en/run/event-id'
+  )
+  expect(metadata.robots).toBeUndefined()
+})
+
+it.each([
+  [null, false],
+  [' ', false],
+  ['250 3e Rue, Québec, QC', true],
+])(
+  'publishes Event JSON-LD only with an address (%s)',
+  async (address, expected) => {
+    vi.mocked(getEventById).mockResolvedValue({
+      id: 'event-id',
+      title: 'Sunday Run',
+      description: null,
+      date: new Date('2026-10-11T12:00:00Z'),
+      time: '08:00',
+      address,
+      latitude: null,
+      longitude: null,
+      status: 'SCHEDULED',
+      club: { name: 'Test Club', slug: 'club-slug' },
+    } as Awaited<ReturnType<typeof getEventById>>)
+
+    const result = await RunPage({
+      params: Promise.resolve({ locale: 'en', id: 'event-id' }),
+    })
+
+    expect(result !== null).toBe(expected)
+  }
+)
