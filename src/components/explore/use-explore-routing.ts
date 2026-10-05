@@ -186,11 +186,6 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     [pathname, searchParams]
   )
 
-  const prefetchRoute = useCallback(
-    (path: string) => router.prefetch(`/${locale}${path}`),
-    [locale, router]
-  )
-
   return {
     locale,
     mode,
@@ -207,7 +202,6 @@ export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
     pushRunDetail,
     pushClubDetail,
     pushPlaceDetail,
-    prefetchRoute,
     localeHref,
   }
 }

@@ -4,12 +4,11 @@ import { useExploreRouting } from './use-explore-routing'
 
 const push = vi.fn()
 const replace = vi.fn()
-const prefetch = vi.fn()
 let pathname = '/fr'
 let search = ''
 
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ push, replace, prefetch, back: vi.fn() }),
+  useRouter: () => ({ push, replace, back: vi.fn() }),
   usePathname: () => pathname,
   useSearchParams: () => new URLSearchParams(search),
 }))
@@ -32,7 +31,6 @@ afterEach(() => {
   vi.restoreAllMocks()
   push.mockClear()
   replace.mockClear()
-  prefetch.mockClear()
 })
 
 describe('reading state out of the URL', () => {
@@ -181,14 +179,6 @@ describe('opening detail routes', () => {
     const { result } = setup('/fr', 'day=2')
 
     expect(result.current.detailFallbackPath(detail)).toBe(expected)
-  })
-
-  it('prefetches a locale-prefixed route', () => {
-    const { result } = setup()
-
-    act(() => result.current.prefetchRoute('/run/run-1'))
-
-    expect(prefetch).toHaveBeenCalledWith('/fr/run/run-1')
   })
 })
 
