@@ -23,7 +23,12 @@ export function cachePublicData<Args extends unknown[], Result>(
   options: CacheOptions
 ) {
   if (process.env.NODE_ENV === 'test') return fn
-  return unstable_cache(fn, keyParts, options)
+  // Data migrations can change schedules without changing the cached function.
+  return unstable_cache(
+    fn,
+    [process.env.VERCEL_GIT_COMMIT_SHA ?? 'local', ...keyParts],
+    options
+  )
 }
 
 type PublicCacheTag = (typeof PUBLIC_CACHE_TAGS)[keyof typeof PUBLIC_CACHE_TAGS]

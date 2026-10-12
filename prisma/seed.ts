@@ -719,15 +719,15 @@ async function main() {
       timezone: 'America/Toronto',
       clubId: laFoulee.id,
     },
-    // Kogi — Tue 18:15 at Kogi Café, Limoilou
+    // Kogi — Wed 18:15 at Kogi Café, Limoilou
     {
       title: 'Kogi',
-      slug: 'mardi',
+      slug: 'mercredi',
       description: 'Kogi Café — 1104 18e Rue, Limoilou',
       address: '1104 18e Rue, Québec, QC G1J 1Z1',
       latitude: 46.836,
       longitude: -71.22,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=15',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=15',
       timezone: 'America/Toronto',
       clubId: kogi.id,
     },
@@ -821,11 +821,11 @@ async function main() {
   // Seed a single concrete override so the "Notable runs" surface has
   // a real example to render against the Kogi recurring pattern.
   const kogiPattern = await prisma.recurringEvent.findFirst({
-    where: { clubId: kogi.id, slug: 'mardi' },
+    where: { clubId: kogi.id, slug: 'mercredi' },
   })
   if (kogiPattern) {
     // Toronto-anchored, not the seeding machine's local midnight.
-    const beerNight = nextTorontoOccurrence(2, 1)
+    const beerNight = nextTorontoOccurrence(3, 1)
     const existing = await prisma.event.findFirst({
       where: {
         recurringEventId: kogiPattern.id,
