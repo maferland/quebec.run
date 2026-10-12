@@ -32,6 +32,29 @@ describe('explore route database errors', () => {
       service: getEventsForDay,
     },
     {
+      name: 'week counts',
+      request: new Request('http://localhost/api/explore/week-counts'),
+      handler: getWeekCounts,
+      service: getWeekEventCounts,
+    },
+  ])('does not HTTP-cache day-relative $name', async (testCase) => {
+    vi.mocked(testCase.service).mockResolvedValue([])
+
+    const response = await testCase.handler(testCase.request, context)
+
+    expect(response.status).toBe(200)
+    expect(response.headers.get('Cache-Control')).toBe('no-store')
+    await expect(response.json()).resolves.toEqual([])
+  })
+
+  it.each([
+    {
+      name: 'runs',
+      request: new Request('http://localhost/api/explore/runs?day=0'),
+      handler: getRuns,
+      service: getEventsForDay,
+    },
+    {
       name: 'clubs',
       request: new Request('http://localhost/api/explore/clubs'),
       handler: getClubs,

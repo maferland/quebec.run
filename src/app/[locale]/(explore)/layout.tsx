@@ -2,9 +2,7 @@ import { ExploreShell } from '@/components/explore/explore-shell'
 import { getClubsForExplore } from '@/lib/services/clubs'
 import { getEventsForDay, getWeekEventCounts } from '@/lib/services/events'
 import { ExploreProviders } from '@/app/providers'
-
-// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 86400
+import { connection } from 'next/server'
 
 export default async function ExploreLayout({
   children,
@@ -13,6 +11,8 @@ export default async function ExploreLayout({
   children: React.ReactNode
   detail: React.ReactNode
 }) {
+  // Day offsets change at Toronto midnight; only the dated data may be cached.
+  await connection()
   const [weekCounts, runs, clubs] = await Promise.all([
     getWeekEventCounts().catch(() => undefined),
     getEventsForDay(0).catch(() => undefined),
