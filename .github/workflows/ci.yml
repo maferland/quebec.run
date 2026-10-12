@@ -129,6 +129,9 @@ jobs:
       - name: Seed test database
         run: bun run db:seed
 
+      - name: Build production app
+        run: bun run build
+
       - name: Run E2E tests
         run: bun run test:e2e -- --project="${{ matrix.project.name }}"
 

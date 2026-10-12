@@ -28,7 +28,9 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: `next dev --turbopack --port ${PORT}`,
+    command: process.env.CI
+      ? `next start --port ${PORT}`
+      : `next dev --turbopack --port ${PORT}`,
     url: BASE_URL,
     reuseExistingServer: !process.env.CI,
     timeout: 120000,
