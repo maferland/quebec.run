@@ -41,3 +41,27 @@ it('redirects a past date to the place page without looking up the event', async
     '/fr/clubs/6am-club/events/montcalm'
   )
 })
+
+it('looks up a future event before redirecting to its run page', async () => {
+  vi.mocked(getEventByClubAndSlug).mockResolvedValue({
+    id: 'cmg1234567890123456789012',
+  } as Awaited<ReturnType<typeof getEventByClubAndSlug>>)
+
+  await expect(
+    EventDateRedirect({
+      params: Promise.resolve({
+        locale: 'fr',
+        slug: '6am-club',
+        place: 'montcalm',
+        date: '2026-12-07',
+      }),
+    })
+  ).rejects.toThrow('REDIRECT')
+
+  expect(getEventByClubAndSlug).toHaveBeenCalledWith({
+    data: { clubSlug: '6am-club', eventSlug: 'montcalm', date: '2026-12-07' },
+  })
+  expect(permanentRedirect).toHaveBeenCalledWith(
+    '/fr/run/cmg1234567890123456789012'
+  )
+})
