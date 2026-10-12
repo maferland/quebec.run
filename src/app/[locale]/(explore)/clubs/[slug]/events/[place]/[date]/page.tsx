@@ -3,7 +3,6 @@ import {
   getEventByClubAndSlug,
   getTorontoDayBounds,
 } from '@/lib/services/events'
-import { getPlacePage } from '@/lib/services/recurring-events'
 
 export const dynamicParams = true
 
@@ -17,12 +16,7 @@ export default async function EventDateRedirect({ params }: Props) {
   const { locale, slug, place: placeSlug, date } = await params
 
   if (new Date(`${date}T23:59:59`) < getTorontoDayBounds(0).start) {
-    const place = await getPlacePage({ clubSlug: slug, placeSlug }).catch(
-      () => null
-    )
-    permanentRedirect(
-      `/${locale}/clubs/${slug}/events/${place?.primarySlug ?? placeSlug}`
-    )
+    permanentRedirect(`/${locale}/clubs/${slug}/events/${placeSlug}`)
   }
 
   const event = await getEventByClubAndSlug({

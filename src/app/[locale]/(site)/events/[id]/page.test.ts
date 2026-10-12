@@ -5,7 +5,6 @@ import { notFound, permanentRedirect } from 'next/navigation'
 
 vi.mock('@/lib/prisma', () => ({
   prisma: {
-    event: { findUnique: vi.fn() },
     recurringEvent: { findUnique: vi.fn() },
   },
 }))
@@ -21,33 +20,28 @@ vi.mock('next/navigation', () => ({
 
 describe('legacy concrete event route', () => {
   beforeEach(() => {
-    vi.mocked(prisma.event.findUnique).mockReset()
     vi.mocked(notFound).mockClear()
     vi.mocked(permanentRedirect).mockClear()
   })
 
-  it('redirects an existing concrete event to its run route', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue({
-      id: 'event-id',
-    } as never)
-
+  it('redirects a concrete event ID without querying the database', async () => {
     await expect(
       LegacyEventPage({
-        params: Promise.resolve({ locale: 'en', id: 'event-id' }),
+        params: Promise.resolve({
+          locale: 'en',
+          id: 'cmj90jhak00079zmoepjac8hp',
+        }),
         searchParams: Promise.resolve({}),
       })
     ).rejects.toThrow('REDIRECT')
 
-    expect(prisma.event.findUnique).toHaveBeenCalledWith({
-      where: { id: 'event-id' },
-      select: { id: true },
-    })
-    expect(permanentRedirect).toHaveBeenCalledWith('/en/run/event-id')
+    expect(prisma.recurringEvent.findUnique).not.toHaveBeenCalled()
+    expect(permanentRedirect).toHaveBeenCalledWith(
+      '/en/run/cmj90jhak00079zmoepjac8hp'
+    )
   })
 
-  it('returns not found when the concrete event does not exist', async () => {
-    vi.mocked(prisma.event.findUnique).mockResolvedValue(null)
-
+  it('returns not found for malformed event IDs', async () => {
     await expect(
       LegacyEventPage({
         params: Promise.resolve({ locale: 'en', id: 'missing' }),
