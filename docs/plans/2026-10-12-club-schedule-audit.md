@@ -1,6 +1,6 @@
 # Club schedule audit
 
-Checked October 12, 2026. PR #145 preview, commit `8ef745c` before the detail-route repair. No blanket claim that all schedules are correct.
+Checked October 12–13, 2026. PR #145 preview, commit `8ef745c` before the detail-route repair. No blanket claim that all schedules are correct.
 
 ## What was checked
 
@@ -76,4 +76,17 @@ For factual reliability, each maintained schedule needs a source URL and last-ch
 
 Repair build passed. All 13 club detail headings rendered on the mobile production build after restarting the server. All 16 6AM schedule entries expanded successfully. Tuesday/Wednesday Kogi run page HTTP checks passed. All 1,078 unit/integration tests passed, including existing cache and migration regressions. All three production HTTP panel tests passed (club, run, place). Deployment checks recorded in the PR.
 
-Audit source findings remain open; this report does not certify all club data as correct. No new schedule facts were written from this audit.
+Audit source findings remain open; this report does not certify all club data as correct. The verified corrections below are included in the PR; uncertain and seasonal schedules remain open.
+
+## Verified corrections applied October 13
+
+- Volt Wednesday corrected from 19:00 to 18:30; matching club description corrected.
+- Citrons biweekly description removed; weekly recurrence unchanged.
+- La Panthère Instagram corrected to `club.la.panthere`.
+- Coureur Nordique beginner badge removed.
+- Crew October 17 Course & Mocktails added as one dated event at 12:00, not a weekly recurrence. Existing organizer-entered events that day are preserved.
+- Seed no longer invents a rolling future Kogi beer outing to demonstrate the interface. Existing saved events are not deleted.
+
+Guarded migrations preserve unrelated records, changed values and event history. Regression tests cover the migration and day/time rendering, including Crew appearing only on the announced Saturday.
+
+La Foulée's seasonal corrections and Volt Monday venue seasons remain unresolved. The runtime understands RRULE month restrictions, but the recurrence editor currently drops them. Adding restricted recurrences now would silently lose seasons after an edit. No fixed year-round substitute was invented. Dated Panthère exception replacement, December closures and current 6AM schedules remain unverified.

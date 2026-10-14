@@ -29,16 +29,24 @@ test.describe('Auth Sign In', () => {
     ).toBeVisible()
   })
 
-  test('shows development quick login without email delivery', async ({
+  test('only exposes quick login on the development server', async ({
     page,
   }) => {
     await page.goto('/en/auth/signin')
 
-    await expect(
-      page.getByRole('heading', { name: /dev only - quick login/i })
-    ).toBeVisible()
-    await expect(
-      page.getByRole('button', { name: /sign in instantly/i })
-    ).toBeDisabled()
+    const quickLoginHeading = page.getByRole('heading', {
+      name: /dev only - quick login/i,
+    })
+    const quickLoginButton = page.getByRole('button', {
+      name: /sign in instantly/i,
+    })
+
+    if (process.env.CI) {
+      await expect(quickLoginHeading).toHaveCount(0)
+      await expect(quickLoginButton).toHaveCount(0)
+    } else {
+      await expect(quickLoginHeading).toBeVisible()
+      await expect(quickLoginButton).toBeDisabled()
+    }
   })
 })
