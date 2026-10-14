@@ -3,7 +3,6 @@ import { PrismaClient } from './generated/client/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { Pool } from 'pg'
 import { createSlug } from '../src/lib/utils/slug'
-import { nextTorontoOccurrence } from '../src/lib/utils/run-time'
 
 config()
 
@@ -138,7 +137,7 @@ async function main() {
     where: { slug: createSlug('Les Citrons Pressés') },
     update: {
       description:
-        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi aux 2 semaines.',
+        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi.',
       language: 'fr',
       instagram: 'citronspressesrunclub',
       vibe: 'SOCIAL',
@@ -150,7 +149,7 @@ async function main() {
       name: 'Les Citrons Pressés',
       slug: createSlug('Les Citrons Pressés'),
       description:
-        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi aux 2 semaines.',
+        'Club de course social — 5km ou 10km (~6:00/km). Lundi et mercredi.',
       language: 'fr',
       instagram: 'citronspressesrunclub',
       vibe: 'SOCIAL',
@@ -167,7 +166,7 @@ async function main() {
       description:
         'Club de course — 5km ou 10km. Mercredi 17h30 et samedi 9h30.',
       language: 'fr',
-      instagram: 'clublapanthere',
+      instagram: 'club.la.panthere',
       vibe: 'SOCIAL',
       type: 'MIXED',
       beginnerFriendly: true,
@@ -179,7 +178,7 @@ async function main() {
       description:
         'Club de course — 5km ou 10km. Mercredi 17h30 et samedi 9h30.',
       language: 'fr',
-      instagram: 'clublapanthere',
+      instagram: 'club.la.panthere',
       vibe: 'SOCIAL',
       type: 'MIXED',
       beginnerFriendly: true,
@@ -192,7 +191,7 @@ async function main() {
     where: { slug: createSlug('Volt') },
     update: {
       description:
-        'Club de course structuré — entraînements lundi et mercredi 19h. 260$/an ou 90$/trimestre.',
+        'Club de course structuré — entraînements lundi 19h et mercredi 18h30.',
       language: 'fr',
       instagram: 'voltarunclub',
       website: 'clubdecoursevolt.com',
@@ -204,7 +203,7 @@ async function main() {
       name: 'Volt',
       slug: createSlug('Volt'),
       description:
-        'Club de course structuré — entraînements lundi et mercredi 19h. 260$/an ou 90$/trimestre.',
+        'Club de course structuré — entraînements lundi 19h et mercredi 18h30.',
       language: 'fr',
       instagram: 'voltarunclub',
       website: 'clubdecoursevolt.com',
@@ -277,7 +276,7 @@ async function main() {
       website: 'lecoureurnordique.ca',
       vibe: 'SOCIAL',
       type: 'ROAD',
-      beginnerFriendly: true,
+      beginnerFriendly: false,
       ownerId: staffUser.id,
     },
     create: {
@@ -290,7 +289,7 @@ async function main() {
       website: 'lecoureurnordique.ca',
       vibe: 'SOCIAL',
       type: 'ROAD',
-      beginnerFriendly: true,
+      beginnerFriendly: false,
       ownerId: staffUser.id,
     },
   })
@@ -662,7 +661,7 @@ async function main() {
       timezone: 'America/Toronto',
       clubId: laPanthere.id,
     },
-    // Volt — Mon 7PM, Wed 7PM
+    // Volt — Mon 7PM, Wed 6:30PM
     {
       title: 'Volt',
       slug: 'lundi',
@@ -682,7 +681,7 @@ async function main() {
       address: '750 Grande Allée Ouest, Québec, QC',
       latitude: 46.7997,
       longitude: -71.2318,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=19;BYMINUTE=0',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=30',
       timezone: 'America/Toronto',
       clubId: volt.id,
     },
@@ -719,15 +718,15 @@ async function main() {
       timezone: 'America/Toronto',
       clubId: laFoulee.id,
     },
-    // Kogi — Tue 18:15 at Kogi Café, Limoilou
+    // Kogi — Wed 18:15 at Kogi Café, Limoilou
     {
       title: 'Kogi',
-      slug: 'mardi',
+      slug: 'mercredi',
       description: 'Kogi Café — 1104 18e Rue, Limoilou',
       address: '1104 18e Rue, Québec, QC G1J 1Z1',
       latitude: 46.836,
       longitude: -71.22,
-      schedulePattern: 'FREQ=WEEKLY;BYDAY=TU;BYHOUR=18;BYMINUTE=15',
+      schedulePattern: 'FREQ=WEEKLY;BYDAY=WE;BYHOUR=18;BYMINUTE=15',
       timezone: 'America/Toronto',
       clubId: kogi.id,
     },
@@ -818,41 +817,41 @@ async function main() {
     data: { pacePolicy: 'OPEN_PACE' },
   })
 
-  // Seed a single concrete override so the "Notable runs" surface has
-  // a real example to render against the Kogi recurring pattern.
-  const kogiPattern = await prisma.recurringEvent.findFirst({
-    where: { clubId: kogi.id, slug: 'mardi' },
+  // Official dated outing; never generate a weekly or rolling demo event.
+  const crew = await prisma.club.findUniqueOrThrow({
+    where: { slug: 'le-crew-run-club' },
+    select: { id: true },
   })
-  if (kogiPattern) {
-    // Toronto-anchored, not the seeding machine's local midnight.
-    const beerNight = nextTorontoOccurrence(2, 1)
-    const existing = await prisma.event.findFirst({
-      where: {
-        recurringEventId: kogiPattern.id,
-        date: {
-          gte: beerNight,
-          lt: new Date(beerNight.getTime() + 86400000),
+  const crewOuting = await prisma.event.findFirst({
+    where: {
+      OR: [
+        { slug: 'crew-course-mocktails-2026-10-17' },
+        {
+          clubId: crew.id,
+          recurringEventId: null,
+          date: {
+            gte: new Date('2026-10-17T04:00:00Z'),
+            lt: new Date('2026-10-18T04:00:00Z'),
+          },
         },
+      ],
+    },
+    select: { id: true },
+  })
+  if (!crewOuting) {
+    await prisma.event.create({
+      data: {
+        slug: 'crew-course-mocktails-2026-10-17',
+        title: 'Course & Mocktails',
+        description:
+          'Sortie gratuite, de 12h à 14h. Inscription : https://www.lecrewrunclub.ca/event-details/course-mocktails',
+        address: '367 Rue Soumande, Québec, QC G1M 1A5',
+        placeName: 'Centre d’entraînement Le Crew',
+        date: new Date('2026-10-17T16:00:00Z'),
+        time: '12:00',
+        clubId: crew.id,
       },
-      select: { id: true },
     })
-    if (!existing) {
-      await prisma.event.create({
-        data: {
-          title: 'Bière au Kogi avec La Souche',
-          description:
-            'Sortie hebdomadaire suivie d’une bière offerte par La Souche.',
-          date: beerNight,
-          time: '18:15',
-          address: kogiPattern.address,
-          latitude: kogiPattern.latitude,
-          longitude: kogiPattern.longitude,
-          clubId: kogi.id,
-          recurringEventId: kogiPattern.id,
-          pacePolicy: 'SHARED',
-        },
-      })
-    }
   }
 
   console.log('Database seeded successfully!')

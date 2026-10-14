@@ -1,12 +1,8 @@
 import { expect, it, vi } from 'vitest'
 import { getEventById } from '@/lib/services/events'
-import { prisma } from '@/lib/prisma'
-import RunPage, { generateMetadata, generateStaticParams } from './page'
+import RunPage, { generateMetadata } from './page'
 
 vi.mock('@/lib/services/events', () => ({ getEventById: vi.fn() }))
-vi.mock('@/lib/prisma', () => ({
-  prisma: { event: { findMany: vi.fn() } },
-}))
 
 vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(
@@ -15,22 +11,6 @@ vi.mock('next-intl/server', () => ({
         `${key}: ${values.eventTitle} | ${values.clubName}`
   ),
 }))
-
-it('pre-generates known club event pages', async () => {
-  vi.mocked(prisma.event.findMany).mockResolvedValue([
-    { id: 'event-one' },
-    { id: 'event-two' },
-  ] as never)
-
-  expect(await generateStaticParams()).toEqual([
-    { id: 'event-one' },
-    { id: 'event-two' },
-  ])
-  expect(prisma.event.findMany).toHaveBeenCalledWith({
-    where: { clubId: { not: null } },
-    select: { id: true },
-  })
-})
 
 it('uses canonical event resolution for virtual run metadata', async () => {
   vi.mocked(getEventById).mockResolvedValue({

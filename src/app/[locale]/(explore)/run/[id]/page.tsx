@@ -4,19 +4,10 @@ import { buildPageMetadata, SITE_URL, type Locale } from '@/lib/seo/metadata'
 import { getEventById } from '@/lib/services/events'
 import { eventJsonLd, JsonLd } from '@/components/seo/json-ld'
 import { notFound } from 'next/navigation'
-import { prisma } from '@/lib/prisma'
 
 // Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
 export const revalidate = 86400
 export const dynamicParams = true
-
-export async function generateStaticParams() {
-  const events = await prisma.event.findMany({
-    where: { clubId: { not: null } },
-    select: { id: true },
-  })
-  return events.map(({ id }) => ({ id }))
-}
 
 type Props = { params: Promise<{ locale: string; id: string }> }
 

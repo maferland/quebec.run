@@ -1,17 +1,47 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-const { revalidatePath, revalidateTag } = vi.hoisted(() => ({
+const { revalidatePath, revalidateTag, cachedResults } = vi.hoisted(() => ({
   revalidatePath: vi.fn(),
   revalidateTag: vi.fn(),
+  cachedResults: new Map<string, Promise<unknown>>(),
 }))
 
 vi.mock('next/cache', () => ({
   revalidatePath,
   revalidateTag,
-  unstable_cache: vi.fn(),
+  unstable_cache:
+    (callback: (...args: unknown[]) => Promise<unknown>, keys: string[]) =>
+    (...args: unknown[]) => {
+      const key = JSON.stringify([keys, args])
+      if (!cachedResults.has(key)) cachedResults.set(key, callback(...args))
+      return cachedResults.get(key)
+    },
 }))
 
-import { invalidatePublicCache } from './public-cache'
+import { cachePublicData, invalidatePublicCache } from './public-cache'
+
+afterEach(() => {
+  cachedResults.clear()
+  vi.unstubAllEnvs()
+})
+
+it('reuses data within a release and refreshes it after a deployment', async () => {
+  vi.stubEnv('NODE_ENV', 'production')
+  vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'before-migration')
+  let weekday = 'Tuesday'
+  const readSchedule = vi.fn(async () => weekday)
+  const before = cachePublicData(readSchedule, ['schedule'], {})
+
+  expect(await before()).toBe('Tuesday')
+  weekday = 'Wednesday'
+  expect(await before()).toBe('Tuesday')
+
+  vi.stubEnv('VERCEL_GIT_COMMIT_SHA', 'after-migration')
+  const after = cachePublicData(readSchedule, ['schedule'], {})
+  expect(await after()).toBe('Wednesday')
+  expect(await after()).toBe('Wednesday')
+  expect(readSchedule.mock.calls).toHaveLength(2)
+})
 
 describe('invalidatePublicCache', () => {
   beforeEach(() => {

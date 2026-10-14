@@ -80,7 +80,7 @@ export const LEGACY_VIRTUAL_SLUG_MAP: Record<
     eventSlug: 'mardi',
   },
   milapres1000: { clubSlug: 'milapres1000', eventSlug: 'mardi' },
-  'kogi-mardi': { clubSlug: 'kogi', eventSlug: 'mardi' },
+  'kogi-mardi': { clubSlug: 'kogi', eventSlug: 'mercredi' },
 
   // Club La Foulée — kept workout-type qualifier
   'club-la-foulee-intervalles': {

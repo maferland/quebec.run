@@ -69,33 +69,30 @@ export type ExploreRun = {
   }
 }
 
-function toExploreRun(
-  event: {
+function toExploreRun(event: {
+  id: string
+  slug?: string | null
+  title: string
+  time: string
+  status: 'SCHEDULED' | 'CANCELLED'
+  latitude: number | null
+  longitude: number | null
+  distance: string | null
+  pace: string | null
+  address: string | null
+  placeName: string | null
+  neighborhood: string | null
+  club: {
     id: string
-    slug?: string | null
-    title: string
-    time: string
-    status: 'SCHEDULED' | 'CANCELLED'
-    latitude: number | null
-    longitude: number | null
-    distance: string | null
-    pace: string | null
-    address: string | null
-    placeName: string | null
-    neighborhood: string | null
-    club: {
-      id: string
-      slug: string
-      name: string
-      type: string | null
-      vibe: string | null
-      beginnerFriendly: boolean
-      paceMin: string | null
-      paceMax: string | null
-    } | null
-  },
-  nowMinutes: number | null
-): ExploreRun | null {
+    slug: string
+    name: string
+    type: string | null
+    vibe: string | null
+    beginnerFriendly: boolean
+    paceMin: string | null
+    paceMax: string | null
+  } | null
+}): ExploreRun | null {
   if (!event.club) return null
   return {
     // The slug is the public handle when there is one; virtual occurrences
@@ -108,7 +105,7 @@ function toExploreRun(
     lng: event.longitude,
     distance: event.distance,
     pace: event.pace,
-    isPast: nowMinutes !== null && isRunTimePast(event.time, nowMinutes),
+    isPast: false,
     address: event.address,
     placeName: event.placeName,
     neighborhood: event.neighborhood,
@@ -127,18 +124,16 @@ const EXPLORE_CLUB_SELECT = {
   paceMax: true,
 } as const
 
-async function getExploreWeekRaw(): Promise<{
+async function getExploreWeekRaw(weekStartIso: string): Promise<{
   runsByDay: ExploreRun[][]
   counts: { day: number; count: number }[]
 }> {
   const days = Array.from({ length: 7 }, (_, day) => ({
     day,
-    ...getTorontoDayBounds(day),
+    ...getTorontoDayBounds(day, new Date(weekStartIso)),
   }))
   const weekStart = days[0].start
   const weekEnd = days[days.length - 1].end
-  const now = new Date()
-  const nowMinutes = getTorontoMinutes(now)
 
   const [concreteEvents, recurringEvents] = await Promise.all([
     prisma.event.findMany({
@@ -174,7 +169,7 @@ async function getExploreWeekRaw(): Promise<{
     }),
   ])
 
-  const runsByDay = days.map(({ day, start, end }) => {
+  const runsByDay = days.map(({ start, end }) => {
     const concreteForDay = concreteEvents.filter(
       (event) => event.date >= start && event.date <= end
     )
@@ -194,7 +189,7 @@ async function getExploreWeekRaw(): Promise<{
     })
     return [...concreteForDay, ...virtualEvents]
       .sort((first, second) => first.time.localeCompare(second.time))
-      .map((event) => toExploreRun(event, day === 0 ? nowMinutes : null))
+      .map(toExploreRun)
       .filter((event): event is ExploreRun => event !== null)
   })
 
@@ -217,12 +212,22 @@ const getCachedExploreWeek = cachePublicData(
 )
 
 export async function getEventsForDay(dayOffset: number) {
-  const week = await getCachedExploreWeek()
-  return week.runsByDay[dayOffset] ?? []
+  const now = new Date()
+  const week = await getCachedExploreWeek(
+    getTorontoDayBounds(0, now).start.toISOString()
+  )
+  const runs = week.runsByDay[dayOffset] ?? []
+  const nowMinutes = getTorontoMinutes(now)
+  return runs.map((run) => ({
+    ...run,
+    isPast: dayOffset === 0 && isRunTimePast(run.time, nowMinutes),
+  }))
 }
 
 export async function getWeekEventCounts() {
-  const week = await getCachedExploreWeek()
+  const week = await getCachedExploreWeek(
+    getTorontoDayBounds(0).start.toISOString()
+  )
   return week.counts
 }
 
