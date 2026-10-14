@@ -1,5 +1,22 @@
 import { test, expect } from '@playwright/test'
 
+for (const locale of ['fr', 'en']) {
+  for (const suffix of ['', '/2026-10-13']) {
+    test(`old Kogi place redirects to Wednesday (${locale}${suffix})`, async ({
+      request,
+    }) => {
+      const response = await request.get(
+        `/${locale}/clubs/kogi/events/mardi${suffix}`,
+        { maxRedirects: 0 }
+      )
+      expect(response.status()).toBe(308)
+      expect(response.headers().location).toBe(
+        `/${locale}/clubs/kogi/events/mercredi`
+      )
+    })
+  }
+}
+
 const PUBLIC_ROUTES = [
   { path: '/fr', name: 'home (fr)' },
   { path: '/en', name: 'home (en)' },

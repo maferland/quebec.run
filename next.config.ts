@@ -10,6 +10,11 @@ const nextConfig: NextConfig = {
   productionBrowserSourceMaps: true,
   async redirects() {
     return [
+      {
+        source: '/:locale/clubs/kogi/events/mardi/:path*',
+        destination: '/:locale/clubs/kogi/events/mercredi',
+        permanent: true,
+      },
       // Old list pages → home (explore shell)
       {
         source: '/:locale/events',
