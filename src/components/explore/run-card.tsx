@@ -1,5 +1,5 @@
 'use client'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { ExploreRun } from '@/lib/services/events'
 import { isRunTimePast } from '@/lib/utils/run-time'
 import { TypeTag, VibePill, MetaPill, Flag, Stamp, paceRange } from './badges'
@@ -84,6 +84,7 @@ export function RunCard({
   day,
 }: Props) {
   const t = useTranslations('explore')
+  const locale = useLocale()
   const cancelled = run.status === 'CANCELLED'
   const isPast = day === 0 && !cancelled && isRunTimePast(run.time, nowMin)
   const accent = cancelled ? 'var(--coral)' : 'var(--lime)'
@@ -312,14 +313,24 @@ export function RunCard({
               </div>
             )}
             <div style={{ display: 'flex', gap: 9 }}>
-              <button
+              <a
+                href={`/${locale}/run/${encodeURIComponent(run.id)}`}
                 className="tap"
                 tabIndex={selected ? 0 : -1}
                 onClick={(e) => {
-                  e.stopPropagation()
+                  if (
+                    e.button !== 0 ||
+                    e.metaKey ||
+                    e.ctrlKey ||
+                    e.shiftKey ||
+                    e.altKey
+                  )
+                    return
+                  e.preventDefault()
                   onOpen()
                 }}
                 style={{
+                  textDecoration: 'none',
                   flex: 1,
                   border: 'none',
                   borderRadius: 100,
@@ -337,7 +348,7 @@ export function RunCard({
                 }}
               >
                 {t('open_run')} {ArrowIcon}
-              </button>
+              </a>
             </div>
           </div>
         </div>
