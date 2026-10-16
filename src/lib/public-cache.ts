@@ -2,10 +2,14 @@ import { revalidatePath, revalidateTag, unstable_cache } from 'next/cache'
 
 export const PUBLIC_PAGE_REVALIDATE_SECONDS = 86400
 export const PUBLIC_API_REVALIDATE_SECONDS = 86400
+export const PUBLIC_RUN_REVALIDATE_SECONDS = 604800
 
 export const PUBLIC_CACHE_TAGS = {
   clubs: 'public:clubs',
+  club: (slug: string): `public:${string}` => `public:club:${slug}`,
   runs: 'public:runs',
+  run: (id: string): `public:${string}` => `public:run:${id}`,
+  explore: 'public:explore',
   sitemap: 'public:sitemap',
 } as const
 
@@ -31,7 +35,7 @@ export function cachePublicData<Args extends unknown[], Result>(
   )
 }
 
-type PublicCacheTag = (typeof PUBLIC_CACHE_TAGS)[keyof typeof PUBLIC_CACHE_TAGS]
+type PublicCacheTag = `public:${string}`
 
 export function invalidatePublicCache(...tags: PublicCacheTag[]) {
   if (process.env.NODE_ENV === 'test') return

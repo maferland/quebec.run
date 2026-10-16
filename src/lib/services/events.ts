@@ -5,6 +5,7 @@ import {
   PUBLIC_API_REVALIDATE_SECONDS,
   PUBLIC_CACHE_TAGS,
   PUBLIC_PAGE_REVALIDATE_SECONDS,
+  PUBLIC_RUN_REVALIDATE_SECONDS,
 } from '@/lib/public-cache'
 import type {
   EventsQuery,
@@ -207,9 +208,33 @@ const getCachedExploreWeek = cachePublicData(
   ['explore-week'],
   {
     revalidate: PUBLIC_API_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.runs],
+    tags: [PUBLIC_CACHE_TAGS.explore],
   }
 )
+
+// Route HTML gets a daily snapshot for crawlable links. It is deliberately
+// separate from the live API cache so an edit need not expire every detail URL
+// that shares the explore layout.
+const getCachedExploreSnapshot = cachePublicData(
+  getExploreWeekRaw,
+  ['explore-html-snapshot'],
+  { revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS }
+)
+
+export async function getExploreSnapshot() {
+  const now = new Date()
+  const anchor = getTorontoDayBounds(0, now).start.toISOString()
+  const week = await getCachedExploreSnapshot(anchor)
+  const nowMinutes = getTorontoMinutes(now)
+  return {
+    anchor,
+    weekCounts: week.counts,
+    runs: (week.runsByDay[0] ?? []).map((run) => ({
+      ...run,
+      isPast: isRunTimePast(run.time, nowMinutes),
+    })),
+  }
+}
 
 export async function getEventsForDay(dayOffset: number) {
   const now = new Date()
@@ -695,14 +720,15 @@ async function getEventByIdRaw(id: string) {
   })
 }
 
-const getCachedEventById = cachePublicData(
-  getEventByIdRaw,
-  ['event-by-id-v3'],
-  {
-    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.runs],
-  }
-)
+function getCachedEventById(id: string) {
+  // A virtual occurrence changes with its recurring pattern. Concrete runs
+  // can be expired one at a time when an editor changes them.
+  const isVirtual = /(?:--|:)\d{4}-\d{2}-\d{2}$/.test(id)
+  return cachePublicData(getEventByIdRaw, ['event-by-id-v4', id], {
+    revalidate: PUBLIC_RUN_REVALIDATE_SECONDS,
+    tags: [isVirtual ? PUBLIC_CACHE_TAGS.runs : PUBLIC_CACHE_TAGS.run(id)],
+  })(id)
+}
 
 export const getEventById = async ({ data }: PublicPayload<EventId>) => {
   return getCachedEventById(data.id)
@@ -784,14 +810,20 @@ async function getEventByClubAndSlugRaw(
   return createVirtualEvent(recurringEvent, new Date(`${date}T12:00:00`))
 }
 
-const getCachedEventByClubAndSlug = cachePublicData(
-  getEventByClubAndSlugRaw,
-  ['event-by-club-and-slug'],
-  {
-    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.runs],
-  }
-)
+function getCachedEventByClubAndSlug(
+  clubSlug: string,
+  eventSlug: string,
+  date: string
+) {
+  return cachePublicData(
+    getEventByClubAndSlugRaw,
+    ['event-by-club-and-slug', clubSlug],
+    {
+      revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+      tags: [PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.club(clubSlug)],
+    }
+  )(clubSlug, eventSlug, date)
+}
 
 export const getEventByClubAndSlug = async ({
   data,
@@ -853,6 +885,19 @@ async function uniqueEventSlug(title: string): Promise<string> {
   return `${base}-${suffix}`
 }
 
+function invalidateEventEdit(event: {
+  id: string
+  slug: string | null
+  club: { slug: string } | null
+}) {
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.run(event.id),
+    ...(event.slug ? [PUBLIC_CACHE_TAGS.run(event.slug)] : []),
+    ...(event.club ? [PUBLIC_CACHE_TAGS.club(event.club.slug)] : [])
+  )
+}
+
 export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
   // Geocode address if provided
   let latitude: number | null = null
@@ -882,12 +927,13 @@ export const createEvent = async ({ data }: AuthPayload<EventCreate>) => {
         select: {
           id: true,
           name: true,
+          slug: true,
         },
       },
     },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  invalidateEventEdit(event)
 
   return event
 }
@@ -900,9 +946,10 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     where: { id },
     select: {
       id: true,
+      slug: true,
       address: true,
       club: {
-        select: { ownerId: true },
+        select: { ownerId: true, slug: true },
       },
       organization: {
         select: { ownerId: true },
@@ -955,12 +1002,19 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
         select: {
           id: true,
           name: true,
+          slug: true,
         },
       },
     },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  invalidateEventEdit(updatedEvent)
+  if (event.slug && event.slug !== updatedEvent.slug) {
+    invalidatePublicCache(PUBLIC_CACHE_TAGS.run(event.slug))
+  }
+  if (event.club?.slug && event.club.slug !== updatedEvent.club?.slug) {
+    invalidatePublicCache(PUBLIC_CACHE_TAGS.club(event.club.slug))
+  }
   return updatedEvent
 }
 
@@ -992,8 +1046,9 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
 
   const deletedEvent = await prisma.event.delete({
     where: { id },
+    include: { club: { select: { slug: true } } },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  invalidateEventEdit(deletedEvent)
   return deletedEvent
 }
