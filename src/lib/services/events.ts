@@ -946,6 +946,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     where: { id },
     select: {
       id: true,
+      slug: true,
       address: true,
       club: {
         select: { ownerId: true, slug: true },
@@ -1008,6 +1009,9 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
   })
 
   invalidateEventEdit(updatedEvent)
+  if (event.slug && event.slug !== updatedEvent.slug) {
+    invalidatePublicCache(PUBLIC_CACHE_TAGS.run(event.slug))
+  }
   if (event.club?.slug && event.club.slug !== updatedEvent.club?.slug) {
     invalidatePublicCache(PUBLIC_CACHE_TAGS.club(event.club.slug))
   }
