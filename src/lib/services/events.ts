@@ -212,6 +212,30 @@ const getCachedExploreWeek = cachePublicData(
   }
 )
 
+// Route HTML gets a daily snapshot for crawlable links. It is deliberately
+// separate from the live API cache so an edit need not expire every detail URL
+// that shares the explore layout.
+const getCachedExploreSnapshot = cachePublicData(
+  getExploreWeekRaw,
+  ['explore-html-snapshot'],
+  { revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS }
+)
+
+export async function getExploreSnapshot() {
+  const now = new Date()
+  const anchor = getTorontoDayBounds(0, now).start.toISOString()
+  const week = await getCachedExploreSnapshot(anchor)
+  const nowMinutes = getTorontoMinutes(now)
+  return {
+    anchor,
+    weekCounts: week.counts,
+    runs: (week.runsByDay[0] ?? []).map((run) => ({
+      ...run,
+      isPast: isRunTimePast(run.time, nowMinutes),
+    })),
+  }
+}
+
 export async function getEventsForDay(dayOffset: number) {
   const now = new Date()
   const week = await getCachedExploreWeek(

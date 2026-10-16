@@ -200,7 +200,10 @@ const placeDetailQuery = (
   retry: false,
 })
 
-export function useWeekCounts(anchor: string | null) {
+export function useWeekCounts(
+  anchor: string | null,
+  initialData?: WeekCount[]
+) {
   return useQuery({
     queryKey: exploreKeys.weekCounts(anchor),
     queryFn: () =>
@@ -208,6 +211,8 @@ export function useWeekCounts(anchor: string | null) {
         '/api/explore/week-counts',
         'Failed to load week counts'
       ),
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
     enabled: Boolean(anchor),
   })
@@ -216,9 +221,11 @@ export function useWeekCounts(anchor: string | null) {
 export function useExploreRuns({
   day,
   anchor,
+  initialData,
 }: {
   day: number
   anchor: string | null
+  initialData?: ExploreRun[]
 }) {
   return useQuery({
     queryKey: exploreKeys.runs(day, anchor),
@@ -227,16 +234,20 @@ export function useExploreRuns({
         `/api/explore/runs?day=${day}`,
         'Failed to load runs'
       ),
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
     enabled: Boolean(anchor),
   })
 }
 
-export function useExploreClubs() {
+export function useExploreClubs(initialData?: ExploreClub[]) {
   return useQuery({
     queryKey: exploreKeys.clubs(),
     queryFn: () =>
       getJson<ExploreClub[]>('/api/explore/clubs', 'Failed to load clubs'),
+    initialData,
+    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
   })
 }
