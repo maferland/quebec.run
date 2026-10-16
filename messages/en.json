@@ -422,6 +422,10 @@
     }
   },
   "explore": {
+    "runs_heading": "Group runs in Quebec City",
+    "clubs_heading": "Running clubs in Quebec City",
+    "directory_description": "quebec.run lists running clubs in Quebec City and their group runs, with schedules and meeting points.",
+
     "tagline": "Where to run tonight?",
     "tonight": "Tonight",
     "tomorrow": "Tomorrow",

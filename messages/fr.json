@@ -53,7 +53,7 @@
     "title": "quebec.run | Trouvez votre prochaine course à Québec",
     "description": "Découvrez les clubs de course et événements à Québec. Connectez-vous avec d'autres coureurs et explorez de nouveaux parcours ensemble.",
     "home": {
-      "title": "quebec.run | Où courir ce soir à Québec ?",
+      "title": "Clubs de course à Québec : sorties ce soir | quebec.run",
       "description": "Tous les clubs de course de Québec sur une carte. Trouve une sortie ce soir, filtrée par moment de la journée.",
       "ogTitle": "quebec.run | Où courir ce soir ?",
       "ogDescription": "Tous les clubs de course de Québec, sur une seule carte.",
@@ -422,6 +422,10 @@
     }
   },
   "explore": {
+    "runs_heading": "Sorties de course à Québec",
+    "clubs_heading": "Clubs de course à Québec",
+    "directory_description": "quebec.run répertorie les clubs de course de la ville de Québec et leurs sorties : horaires et points de départ pour courir en groupe.",
+
     "tagline": "Où courir ce soir ?",
     "tonight": "Ce soir",
     "tomorrow": "Demain",

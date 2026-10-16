@@ -267,27 +267,53 @@ function ExploreShellInner({
   )
 
   const list = (
-    <RunList
-      runs={collections.filteredRuns}
-      clubs={collections.filteredClubs}
-      mode={mode}
-      selId={selectedId}
-      onSelect={setPreviewRunId}
-      onOpenRun={openRunDetail}
-      onOpenClub={openClubDetail}
-      loading={mode === 'clubs' ? loadingClubs : loadingRuns}
-      refreshing={mode === 'runs' && fetchingRuns && runs.length > 0}
-      day={day}
-      week={week}
-      setDay={routing.setDay}
-      nowMin={nowMin}
-      hasActiveFilters={activeFilterCount > 0}
-      hasSearchQuery={collections.hasSearchQuery}
-      onClearFilters={routing.clearFilters}
-      allRuns={runs}
-      onPreloadRun={preloadRun}
-      onPreloadClub={preloadClub}
-    />
+    <>
+      {!routing.currentDetail && (
+        <header style={{ marginBottom: 16 }}>
+          <h1
+            style={{
+              margin: '0 0 6px',
+              fontSize: 22,
+              fontWeight: 700,
+              lineHeight: 1.2,
+            }}
+          >
+            {t(mode === 'clubs' ? 'clubs_heading' : 'runs_heading')}
+          </h1>
+          <p
+            style={{
+              margin: 0,
+              fontSize: 13.5,
+              lineHeight: 1.5,
+              color: 'var(--dim)',
+            }}
+          >
+            {t('directory_description')}
+          </p>
+        </header>
+      )}
+      <RunList
+        runs={collections.filteredRuns}
+        clubs={collections.filteredClubs}
+        mode={mode}
+        selId={selectedId}
+        onSelect={setPreviewRunId}
+        onOpenRun={openRunDetail}
+        onOpenClub={openClubDetail}
+        loading={mode === 'clubs' ? loadingClubs : loadingRuns}
+        refreshing={mode === 'runs' && fetchingRuns && runs.length > 0}
+        day={day}
+        week={week}
+        setDay={routing.setDay}
+        nowMin={nowMin}
+        hasActiveFilters={activeFilterCount > 0}
+        hasSearchQuery={collections.hasSearchQuery}
+        onClearFilters={routing.clearFilters}
+        allRuns={runs}
+        onPreloadRun={preloadRun}
+        onPreloadClub={preloadClub}
+      />
+    </>
   )
 
   // No upcoming run left today, and the list is not empty.
