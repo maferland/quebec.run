@@ -1,5 +1,5 @@
 'use client'
-import { useTranslations } from 'next-intl'
+import { useLocale, useTranslations } from 'next-intl'
 import type { ExploreClub } from '@/lib/services/clubs'
 import { TypeTag, VibePill, MetaPill, Flag, paceRange } from './badges'
 
@@ -27,18 +27,31 @@ type Props = {
 
 export function ClubCard({ club, onOpen, onIntent }: Props) {
   const t = useTranslations('explore')
+  const locale = useLocale()
   const pace = paceRange(club.paceMin, club.paceMax)
   const typeLabel = club.type ? t(`type_${club.type.toLowerCase()}`) : null
   const vibeLabel = club.vibe ? t(`vibe_${club.vibe.toLowerCase()}`) : null
 
   return (
-    <button
-      type="button"
+    <a
+      href={`/${locale}/clubs/${encodeURIComponent(club.slug)}`}
       className="tap sheet-card-enter qr-card-action"
-      onClick={onOpen}
+      onClick={(event) => {
+        if (
+          event.button !== 0 ||
+          event.metaKey ||
+          event.ctrlKey ||
+          event.shiftKey ||
+          event.altKey
+        )
+          return
+        event.preventDefault()
+        onOpen()
+      }}
       onPointerEnter={onIntent}
       onFocus={onIntent}
       style={{
+        textDecoration: 'none',
         width: '100%',
         borderRadius: 'var(--r-lg)',
         padding: '15px',
@@ -103,6 +116,6 @@ export function ClubCard({ club, onOpen, onIntent }: Props) {
           </MetaPill>
         </span>
       )}
-    </button>
+    </a>
   )
 }
