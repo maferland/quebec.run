@@ -223,7 +223,7 @@ test.describe('Map Markers', () => {
     await Promise.all([
       page.waitForURL(/\/en\/clubs\/fauxmouvement$/, { timeout: 15000 }),
       page
-        .getByRole('button', { name: /Faux Mouvement/ })
+        .getByRole('link', { name: /Faux Mouvement/ })
         .first()
         .click(),
     ])
@@ -346,7 +346,7 @@ test.describe('Map Markers', () => {
       .click()
     await expect(page).toHaveURL(new RegExp(`/en${qs ? '\\?day=' + day : ''}$`))
     await expect(page.locator('.pin.is-active')).toBeVisible()
-    const detailsButton = page.getByRole('button', { name: /details/i }).first()
+    const detailsButton = page.getByRole('link', { name: /details/i }).first()
     await expect(detailsButton).toBeVisible()
 
     await detailsButton.click()
@@ -404,7 +404,7 @@ test.describe('Map Markers', () => {
     await runTitle.click()
     await expect(page.locator('.qr-detail-shell')).toHaveCount(0)
     await page
-      .getByRole('button', { name: /details/i })
+      .getByRole('link', { name: /details/i })
       .first()
       .click()
     await expect(page.locator('.qr-detail-shell')).toBeVisible()
