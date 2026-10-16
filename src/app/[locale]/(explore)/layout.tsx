@@ -1,24 +1,16 @@
 import { ExploreShell } from '@/components/explore/explore-shell'
-import { getClubsForExplore } from '@/lib/services/clubs'
-import { getEventsForDay, getWeekEventCounts } from '@/lib/services/events'
 import { ExploreProviders } from '@/app/providers'
-import { connection } from 'next/server'
 
-export default async function ExploreLayout({
+// The shell is shared by every club and event URL. Keep it independent of the
+// current day so those pages can be served from the full route cache.
+
+export default function ExploreLayout({
   children,
   detail,
 }: {
   children: React.ReactNode
   detail: React.ReactNode
 }) {
-  // Day offsets change at Toronto midnight; only the dated data may be cached.
-  await connection()
-  const [weekCounts, runs, clubs] = await Promise.all([
-    getWeekEventCounts().catch(() => undefined),
-    getEventsForDay(0).catch(() => undefined),
-    getClubsForExplore().catch(() => undefined),
-  ])
-
   return (
     <ExploreProviders>
       <link rel="preconnect" href="https://a.basemaps.cartocdn.com" />
@@ -36,10 +28,7 @@ export default async function ExploreLayout({
         media="(min-width: 768px)"
         fetchPriority="high"
       />
-      <ExploreShell
-        initialData={{ day: 0, weekCounts, runs, clubs }}
-        serverDetail={detail}
-      />
+      <ExploreShell serverDetail={detail} />
       {children}
     </ExploreProviders>
   )

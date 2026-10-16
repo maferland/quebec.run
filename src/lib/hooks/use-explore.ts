@@ -1,6 +1,5 @@
 import { format } from 'date-fns'
 import {
-  keepPreviousData,
   useQuery,
   useQueryClient,
   type QueryClient,
@@ -23,8 +22,10 @@ export type WeekCount = { day: number; count: number }
 const STALE_TIME = 5 * 60 * 1000
 
 export const exploreKeys = {
-  weekCounts: () => ['explore', 'week-counts'] as const,
-  runs: (day: number) => ['explore', 'runs', { day }] as const,
+  weekCounts: (anchor: string | null) =>
+    ['explore', 'week-counts', { anchor }] as const,
+  runs: (day: number, anchor: string | null) =>
+    ['explore', 'runs', { day, anchor }] as const,
   clubs: () => ['explore', 'clubs'] as const,
   runDetail: (id: string) => ['explore', 'run-detail', { id }] as const,
   clubDetail: (slug: string, locale: string) =>
@@ -199,45 +200,43 @@ const placeDetailQuery = (
   retry: false,
 })
 
-export function useWeekCounts(initialData?: WeekCount[]) {
+export function useWeekCounts(anchor: string | null) {
   return useQuery({
-    queryKey: exploreKeys.weekCounts(),
+    queryKey: exploreKeys.weekCounts(anchor),
     queryFn: () =>
       getJson<WeekCount[]>(
         '/api/explore/week-counts',
         'Failed to load week counts'
       ),
-    initialData,
     staleTime: STALE_TIME,
+    enabled: Boolean(anchor),
   })
 }
 
 export function useExploreRuns({
   day,
-  initialData,
+  anchor,
 }: {
   day: number
-  initialData?: ExploreRun[]
+  anchor: string | null
 }) {
   return useQuery({
-    queryKey: exploreKeys.runs(day),
+    queryKey: exploreKeys.runs(day, anchor),
     queryFn: () =>
       getJson<ExploreRun[]>(
         `/api/explore/runs?day=${day}`,
         'Failed to load runs'
       ),
-    initialData,
-    placeholderData: keepPreviousData,
     staleTime: STALE_TIME,
+    enabled: Boolean(anchor),
   })
 }
 
-export function useExploreClubs(initialData?: ExploreClub[]) {
+export function useExploreClubs() {
   return useQuery({
     queryKey: exploreKeys.clubs(),
     queryFn: () =>
       getJson<ExploreClub[]>('/api/explore/clubs', 'Failed to load clubs'),
-    initialData,
     staleTime: STALE_TIME,
   })
 }

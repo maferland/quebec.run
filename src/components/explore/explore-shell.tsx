@@ -32,15 +32,13 @@ import {
 } from './use-explore-layout'
 import { useExploreSearch } from './use-explore-search'
 import { useAutoScrollToNextRun } from './use-auto-scroll'
-import type { ExploreRun } from '@/lib/services/events'
-import type { ExploreClub } from '@/lib/services/clubs'
+import { getTorontoDayBounds } from '@/lib/utils/run-time'
 import {
   useDetailPrefetch,
   useExploreClubs,
   useExploreRuns,
   useRunDetail,
   useWeekCounts,
-  type WeekCount,
 } from '@/lib/hooks/use-explore'
 
 const PASSPORT_ENABLED = process.env.NEXT_PUBLIC_PASSPORT_ENABLED === 'true'
@@ -55,36 +53,22 @@ const ROOT_STYLE: React.CSSProperties = {
   zIndex: 1200,
 }
 
-export type InitialExploreData = {
-  day: number
-  weekCounts?: WeekCount[]
-  runs?: ExploreRun[]
-  clubs?: ExploreClub[]
-}
-
 // useSearchParams needs a Suspense boundary above it.
 export function ExploreShell({
-  initialData,
   serverDetail,
 }: {
-  initialData?: InitialExploreData
   serverDetail?: React.ReactNode
 }) {
   return (
     <Suspense>
-      <ExploreShellInner
-        initialData={initialData}
-        serverDetail={serverDetail}
-      />
+      <ExploreShellInner serverDetail={serverDetail} />
     </Suspense>
   )
 }
 
 function ExploreShellInner({
-  initialData,
   serverDetail,
 }: {
-  initialData?: InitialExploreData
   serverDetail?: React.ReactNode
 }) {
   const { theme, setTheme } = useTheme()
@@ -93,20 +77,27 @@ function ExploreShellInner({
   const clearPreview = useCallback(() => setPreviewRunId(null), [])
   const routing = useExploreRouting({ onNavigate: clearPreview })
   const { locale, mode, day, filters } = routing
+  const [dayAnchor, setDayAnchor] = useState<string | null>(null)
+
+  useEffect(() => {
+    const updateDay = () =>
+      setDayAnchor(getTorontoDayBounds(0).start.toISOString())
+    updateDay()
+    const interval = window.setInterval(updateDay, 60_000)
+    return () => window.clearInterval(interval)
+  }, [])
 
   // ── Data ────────────────────────────────────────────────────────────────────
-  const { data: weekCounts = [] } = useWeekCounts(initialData?.weekCounts)
+  const { data: weekCounts = [] } = useWeekCounts(dayAnchor)
   const { data: runs = [], isFetching: fetchingRuns } = useExploreRuns({
     day,
-    initialData: initialData?.day === day ? initialData.runs : undefined,
+    anchor: dayAnchor,
   })
-  const { data: clubs = [], isFetching: fetchingClubs } = useExploreClubs(
-    initialData?.clubs
-  )
+  const { data: clubs = [], isFetching: fetchingClubs } = useExploreClubs()
   const { data: selectedRun } = useRunDetail(routing.selectedRunId)
   const { prefetchRun, prefetchClub } = useDetailPrefetch(locale)
 
-  const loadingRuns = fetchingRuns && runs.length === 0
+  const loadingRuns = !dayAnchor || (fetchingRuns && runs.length === 0)
   const loadingClubs = fetchingClubs && clubs.length === 0
 
   // ── Layout ──────────────────────────────────────────────────────────────────
@@ -198,13 +189,16 @@ function ExploreShellInner({
 
   const week = useMemo(
     () =>
-      buildWeekDays({
-        counts: weekCounts,
-        locale,
-        todayLabel: t('tonight'),
-        tomorrowLabel: t('tomorrow'),
-      }),
-    [weekCounts, locale, t]
+      dayAnchor
+        ? buildWeekDays({
+            counts: weekCounts,
+            locale,
+            todayLabel: t('tonight'),
+            tomorrowLabel: t('tomorrow'),
+            now: new Date(dayAnchor),
+          })
+        : [],
+    [dayAnchor, weekCounts, locale, t]
   )
 
   const selectedId =

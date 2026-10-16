@@ -265,6 +265,7 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
   invalidatePublicCache(
     PUBLIC_CACHE_TAGS.clubs,
     PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
     PUBLIC_CACHE_TAGS.sitemap
   )
   return club
@@ -293,6 +294,7 @@ export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
   invalidatePublicCache(
     PUBLIC_CACHE_TAGS.clubs,
     PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
     PUBLIC_CACHE_TAGS.sitemap
   )
   return club
@@ -337,6 +339,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   invalidatePublicCache(
     PUBLIC_CACHE_TAGS.clubs,
     PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
     PUBLIC_CACHE_TAGS.sitemap
   )
   return deletedClub
@@ -414,14 +417,12 @@ async function getClubBySlugRaw(slug: string) {
   return { ...club, patterns }
 }
 
-const getCachedClubBySlug = cachePublicData(
-  getClubBySlugRaw,
-  ['club-by-slug'],
-  {
+function getCachedClubBySlug(slug: string) {
+  return cachePublicData(getClubBySlugRaw, ['club-by-slug', slug], {
     revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
-  }
-)
+    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.club(slug)],
+  })(slug)
+}
 
 export async function getClubBySlug({ slug }: ClubSlug) {
   return getCachedClubBySlug(slug)
@@ -671,14 +672,16 @@ async function getClubDetailBySlugRaw(
   }
 }
 
-export const getClubDetailBySlug = cachePublicData(
-  getClubDetailBySlugRaw,
-  ['club-detail-by-slug'],
-  {
-    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.runs],
-  }
-)
+export function getClubDetailBySlug(slug: string, locale: string) {
+  return cachePublicData(
+    getClubDetailBySlugRaw,
+    ['club-detail-by-slug', slug],
+    {
+      revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+      tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.club(slug)],
+    }
+  )(slug, locale)
+}
 
 export const updateClubById = async ({
   user,
@@ -707,6 +710,7 @@ export const updateClubById = async ({
   invalidatePublicCache(
     PUBLIC_CACHE_TAGS.clubs,
     PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
     PUBLIC_CACHE_TAGS.sitemap
   )
   return updatedClub

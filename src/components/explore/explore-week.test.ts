@@ -64,4 +64,12 @@ describe('buildWeekDays', () => {
 
     expect(week.every((d) => d.count === 0)).toBe(true)
   })
+
+  it('uses Toronto midnight even when UTC has already reached the next day', () => {
+    vi.setSystemTime(new Date('2026-10-16T03:30:00Z'))
+    expect(build('en')[0].dateLabel).toBe('Oct 15')
+
+    vi.setSystemTime(new Date('2026-10-16T04:30:00Z'))
+    expect(build('en')[0].dateLabel).toBe('Oct 16')
+  })
 })
