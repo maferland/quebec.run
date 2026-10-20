@@ -6,7 +6,6 @@ import { getPlacePage } from '@/lib/services/recurring-events'
 // Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
 export const revalidate = 86400
 export const dynamicParams = true
-export const dynamic = 'force-static'
 
 type Props = {
   params: Promise<{ locale: string; slug: string; place: string }>

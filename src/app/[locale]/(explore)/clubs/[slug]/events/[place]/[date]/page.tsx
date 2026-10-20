@@ -8,7 +8,6 @@ import {
 // upcoming to past and concrete occurrences are materialized.
 export const revalidate = 86400
 export const dynamicParams = true
-export const dynamic = 'force-static'
 
 type Props = {
   params: Promise<{ locale: string; slug: string; place: string; date: string }>
