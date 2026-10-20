@@ -3,6 +3,7 @@ import { useTranslations } from 'next-intl'
 import { useEffect, useState } from 'react'
 import { Link } from '@/i18n/navigation'
 import type { RunDetailClub } from '@/lib/schemas'
+import { isRunPast } from '@/lib/utils/run-time'
 import { TypeTag, VibePill, Flag, Stamp, paceRange } from './badges'
 
 const ChevLIcon = (
@@ -273,6 +274,15 @@ export function RunDetailPanel({
   const t = useTranslations('explore')
   const [shared, setShared] = useState(false)
   const [shown, setShown] = useState(!animateIn)
+  const [isPast, setIsPast] = useState(run.isPast)
+
+  useEffect(() => {
+    const updatePast = () =>
+      setIsPast(isRunPast(run.date, run.time, new Date()))
+    updatePast()
+    const interval = window.setInterval(updatePast, 60_000)
+    return () => window.clearInterval(interval)
+  }, [run.date, run.time])
 
   useEffect(() => {
     if (!animateIn) return
@@ -382,9 +392,7 @@ export function RunDetailPanel({
           {vibeLabel && <VibePill label={vibeLabel} />}
           {run.club.beginnerFriendly && <Flag>{t('beginner_badge')}</Flag>}
           {cancelled && <Stamp tone="cancelled">{t('cancelled')}</Stamp>}
-          {run.isPast && !cancelled && (
-            <Stamp tone="past">{t('past_badge')}</Stamp>
-          )}
+          {isPast && !cancelled && <Stamp tone="past">{t('past_badge')}</Stamp>}
         </div>
         <h1
           style={{

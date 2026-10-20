@@ -1,5 +1,4 @@
 import { withPublic } from '@/lib/api-middleware'
-import { publicCacheHeaders } from '@/lib/public-cache'
 import { z } from 'zod'
 import { getPlacePage } from '@/lib/services/recurring-events'
 import { toPlaceDetail } from '@/lib/hooks/use-explore'
@@ -17,6 +16,6 @@ export const GET = withPublic(schema)(async (data) => {
   })
   if (!place) return Response.json({ error: 'Not found' }, { status: 404 })
   return Response.json(toPlaceDetail(place, data.locale), {
-    headers: publicCacheHeaders(),
+    headers: { 'Cache-Control': 'no-store' },
   })
 })

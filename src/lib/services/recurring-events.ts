@@ -96,7 +96,11 @@ export async function generateEventsFromRecurring(
   }))
 
   await prisma.event.createMany({ data: events })
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs)
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.clubs
+  )
 
   return events.length
 }
@@ -321,7 +325,11 @@ export async function createRecurringEvent(
     },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.clubs
+  )
   return recurringEvent
 }
 
@@ -341,7 +349,11 @@ export async function updateRecurringEvent(
     data: updateData,
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.clubs
+  )
   return recurringEvent
 }
 
@@ -354,7 +366,11 @@ export async function deleteRecurringEvent(id: string) {
     data: { isActive: false },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.clubs)
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.runs,
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.clubs
+  )
   return recurringEvent
 }
 

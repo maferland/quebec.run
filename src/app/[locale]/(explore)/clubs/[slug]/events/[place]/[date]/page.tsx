@@ -4,6 +4,9 @@ import {
   getTorontoDayBounds,
 } from '@/lib/services/events'
 
+// Dated redirects are reused by crawlers; refresh daily as dates move from
+// upcoming to past and concrete occurrences are materialized.
+export const revalidate = 86400
 export const dynamicParams = true
 
 type Props = {

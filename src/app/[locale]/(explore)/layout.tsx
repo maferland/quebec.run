@@ -1,8 +1,11 @@
 import { ExploreShell } from '@/components/explore/explore-shell'
-import { getClubsForExplore } from '@/lib/services/clubs'
-import { getEventsForDay, getWeekEventCounts } from '@/lib/services/events'
 import { ExploreProviders } from '@/app/providers'
-import { connection } from 'next/server'
+import { getClubsForExplore } from '@/lib/services/clubs'
+import { getExploreSnapshot } from '@/lib/services/events'
+
+// The shell is shared by every club and event URL. Keep it independent of the
+// request so those pages can be served from the full route cache.
+export const revalidate = 86400
 
 export default async function ExploreLayout({
   children,
@@ -11,11 +14,8 @@ export default async function ExploreLayout({
   children: React.ReactNode
   detail: React.ReactNode
 }) {
-  // Day offsets change at Toronto midnight; only the dated data may be cached.
-  await connection()
-  const [weekCounts, runs, clubs] = await Promise.all([
-    getWeekEventCounts().catch(() => undefined),
-    getEventsForDay(0).catch(() => undefined),
+  const [snapshot, clubs] = await Promise.all([
+    getExploreSnapshot().catch(() => undefined),
     getClubsForExplore().catch(() => undefined),
   ])
 
@@ -37,7 +37,7 @@ export default async function ExploreLayout({
         fetchPriority="high"
       />
       <ExploreShell
-        initialData={{ day: 0, weekCounts, runs, clubs }}
+        initialData={snapshot ? { ...snapshot, clubs } : undefined}
         serverDetail={detail}
       />
       {children}

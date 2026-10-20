@@ -1,5 +1,4 @@
 import { withPublic } from '@/lib/api-middleware'
-import { publicCacheHeaders } from '@/lib/public-cache'
 import { eventIdSchema, runDetailResponseSchema } from '@/lib/schemas'
 import { getEventById, toRunDetailResponse } from '@/lib/services/events'
 
@@ -21,5 +20,9 @@ export const GET = withPublic(eventIdSchema)(async (data) => {
     )
   }
 
-  return Response.json(parsed.data, { headers: publicCacheHeaders() })
+  // The tagged data cache handles database reads. Keep edited runs immediately
+  // visible to clients instead of retaining a separate CDN copy for a day.
+  return Response.json(parsed.data, {
+    headers: { 'Cache-Control': 'no-store' },
+  })
 })

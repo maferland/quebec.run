@@ -46,6 +46,8 @@ it('opens the related club from a native button', async () => {
 
   await user.click(screen.getByRole('button', { name: /Track Club/ }))
   expect(onOpenClub).toHaveBeenCalledWith('track-club')
+  // Cached detail HTML can outlive the event date; the client recomputes it.
+  expect(await screen.findByText('Past')).toBeInTheDocument()
 })
 
 it('opens an upcoming run from a native button', async () => {

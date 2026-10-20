@@ -5,8 +5,8 @@ import { getEventById } from '@/lib/services/events'
 import { eventJsonLd, JsonLd } from '@/components/seo/json-ld'
 import { notFound } from 'next/navigation'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 86400
+// Next.js requires a literal here; keep in sync with PUBLIC_RUN_REVALIDATE_SECONDS in public-cache.ts.
+export const revalidate = 604800
 export const dynamicParams = true
 
 type Props = { params: Promise<{ locale: string; id: string }> }
