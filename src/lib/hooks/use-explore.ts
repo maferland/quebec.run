@@ -212,7 +212,6 @@ export function useWeekCounts(
         'Failed to load week counts'
       ),
     initialData,
-    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
     enabled: Boolean(anchor),
   })
