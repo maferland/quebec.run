@@ -234,7 +234,6 @@ export function useExploreRuns({
         'Failed to load runs'
       ),
     initialData,
-    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
     enabled: Boolean(anchor),
   })
@@ -246,7 +245,6 @@ export function useExploreClubs(initialData?: ExploreClub[]) {
     queryFn: () =>
       getJson<ExploreClub[]>('/api/explore/clubs', 'Failed to load clubs'),
     initialData,
-    initialDataUpdatedAt: initialData ? 0 : undefined,
     staleTime: STALE_TIME,
   })
 }
