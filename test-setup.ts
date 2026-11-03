@@ -2,17 +2,6 @@ import '@testing-library/jest-dom'
 import React from 'react'
 import { vi } from 'vitest'
 
-// Polyfill Web APIs for jsdom environment
-// Node 18+ has these built-in, but jsdom doesn't expose them
-if (typeof global.Request === 'undefined') {
-  // @ts-expect-error - node:fetch exists in Node 18+ but types not in @types/node yet
-  const nodeFetch = await import('node:fetch')
-  global.Request = nodeFetch.Request as typeof global.Request
-  global.Response = nodeFetch.Response as typeof global.Response
-  global.Headers = nodeFetch.Headers as typeof global.Headers
-  global.fetch = nodeFetch.fetch as typeof global.fetch
-}
-
 // Make vi available globally
 ;(globalThis as typeof globalThis & { vi: typeof vi }).vi = vi
 
