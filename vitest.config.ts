@@ -37,7 +37,6 @@ export default defineConfig(({ mode }) => {
           '.storybook/**',
           'prisma/**',
           '.next/',
-          '.worktrees/',
           'coverage/',
           '**/*.config.{js,ts,mjs}',
           // Exclude only API route files - these are integration tested
