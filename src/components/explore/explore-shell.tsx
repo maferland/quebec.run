@@ -3,10 +3,12 @@ import {
   Suspense,
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
 } from 'react'
+import { useSearchParams } from 'next/navigation'
 import { useTranslations } from 'next-intl'
 import { MapView } from './map-view'
 import { useTheme } from './theme-provider'
@@ -63,7 +65,17 @@ export type InitialExploreData = {
   clubs?: ExploreClub[]
 }
 
-// useSearchParams needs a Suspense boundary above it.
+// Only URL synchronization needs the client-only search params boundary. Keep
+// the catalogue outside it so static pages contain crawlable cards.
+function SearchParamsSync({ onChange }: { onChange: (query: string) => void }) {
+  const params = useSearchParams()
+  const query = params.toString()
+  // Apply URL state before hydrated controls become clickable, including after
+  // locale navigation. Otherwise an early locale click can drop its filters.
+  useLayoutEffect(() => onChange(query), [query, onChange])
+  return null
+}
+
 export function ExploreShell({
   initialData,
   serverDetail,
@@ -71,28 +83,41 @@ export function ExploreShell({
   initialData?: InitialExploreData
   serverDetail?: React.ReactNode
 }) {
+  const [query, setQuery] = useState('')
+  // The tiny Suspense boundary can hydrate after the rest of the shell. Read
+  // the initial browser URL here too, before the language links become active.
+  useLayoutEffect(() => {
+    setQuery(window.location.search.slice(1))
+  }, [])
+  const searchParams = useMemo(() => new URLSearchParams(query), [query])
   return (
-    <Suspense>
+    <>
+      <Suspense fallback={null}>
+        <SearchParamsSync onChange={setQuery} />
+      </Suspense>
       <ExploreShellInner
         initialData={initialData}
         serverDetail={serverDetail}
+        searchParams={searchParams}
       />
-    </Suspense>
+    </>
   )
 }
 
 function ExploreShellInner({
   initialData,
   serverDetail,
+  searchParams,
 }: {
   initialData?: InitialExploreData
   serverDetail?: React.ReactNode
+  searchParams: URLSearchParams
 }) {
   const { theme, setTheme } = useTheme()
   const t = useTranslations('explore')
   const [previewRunId, setPreviewRunId] = useState<string | null>(null)
   const clearPreview = useCallback(() => setPreviewRunId(null), [])
-  const routing = useExploreRouting({ onNavigate: clearPreview })
+  const routing = useExploreRouting({ onNavigate: clearPreview, searchParams })
   const { locale, mode, day, filters } = routing
   const [dayAnchor, setDayAnchor] = useState<string | null>(null)
 

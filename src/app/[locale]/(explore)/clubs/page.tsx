@@ -1,5 +1,4 @@
 import type { Metadata } from 'next'
-import { connection } from 'next/server'
 import { getTranslations } from 'next-intl/server'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 
@@ -21,8 +20,6 @@ export async function generateMetadata({
   })
 }
 
-export default async function ClubsPage() {
-  // Keep club card links in the server HTML for crawlers.
-  await connection()
+export default function ClubsPage() {
   return null
 }
