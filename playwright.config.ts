@@ -28,6 +28,11 @@ export default defineConfig({
     },
   ],
   webServer: {
+    // Cache invalidation tests sign local fixture sessions. Never use a real
+    // deployment secret for tokens that can appear in Playwright traces.
+    env: {
+      NEXTAUTH_SECRET: 'playwright-local-fixture-secret-at-least-32-characters',
+    },
     command: process.env.CI
       ? `next start --port ${PORT}`
       : `next dev --turbopack --port ${PORT}`,

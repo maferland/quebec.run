@@ -14,6 +14,12 @@ import {
 export const revalidate = 604800
 export const dynamicParams = true
 
+// Generate new URLs on their first request, then reuse the full route cache.
+// Returning [] keeps runtime fallback enabled for events created after builds.
+export function generateStaticParams() {
+  return []
+}
+
 type Params = { locale: string; id: string }
 
 export async function GET(
@@ -28,7 +34,7 @@ export async function GET(
 
   // The page 404s for an unknown id or a clubless event, so the preview must
   // not claim it exists.
-  if (!event?.club) return new Response(null, { status: 404 })
+  if (!event?.club) return new Response('Not found', { status: 404 })
 
   const dateLabel = formatEventDate(event.date, locale, {
     weekday: 'long',

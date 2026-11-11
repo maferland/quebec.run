@@ -40,6 +40,12 @@ type PublicCacheTag = `public:${string}`
 export function invalidatePublicCache(...tags: PublicCacheTag[]) {
   if (process.env.NODE_ENV === 'test') return
 
+  // Legacy ID redirects read Prisma directly, so they have no tagged data
+  // dependency. Expire their cached destinations when events/clubs change.
+  if (tags.some((tag) => /^public:(run|club)(:|s|$)/.test(tag))) {
+    revalidatePath('/[locale]/events/[id]', 'page')
+  }
+
   new Set(tags).forEach((tag) => {
     if (tag === PUBLIC_CACHE_TAGS.sitemap) {
       revalidatePath('/sitemap.xml')

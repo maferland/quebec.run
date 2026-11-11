@@ -11,18 +11,18 @@ const nextConfig: NextConfig = {
   async redirects() {
     return [
       {
-        source: '/:locale/clubs/kogi/events/mardi/:path*',
+        source: '/:locale(en|fr)/clubs/kogi/events/mardi/:path*',
         destination: '/:locale/clubs/kogi/events/mercredi',
         permanent: true,
       },
       // Old list pages → home (explore shell)
       {
-        source: '/:locale/events',
+        source: '/:locale(en|fr)/events',
         destination: '/:locale',
         permanent: true,
       },
       {
-        source: '/:locale/calendar',
+        source: '/:locale(en|fr)/calendar',
         destination: '/:locale',
         permanent: true,
       },

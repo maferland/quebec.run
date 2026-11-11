@@ -7,6 +7,12 @@ import { getEventById, toRunDetailResponse } from '@/lib/services/events'
 export const revalidate = 604800
 export const dynamicParams = true
 
+// Generate new URLs on their first request, then reuse the full route cache.
+// Returning [] keeps runtime fallback enabled for events created after builds.
+export function generateStaticParams() {
+  return []
+}
+
 type Props = { params: Promise<{ locale: string; id: string }> }
 
 export default async function RunDetailSlot({ params }: Props) {

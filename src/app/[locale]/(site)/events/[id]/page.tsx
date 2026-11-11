@@ -5,6 +5,13 @@ import type { PageProps } from '@/lib/types/next'
 
 export type LegacyEventPageProps = PageProps<{ locale: string; id: string }>
 
+export const revalidate = 86400
+export const dynamicParams = true
+
+export function generateStaticParams() {
+  return []
+}
+
 /**
  * Legacy /events/[id] is a permanent redirect to the canonical nested URL
  * /clubs/<club>/events/<event>/<date>. Three id shapes are accepted:
