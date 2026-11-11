@@ -9,6 +9,12 @@ import {
 export const revalidate = 86400
 export const dynamicParams = true
 
+// Generate new URLs on their first request, then reuse the full route cache.
+// Returning [] keeps runtime fallback enabled for events created after builds.
+export function generateStaticParams() {
+  return []
+}
+
 type Props = {
   params: Promise<{ locale: string; slug: string; place: string; date: string }>
 }

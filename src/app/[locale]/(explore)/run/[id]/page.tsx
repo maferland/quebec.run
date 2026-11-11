@@ -9,6 +9,12 @@ import { notFound } from 'next/navigation'
 export const revalidate = 604800
 export const dynamicParams = true
 
+// Generate new URLs on their first request, then reuse the full route cache.
+// Returning [] keeps runtime fallback enabled for events created after builds.
+export function generateStaticParams() {
+  return []
+}
+
 type Props = { params: Promise<{ locale: string; id: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {

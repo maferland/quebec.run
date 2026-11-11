@@ -4,6 +4,10 @@ import { permanentRedirect } from 'next/navigation'
 export const revalidate = 86400
 export const dynamicParams = true
 
+export function generateStaticParams() {
+  return []
+}
+
 type Props = { params: Promise<{ locale: string; slug: string }> }
 
 export default async function ClubPage({ params }: Props) {
