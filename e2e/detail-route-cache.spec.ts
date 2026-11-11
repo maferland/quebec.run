@@ -48,12 +48,12 @@ test('new event HTML and preview images cache, refresh on edit, and disappear on
     // ISR may serve one stale response while regenerating in the background.
     await expect(async () => {
       expect(await (await request.get(path)).text()).toContain(updatedTitle)
-    }).toPass()
+    }).toPass({ timeout: 15000 })
     await expect(async () => {
       expect(await (await request.get(imagePath)).body()).not.toEqual(
         originalImage
       )
-    }).toPass()
+    }).toPass({ timeout: 15000 })
   } finally {
     const deleted = await request.delete(`/api/events/${event.id}`, { headers })
     expect(deleted.ok()).toBe(true)
@@ -61,7 +61,7 @@ test('new event HTML and preview images cache, refresh on edit, and disappear on
   await expect(async () => {
     expect((await request.get(path)).status()).toBe(404)
     expect((await request.get(imagePath)).status()).toBe(404)
-  }).toPass()
+  }).toPass({ timeout: 15000 })
 })
 
 test('club/place pages and dated redirects cache on first visit with runtime fallback', async ({
@@ -79,7 +79,11 @@ test('club/place pages and dated redirects cache on first visit with runtime fal
   ]) {
     const first = await request.get(path, { maxRedirects: 0 })
     expect([200, 308]).toContain(first.status())
-    const cached = await request.get(path, { maxRedirects: 0 })
-    expect(cached.headers()['x-nextjs-cache']).toBe('HIT')
+    // Another test may just have edited an event, invalidating the shared
+    // catalogue dependency. Allow the background regeneration to complete.
+    await expect(async () => {
+      const cached = await request.get(path, { maxRedirects: 0 })
+      expect(cached.headers()['x-nextjs-cache']).toBe('HIT')
+    }).toPass({ timeout: 15000 })
   }
 })
