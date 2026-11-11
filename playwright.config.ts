@@ -32,6 +32,7 @@ export default defineConfig({
     // deployment secret for tokens that can appear in Playwright traces.
     env: {
       NEXTAUTH_SECRET: 'playwright-local-fixture-secret-at-least-32-characters',
+      NEXTAUTH_URL: BASE_URL,
     },
     command: process.env.CI
       ? `next start --port ${PORT}`

@@ -130,9 +130,13 @@ jobs:
         run: bun run db:seed
 
       - name: Build production app
+        env:
+          NODE_ENV: production
         run: bun run build
 
       - name: Run E2E tests
+        env:
+          NODE_ENV: production
         run: bun run test:e2e -- --project="${{ matrix.project.name }}"
 
       - name: Upload Playwright report
