@@ -19,7 +19,9 @@ const setup = (route = '/fr', query = '') => {
   pathname = route
   search = query
   const onNavigate = vi.fn()
-  const hook = renderHook(() => useExploreRouting({ onNavigate }))
+  const hook = renderHook(() =>
+    useExploreRouting({ onNavigate, searchParams: new URLSearchParams(search) })
+  )
   return { ...hook, onNavigate }
 }
 

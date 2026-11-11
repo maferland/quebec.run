@@ -1,6 +1,6 @@
 'use client'
 import { useCallback, useEffect, useMemo, useTransition } from 'react'
-import { usePathname, useRouter, useSearchParams } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useLocale } from 'next-intl'
 import { DEFAULT_FILTERS, type Filters } from './filter-panel'
 import {
@@ -21,8 +21,13 @@ type UrlUpdate = {
 }
 
 /** Reads explore state out of the URL and owns every write back to it. */
-export function useExploreRouting({ onNavigate }: { onNavigate: () => void }) {
-  const searchParams = useSearchParams()
+export function useExploreRouting({
+  onNavigate,
+  searchParams,
+}: {
+  onNavigate: () => void
+  searchParams: URLSearchParams
+}) {
   const pathname = usePathname()
   const router = useRouter()
   const locale = useLocale()
