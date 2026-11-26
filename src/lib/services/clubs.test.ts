@@ -9,6 +9,7 @@ import {
   getClubListing,
   updateClub,
   getClubsForExplore,
+  getClubImageName,
 } from './clubs'
 import { NotFoundError, UnauthorizedError } from '@/lib/errors'
 
@@ -65,6 +66,18 @@ describe('Clubs Service Integration Tests', () => {
 
   afterEach(async () => {
     await teardownTestData()
+  })
+
+  describe('getClubImageName', () => {
+    it('returns only the club name from the database', async () => {
+      expect(await getClubImageName({ slug: 'test-running-club' })).toEqual({
+        name: 'Test Running Club',
+      })
+    })
+
+    it('returns null for a missing club', async () => {
+      expect(await getClubImageName({ slug: 'missing-club' })).toBeNull()
+    })
   })
 
   describe('getAllClubs', () => {

@@ -10,8 +10,8 @@ import {
   ogCardStyle,
 } from '@/lib/seo/og-theme'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_RUN_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 604800
+// Stable content is refreshed by its tagged mutation dependencies.
+export const revalidate = false
 export const dynamicParams = true
 
 // Generate new URLs on their first request, then reuse the full route cache.
@@ -28,7 +28,7 @@ export async function GET(
 ) {
   const { locale, id } = await params
   const [event, t] = await Promise.all([
-    getEventById({ data: { id } }).catch(() => null),
+    getEventById({ data: { id } }),
     getTranslations({ locale, namespace: 'metadata.eventDetail' }),
   ])
 

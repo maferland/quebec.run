@@ -2,8 +2,8 @@ import type { Metadata } from 'next'
 import { getTranslations } from 'next-intl/server'
 import { buildPageMetadata, type Locale } from '@/lib/seo/metadata'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 86400
+// Stable content is refreshed by its tagged mutation dependencies.
+export const revalidate = false
 
 export async function generateMetadata({
   params,

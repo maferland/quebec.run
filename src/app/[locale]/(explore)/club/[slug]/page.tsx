@@ -1,7 +1,7 @@
 import { permanentRedirect } from 'next/navigation'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 86400
+// Stable content is refreshed by its tagged mutation dependencies.
+export const revalidate = false
 export const dynamicParams = true
 
 export function generateStaticParams() {

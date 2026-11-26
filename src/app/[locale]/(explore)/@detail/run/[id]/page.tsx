@@ -3,8 +3,8 @@ import { RunDetailPanel } from '@/components/explore/run-detail'
 import { toRunDetail } from '@/lib/hooks/use-explore'
 import { getEventById, toRunDetailResponse } from '@/lib/services/events'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_RUN_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 604800
+// The absolute event date is stable; the client updates its past badge.
+export const revalidate = false
 export const dynamicParams = true
 
 // Generate new URLs on their first request, then reuse the full route cache.
@@ -17,7 +17,7 @@ type Props = { params: Promise<{ locale: string; id: string }> }
 
 export default async function RunDetailSlot({ params }: Props) {
   const { locale, id } = await params
-  const event = await getEventById({ data: { id } }).catch(() => null)
+  const event = await getEventById({ data: { id } })
   const response = toRunDetailResponse(event)
   if (!response) notFound()
 

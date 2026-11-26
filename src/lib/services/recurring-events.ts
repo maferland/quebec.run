@@ -7,10 +7,49 @@ import {
   cachePublicData,
   invalidatePublicCache,
   PUBLIC_CACHE_TAGS,
-  PUBLIC_PAGE_REVALIDATE_SECONDS,
 } from '@/lib/public-cache'
 import { weekdaySlugOrder } from '@/lib/utils/weekday-slug'
 import { parseRRuleToForm } from '@/lib/utils/rrule-builder'
+
+type ChangedSchedule = Pick<RecurringEvent, 'id' | 'clubId' | 'slug'>
+
+async function invalidateRecurringCache(...schedules: ChangedSchedule[]) {
+  const clubIds = [...new Set(schedules.map((schedule) => schedule.clubId))]
+  const [clubs, materializedRuns] = await Promise.all([
+    prisma.club.findMany({
+      where: { id: { in: clubIds } },
+      select: { id: true, slug: true },
+    }),
+    prisma.event.findMany({
+      where: {
+        recurringEventId: {
+          in: [...new Set(schedules.map((schedule) => schedule.id))],
+        },
+      },
+      select: { id: true, slug: true },
+    }),
+  ])
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.sitemap,
+    ...clubIds.map(PUBLIC_CACHE_TAGS.clubId),
+    ...clubs.map((club) => PUBLIC_CACHE_TAGS.club(club.slug)),
+    ...materializedRuns.flatMap((run) => [
+      PUBLIC_CACHE_TAGS.run(run.id),
+      ...(run.slug ? [PUBLIC_CACHE_TAGS.run(run.slug)] : []),
+    ]),
+    ...schedules.flatMap((schedule) => [
+      PUBLIC_CACHE_TAGS.schedule(schedule.id),
+      PUBLIC_CACHE_TAGS.schedule(schedule.slug),
+      ...clubs
+        .filter((club) => club.id === schedule.clubId)
+        .map((club) =>
+          PUBLIC_CACHE_TAGS.schedule(`${club.slug}-${schedule.slug}`)
+        ),
+    ])
+  )
+}
 
 /**
  * Generate Event records from RecurringEvent pattern
@@ -96,11 +135,7 @@ export async function generateEventsFromRecurring(
   }))
 
   await prisma.event.createMany({ data: events })
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.clubs
-  )
+  await invalidateRecurringCache(recurringEvent)
 
   return events.length
 }
@@ -168,7 +203,19 @@ export function expandRRuleDates(
  * @returns Virtual event object
  */
 export function createVirtualEvent(
-  recurringEvent: RecurringEvent & { club: Club },
+  recurringEvent: RecurringEvent & {
+    club: Pick<
+      Club,
+      | 'id'
+      | 'name'
+      | 'slug'
+      | 'type'
+      | 'vibe'
+      | 'beginnerFriendly'
+      | 'paceMin'
+      | 'paceMax'
+    >
+  },
   date: Date
 ) {
   const pattern = recurringEvent.schedulePattern.toUpperCase()
@@ -229,17 +276,12 @@ export function createVirtualEvent(
  * @param clubId - Optional club filter
  * @returns Array of concrete + virtual events, sorted by date
  */
-export async function getEventsInRange(
-  startDate: Date,
-  endDate: Date,
-  clubId?: string
-) {
-  // 1. Fetch concrete Events in range (exclude cancelled). Skip concretes whose
+async function getRangeInputsRaw(clubId?: string) {
+  // 1. Fetch stable concrete inputs (exclude cancelled). Skip concretes whose
   //    parent recurring pattern is paused so the listing matches what virtual
   //    expansion produces.
   const concreteEvents = await prisma.event.findMany({
     where: {
-      date: { gte: startDate, lte: endDate },
       status: 'SCHEDULED',
       ...(clubId && { clubId }),
       OR: [{ recurringEventId: null }, { recurringEvent: { isActive: true } }],
@@ -283,9 +325,53 @@ export async function getEventsInRange(
       ...(clubId && { clubId }),
     },
     include: {
-      club: true,
+      club: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          type: true,
+          vibe: true,
+          beginnerFriendly: true,
+          paceMin: true,
+          paceMax: true,
+        },
+      },
     },
   })
+
+  return { concreteEvents, recurringEvents }
+}
+
+// The records are stable; the requested date window is not. Do not put the
+// current timestamp in the cache key or cache already-expanded occurrences.
+function getRangeInputs(clubId?: string) {
+  return cachePublicData(
+    getRangeInputsRaw,
+    ['event-range-inputs', clubId ?? 'all'],
+    {
+      revalidate: false,
+      tags: [
+        clubId ? PUBLIC_CACHE_TAGS.clubId(clubId) : PUBLIC_CACHE_TAGS.explore,
+      ],
+    }
+  )(clubId)
+}
+
+export async function getEventsInRange(
+  startDate: Date,
+  endDate: Date,
+  clubId?: string
+) {
+  const inputs = await getRangeInputs(clubId)
+  const concreteEvents = inputs.concreteEvents
+    .map((event) => ({ ...event, date: new Date(event.date) }))
+    .filter((event) => event.date >= startDate && event.date <= endDate)
+  const recurringEvents = inputs.recurringEvents.map((event) => ({
+    ...event,
+    createdAt: new Date(event.createdAt),
+    updatedAt: new Date(event.updatedAt),
+  }))
 
   // 3. Expand patterns, excluding materialized dates
   const expandedEvents = recurringEvents.flatMap((re) => {
@@ -325,11 +411,7 @@ export async function createRecurringEvent(
     },
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.clubs
-  )
+  await invalidateRecurringCache(recurringEvent)
   return recurringEvent
 }
 
@@ -340,6 +422,10 @@ export async function updateRecurringEvent(
   id: string,
   data: Partial<Prisma.RecurringEventUncheckedUpdateInput>
 ) {
+  const previous = await prisma.recurringEvent.findUnique({
+    where: { id },
+    select: { id: true, clubId: true, slug: true },
+  })
   const updateData = { ...data }
   if (typeof data.title === 'string') {
     updateData.slug = createSlug(data.title)
@@ -349,10 +435,9 @@ export async function updateRecurringEvent(
     data: updateData,
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.clubs
+  await invalidateRecurringCache(
+    ...(previous ? [previous] : []),
+    recurringEvent
   )
   return recurringEvent
 }
@@ -366,11 +451,7 @@ export async function deleteRecurringEvent(id: string) {
     data: { isActive: false },
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.clubs
-  )
+  await invalidateRecurringCache(recurringEvent)
   return recurringEvent
 }
 
@@ -517,20 +598,13 @@ async function getPlacePageRaw(clubSlug: string, placeSlug: string) {
   const group = patterns.filter((pattern) => placeKey(pattern) === key)
   const primarySlug = pickPrimarySlug(group.map((pattern) => pattern.slug))
 
-  const now = new Date()
-  const upper = addDays(now, PLACE_OCCURRENCE_DAYS)
   // Week order, not next-occurrence order: a place's slots read as a schedule,
   // and it should say the same thing whichever day someone lands on it.
-  const slots = group
-    .map((pattern) => ({
-      ...pattern,
-      occurrences: expandRRuleDates(pattern.schedulePattern, now, upper),
-    }))
-    .sort((first, second) =>
-      weekOrder(first.schedulePattern).localeCompare(
-        weekOrder(second.schedulePattern)
-      )
+  const slots = group.sort((first, second) =>
+    weekOrder(first.schedulePattern).localeCompare(
+      weekOrder(second.schedulePattern)
     )
+  )
 
   // Other places this club meets at, for a short name-only link list. Full
   // addresses stay on the club page: repeating every location on every place
@@ -563,10 +637,16 @@ async function getPlacePageRaw(clubSlug: string, placeSlug: string) {
   }
 }
 
-const getCachedPlacePage = cachePublicData(getPlacePageRaw, ['place-page'], {
-  revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-  tags: [PUBLIC_CACHE_TAGS.runs],
-})
+function getCachedPlacePage(clubSlug: string, placeSlug: string) {
+  return cachePublicData(
+    getPlacePageRaw,
+    ['place-definitions', clubSlug, placeSlug],
+    {
+      revalidate: false,
+      tags: [PUBLIC_CACHE_TAGS.club(clubSlug)],
+    }
+  )(clubSlug, placeSlug)
+}
 
 export async function getPlacePage({
   clubSlug,
@@ -577,13 +657,13 @@ export async function getPlacePage({
 }) {
   const place = await getCachedPlacePage(clubSlug, placeSlug)
   if (!place) return null
-  // A cache hit hands back JSON, so the occurrence dates arrive as strings even
-  // though the type says Date.
+  const now = new Date()
+  const upper = addDays(now, PLACE_OCCURRENCE_DAYS)
   return {
     ...place,
     slots: place.slots.map((slot) => ({
       ...slot,
-      occurrences: slot.occurrences.map((date) => new Date(date)),
+      occurrences: expandRRuleDates(slot.schedulePattern, now, upper),
     })),
   }
 }
