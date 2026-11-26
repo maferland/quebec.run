@@ -66,7 +66,8 @@ jobs:
 
   e2e:
     needs: test
-    runs-on: ubuntu-latest
+    # Playwright 1.57 supports Ubuntu 24.04, not the newer ubuntu-latest image.
+    runs-on: ubuntu-24.04
 
     strategy:
       fail-fast: false
@@ -141,7 +142,8 @@ jobs:
 
       - name: Upload Playwright report
         uses: actions/upload-artifact@v4
-        if: failure()
+        # Keep CI free of artifact-storage charges unless explicitly enabled.
+        if: failure() && vars.UPLOAD_PLAYWRIGHT_REPORTS == 'true'
         with:
           name: playwright-report-${{ matrix.project.slug }}
           path: playwright-report/
