@@ -97,19 +97,19 @@ describe('explore week cache date rollover', () => {
     expect(cachedResults.size).toBe(1)
   })
 
-  it('keeps the route snapshot separate and advances it at Toronto midnight', async () => {
+  it('shares stable week data with home HTML and advances it at Toronto midnight', async () => {
     vi.setSystemTime(new Date('2026-10-13T10:00:00Z'))
     const first = await events.getExploreSnapshot()
     expect(first.anchor).toBe('2026-10-13T04:00:00.000Z')
     expect(first.runs).toHaveLength(1)
 
     await events.getEventsForDay(0)
-    expect(cachedResults.size).toBe(2)
+    expect(cachedResults.size).toBe(1)
 
     vi.setSystemTime(new Date('2026-10-14T04:01:00Z'))
     const next = await events.getExploreSnapshot()
     expect(next.anchor).toBe('2026-10-14T04:00:00.000Z')
-    expect(cachedResults.size).toBe(3)
+    expect(cachedResults.size).toBe(2)
   })
 
   it.each([

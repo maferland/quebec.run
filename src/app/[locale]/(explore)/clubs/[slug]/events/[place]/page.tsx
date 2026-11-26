@@ -32,9 +32,7 @@ function schedules(place: PlacePage, locale: Locale): string[] {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug, place: placeSlug } = await params
-  const place = await getPlacePage({ clubSlug: slug, placeSlug }).catch(
-    () => null
-  )
+  const place = await getPlacePage({ clubSlug: slug, placeSlug })
   const t = await getTranslations({ locale, namespace: 'metadata.place' })
   const path = placePath(slug, placeSlug)
 

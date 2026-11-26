@@ -2,10 +2,7 @@ import { prisma } from '@/lib/prisma'
 import {
   cachePublicData,
   invalidatePublicCache,
-  PUBLIC_API_REVALIDATE_SECONDS,
   PUBLIC_CACHE_TAGS,
-  PUBLIC_PAGE_REVALIDATE_SECONDS,
-  PUBLIC_RUN_REVALIDATE_SECONDS,
 } from '@/lib/public-cache'
 import type {
   EventsQuery,
@@ -207,24 +204,17 @@ const getCachedExploreWeek = cachePublicData(
   getExploreWeekRaw,
   ['explore-week'],
   {
-    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    revalidate: false,
     tags: [PUBLIC_CACHE_TAGS.explore],
   }
-)
-
-// Route HTML gets a daily snapshot for crawlable links. It is deliberately
-// separate from the live API cache so an edit need not expire every detail URL
-// that shares the explore layout.
-const getCachedExploreSnapshot = cachePublicData(
-  getExploreWeekRaw,
-  ['explore-html-snapshot'],
-  { revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS }
 )
 
 export async function getExploreSnapshot() {
   const now = new Date()
   const anchor = getTorontoDayBounds(0, now).start.toISOString()
-  const week = await getCachedExploreSnapshot(anchor)
+  // Only the home slot depends on this catalogue, so an edit now refreshes
+  // its crawlable links without evicting unrelated detail pages.
+  const week = await getCachedExploreWeek(anchor)
   const nowMinutes = getTorontoMinutes(now)
   return {
     anchor,
@@ -680,7 +670,7 @@ async function getEventByIdRaw(id: string) {
       })
     }
 
-    if (!recurringEvent) {
+    if (!recurringEvent || !recurringEvent.isActive) {
       return null
     }
 
@@ -721,12 +711,17 @@ async function getEventByIdRaw(id: string) {
 }
 
 function getCachedEventById(id: string) {
-  // A virtual occurrence changes with its recurring pattern. Concrete runs
-  // can be expired one at a time when an editor changes them.
-  const isVirtual = /(?:--|:)\d{4}-\d{2}-\d{2}$/.test(id)
-  return cachePublicData(getEventByIdRaw, ['event-by-id-v4', id], {
-    revalidate: PUBLIC_RUN_REVALIDATE_SECONDS,
-    tags: [isVirtual ? PUBLIC_CACHE_TAGS.runs : PUBLIC_CACHE_TAGS.run(id)],
+  // A virtual URL contains its schedule's public alias (or legacy id). Edits
+  // expire those aliases explicitly, including cached misses, without a lookup
+  // or a global tag on every detail request.
+  const virtual = id.match(/^(.+)(?:--|:)(\d{4}-\d{2}-\d{2})$/)
+  return cachePublicData(getEventByIdRaw, ['event-by-id-v5', id], {
+    revalidate: false,
+    tags: [
+      virtual
+        ? PUBLIC_CACHE_TAGS.schedule(virtual[1])
+        : PUBLIC_CACHE_TAGS.run(id),
+    ],
   })(id)
 }
 
@@ -784,7 +779,7 @@ async function getEventByClubAndSlugRaw(
     where: { clubId_slug: { clubId: club.id, slug: eventSlug } },
     include: { club: true },
   })
-  if (!recurringEvent) return null
+  if (!recurringEvent || !recurringEvent.isActive) return null
 
   const dayStart = new Date(`${date}T00:00:00`)
   const dayEnd = new Date(`${date}T23:59:59`)
@@ -819,8 +814,8 @@ function getCachedEventByClubAndSlug(
     getEventByClubAndSlugRaw,
     ['event-by-club-and-slug', clubSlug],
     {
-      revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-      tags: [PUBLIC_CACHE_TAGS.runs, PUBLIC_CACHE_TAGS.club(clubSlug)],
+      revalidate: false,
+      tags: [PUBLIC_CACHE_TAGS.club(clubSlug)],
     }
   )(clubSlug, eventSlug, date)
 }
@@ -832,38 +827,35 @@ export const getEventByClubAndSlug = async ({
   return getCachedEventByClubAndSlug(clubSlug, eventSlug, date)
 }
 
-async function getNextOccurrenceDateRaw(clubSlug: string, eventSlug: string) {
-  const club = await prisma.club.findUnique({
-    where: { slug: clubSlug },
-    select: { id: true },
-  })
-  if (!club) return null
-
-  const recurringEvent = await prisma.recurringEvent.findUnique({
-    where: { clubId_slug: { clubId: club.id, slug: eventSlug } },
+async function getNextOccurrencePatternRaw(
+  clubSlug: string,
+  eventSlug: string
+) {
+  return prisma.recurringEvent.findFirst({
+    where: { club: { slug: clubSlug }, slug: eventSlug, isActive: true },
     select: { schedulePattern: true },
   })
-  if (!recurringEvent) return null
-
-  const now = new Date()
-  const upper = addDays(now, 365)
-  const [next] = expandRRuleDates(recurringEvent.schedulePattern, now, upper)
-  return next ?? null
 }
-
-const getCachedNextOccurrenceDate = cachePublicData(
-  getNextOccurrenceDateRaw,
-  ['next-occurrence-date'],
-  {
-    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.runs],
-  }
-)
 
 export const getNextOccurrenceDate = async ({
   data,
 }: PublicPayload<EventByClubAndSlugBare>) => {
-  return getCachedNextOccurrenceDate(data.clubSlug, data.eventSlug)
+  // Only the definition is persistent. A redirect must select its destination
+  // against today's clock even if nobody has edited the recurring schedule.
+  const recurringEvent = await cachePublicData(
+    getNextOccurrencePatternRaw,
+    ['next-occurrence-pattern', data.clubSlug, data.eventSlug],
+    { revalidate: false, tags: [PUBLIC_CACHE_TAGS.club(data.clubSlug)] }
+  )(data.clubSlug, data.eventSlug)
+  if (!recurringEvent) return null
+
+  const now = new Date()
+  const [next] = expandRRuleDates(
+    recurringEvent.schedulePattern,
+    now,
+    addDays(now, 365)
+  )
+  return next ?? null
 }
 
 // Slugs are global, so a title that collides with an existing event picks up a
@@ -888,13 +880,19 @@ async function uniqueEventSlug(title: string): Promise<string> {
 function invalidateEventEdit(event: {
   id: string
   slug: string | null
-  club: { slug: string } | null
+  club: { id: string; slug: string } | null
 }) {
   invalidatePublicCache(
     PUBLIC_CACHE_TAGS.explore,
     PUBLIC_CACHE_TAGS.run(event.id),
     ...(event.slug ? [PUBLIC_CACHE_TAGS.run(event.slug)] : []),
-    ...(event.club ? [PUBLIC_CACHE_TAGS.club(event.club.slug)] : [])
+    ...(event.club
+      ? [
+          PUBLIC_CACHE_TAGS.club(event.club.slug),
+          PUBLIC_CACHE_TAGS.clubId(event.club.id),
+        ]
+      : []),
+    PUBLIC_CACHE_TAGS.sitemap
   )
 }
 
@@ -949,7 +947,7 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
       slug: true,
       address: true,
       club: {
-        select: { ownerId: true, slug: true },
+        select: { id: true, ownerId: true, slug: true },
       },
       organization: {
         select: { ownerId: true },
@@ -1013,7 +1011,10 @@ export const updateEvent = async ({ user, data }: AuthPayload<EventUpdate>) => {
     invalidatePublicCache(PUBLIC_CACHE_TAGS.run(event.slug))
   }
   if (event.club?.slug && event.club.slug !== updatedEvent.club?.slug) {
-    invalidatePublicCache(PUBLIC_CACHE_TAGS.club(event.club.slug))
+    invalidatePublicCache(
+      PUBLIC_CACHE_TAGS.club(event.club.slug),
+      PUBLIC_CACHE_TAGS.clubId(event.club.id)
+    )
   }
   return updatedEvent
 }
@@ -1046,7 +1047,7 @@ export const deleteEvent = async ({ user, data }: AuthPayload<EventId>) => {
 
   const deletedEvent = await prisma.event.delete({
     where: { id },
-    include: { club: { select: { slug: true } } },
+    include: { club: { select: { id: true, slug: true } } },
   })
 
   invalidateEventEdit(deletedEvent)

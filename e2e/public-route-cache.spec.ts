@@ -19,9 +19,15 @@ test('production catalogue responses use the full route cache', async ({
 }) => {
   test.skip(!process.env.CI, 'Full route caching requires a production build')
   for (const path of ['/fr', '/en', '/fr/clubs', '/en/clubs']) {
-    const response = await request.get(path)
+    let response = await request.get(path)
+    await expect(async () => {
+      response = await request.get(path)
+      expect(response.headers()['x-nextjs-cache']).toBe('HIT')
+    }).toPass({ timeout: 15000 })
     expect(response.ok()).toBe(true)
-    expect(response.headers()['cache-control']).toContain('s-maxage=86400')
+    expect(response.headers()['cache-control']).toContain(
+      path.endsWith('/clubs') ? 's-maxage=31536000' : 's-maxage=86400'
+    )
     expect(response.headers()['x-nextjs-cache']).toBe('HIT')
   }
 })

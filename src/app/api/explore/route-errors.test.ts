@@ -24,6 +24,12 @@ describe('explore route database errors', () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined)
   })
 
+  it('propagates static club failures instead of returning a cacheable response', async () => {
+    const error = new Error('database down')
+    vi.mocked(getClubsForExplore).mockRejectedValue(error)
+    await expect(getClubs()).rejects.toBe(error)
+  })
+
   it.each([
     {
       name: 'runs',
@@ -53,12 +59,6 @@ describe('explore route database errors', () => {
       request: new Request('http://localhost/api/explore/runs?day=0'),
       handler: getRuns,
       service: getEventsForDay,
-    },
-    {
-      name: 'clubs',
-      request: new Request('http://localhost/api/explore/clubs'),
-      handler: getClubs,
-      service: getClubsForExplore,
     },
     {
       name: 'week counts',

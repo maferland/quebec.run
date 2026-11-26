@@ -67,13 +67,13 @@ describe('invalidatePublicCache', () => {
 
     expect(revalidateTag).toHaveBeenCalledWith('public:runs')
     expect(revalidateTag).toHaveBeenCalledWith('public:clubs')
-    expect(revalidatePath).toHaveBeenCalledWith('/[locale]/events/[id]', 'page')
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
-  it('expires legacy redirects for a targeted event edit', () => {
+  it('does not expire unrelated legacy redirects for a targeted event edit', () => {
     vi.stubEnv('NODE_ENV', 'production')
     invalidatePublicCache('public:run:renamed-event')
-    expect(revalidatePath).toHaveBeenCalledWith('/[locale]/events/[id]', 'page')
+    expect(revalidatePath).not.toHaveBeenCalled()
   })
 
   it('does not call the Next cache API in tests', () => {

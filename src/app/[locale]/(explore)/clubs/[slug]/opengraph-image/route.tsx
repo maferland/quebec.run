@@ -1,6 +1,6 @@
 import { ImageResponse } from 'next/og'
 import { getTranslations } from 'next-intl/server'
-import { getClubBySlug } from '@/lib/services/clubs'
+import { getClubImageName } from '@/lib/services/clubs'
 import {
   BrandLockup,
   OgGlow,
@@ -9,8 +9,8 @@ import {
   ogCardStyle,
 } from '@/lib/seo/og-theme'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_PAGE_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 86400
+// Stable content is refreshed by its tagged mutation dependencies.
+export const revalidate = false
 export const dynamicParams = true
 
 // Generate new URLs on their first request, then reuse the full route cache.
@@ -27,7 +27,7 @@ export async function GET(
 ) {
   const { locale, slug } = await params
   const [club, t] = await Promise.all([
-    getClubBySlug({ slug }).catch(() => null),
+    getClubImageName({ slug }),
     getTranslations({ locale, namespace: 'metadata.clubDetail' }),
   ])
 

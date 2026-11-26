@@ -2,9 +2,7 @@ import { prisma } from '@/lib/prisma'
 import {
   cachePublicData,
   invalidatePublicCache,
-  PUBLIC_API_REVALIDATE_SECONDS,
   PUBLIC_CACHE_TAGS,
-  PUBLIC_PAGE_REVALIDATE_SECONDS,
 } from '@/lib/public-cache'
 import type {
   AuthPayload,
@@ -31,6 +29,50 @@ import type { z } from 'zod'
 import { foldAccents, foldedIncludes } from '@/lib/utils/intl'
 type ClubId = z.infer<typeof clubIdSchema>
 type ClubSlug = z.infer<typeof clubSlugSchema>
+
+const CLUB_CACHE_DEPENDENCY_SELECT = {
+  id: true,
+  slug: true,
+  events: { select: { id: true, slug: true } },
+  recurringEvents: { select: { id: true, slug: true } },
+} as const
+
+type ClubCacheDependencies = {
+  id: string
+  slug: string
+  events: { id: string; slug: string | null }[]
+  recurringEvents: { id: string; slug: string | null }[]
+}
+
+function invalidateClubCache(
+  club: { id: string; slug: string },
+  previous?: ClubCacheDependencies | null
+) {
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    PUBLIC_CACHE_TAGS.clubId(club.id),
+    PUBLIC_CACHE_TAGS.club(club.slug),
+    PUBLIC_CACHE_TAGS.clubImage(club.slug),
+    ...(previous ? [PUBLIC_CACHE_TAGS.club(previous.slug)] : []),
+    ...(previous ? [PUBLIC_CACHE_TAGS.clubImage(previous.slug)] : []),
+    ...(previous?.events.flatMap((event) => [
+      PUBLIC_CACHE_TAGS.run(event.id),
+      ...(event.slug ? [PUBLIC_CACHE_TAGS.run(event.slug)] : []),
+    ]) ?? []),
+    ...(previous?.recurringEvents.flatMap((schedule) => [
+      PUBLIC_CACHE_TAGS.schedule(schedule.id),
+      ...(schedule.slug
+        ? [
+            PUBLIC_CACHE_TAGS.schedule(schedule.slug),
+            PUBLIC_CACHE_TAGS.schedule(`${previous.slug}-${schedule.slug}`),
+            PUBLIC_CACHE_TAGS.schedule(`${club.slug}-${schedule.slug}`),
+          ]
+        : []),
+    ]) ?? []),
+    PUBLIC_CACHE_TAGS.explore,
+    PUBLIC_CACHE_TAGS.sitemap
+  )
+}
 
 // Pure business logic functions - let TypeScript infer return types
 
@@ -103,7 +145,7 @@ async function fetchClubListRaw(): Promise<NonNullable<ClubListItem>[]> {
 }
 
 const fetchClubList = cachePublicData(fetchClubListRaw, ['club-list'], {
-  revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+  revalidate: false,
   tags: [PUBLIC_CACHE_TAGS.clubs],
 })
 
@@ -119,7 +161,7 @@ export const getActiveClubSlugs = cachePublicData(
   getActiveClubSlugsRaw,
   ['active-club-slugs'],
   {
-    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
+    revalidate: false,
     tags: [PUBLIC_CACHE_TAGS.clubs],
   }
 )
@@ -262,12 +304,7 @@ export const createClub = async ({ user, data }: AuthPayload<ClubCreate>) => {
     })
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.clubs,
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.sitemap
-  )
+  invalidateClubCache(club)
   return club
 }
 
@@ -286,17 +323,16 @@ export const updateClub = async ({ data }: PublicPayload<ClubUpdate>) => {
     }
   }
 
+  const previous = await prisma.club.findUnique({
+    where: { id },
+    select: CLUB_CACHE_DEPENDENCY_SELECT,
+  })
   const club = await prisma.club.update({
     where: { id },
     data: updateData,
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.clubs,
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.sitemap
-  )
+  invalidateClubCache(club, previous)
   return club
 }
 
@@ -304,7 +340,11 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
   const { id } = data
   const club = await prisma.club.findUnique({
     where: { id },
-    select: { ownerId: true, organizationId: true },
+    select: {
+      ...CLUB_CACHE_DEPENDENCY_SELECT,
+      ownerId: true,
+      organizationId: true,
+    },
   })
 
   if (!club) return null
@@ -336,12 +376,7 @@ export const deleteClub = async ({ user, data }: AuthPayload<ClubDelete>) => {
     return deletedClub
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.clubs,
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.sitemap
-  )
+  invalidateClubCache(deletedClub, club)
   return deletedClub
 }
 
@@ -401,6 +436,13 @@ async function getClubBySlugRaw(slug: string) {
 
   if (!club) return null
 
+  return club
+}
+
+function withNextClubOccurrences(
+  club: Awaited<ReturnType<typeof getClubBySlugRaw>>
+) {
+  if (!club) return null
   const now = new Date()
   const upper = addDays(now, 365)
   const patterns = club.recurringEvents
@@ -419,13 +461,27 @@ async function getClubBySlugRaw(slug: string) {
 
 function getCachedClubBySlug(slug: string) {
   return cachePublicData(getClubBySlugRaw, ['club-by-slug', slug], {
-    revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-    tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.club(slug)],
+    revalidate: false,
+    tags: [PUBLIC_CACHE_TAGS.club(slug)],
   })(slug)
 }
 
 export async function getClubBySlug({ slug }: ClubSlug) {
-  return getCachedClubBySlug(slug)
+  return withNextClubOccurrences(await getCachedClubBySlug(slug))
+}
+
+async function getClubImageNameRaw(slug: string) {
+  return prisma.club.findUnique({
+    where: { slug },
+    select: { name: true },
+  })
+}
+
+export async function getClubImageName({ slug }: ClubSlug) {
+  return cachePublicData(getClubImageNameRaw, ['club-image-name', slug], {
+    revalidate: false,
+    tags: [PUBLIC_CACHE_TAGS.clubImage(slug)],
+  })(slug)
 }
 
 // ─── Explore data layer ───────────────────────────────────────────────────────
@@ -511,7 +567,7 @@ export const getClubsForExplore = cachePublicData(
   getClubsForExploreRaw,
   ['clubs-for-explore'],
   {
-    revalidate: PUBLIC_API_REVALIDATE_SECONDS,
+    revalidate: false,
     tags: [PUBLIC_CACHE_TAGS.clubs],
   }
 )
@@ -584,10 +640,7 @@ function schedTime(pattern: string): string {
   return ''
 }
 
-async function getClubDetailBySlugRaw(
-  slug: string,
-  locale = 'fr'
-): Promise<ClubForDetail | null> {
+async function getClubDetailBySlugRaw(slug: string) {
   const club = await prisma.club.findUnique({
     where: { slug },
     select: {
@@ -621,6 +674,18 @@ async function getClubDetailBySlugRaw(
     },
   })
 
+  return club
+}
+
+export async function getClubDetailBySlug(
+  slug: string,
+  locale: string
+): Promise<ClubForDetail | null> {
+  const club = await cachePublicData(
+    getClubDetailBySlugRaw,
+    ['club-detail-by-slug', slug],
+    { revalidate: false, tags: [PUBLIC_CACHE_TAGS.club(slug)] }
+  )(slug)
   if (!club) return null
 
   const schedule = club.recurringEvents
@@ -672,24 +737,13 @@ async function getClubDetailBySlugRaw(
   }
 }
 
-export function getClubDetailBySlug(slug: string, locale: string) {
-  return cachePublicData(
-    getClubDetailBySlugRaw,
-    ['club-detail-by-slug', slug],
-    {
-      revalidate: PUBLIC_PAGE_REVALIDATE_SECONDS,
-      tags: [PUBLIC_CACHE_TAGS.clubs, PUBLIC_CACHE_TAGS.club(slug)],
-    }
-  )(slug, locale)
-}
-
 export const updateClubById = async ({
   user,
   data,
 }: AuthPayload<ClubUpdate & { id: string }>) => {
   const club = await prisma.club.findUnique({
     where: { id: data.id },
-    select: { ownerId: true },
+    select: { ...CLUB_CACHE_DEPENDENCY_SELECT, ownerId: true },
   })
 
   if (!club) {
@@ -707,11 +761,6 @@ export const updateClubById = async ({
     data: updateData,
   })
 
-  invalidatePublicCache(
-    PUBLIC_CACHE_TAGS.clubs,
-    PUBLIC_CACHE_TAGS.runs,
-    PUBLIC_CACHE_TAGS.explore,
-    PUBLIC_CACHE_TAGS.sitemap
-  )
+  invalidateClubCache(updatedClub, club)
   return updatedClub
 }

@@ -19,9 +19,7 @@ type Props = {
 
 export default async function PlaceDetailSlot({ params }: Props) {
   const { locale, slug, place: placeSlug } = await params
-  const place = await getPlacePage({ clubSlug: slug, placeSlug }).catch(
-    () => null
-  )
+  const place = await getPlacePage({ clubSlug: slug, placeSlug })
   if (!place) notFound()
   if (place.primarySlug !== placeSlug) {
     permanentRedirect(`/${locale}/clubs/${slug}/events/${place.primarySlug}`)

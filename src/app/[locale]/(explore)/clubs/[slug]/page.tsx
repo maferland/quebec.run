@@ -23,7 +23,7 @@ type Props = { params: Promise<{ locale: string; slug: string }> }
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, slug } = await params
-  const club = await getClubBySlug({ slug }).catch(() => null)
+  const club = await getClubBySlug({ slug })
   const t = await getTranslations({ locale, namespace: 'metadata.clubDetail' })
 
   return buildPageMetadata({
@@ -42,7 +42,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClubPage({ params }: Props) {
   const { locale, slug } = await params
-  const club = await getClubBySlug({ slug }).catch(() => null)
+  const club = await getClubBySlug({ slug })
   if (!club) notFound()
   const tEvents = await getTranslations('events')
 

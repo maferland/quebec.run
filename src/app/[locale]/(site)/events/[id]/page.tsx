@@ -2,10 +2,11 @@ import { notFound, permanentRedirect } from 'next/navigation'
 import { prisma } from '@/lib/prisma'
 import { LEGACY_VIRTUAL_SLUG_MAP } from '@/lib/utils/legacy-event-slugs'
 import type { PageProps } from '@/lib/types/next'
+import { cachePublicData, PUBLIC_CACHE_TAGS } from '@/lib/public-cache'
 
 export type LegacyEventPageProps = PageProps<{ locale: string; id: string }>
 
-export const revalidate = 86400
+export const revalidate = false
 export const dynamicParams = true
 
 export function generateStaticParams() {
@@ -40,12 +41,15 @@ export default async function LegacyEventPage({
   const cuidMatch = id.match(/^(.+):(\d{4}-\d{2}-\d{2})$/)
   if (cuidMatch) {
     const [, recurringId, date] = cuidMatch
-    const re = await prisma.recurringEvent
-      .findUnique({
-        where: { id: recurringId },
-        select: { slug: true, club: { select: { slug: true } } },
-      })
-      .catch(() => null)
+    const re = await cachePublicData(
+      async () =>
+        prisma.recurringEvent.findUnique({
+          where: { id: recurringId },
+          select: { slug: true, club: { select: { slug: true } } },
+        }),
+      ['legacy-schedule', recurringId],
+      { revalidate: false, tags: [PUBLIC_CACHE_TAGS.schedule(recurringId)] }
+    )()
     if (re) {
       permanentRedirect(
         `/${locale}/clubs/${re.club.slug}/events/${re.slug}/${date}`

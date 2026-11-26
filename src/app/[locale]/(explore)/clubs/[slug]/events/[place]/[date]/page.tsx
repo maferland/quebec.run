@@ -30,7 +30,7 @@ export default async function EventDateRedirect({ params }: Props) {
 
   const event = await getEventByClubAndSlug({
     data: { clubSlug: slug, eventSlug: placeSlug, date },
-  }).catch(() => null)
+  })
   if (!event) notFound()
 
   permanentRedirect(`/${locale}/run/${event.id}`)

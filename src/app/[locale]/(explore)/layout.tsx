@@ -3,9 +3,10 @@ import { ExploreProviders } from '@/app/providers'
 import { getClubsForExplore } from '@/lib/services/clubs'
 import { getExploreSnapshot } from '@/lib/services/events'
 
-// The shell is shared by every club and event URL. Keep it independent of the
-// request so those pages can be served from the full route cache.
-export const revalidate = 86400
+// Keep the client shell in the shared layout so maps and detail transitions
+// survive navigation. Date-dependent pages set their own refresh interval;
+// stable data remains cached until its dependency tags are invalidated.
+export const revalidate = false
 
 export default async function ExploreLayout({
   children,
@@ -15,8 +16,8 @@ export default async function ExploreLayout({
   detail: React.ReactNode
 }) {
   const [snapshot, clubs] = await Promise.all([
-    getExploreSnapshot().catch(() => undefined),
-    getClubsForExplore().catch(() => undefined),
+    getExploreSnapshot(),
+    getClubsForExplore(),
   ])
 
   return (

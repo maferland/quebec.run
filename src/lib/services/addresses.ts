@@ -9,6 +9,22 @@ import type {
   AddressesQuery,
 } from '@/lib/schemas/addresses'
 
+async function invalidateAddressClubs(...ids: (string | null | undefined)[]) {
+  const clubIds = [...new Set(ids.filter((id): id is string => Boolean(id)))]
+  if (!clubIds.length) return
+  const clubs = await prisma.club.findMany({
+    where: { id: { in: clubIds } },
+    select: { id: true, slug: true },
+  })
+  invalidatePublicCache(
+    PUBLIC_CACHE_TAGS.clubs,
+    ...clubs.flatMap((club) => [
+      PUBLIC_CACHE_TAGS.clubId(club.id),
+      PUBLIC_CACHE_TAGS.club(club.slug),
+    ])
+  )
+}
+
 // Re-export address schemas
 export {
   addressCreateSchema,
@@ -152,7 +168,7 @@ export const createAddress = async ({
     },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  await invalidateAddressClubs(savedAddress.clubId)
   return savedAddress
 }
 
@@ -202,7 +218,7 @@ export const updateAddress = async ({
     },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  await invalidateAddressClubs(existingAddress.clubId, savedAddress.clubId)
   return savedAddress
 }
 
@@ -219,6 +235,7 @@ export const deleteAddress = async ({
   const address = await prisma.address.findUnique({
     where: { id },
     select: {
+      clubId: true,
       club: { select: { ownerId: true } },
       organization: { select: { ownerId: true } },
     },
@@ -238,6 +255,6 @@ export const deleteAddress = async ({
     where: { id },
   })
 
-  invalidatePublicCache(PUBLIC_CACHE_TAGS.clubs)
+  await invalidateAddressClubs(address.clubId)
   return deletedAddress
 }

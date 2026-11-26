@@ -5,8 +5,8 @@ import { getEventById } from '@/lib/services/events'
 import { eventJsonLd, JsonLd } from '@/components/seo/json-ld'
 import { notFound } from 'next/navigation'
 
-// Next.js requires a literal here; keep in sync with PUBLIC_RUN_REVALIDATE_SECONDS in public-cache.ts.
-export const revalidate = 604800
+// Stable content is refreshed by its tagged mutation dependencies.
+export const revalidate = false
 export const dynamicParams = true
 
 // Generate new URLs on their first request, then reuse the full route cache.
@@ -21,7 +21,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { locale, id } = await params
   const t = await getTranslations({ locale, namespace: 'metadata.eventDetail' })
 
-  const event = await getEventById({ data: { id } }).catch(() => null)
+  const event = await getEventById({ data: { id } })
   const title = event?.title ?? null
   const clubName = event?.club?.name ?? null
   const date = id.match(/--(\d{4}-\d{2}-\d{2})$/)?.[1]
@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RunPage({ params }: Props) {
   const { locale, id } = await params
-  const event = await getEventById({ data: { id } }).catch(() => null)
+  const event = await getEventById({ data: { id } })
   if (!event?.club) notFound()
 
   const date = id.match(/--(\d{4}-\d{2}-\d{2})$/)?.[1]
