@@ -12,7 +12,9 @@ test('account deletion evicts direct and organization-owned public routes, prese
   expect(new URL(baseURL!).hostname).toBe('localhost')
   const database = new URL(process.env.DATABASE_URL!)
   expect(['localhost', '127.0.0.1']).toContain(database.hostname)
-  expect(database.pathname).toBe('/courses_club_og_cache')
+  expect(['/courses_club_og_cache', '/courses_test']).toContain(
+    database.pathname
+  )
   const pool = new Pool({ connectionString: database.toString() })
   const owner = randomUUID()
   const other = randomUUID()
